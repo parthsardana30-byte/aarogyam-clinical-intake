@@ -463,6 +463,8 @@
     .login-intro h1 { margin: 0; font-family: inherit; font-weight: 520; letter-spacing: -.045em; font-size: clamp(2.35rem, 4.6vw, 3.8rem); }
     .login-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .login-card {
+      --portal-accent: #0e6655;
+      --portal-accent-rgb: 14, 102, 85;
       min-height: 350px;
       padding: 40px;
       display: flex;
@@ -474,16 +476,87 @@
       backdrop-filter: blur(16px);
       color: var(--ink);
       text-align: left;
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
       box-shadow: 0 22px 60px rgba(28, 39, 36, .08);
-      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+      transition: transform .52s cubic-bezier(.2,.75,.25,1), box-shadow .52s ease, border-color .35s ease;
     }
-    .login-card:hover { transform: translateY(-7px); border-color: rgba(14, 102, 85, .4); box-shadow: 0 30px 80px rgba(16, 43, 39, .16); }
+    .login-card:nth-child(2) { --portal-accent: #a75c20; --portal-accent-rgb: 167, 92, 32; }
+    .login-card:nth-child(3) { --portal-accent: #315f79; --portal-accent-rgb: 49, 95, 121; }
+    .login-card::before {
+      content: "";
+      position: absolute;
+      left: 30px;
+      top: calc(50% - 76px);
+      width: 150px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      z-index: -1;
+      background: radial-gradient(circle, rgba(var(--portal-accent-rgb), .2) 0 28%, rgba(var(--portal-accent-rgb), .1) 53%, transparent 72%);
+      filter: blur(2px);
+      opacity: 0;
+      transform: scale(.45);
+      transition: transform .72s cubic-bezier(.16,1,.3,1), opacity .32s ease;
+    }
+    .login-card::after {
+      content: "";
+      position: absolute;
+      left: 29px;
+      top: calc(50% - 77px);
+      width: 152px;
+      aspect-ratio: 1;
+      border: 1px solid rgba(var(--portal-accent-rgb), .24);
+      border-radius: 50%;
+      z-index: -1;
+      opacity: 0;
+      transform: scale(.72);
+      transition: transform .62s cubic-bezier(.16,1,.3,1), opacity .28s ease;
+    }
+    .login-card:is(:hover, :focus-visible) { transform: translateY(-9px) scale(1.012); border-color: rgba(var(--portal-accent-rgb), .42); box-shadow: 0 32px 85px rgba(var(--portal-accent-rgb), .18); }
+    .login-card:is(:hover, :focus-visible)::before { opacity: 1; transform: scale(4.8); }
+    .login-card:is(:hover, :focus-visible)::after { opacity: 1; transform: scale(1.32); }
     .login-card:focus-visible { outline: 4px solid rgba(221, 122, 36, .3); outline-offset: 3px; }
     .login-card-icon { width: 88px; height: 88px; display: grid; place-items: center; border-radius: 27px; margin-bottom: 31px; color: var(--teal); background: linear-gradient(145deg, #eef8f3, #d9ebe3); box-shadow: inset 0 0 0 1px rgba(14,102,85,.08), 0 12px 28px rgba(14,102,85,.1); }
     .login-card:nth-child(2) .login-card-icon { color: #9b5418; background: linear-gradient(145deg, #fff7ee, #ffe8cf); box-shadow: inset 0 0 0 1px rgba(155,84,24,.08), 0 12px 28px rgba(155,84,24,.1); }
     .login-card:nth-child(3) .login-card-icon { color: #315d70; background: linear-gradient(145deg, #f0f7fa, #dbeaf0); box-shadow: inset 0 0 0 1px rgba(49,93,112,.08), 0 12px 28px rgba(49,93,112,.1); }
-    .login-card-icon svg { width: 52px; height: 52px; }
-    .login-card h2 { font: 620 clamp(1.9rem, 2.5vw, 2.35rem)/1.12 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin: 0; text-wrap: balance; }
+    .login-card .login-card-icon {
+      width: 96px; height: 96px; border-radius: 30px; color: #fff;
+      position: relative;
+      background: linear-gradient(145deg, #218d7a, #0c5448);
+      border: 1px solid rgba(255,255,255,.5);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.24), 0 14px 26px rgba(14,102,85,.2);
+      transition: transform .58s cubic-bezier(.16,1,.3,1), box-shadow .48s ease;
+    }
+    .login-card:nth-child(2) .login-card-icon { background: linear-gradient(145deg, #d99043, #995019); box-shadow: inset 0 2px 0 rgba(255,255,255,.24), 0 14px 26px rgba(155,84,24,.2); }
+    .login-card:nth-child(3) .login-card-icon { background: linear-gradient(145deg, #4e8eaf, #28556f); box-shadow: inset 0 2px 0 rgba(255,255,255,.24), 0 14px 26px rgba(49,93,112,.2); }
+    .login-card-icon::before,
+    .login-card-icon::after {
+      content: "\2726";
+      position: absolute;
+      color: #fff;
+      line-height: 1;
+      opacity: 0;
+      pointer-events: none;
+      text-shadow: 0 0 13px rgba(255,255,255,.95);
+    }
+    .login-card-icon::before { right: -19px; top: -15px; font-size: 25px; transform: translate(-8px, 9px) scale(.25) rotate(-24deg); }
+    .login-card-icon::after { left: -15px; bottom: -12px; font-size: 16px; transform: translate(10px, -8px) scale(.2) rotate(22deg); }
+    .login-card-icon svg { width: 64px; height: 64px; }
+    .login-card:is(:hover, :focus-visible) .login-card-icon { transform: translateY(-6px) scale(1.06) rotate(-4deg); box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 18px 38px rgba(var(--portal-accent-rgb), .35), 0 0 0 9px rgba(var(--portal-accent-rgb), .09); }
+    .login-card:is(:hover, :focus-visible) .login-card-icon::before { animation: portal-spark-one .78s .08s cubic-bezier(.2,.8,.2,1) both; }
+    .login-card:is(:hover, :focus-visible) .login-card-icon::after { animation: portal-spark-two .82s .18s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes portal-spark-one { 0% { opacity: 0; transform: translate(-8px,9px) scale(.25) rotate(-24deg); } 48%, 72% { opacity: 1; } 100% { opacity: .72; transform: translate(0,0) scale(1) rotate(0); } }
+    @keyframes portal-spark-two { 0% { opacity: 0; transform: translate(10px,-8px) scale(.2) rotate(22deg); } 52%, 76% { opacity: .92; } 100% { opacity: .58; transform: translate(0,0) scale(1) rotate(0); } }
+    .login-card h2 { position: relative; z-index: 1; font: 620 clamp(1.9rem, 2.5vw, 2.35rem)/1.12 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin: 0; text-wrap: balance; transition: color .32s ease, transform .48s cubic-bezier(.16,1,.3,1); }
+    .login-card h2::after { content: "\2192"; display: inline-block; margin-left: .35em; opacity: 0; transform: translateX(-12px); transition: opacity .25s ease, transform .48s cubic-bezier(.16,1,.3,1); }
+    .login-card:is(:hover, :focus-visible) h2 { color: var(--portal-accent); transform: translateX(3px); }
+    .login-card:is(:hover, :focus-visible) h2::after { opacity: 1; transform: translateX(0); }
+    @media (prefers-reduced-motion: reduce) {
+      .login-card, .login-card::before, .login-card::after, .login-card .login-card-icon, .login-card h2, .login-card h2::after { transition: none; }
+      .login-card:is(:hover, :focus-visible), .login-card:is(:hover, :focus-visible) .login-card-icon, .login-card:is(:hover, :focus-visible) h2 { transform: none; }
+      .login-card:is(:hover, :focus-visible) .login-card-icon::before, .login-card:is(:hover, :focus-visible) .login-card-icon::after { animation: none; opacity: .7; transform: none; }
+    }
 
     .login-form-shell {
       width: min(620px, 100%);
@@ -615,15 +688,15 @@
         </div>
         <div class="login-cards">
           <button class="login-card" type="button" data-login-role="patient">
-            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><circle cx="21" cy="17" r="7" stroke="currentColor" stroke-width="3"/><path d="M8 37c1.8-8 6.1-12 13-12s11.2 4 13 12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="36" cy="13" r="8" fill="currentColor"/><path d="M36 9v8M32 13h8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></span>
+            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle cx="27" cy="22" r="9" fill="white" fill-opacity=".16" stroke="currentColor" stroke-width="2.5"/><path d="M11 51v-4a16 16 0 0 1 32 0v4" fill="white" fill-opacity=".1" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M15 51h24" stroke="currentColor" stroke-opacity=".5" stroke-width="2.5" stroke-linecap="round"/><rect x="40" y="29" width="19" height="23" rx="7" fill="#e1f5ec"/><path d="M49.5 35v11M44 40.5h11" stroke="#0c6655" stroke-width="2.5" stroke-linecap="round"/></svg></span>
             <h2>Patient Login</h2>
           </button>
           <button class="login-card" type="button" data-login-role="doctor">
-            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M14 8v9a10 10 0 0 0 20 0V8M10 8h8M30 8h8M24 27v3a10 10 0 0 0 10 10h2" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="39" cy="39" r="5" fill="currentColor"/><circle cx="39" cy="39" r="2" fill="#fff"/><path d="M10 5v6M38 5v6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span>
+            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M15 13v12a12 12 0 0 0 24 0V13" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M15 13h6M33 13h6" stroke="#ffe2b5" stroke-width="5" stroke-linecap="round"/><path d="M27 37v4a12 12 0 0 0 24 0v-5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="51" cy="29" r="8" fill="#fff0d9"/><circle cx="51" cy="29" r="3.5" stroke="#a05b22" stroke-width="2"/><path d="M20 29a8 8 0 0 0 14 0" stroke="currentColor" stroke-opacity=".35" stroke-width="2" stroke-linecap="round"/></svg></span>
             <h2>Doctor Login</h2>
           </button>
           <button class="login-card" type="button" data-login-role="staff">
-            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M8 41V15l16-8 16 8v26M15 41V29h18v12M18 18h12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 14v10M19 19h10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M12 41h24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span>
+            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><rect x="13" y="15" width="38" height="40" rx="7" fill="white" fill-opacity=".1" stroke="currentColor" stroke-width="2.5"/><rect x="24" y="9" width="16" height="12" rx="4" fill="#deedf7"/><path d="M32 12v6M29 15h6" stroke="#315d70" stroke-width="2" stroke-linecap="round"/><circle cx="26" cy="33" r="5" fill="white" fill-opacity=".18" stroke="currentColor" stroke-width="2"/><path d="M18 46a8 8 0 0 1 16 0M39 31h5M39 38h5M39 45h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
             <h2>Hospital Staff Login</h2>
           </button>
         </div>
