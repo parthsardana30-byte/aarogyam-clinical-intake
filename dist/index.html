@@ -222,6 +222,101 @@
     .toast strong { display: block; margin-bottom: 2px; }
     .toast small { color: #c9d8d4; }
 
+    .login-screen {
+      min-height: 100vh;
+      padding: 42px 24px 54px;
+      background:
+        radial-gradient(circle at 12% 6%, rgba(221, 122, 36, .14), transparent 28rem),
+        radial-gradient(circle at 90% 90%, rgba(14, 102, 85, .16), transparent 34rem),
+        linear-gradient(180deg, #fbfcfa 0%, #eef3f0 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .login-screen::before {
+      content: "";
+      position: absolute;
+      inset: auto -10% -170px;
+      height: 330px;
+      background: var(--ink);
+      transform: rotate(-3deg);
+      transform-origin: center;
+    }
+    .login-container { width: min(1180px, 100%); margin: 0 auto; position: relative; z-index: 1; }
+    .login-brand { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 42px; }
+    .login-brand .brand-mark { width: 52px; height: 52px; border-radius: 16px; }
+    .login-brand .brand-name { font-size: 2rem; }
+    .login-brand .brand-context { color: #667d77; font-size: .9rem; }
+    .login-intro { text-align: center; margin: 0 auto 28px; max-width: 700px; }
+    .login-intro h1 { margin-bottom: 10px; }
+    .login-intro p { color: var(--ink-soft); margin-bottom: 0; font-size: 1.02rem; }
+    .demo-ribbon { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 12px; color: var(--teal-dark); background: var(--mint); border: 1px solid #c9ddd5; border-radius: 999px; padding: 6px 11px; font-size: .76rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+    .login-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .login-card {
+      min-height: 330px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(16, 43, 39, .12);
+      border-radius: 24px;
+      background: rgba(255,255,255,.96);
+      color: var(--ink);
+      text-align: left;
+      box-shadow: 0 24px 70px rgba(16, 43, 39, .11);
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .login-card:hover { transform: translateY(-7px); border-color: rgba(14, 102, 85, .4); box-shadow: 0 30px 80px rgba(16, 43, 39, .16); }
+    .login-card:focus-visible { outline: 4px solid rgba(221, 122, 36, .3); outline-offset: 3px; }
+    .login-card-icon { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 19px; margin-bottom: 23px; color: var(--teal); background: var(--mint); }
+    .login-card:nth-child(2) .login-card-icon { color: #9b5418; background: var(--orange-soft); }
+    .login-card:nth-child(3) .login-card-icon { color: #315d70; background: #e4eff3; }
+    .login-card-icon svg { width: 34px; height: 34px; }
+    .login-card h2 { font: 700 1.48rem/1.2 Georgia, serif; margin-bottom: 10px; }
+    .login-card p { color: #5e716d; margin-bottom: 22px; }
+    .login-card-action { margin-top: auto; display: flex; justify-content: space-between; align-items: center; color: var(--teal-dark); font-weight: 800; }
+    .login-card-action span:last-child { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: #fff; font-size: 1.1rem; }
+    .login-footnote { position: relative; z-index: 1; margin: 34px auto 0; color: rgba(255,255,255,.78); text-align: center; font-size: .82rem; }
+
+    .login-form-shell {
+      width: min(900px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: .82fr 1.18fr;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid rgba(16, 43, 39, .12);
+      border-radius: 26px;
+      box-shadow: 0 28px 90px rgba(16, 43, 39, .17);
+    }
+    .login-form-shell[hidden] { display: none; }
+    .login-role-panel { padding: 38px; color: #fff; background: var(--ink); display: flex; flex-direction: column; justify-content: space-between; }
+    .login-role-panel .login-card-icon { background: rgba(255,255,255,.12); color: #fff; }
+    .login-role-panel h2 { font: 700 2rem/1.15 Georgia, serif; margin-bottom: 12px; }
+    .login-role-panel p { color: #c6d7d2; }
+    .login-role-panel small { color: #9fb9b2; }
+    .login-form-area { padding: 38px 42px; }
+    .back-button { border: 0; background: transparent; color: var(--teal); padding: 0; margin-bottom: 25px; font-weight: 750; }
+    .login-form-area h2 { font: 700 1.85rem/1.2 Georgia, serif; margin-bottom: 8px; }
+    .login-form-area > p { color: #647873; margin-bottom: 25px; }
+    .field-group { margin-bottom: 16px; }
+    .field-group label { display: block; margin-bottom: 7px; font-size: .84rem; font-weight: 760; }
+    .field-group input {
+      width: 100%;
+      min-height: 50px;
+      padding: 12px 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      color: var(--ink);
+      background: #fbfcfb;
+      font: inherit;
+    }
+    .field-group input:focus { outline: 3px solid rgba(14, 102, 85, .14); border-color: var(--teal); }
+    .login-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 4px 0 20px; font-size: .82rem; }
+    .remember-label { display: flex; align-items: center; gap: 8px; color: #596f69; }
+    .login-help { color: var(--teal); font-weight: 700; }
+    .login-submit { width: 100%; }
+    .demo-login-button { width: 100%; margin-top: 10px; border: 0; background: transparent; color: var(--teal); font-weight: 760; padding: 9px; }
+    .logout-button { border: 1px solid rgba(255,255,255,.23); background: transparent; color: #fff; border-radius: 10px; padding: 9px 12px; font-weight: 720; }
+
     @media (max-width: 1080px) {
       .intake-grid { grid-template-columns: 230px 1fr; }
       .side-stack { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
@@ -229,6 +324,16 @@
     }
 
     @media (max-width: 760px) {
+      .login-screen { padding: 24px 14px 40px; }
+      .login-screen::before { height: 230px; bottom: -150px; }
+      .login-brand { justify-content: flex-start; margin-bottom: 28px; }
+      .login-brand .brand-context { display: block; }
+      .login-cards { grid-template-columns: 1fr; }
+      .login-card { min-height: auto; padding: 23px; }
+      .login-form-shell { grid-template-columns: 1fr; }
+      .login-role-panel { padding: 25px; }
+      .login-form-area { padding: 26px 22px; }
+      .login-footnote { color: var(--ink-soft); }
       .topbar { height: auto; padding: 14px 18px; align-items: flex-start; }
       .brand-context, .privacy-badge { display: none; }
       .language-select { max-width: 112px; }
@@ -250,7 +355,70 @@
   </style>
 </head>
 <body>
-  <div class="app-shell">
+  <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
+    <div class="login-container">
+      <div class="login-brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3C8 7.5 5.5 10.5 5.5 15a6.5 6.5 0 0 0 13 0C18.5 10.5 16 7.5 12 3Z" fill="currentColor" opacity=".34"/><path d="M8.5 15h7M12 11.5v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div><div class="brand-name">Aarogyam</div><div class="brand-context">AYUSH clinical intake workspace</div></div>
+      </div>
+
+      <div id="rolePicker">
+        <div class="login-intro">
+          <div class="demo-ribbon">● Secure prototype access</div>
+          <h1 id="loginTitle">Choose your care portal</h1>
+          <p>One connected platform, designed around the work each person needs to complete.</p>
+        </div>
+        <div class="login-cards">
+          <button class="login-card" type="button" data-login-role="patient">
+            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4.8 20c.7-4.2 3-6.3 7.2-6.3s6.5 2.1 7.2 6.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+            <h2>Patient Login</h2>
+            <p>Complete your pre-consultation intake, review health records and control consent from one place.</p>
+            <span class="login-card-action"><span>Enter patient portal</span><span>→</span></span>
+          </button>
+          <button class="login-card" type="button" data-login-role="doctor">
+            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 4v3a3 3 0 0 0 6 0V4M7 4h2M15 4h2M12 10v2a6 6 0 0 0 6 6h1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="19" cy="18" r="2" stroke="currentColor" stroke-width="1.8"/></svg></span>
+            <h2>Doctor Login</h2>
+            <p>Review evidence-linked case sheets, longitudinal changes, contradictions and clinician-only findings.</p>
+            <span class="login-card-action"><span>Enter doctor console</span><span>→</span></span>
+          </button>
+          <button class="login-card" type="button" data-login-role="staff">
+            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V8l8-4 8 4v12M8 20v-5h8v5M9 10h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <h2>Hospital Staff Login</h2>
+            <p>Register patients, start assisted intake, scan documents and manage the OPD preparation queue.</p>
+            <span class="login-card-action"><span>Enter staff workspace</span><span>→</span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="login-form-shell" id="loginFormShell" hidden>
+        <aside class="login-role-panel">
+          <div>
+            <div class="login-card-icon" id="formRoleIcon" aria-hidden="true">✦</div>
+            <h2 id="formRoleName">Patient portal</h2>
+            <p id="formRoleCopy">Continue your intake securely and review what will be shared with the doctor.</p>
+          </div>
+          <small>Synthetic prototype only. Do not enter real health information or credentials.</small>
+        </aside>
+        <div class="login-form-area">
+          <button class="back-button" id="backToRoles" type="button">← Choose another portal</button>
+          <h2 id="formTitle">Welcome back</h2>
+          <p id="formSubtitle">Use demonstration credentials to continue.</p>
+          <form id="loginForm">
+            <div class="field-group"><label for="loginIdentifier" id="identifierLabel">Demo patient ID</label><input id="loginIdentifier" autocomplete="username" required placeholder="Enter demo ID" /></div>
+            <div class="field-group"><label for="loginPassword">Password or PIN</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter demo password" /></div>
+            <div class="login-row"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label><span class="login-help">Demo access</span></div>
+            <button class="primary-button login-submit" type="submit">Continue securely</button>
+            <button class="demo-login-button" id="demoLoginButton" type="button">Fill demonstration credentials</button>
+          </form>
+        </div>
+      </div>
+      <p class="login-footnote">Privacy-first demonstration · Role-based access · Clinician review required</p>
+    </div>
+  </section>
+
+  <div class="app-shell" id="appShell" hidden>
     <header class="topbar">
       <div class="brand" aria-label="Aarogyam home">
         <div class="brand-mark" aria-hidden="true">
@@ -266,6 +434,7 @@
           </select>
         </label>
         <div class="privacy-badge">🔒 Synthetic demonstration · No patient data</div>
+        <button class="logout-button" id="logoutButton" type="button">Log out</button>
       </div>
     </header>
 
@@ -415,6 +584,73 @@
   <div class="toast" id="toast" role="status" aria-live="polite"><strong id="toastTitle"></strong><small id="toastText"></small></div>
 
   <script>
+    const loginScreen = document.getElementById('loginScreen');
+    const rolePicker = document.getElementById('rolePicker');
+    const loginFormShell = document.getElementById('loginFormShell');
+    const loginForm = document.getElementById('loginForm');
+    const appShell = document.getElementById('appShell');
+    let selectedLoginRole = 'patient';
+
+    const loginRoles = {
+      patient: {
+        name: 'Patient portal',
+        copy: 'Continue your intake securely and review exactly what will be shared with the doctor.',
+        title: 'Welcome back',
+        subtitle: 'Use your demonstration patient ID and PIN to continue.',
+        label: 'Demo patient ID',
+        placeholder: 'e.g. DEMO-PATIENT-01',
+        demoId: 'DEMO-PATIENT-01',
+        view: 'patient',
+        icon: 'P'
+      },
+      doctor: {
+        name: 'Doctor console',
+        copy: 'Open evidence-linked intake summaries and complete clinician-only examination findings.',
+        title: 'Clinician sign in',
+        subtitle: 'Use a demonstration practitioner ID and password.',
+        label: 'Demo practitioner ID',
+        placeholder: 'e.g. DEMO-DOCTOR-01',
+        demoId: 'DEMO-DOCTOR-01',
+        view: 'doctor',
+        icon: 'Dr'
+      },
+      staff: {
+        name: 'Hospital staff workspace',
+        copy: 'Manage registration, assisted intake, document scanning and the OPD preparation queue.',
+        title: 'Staff sign in',
+        subtitle: 'Use a demonstration employee ID and password.',
+        label: 'Demo employee ID',
+        placeholder: 'e.g. DEMO-STAFF-01',
+        demoId: 'DEMO-STAFF-01',
+        view: 'reception',
+        icon: 'HS'
+      }
+    };
+
+    function selectLoginRole(role) {
+      selectedLoginRole = role;
+      const config = loginRoles[role];
+      document.getElementById('formRoleName').textContent = config.name;
+      document.getElementById('formRoleCopy').textContent = config.copy;
+      document.getElementById('formTitle').textContent = config.title;
+      document.getElementById('formSubtitle').textContent = config.subtitle;
+      document.getElementById('identifierLabel').textContent = config.label;
+      document.getElementById('loginIdentifier').placeholder = config.placeholder;
+      document.getElementById('formRoleIcon').textContent = config.icon;
+      rolePicker.hidden = true;
+      loginFormShell.hidden = false;
+      document.getElementById('loginIdentifier').focus();
+    }
+
+    document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => selectLoginRole(card.dataset.loginRole)));
+    document.getElementById('backToRoles').addEventListener('click', () => {
+      loginForm.reset(); loginFormShell.hidden = true; rolePicker.hidden = false;
+    });
+    document.getElementById('demoLoginButton').addEventListener('click', () => {
+      document.getElementById('loginIdentifier').value = loginRoles[selectedLoginRole].demoId;
+      document.getElementById('loginPassword').value = 'demo123';
+    });
+
     const tabs = [...document.querySelectorAll('.role-tab')];
     const views = [...document.querySelectorAll('.view')];
     const toast = document.getElementById('toast');
@@ -433,6 +669,30 @@
       views.forEach(view => view.classList.toggle('active', view.id === id));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    loginForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const submitButton = loginForm.querySelector('[type="submit"]');
+      submitButton.textContent = 'Opening workspace…';
+      submitButton.disabled = true;
+      setTimeout(() => {
+        loginScreen.hidden = true;
+        appShell.hidden = false;
+        openView(loginRoles[selectedLoginRole].view);
+        submitButton.textContent = 'Continue securely';
+        submitButton.disabled = false;
+        showToast('Demo login successful', `${loginRoles[selectedLoginRole].name} is ready.`);
+      }, 420);
+    });
+
+    document.getElementById('logoutButton').addEventListener('click', () => {
+      appShell.hidden = true;
+      loginScreen.hidden = false;
+      loginForm.reset();
+      loginFormShell.hidden = true;
+      rolePicker.hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
     tabs.forEach(tab => tab.addEventListener('click', () => openView(tab.dataset.view)));
     document.querySelectorAll('[data-start-intake]').forEach(button => button.addEventListener('click', () => openView('patient')));
