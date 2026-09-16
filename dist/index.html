@@ -273,6 +273,19 @@
     .doctor-main, .portal-main { grid-column: 2; min-width: 0; }
     .current-patient-name { color: #1769aa; }
     .patient-greeting-name { color: #1769aa; }
+    .checkup-launch {
+      min-height: calc(100vh - 176px); display: grid; place-items: center; padding: 28px;
+    }
+    .checkup-launch[hidden], .checkup-flow[hidden] { display: none; }
+    .checkup-launch-button {
+      min-width: min(340px, 100%); min-height: 68px; display: inline-flex; align-items: center; justify-content: center; gap: 13px;
+      border: 0; border-radius: 20px; padding: 0 28px; background: var(--ink); color: #fff; font: inherit;
+      font-size: 1.08rem; font-weight: 780; cursor: pointer; box-shadow: 0 18px 42px rgba(16,43,39,.22);
+      transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .checkup-launch-button:hover { transform: translateY(-3px); background: #16483f; box-shadow: 0 24px 52px rgba(16,43,39,.28); }
+    .checkup-launch-button:focus-visible { outline: 4px solid rgba(244,162,97,.42); outline-offset: 4px; }
+    .checkup-launch-button svg { width: 22px; height: 22px; }
     .portal-main .intake-grid { grid-template-columns: minmax(210px, .72fr) minmax(410px, 1.55fr) minmax(250px, .88fr); }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
@@ -656,7 +669,7 @@
         </div>
       </section>
 
-      <section class="view active" id="patient" aria-labelledby="patientTitle">
+      <section class="view active" id="patient" aria-label="Patient check-up">
         <div class="portal-workspace">
           <aside class="card doctor-sidebar portal-sidebar" aria-label="Patient navigation">
             <div class="doctor-profile">
@@ -680,6 +693,13 @@
             </nav>
           </aside>
           <div class="portal-main">
+        <div class="checkup-launch" id="checkupLaunch">
+          <button class="checkup-launch-button" id="startCheckupButton" type="button">
+            Initiate check-up
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="checkup-flow" id="checkupFlow" hidden>
         <div class="page-heading">
           <div><h1 id="patientTitle">Hello, <span class="patient-greeting-name">Ananya</span></h1><p class="heading-copy">Let’s begin your health check-up. Share what has changed since your last visit.</p></div>
         </div>
@@ -743,6 +763,7 @@
               </div>
             </aside>
           </div>
+        </div>
         </div>
           </div>
         </div>
@@ -870,8 +891,22 @@
     const views = [...document.querySelectorAll('.view')];
     const doctorNavButtons = [...document.querySelectorAll('#doctor .doctor-nav-button')];
     const doctorPanels = [...document.querySelectorAll('[data-doctor-panel-content]')];
+    const checkupLaunch = document.getElementById('checkupLaunch');
+    const checkupFlow = document.getElementById('checkupFlow');
+    const startCheckupButton = document.getElementById('startCheckupButton');
     const toast = document.getElementById('toast');
     let toastTimer;
+
+    function resetCheckup() {
+      checkupLaunch.hidden = false;
+      checkupFlow.hidden = true;
+    }
+
+    startCheckupButton.addEventListener('click', () => {
+      checkupLaunch.hidden = true;
+      checkupFlow.hidden = false;
+      document.getElementById('answerInput').focus();
+    });
 
     function showToast(title, text) {
       document.getElementById('toastTitle').textContent = title;
@@ -906,6 +941,7 @@
         appShell.hidden = false;
         appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
         appShell.classList.add(`${selectedLoginRole}-session`);
+        if (selectedLoginRole === 'patient') resetCheckup();
         openView(loginRoles[selectedLoginRole].view);
         if (selectedLoginRole === 'doctor') openDoctorPanel('current');
         submitButton.textContent = 'Continue securely';
@@ -948,7 +984,10 @@
     });
 
     tabs.forEach(tab => tab.addEventListener('click', () => openView(tab.dataset.view)));
-    document.querySelectorAll('[data-start-intake]').forEach(button => button.addEventListener('click', () => openView('patient')));
+    document.querySelectorAll('[data-start-intake]').forEach(button => button.addEventListener('click', () => {
+      resetCheckup();
+      openView('patient');
+    }));
     document.querySelectorAll('[data-toast]').forEach(button => button.addEventListener('click', () => {
       const [title, text] = button.dataset.toast.split('|'); showToast(title, text);
     }));
