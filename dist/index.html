@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#102b27" />
-  <meta name="description" content="Aarogyam is an evidence-linked, voice-first patient intake workspace for AYUSH outpatient care." />
-  <title>Aarogyam Clinical Intake</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23102b27'/%3E%3Cpath d='M32 14c-7 8-13 15-13 23a13 13 0 0 0 26 0c0-8-6-15-13-23Z' fill='%23f4a261'/%3E%3Cpath d='M25 38h14M32 31v14' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <meta name="description" content="ArogSevak is an evidence-linked, voice-first patient intake workspace for AYUSH outpatient care." />
+  <title>ArogSevak Clinical Intake</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230e6655'/%3E%3Cpath d='M16 23c5-8 22-8 28-1 4 5 1 11-6 13l-13 4c-6 2-6 9 0 11 7 2 17-1 21-7' fill='none' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M46 12v12M40 18h12' stroke='%23f4a261' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E" />
   <style>
     :root {
       color-scheme: light;
@@ -64,11 +64,11 @@
     .brand-mark {
       width: 42px; height: 42px; border-radius: 13px;
       display: grid; place-items: center;
-      background: var(--orange); color: #fff;
+      background: linear-gradient(145deg, var(--teal), var(--teal-dark)); color: #fff;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.2);
     }
-    .brand-mark svg { width: 25px; height: 25px; }
-    .brand-name { font-family: Georgia, "Times New Roman", serif; font-size: 1.5rem; letter-spacing: .01em; }
+    .brand-mark svg { width: 29px; height: 29px; }
+    .brand-name { font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif; font-size: 1.5rem; font-weight: 720; letter-spacing: -.035em; }
     .brand-context { color: #bed2cc; font-size: .82rem; margin-top: -2px; }
 
     .top-actions { display: flex; align-items: center; gap: 12px; }
@@ -410,9 +410,9 @@
     <div class="login-container">
       <div class="login-brand">
         <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3C8 7.5 5.5 10.5 5.5 15a6.5 6.5 0 0 0 13 0C18.5 10.5 16 7.5 12 3Z" fill="currentColor" opacity=".34"/><path d="M8.5 15h7M12 11.5v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 32 32" fill="none"><path d="M7 11.5c2.5-4 11-4 14-0.5 2 2.5.5 5.5-3 6.5l-6.5 2c-3 1-3 4.5 0 5.5 3.5 1 8.5-.5 10.5-3.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M23 6v6M20 9h6" stroke="#f4a261" stroke-width="2.5" stroke-linecap="round"/></svg>
         </div>
-        <div><div class="brand-name">Aarogyam</div><div class="brand-context">AYUSH clinical intake workspace</div></div>
+        <div><div class="brand-name">ArogSevak</div><div class="brand-context">AYUSH clinical intake workspace</div></div>
       </div>
 
       <div id="rolePicker">
@@ -470,11 +470,11 @@
 
   <div class="app-shell" id="appShell" hidden>
     <header class="topbar">
-      <div class="brand" aria-label="Aarogyam home">
+      <div class="brand" aria-label="ArogSevak home">
         <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3C8 7.5 5.5 10.5 5.5 15a6.5 6.5 0 0 0 13 0C18.5 10.5 16 7.5 12 3Z" fill="currentColor" opacity=".34"/><path d="M8.5 15h7M12 11.5v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 32 32" fill="none"><path d="M7 11.5c2.5-4 11-4 14-0.5 2 2.5.5 5.5-3 6.5l-6.5 2c-3 1-3 4.5 0 5.5 3.5 1 8.5-.5 10.5-3.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M23 6v6M20 9h6" stroke="#f4a261" stroke-width="2.5" stroke-linecap="round"/></svg>
         </div>
-        <div><div class="brand-name">Aarogyam</div><div class="brand-context">AYUSH clinical intake workspace</div></div>
+        <div><div class="brand-name">ArogSevak</div><div class="brand-context">AYUSH clinical intake workspace</div></div>
       </div>
       <div class="top-actions">
         <label>
@@ -559,7 +559,7 @@
 
           <article class="card conversation-card">
             <div class="conversation-head">
-              <div class="assistant-person"><div class="assistant-avatar" aria-hidden="true">✦</div><div><strong>Aarogyam Assistant</strong><small>Listening in Hindi · text shown in English</small></div></div>
+              <div class="assistant-person"><div class="assistant-avatar" aria-hidden="true">✦</div><div><strong>ArogSevak Assistant</strong><small>Listening in Hindi · text shown in English</small></div></div>
               <div class="safety-label">No diagnosis · clinician reviewed</div>
             </div>
             <div class="messages" id="messages" aria-live="polite">
