@@ -245,6 +245,9 @@
       pointer-events: none;
     }
     .login-container { width: min(1240px, 100%); margin: 0 auto; position: relative; z-index: 1; }
+    .login-screen.form-open { height: 100dvh; min-height: 0; padding: 20px; overflow: hidden; }
+    .login-screen.form-open .login-container { height: 100%; display: grid; place-items: center; }
+    .login-screen.form-open .login-brand { display: none; }
     .login-brand { display: flex; align-items: center; justify-content: flex-start; gap: 11px; margin: 0 0 56px; }
     .login-brand .brand-mark { width: 38px; height: 38px; border-radius: 12px; box-shadow: none; }
     .login-brand .brand-name { font-family: inherit; font-size: 1.35rem; font-weight: 620; letter-spacing: -.03em; }
@@ -277,7 +280,8 @@
 
     .login-form-shell {
       width: min(620px, 100%);
-      min-height: 620px;
+      height: min(560px, calc(100dvh - 40px));
+      min-height: 0;
       margin: 0 auto;
       overflow: hidden;
       background: #fff;
@@ -286,10 +290,14 @@
       box-shadow: 0 28px 90px rgba(16, 43, 39, .17);
     }
     .login-form-shell[hidden] { display: none; }
-    .login-form-area { min-height: 620px; padding: 52px 62px; display: flex; flex-direction: column; justify-content: center; }
-    .back-button { width: 52px; height: 52px; display: grid; place-items: center; border: 1px solid rgba(14,102,85,.16); border-radius: 50%; background: #f4faf7; color: var(--teal); padding: 0; margin-bottom: 38px; font-size: 2rem; line-height: 1; font-weight: 500; transition: transform .2s ease, background .2s ease; }
+    .login-form-area { height: 100%; min-height: 0; position: relative; padding: 42px 62px 38px; display: flex; flex-direction: column; justify-content: center; }
+    .login-form-brand { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 auto 24px; }
+    .login-form-brand .brand-mark { width: 48px; height: 48px; border-radius: 15px; }
+    .login-form-brand .brand-mark svg { width: 33px; height: 33px; }
+    .login-form-brand .brand-name { font-size: 1.6rem; }
+    .back-button { position: absolute; top: 32px; left: 34px; width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid rgba(14,102,85,.16); border-radius: 50%; background: #f4faf7; color: var(--teal); padding: 0; margin: 0; font-size: 2rem; line-height: 1; font-weight: 500; transition: transform .2s ease, background .2s ease; }
     .back-button:hover { transform: translateX(-4px); background: var(--mint); }
-    .login-form-area h2 { font: 560 2.4rem/1.2 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin-bottom: 30px; }
+    .login-form-area h2 { font: 560 2.4rem/1.2 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin-bottom: 24px; }
     .field-group { margin-bottom: 16px; }
     .field-group label { display: block; margin-bottom: 7px; font-size: .84rem; font-weight: 760; }
     .field-group input {
@@ -321,7 +329,12 @@
       .login-brand .brand-context { display: block; }
       .login-cards { grid-template-columns: 1fr; }
       .login-card { min-height: auto; padding: 23px; }
-      .login-form-area { padding: 26px 22px; }
+      .login-screen.form-open { padding: 12px; }
+      .login-form-shell { height: calc(100dvh - 24px); }
+      .login-form-area { padding: 30px 22px 22px; }
+      .login-form-brand { margin-bottom: 22px; }
+      .login-form-brand .brand-mark { width: 42px; height: 42px; }
+      .back-button { top: 24px; left: 22px; width: 44px; height: 44px; }
       .login-footnote { color: var(--ink-soft); }
       .topbar { height: auto; padding: 14px 18px; align-items: flex-start; }
       .brand-context, .privacy-badge { display: none; }
@@ -340,6 +353,15 @@
       .message { max-width: 92%; }
       .metric-grid { grid-template-columns: 1fr; }
       .queue-table th:nth-child(3), .queue-table td:nth-child(3) { display: none; }
+    }
+
+    @media (max-height: 620px) {
+      .login-form-area { padding-top: 22px; padding-bottom: 18px; }
+      .login-form-brand { margin-bottom: 14px; }
+      .login-form-area h2 { margin-bottom: 16px; font-size: 2rem; }
+      .field-group { margin-bottom: 11px; }
+      .login-row { margin-bottom: 15px; }
+      .back-button { top: 20px; }
     }
   </style>
 </head>
@@ -376,6 +398,12 @@
       <div class="login-form-shell" id="loginFormShell" hidden>
         <div class="login-form-area">
           <button class="back-button" id="backToRoles" type="button" aria-label="Choose another portal">←</button>
+          <div class="login-form-brand" aria-label="ArogSevak">
+            <div class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none"><path d="M7 11.5c2.5-4 11-4 14-0.5 2 2.5.5 5.5-3 6.5l-6.5 2c-3 1-3 4.5 0 5.5 3.5 1 8.5-.5 10.5-3.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M23 6v6M20 9h6" stroke="#f4a261" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="brand-name">ArogSevak</div>
+          </div>
           <h2 id="formTitle">Welcome back</h2>
           <form id="loginForm">
             <div class="field-group"><label for="loginIdentifier" id="identifierLabel">Patient ID</label><input id="loginIdentifier" autocomplete="username" required placeholder="Enter patient ID" /></div>
@@ -593,12 +621,13 @@
       document.getElementById('loginIdentifier').placeholder = config.placeholder;
       rolePicker.hidden = true;
       loginFormShell.hidden = false;
+      loginScreen.classList.add('form-open');
       document.getElementById('loginIdentifier').focus();
     }
 
     document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => selectLoginRole(card.dataset.loginRole)));
     document.getElementById('backToRoles').addEventListener('click', () => {
-      loginForm.reset(); loginFormShell.hidden = true; rolePicker.hidden = false;
+      loginForm.reset(); loginFormShell.hidden = true; rolePicker.hidden = false; loginScreen.classList.remove('form-open');
     });
 
     const tabs = [...document.querySelectorAll('.role-tab')];
@@ -626,6 +655,7 @@
       submitButton.textContent = 'Opening workspace…';
       submitButton.disabled = true;
       setTimeout(() => {
+        loginScreen.classList.remove('form-open');
         loginScreen.hidden = true;
         appShell.hidden = false;
         openView(loginRoles[selectedLoginRole].view);
@@ -638,6 +668,7 @@
     document.getElementById('logoutButton').addEventListener('click', () => {
       appShell.hidden = true;
       loginScreen.hidden = false;
+      loginScreen.classList.remove('form-open');
       loginForm.reset();
       loginFormShell.hidden = true;
       rolePicker.hidden = false;
