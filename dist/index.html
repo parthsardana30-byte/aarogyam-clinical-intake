@@ -272,6 +272,7 @@
     }
     .doctor-main, .portal-main { grid-column: 2; min-width: 0; }
     .current-patient-name { color: #1769aa; }
+    .patient-greeting-name { color: #1769aa; }
     .portal-main .intake-grid { grid-template-columns: minmax(210px, .72fr) minmax(410px, 1.55fr) minmax(250px, .88fr); }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
@@ -666,7 +667,7 @@
             <nav class="doctor-nav">
               <button class="doctor-nav-button" type="button" aria-selected="true">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 5h14v14H5V5Z" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h5M8 17h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                <span class="nav-label">Health intake</span>
+                <span class="nav-label">Start check-up</span>
               </button>
               <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="My records|Your consultation history is ready to review.">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -680,8 +681,7 @@
           </aside>
           <div class="portal-main">
         <div class="page-heading">
-          <div><div class="eyebrow">Patient intake</div><h1 id="patientTitle">Tell us what has changed</h1><p class="heading-copy">Speak naturally. You can review every answer before it reaches the doctor.</p></div>
-          <div class="patient-id">Synthetic patient · DEMO-ID</div>
+          <div><h1 id="patientTitle">Hello, <span class="patient-greeting-name">Ananya</span></h1><p class="heading-copy">Let’s begin your health check-up. Share what has changed since your last visit.</p></div>
         </div>
 
         <div class="intake-grid">
@@ -707,7 +707,7 @@
               <div class="safety-label">No diagnosis · clinician reviewed</div>
             </div>
             <div class="messages" id="messages" aria-live="polite">
-              <div class="message ai"><p>Namaste. What is the main problem that brought you to the clinic today?</p><small>Asked from the chief complaint pathway</small></div>
+              <div class="message ai"><p>Hello, Ananya. What health concern would you like to discuss today?</p><small>Starting your check-up</small></div>
               <div class="message user"><p>I feel heaviness in my stomach and I don’t feel hungry.</p><small>Voice answer · patient confirmed</small></div>
               <div class="message ai"><p>When did the stomach heaviness begin?</p><small>Follow-up selected because duration is missing</small></div>
             </div>
