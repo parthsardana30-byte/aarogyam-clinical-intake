@@ -518,7 +518,7 @@
     .login-intro h1 { margin: 0; color: #0b2634; font-family: inherit; font-weight: 590; letter-spacing: -.05em; font-size: clamp(2.35rem, 4.6vw, 3.8rem); }
     .login-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .login-screen.device-patient-only .login-cards { grid-template-columns: minmax(260px, 390px); justify-content: center; }
-    .login-screen.device-patient-only .login-card:not([data-login-role="patient"]) { display: none; }
+    .login-screen.device-patient-only .login-card:not([data-portal-role="patient"]) { display: none; }
     .login-card {
       --portal-accent: #0f887f;
       --portal-accent-rgb: 15, 136, 127;
@@ -571,10 +571,13 @@
       transform: scale(.72);
       transition: transform .62s cubic-bezier(.16,1,.3,1), opacity .28s ease;
     }
-    .login-card:is(:hover, :focus-visible) { transform: translateY(-9px) scale(1.012); border-color: rgba(var(--portal-accent-rgb), .42); box-shadow: 0 32px 85px rgba(var(--portal-accent-rgb), .18); }
-    .login-card:is(:hover, :focus-visible)::before { opacity: 1; transform: scale(4.8); }
-    .login-card:is(:hover, :focus-visible)::after { opacity: 1; transform: scale(1.32); }
-    .login-card:focus-visible { outline: 4px solid rgba(var(--portal-accent-rgb), .25); outline-offset: 3px; }
+    .login-card:is(:hover, :focus-within) { transform: translateY(-9px) scale(1.012); border-color: rgba(var(--portal-accent-rgb), .42); box-shadow: 0 32px 85px rgba(var(--portal-accent-rgb), .18); }
+    .login-card:is(:hover, :focus-within)::before { opacity: 1; transform: scale(4.8); }
+    .login-card:is(:hover, :focus-within)::after { opacity: 1; transform: scale(1.32); }
+    .login-card:focus-within { outline: 4px solid rgba(var(--portal-accent-rgb), .25); outline-offset: 3px; }
+    .login-card-main { display:flex; flex:1; flex-direction:column; justify-content:center; align-items:flex-start; width:100%; padding:0; border:0; background:transparent; color:inherit; text-align:inherit; }
+    .login-card-register { position:relative; z-index:2; align-self:flex-start; margin-top:26px; padding:10px 18px; border:1px solid rgba(var(--portal-accent-rgb), .32); border-radius:999px; background:rgba(255,255,255,.68); color:var(--portal-accent); font:750 .88rem/1 "Aptos", "Segoe UI", sans-serif; box-shadow:0 8px 22px rgba(var(--portal-accent-rgb), .1); transition:background .22s ease, color .22s ease, transform .22s ease, box-shadow .22s ease; }
+    .login-card-register:is(:hover, :focus-visible) { background:var(--portal-accent); color:#fff; transform:translateY(-2px); box-shadow:0 12px 28px rgba(var(--portal-accent-rgb), .26); outline:none; }
     .login-card-icon { width: 88px; height: 88px; display: grid; place-items: center; border-radius: 27px; margin-bottom: 31px; color: var(--teal); background: linear-gradient(145deg, #eef8f3, #d9ebe3); box-shadow: inset 0 0 0 1px rgba(14,102,85,.08), 0 12px 28px rgba(14,102,85,.1); }
     .login-card:nth-child(2) .login-card-icon { color: #9b5418; background: linear-gradient(145deg, #fff7ee, #ffe8cf); box-shadow: inset 0 0 0 1px rgba(155,84,24,.08), 0 12px 28px rgba(155,84,24,.1); }
     .login-card:nth-child(3) .login-card-icon { color: #315d70; background: linear-gradient(145deg, #f0f7fa, #dbeaf0); box-shadow: inset 0 0 0 1px rgba(49,93,112,.08), 0 12px 28px rgba(49,93,112,.1); }
@@ -606,23 +609,23 @@
     .login-card-icon .icon-accent { color: #bff9ef; }
     .login-card:nth-child(2) .login-card-icon .icon-accent { color: #dce1ff; }
     .login-card:nth-child(3) .login-card-icon .icon-accent { color: #cff6ff; }
-    .login-card:is(:hover, :focus-visible) .login-card-icon { transform: translateY(-6px) scale(1.06) rotate(-4deg); box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 18px 38px rgba(var(--portal-accent-rgb), .35), 0 0 0 9px rgba(var(--portal-accent-rgb), .09); }
-    .login-card:is(:hover, :focus-visible) .login-card-icon::before { animation: portal-spark-one .78s .08s cubic-bezier(.2,.8,.2,1) both; }
-    .login-card:is(:hover, :focus-visible) .login-card-icon::after { animation: portal-spark-two .82s .18s cubic-bezier(.2,.8,.2,1) both; }
-    .login-card:is(:hover, :focus-visible) .login-card-icon svg [stroke] { animation: icon-line-draw .72s cubic-bezier(.65,0,.25,1) both; }
-    .login-card:is(:hover, :focus-visible) .login-card-icon svg [stroke]:nth-child(2) { animation-delay: .08s; }
-    .login-card:is(:hover, :focus-visible) .login-card-icon svg [stroke]:nth-child(n+3) { animation-delay: .14s; }
+    .login-card:is(:hover, :focus-within) .login-card-icon { transform: translateY(-6px) scale(1.06) rotate(-4deg); box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 18px 38px rgba(var(--portal-accent-rgb), .35), 0 0 0 9px rgba(var(--portal-accent-rgb), .09); }
+    .login-card:is(:hover, :focus-within) .login-card-icon::before { animation: portal-spark-one .78s .08s cubic-bezier(.2,.8,.2,1) both; }
+    .login-card:is(:hover, :focus-within) .login-card-icon::after { animation: portal-spark-two .82s .18s cubic-bezier(.2,.8,.2,1) both; }
+    .login-card:is(:hover, :focus-within) .login-card-icon svg [stroke] { animation: icon-line-draw .72s cubic-bezier(.65,0,.25,1) both; }
+    .login-card:is(:hover, :focus-within) .login-card-icon svg [stroke]:nth-child(2) { animation-delay: .08s; }
+    .login-card:is(:hover, :focus-within) .login-card-icon svg [stroke]:nth-child(n+3) { animation-delay: .14s; }
     @keyframes icon-line-draw { from { stroke-dashoffset: 1; opacity: .25; } 55% { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
     @keyframes portal-spark-one { 0% { opacity: 0; transform: translate(-8px,9px) scale(.25) rotate(-24deg); } 48%, 72% { opacity: 1; } 100% { opacity: .72; transform: translate(0,0) scale(1) rotate(0); } }
     @keyframes portal-spark-two { 0% { opacity: 0; transform: translate(10px,-8px) scale(.2) rotate(22deg); } 52%, 76% { opacity: .92; } 100% { opacity: .58; transform: translate(0,0) scale(1) rotate(0); } }
     .login-card h2 { position: relative; z-index: 1; font: 620 clamp(1.9rem, 2.5vw, 2.35rem)/1.12 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin: 0; text-wrap: balance; transition: color .32s ease, transform .48s cubic-bezier(.16,1,.3,1); }
     .login-card h2::after { content: "\2192"; display: inline-block; margin-left: .35em; opacity: 0; transform: translateX(-12px); transition: opacity .25s ease, transform .48s cubic-bezier(.16,1,.3,1); }
-    .login-card:is(:hover, :focus-visible) h2 { color: var(--portal-accent); transform: translateX(3px); }
-    .login-card:is(:hover, :focus-visible) h2::after { opacity: 1; transform: translateX(0); }
+    .login-card:is(:hover, :focus-within) h2 { color: var(--portal-accent); transform: translateX(3px); }
+    .login-card:is(:hover, :focus-within) h2::after { opacity: 1; transform: translateX(0); }
     @media (prefers-reduced-motion: reduce) {
-      .login-card, .login-card::before, .login-card::after, .login-card .login-card-icon, .login-card h2, .login-card h2::after { transition: none; }
-      .login-card:is(:hover, :focus-visible), .login-card:is(:hover, :focus-visible) .login-card-icon, .login-card:is(:hover, :focus-visible) h2 { transform: none; }
-      .login-card:is(:hover, :focus-visible) .login-card-icon::before, .login-card:is(:hover, :focus-visible) .login-card-icon::after { animation: none; opacity: .7; transform: none; }
+      .login-card, .login-card::before, .login-card::after, .login-card .login-card-icon, .login-card h2, .login-card h2::after, .login-card-register { transition: none; }
+      .login-card:is(:hover, :focus-within), .login-card:is(:hover, :focus-within) .login-card-icon, .login-card:is(:hover, :focus-within) h2 { transform: none; }
+      .login-card:is(:hover, :focus-within) .login-card-icon::before, .login-card:is(:hover, :focus-within) .login-card-icon::after { animation: none; opacity: .7; transform: none; }
       .login-card-icon svg [stroke] { animation: none !important; stroke-dashoffset: 0 !important; }
     }
 
@@ -831,18 +834,27 @@
           <h1 id="loginTitle">Choose your care portal</h1>
         </div>
         <div class="login-cards">
-          <button class="login-card" type="button" data-login-role="patient">
-            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><circle pathLength="1" cx="25" cy="23" r="8" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" d="M11 49c1.6-9.2 6.3-13.8 14-13.8 5.4 0 9.4 2.3 11.8 6.8" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><circle pathLength="1" class="icon-accent" cx="45" cy="42" r="10" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" class="icon-accent" d="M45 37v10M40 42h10" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/></svg></span>
-            <h2 id="patientLoginLabel">Patient Login</h2>
-          </button>
-          <button class="login-card" type="button" data-login-role="doctor">
-            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><path pathLength="1" d="M17 14v12a11 11 0 0 0 22 0V14M17 14h5M34 14h5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path pathLength="1" d="M28 37v5a11 11 0 0 0 22 0v-4" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><circle pathLength="1" class="icon-accent" cx="50" cy="32" r="7" stroke="currentColor" stroke-width="2.8"/><circle cx="50" cy="32" r="2" fill="currentColor"/></svg></span>
-            <h2 id="doctorLoginLabel">Doctor Login</h2>
-          </button>
-          <button class="login-card" type="button" data-login-role="staff">
-            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><path pathLength="1" d="M15 23a5 5 0 0 1 5-5h24a5 5 0 0 1 5 5v27H15V23Z" stroke="currentColor" stroke-width="2.7" stroke-linejoin="round"/><path pathLength="1" class="icon-accent" d="M25 18v-5h14v5M32 27v10M27 32h10" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M21 50V40h9v10M38 42h5M38 36h5" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/></svg></span>
-            <h2 id="staffLoginLabel">Hospital Staff Login</h2>
-          </button>
+          <article class="login-card" data-portal-role="patient">
+            <button class="login-card-main" type="button" data-login-role="patient">
+              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><circle pathLength="1" cx="25" cy="23" r="8" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" d="M11 49c1.6-9.2 6.3-13.8 14-13.8 5.4 0 9.4 2.3 11.8 6.8" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><circle pathLength="1" class="icon-accent" cx="45" cy="42" r="10" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" class="icon-accent" d="M45 37v10M40 42h10" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/></svg></span>
+              <h2 id="patientLoginLabel">Patient Login</h2>
+            </button>
+            <button class="login-card-register" type="button" data-register-role="patient">Register</button>
+          </article>
+          <article class="login-card" data-portal-role="doctor">
+            <button class="login-card-main" type="button" data-login-role="doctor">
+              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><path pathLength="1" d="M17 14v12a11 11 0 0 0 22 0V14M17 14h5M34 14h5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path pathLength="1" d="M28 37v5a11 11 0 0 0 22 0v-4" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><circle pathLength="1" class="icon-accent" cx="50" cy="32" r="7" stroke="currentColor" stroke-width="2.8"/><circle cx="50" cy="32" r="2" fill="currentColor"/></svg></span>
+              <h2 id="doctorLoginLabel">Doctor Login</h2>
+            </button>
+            <button class="login-card-register" type="button" data-register-role="doctor">Register</button>
+          </article>
+          <article class="login-card" data-portal-role="staff">
+            <button class="login-card-main" type="button" data-login-role="staff">
+              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><path pathLength="1" d="M15 23a5 5 0 0 1 5-5h24a5 5 0 0 1 5 5v27H15V23Z" stroke="currentColor" stroke-width="2.7" stroke-linejoin="round"/><path pathLength="1" class="icon-accent" d="M25 18v-5h14v5M32 27v10M27 32h10" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M21 50V40h9v10M38 42h5M38 36h5" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/></svg></span>
+              <h2 id="staffLoginLabel">Hospital Staff Login</h2>
+            </button>
+            <button class="login-card-register" type="button" data-register-role="staff">Register</button>
+          </article>
         </div>
       </div>
 
@@ -1210,6 +1222,7 @@
     const loginForm = document.getElementById('loginForm');
     const appShell = document.getElementById('appShell');
     let selectedLoginRole = 'patient';
+    let selectedAuthMode = 'login';
     let authorizedPatientDevice = false;
     let patientLoggedInThisSession = false;
 
@@ -1237,8 +1250,9 @@
       }
     };
 
-    function selectLoginRole(role, focus = true) {
+    function selectLoginRole(role, focus = true, mode = 'login') {
       selectedLoginRole = role;
+      selectedAuthMode = mode;
       const config = loginRoles[role];
       const currentLanguage = (() => { try { return localStorage.getItem('arogSevakLanguage') || 'English'; } catch (_) { return 'English'; } })();
       const hindiLogin = {
@@ -1246,10 +1260,17 @@
         doctor: ['चिकित्सक लॉगिन', 'चिकित्सक आईडी', 'चिकित्सक आईडी दर्ज करें'],
         staff: ['स्टाफ लॉगिन', 'कर्मचारी आईडी', 'कर्मचारी आईडी दर्ज करें']
       };
+      const registrationTitles = currentLanguage === 'Hindi'
+        ? { patient: 'रोगी पंजीकरण', doctor: 'चिकित्सक पंजीकरण', staff: 'स्टाफ पंजीकरण' }
+        : { patient: 'Create patient account', doctor: 'Register as a clinician', staff: 'Register hospital staff' };
       const localized = currentLanguage === 'Hindi' ? hindiLogin[role] : [config.title, config.label, config.placeholder];
+      if (mode === 'register') localized[0] = registrationTitles[role];
       document.getElementById('formTitle').textContent = localized[0];
       document.getElementById('identifierLabel').textContent = localized[1];
       document.getElementById('loginIdentifier').placeholder = localized[2];
+      const submitLabel = document.querySelector('.login-submit-label');
+      submitLabel.textContent = mode === 'register' ? (currentLanguage === 'Hindi' ? 'खाता बनाएँ' : 'Create account') : (currentLanguage === 'Hindi' ? 'सुरक्षित रूप से जारी रखें' : 'Continue securely');
+      submitLabel.closest('button').setAttribute('aria-label', submitLabel.textContent);
       appShell.hidden = true;
       loginScreen.hidden = false;
       rolePicker.hidden = true;
@@ -1259,6 +1280,7 @@
     }
 
     document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => navigateRoute(`login/${card.dataset.loginRole}`, false, true)));
+    document.querySelectorAll('[data-register-role]').forEach(button => button.addEventListener('click', () => navigateRoute(`register/${button.dataset.registerRole}`, false, true)));
     document.getElementById('backToRoles').addEventListener('click', () => navigateRoute('roles'));
 
     const tabs = [...document.querySelectorAll('.role-tab')];
@@ -1290,29 +1312,29 @@
       ['Telugu', 'తెలుగు'], ['Urdu', 'اُردُو']
     ];
     const roleTranslations = {
-      English: ['Choose your care portal', 'Patient Login', 'Doctor Login', 'Hospital Staff Login'],
-      Assamese: ['আপোনাৰ সেৱা প’ৰ্টেল বাছনি কৰক', 'ৰোগী লগইন', 'চিকিৎসক লগইন', 'চিকিৎসালয় কৰ্মচাৰী লগইন'],
-      Bengali: ['আপনার সেবা পোর্টাল বেছে নিন', 'রোগী লগইন', 'ডাক্তার লগইন', 'হাসপাতাল কর্মী লগইন'],
-      Bodo: ['नोंथांनि सेवा पोर्टालखौ सायख', 'रोगी लॉगिन', 'डाक्टार लॉगिन', 'हास्पिटाल स्टाफ लॉगिन'],
-      Dogri: ['अपना सेवा पोर्टल चुनो', 'मरीज लॉगिन', 'डॉक्टर लॉगिन', 'अस्पताल स्टाफ लॉगिन'],
-      Gujarati: ['તમારું સેવા પોર્ટલ પસંદ કરો', 'દર્દી લૉગિન', 'ડૉક્ટર લૉગિન', 'હૉસ્પિટલ સ્ટાફ લૉગિન'],
-      Hindi: ['अपना सेवा पोर्टल चुनें', 'रोगी लॉगिन', 'डॉक्टर लॉगिन', 'अस्पताल स्टाफ लॉगिन'],
-      Kannada: ['ನಿಮ್ಮ ಸೇವಾ ಪೋರ್ಟಲ್ ಆಯ್ಕೆಮಾಡಿ', 'ರೋಗಿ ಲಾಗಿನ್', 'ವೈದ್ಯರ ಲಾಗಿನ್', 'ಆಸ್ಪತ್ರೆ ಸಿಬ್ಬಂದಿ ಲಾಗಿನ್'],
-      Kashmiri: ['پنُن خدمت پورٹل ژارِو', 'مریض لاگ اِن', 'ڈاکٹر لاگ اِن', 'ہسپتال عملہ لاگ اِن'],
-      Konkani: ['तुमचें सेवा पोर्टल निवडात', 'दुयेंती लॉगिन', 'डॉक्टर लॉगिन', 'हॉस्पिटल कर्मचारी लॉगिन'],
-      Maithili: ['अपन सेवा पोर्टल चुनू', 'रोगी लॉगिन', 'डॉक्टर लॉगिन', 'अस्पताल कर्मचारी लॉगिन'],
-      Malayalam: ['നിങ്ങളുടെ സേവന പോർട്ടൽ തിരഞ്ഞെടുക്കുക', 'രോഗി ലോഗിൻ', 'ഡോക്ടർ ലോഗിൻ', 'ആശുപത്രി ജീവനക്കാരുടെ ലോഗിൻ'],
-      Manipuri: ['নহাক্কী সেবা পোর্টেল খনবীয়ু', 'লাইয়েংফম লগইন', 'ডাক্তার লগইন', 'হাসপাতাল স্টাফ লগইন'],
-      Marathi: ['तुमचे सेवा पोर्टल निवडा', 'रुग्ण लॉगिन', 'डॉक्टर लॉगिन', 'रुग्णालय कर्मचारी लॉगिन'],
-      Nepali: ['आफ्नो सेवा पोर्टल छान्नुहोस्', 'बिरामी लगइन', 'डाक्टर लगइन', 'अस्पताल कर्मचारी लगइन'],
-      Odia: ['ଆପଣଙ୍କ ସେବା ପୋର୍ଟାଲ ବାଛନ୍ତୁ', 'ରୋଗୀ ଲଗଇନ୍', 'ଡାକ୍ତର ଲଗଇନ୍', 'ହସ୍ପିଟାଲ କର୍ମଚାରୀ ଲଗଇନ୍'],
-      Punjabi: ['ਆਪਣਾ ਸੇਵਾ ਪੋਰਟਲ ਚੁਣੋ', 'ਮਰੀਜ਼ ਲਾਗਇਨ', 'ਡਾਕਟਰ ਲਾਗਇਨ', 'ਹਸਪਤਾਲ ਸਟਾਫ ਲਾਗਇਨ'],
-      Sanskrit: ['स्वसेवा-पोर्टलं चिनुत', 'रोगी प्रवेशः', 'चिकित्सक प्रवेशः', 'चिकित्सालय-कर्मचारी प्रवेशः'],
-      Santali: ['ᱟᱢᱟᱜ ᱥᱮᱣᱟ ᱯᱳᱨᱴᱟᱞ ᱵᱟᱪᱷᱟᱣ ᱢᱮ', 'ᱨᱩᱣᱟᱹ ᱞᱚᱜᱤᱱ', 'ᱰᱟᱠᱛᱟᱨ ᱞᱚᱜᱤᱱ', 'ᱦᱟᱥᱯᱟᱛᱟᱞ ᱥᱴᱟᱯᱷ ᱞᱚᱜᱤᱱ'],
-      Sindhi: ['پنهنجو خدمت پورٽل چونڊيو', 'مريض لاگ اِن', 'ڊاڪٽر لاگ اِن', 'اسپتال اسٽاف لاگ اِن'],
-      Tamil: ['உங்கள் சேவைத் தளத்தைத் தேர்ந்தெடுக்கவும்', 'நோயாளர் உள்நுழைவு', 'மருத்துவர் உள்நுழைவு', 'மருத்துவமனை ஊழியர் உள்நுழைவு'],
-      Telugu: ['మీ సేవా పోర్టల్‌ను ఎంచుకోండి', 'రోగి లాగిన్', 'డాక్టర్ లాగిన్', 'ఆసుపత్రి సిబ్బంది లాగిన్'],
-      Urdu: ['اپنا سروس پورٹل منتخب کریں', 'مریض لاگ اِن', 'ڈاکٹر لاگ اِن', 'ہسپتال عملہ لاگ اِن']
+      English: ['Choose your care portal', 'Patient Login', 'Doctor Login', 'Hospital Staff Login', 'Register'],
+      Assamese: ['আপোনাৰ সেৱা প’ৰ্টেল বাছনি কৰক', 'ৰোগী লগইন', 'চিকিৎসক লগইন', 'চিকিৎসালয় কৰ্মচাৰী লগইন', 'পঞ্জীয়ন কৰক'],
+      Bengali: ['আপনার সেবা পোর্টাল বেছে নিন', 'রোগী লগইন', 'ডাক্তার লগইন', 'হাসপাতাল কর্মী লগইন', 'নিবন্ধন করুন'],
+      Bodo: ['नोंथांनि सेवा पोर्टालखौ सायख', 'रोगी लॉगिन', 'डाक्टार लॉगिन', 'हास्पिटाल स्टाफ लॉगिन', 'रेजिस्टार खालाम'],
+      Dogri: ['अपना सेवा पोर्टल चुनो', 'मरीज लॉगिन', 'डॉक्टर लॉगिन', 'अस्पताल स्टाफ लॉगिन', 'रजिस्टर करो'],
+      Gujarati: ['તમારું સેવા પોર્ટલ પસંદ કરો', 'દર્દી લૉગિન', 'ડૉક્ટર લૉગિન', 'હૉસ્પિટલ સ્ટાફ લૉગિન', 'નોંધણી કરો'],
+      Hindi: ['अपना सेवा पोर्टल चुनें', 'रोगी लॉगिन', 'डॉक्टर लॉगिन', 'अस्पताल स्टाफ लॉगिन', 'पंजीकरण करें'],
+      Kannada: ['ನಿಮ್ಮ ಸೇವಾ ಪೋರ್ಟಲ್ ಆಯ್ಕೆಮಾಡಿ', 'ರೋಗಿ ಲಾಗಿನ್', 'ವೈದ್ಯರ ಲಾಗಿನ್', 'ಆಸ್ಪತ್ರೆ ಸಿಬ್ಬಂದಿ ಲಾಗಿನ್', 'ನೋಂದಾಯಿಸಿ'],
+      Kashmiri: ['پنُن خدمت پورٹل ژارِو', 'مریض لاگ اِن', 'ڈاکٹر لاگ اِن', 'ہسپتال عملہ لاگ اِن', 'رجسٹر'],
+      Konkani: ['तुमचें सेवा पोर्टल निवडात', 'दुयेंती लॉगिन', 'डॉक्टर लॉगिन', 'हॉस्पिटल कर्मचारी लॉगिन', 'नोंदणी करात'],
+      Maithili: ['अपन सेवा पोर्टल चुनू', 'रोगी लॉगिन', 'डॉक्टर लॉगिन', 'अस्पताल कर्मचारी लॉगिन', 'पंजीकरण करू'],
+      Malayalam: ['നിങ്ങളുടെ സേവന പോർട്ടൽ തിരഞ്ഞെടുക്കുക', 'രോഗി ലോഗിൻ', 'ഡോക്ടർ ലോഗിൻ', 'ആശുപത്രി ജീവനക്കാരുടെ ലോഗിൻ', 'രജിസ്റ്റർ ചെയ്യുക'],
+      Manipuri: ['নহাক্কী সেবা পোর্টেল খনবীয়ু', 'লাইয়েংফম লগইন', 'ডাক্তার লগইন', 'হাসপাতাল স্টাফ লগইন', 'রেজিস্টার তৌবিয়ু'],
+      Marathi: ['तुमचे सेवा पोर्टल निवडा', 'रुग्ण लॉगिन', 'डॉक्टर लॉगिन', 'रुग्णालय कर्मचारी लॉगिन', 'नोंदणी करा'],
+      Nepali: ['आफ्नो सेवा पोर्टल छान्नुहोस्', 'बिरामी लगइन', 'डाक्टर लगइन', 'अस्पताल कर्मचारी लगइन', 'दर्ता गर्नुहोस्'],
+      Odia: ['ଆପଣଙ୍କ ସେବା ପୋର୍ଟାଲ ବାଛନ୍ତୁ', 'ରୋଗୀ ଲଗଇନ୍', 'ଡାକ୍ତର ଲଗଇନ୍', 'ହସ୍ପିଟାଲ କର୍ମଚାରୀ ଲଗଇନ୍', 'ପଞ୍ଜୀକରଣ କରନ୍ତୁ'],
+      Punjabi: ['ਆਪਣਾ ਸੇਵਾ ਪੋਰਟਲ ਚੁਣੋ', 'ਮਰੀਜ਼ ਲਾਗਇਨ', 'ਡਾਕਟਰ ਲਾਗਇਨ', 'ਹਸਪਤਾਲ ਸਟਾਫ ਲਾਗਇਨ', 'ਰਜਿਸਟਰ ਕਰੋ'],
+      Sanskrit: ['स्वसेवा-पोर्टलं चिनुत', 'रोगी प्रवेशः', 'चिकित्सक प्रवेशः', 'चिकित्सालय-कर्मचारी प्रवेशः', 'पञ्जीकरणं कुरुत'],
+      Santali: ['ᱟᱢᱟᱜ ᱥᱮᱣᱟ ᱯᱳᱨᱴᱟᱞ ᱵᱟᱪᱷᱟᱣ ᱢᱮ', 'ᱨᱩᱣᱟᱹ ᱞᱚᱜᱤᱱ', 'ᱰᱟᱠᱛᱟᱨ ᱞᱚᱜᱤᱱ', 'ᱦᱟᱥᱯᱟᱛᱟᱞ ᱥᱴᱟᱯᱷ ᱞᱚᱜᱤᱱ', 'ᱨᱮᱡᱤᱥᱴᱟᱨ ᱢᱮ'],
+      Sindhi: ['پنهنجو خدمت پورٽل چونڊيو', 'مريض لاگ اِن', 'ڊاڪٽر لاگ اِن', 'اسپتال اسٽاف لاگ اِن', 'رجسٽر ڪريو'],
+      Tamil: ['உங்கள் சேவைத் தளத்தைத் தேர்ந்தெடுக்கவும்', 'நோயாளர் உள்நுழைவு', 'மருத்துவர் உள்நுழைவு', 'மருத்துவமனை ஊழியர் உள்நுழைவு', 'பதிவு செய்யவும்'],
+      Telugu: ['మీ సేవా పోర్టల్‌ను ఎంచుకోండి', 'రోగి లాగిన్', 'డాక్టర్ లాగిన్', 'ఆసుపత్రి సిబ్బంది లాగిన్', 'నమోదు చేసుకోండి'],
+      Urdu: ['اپنا سروس پورٹل منتخب کریں', 'مریض لاگ اِن', 'ڈاکٹر لاگ اِن', 'ہسپتال عملہ لاگ اِن', 'رجسٹر کریں']
     };
     const interfaceLanguageCodes = {
       English: 'en', Assamese: 'as', Bengali: 'bn', Bodo: 'brx', Dogri: 'doi', Gujarati: 'gu', Hindi: 'hi',
@@ -1556,6 +1578,7 @@
       document.getElementById('patientLoginLabel').textContent = copy[1];
       document.getElementById('doctorLoginLabel').textContent = copy[2];
       document.getElementById('staffLoginLabel').textContent = copy[3];
+      document.querySelectorAll('[data-register-role]').forEach(button => { button.textContent = copy[4] || 'Register'; });
       document.documentElement.lang = interfaceLanguageCodes[language] || 'en';
       document.getElementById('rolePicker').dir = ['Kashmiri', 'Sindhi', 'Urdu'].includes(language) ? 'rtl' : 'ltr';
       translateApplicationUI(language);
@@ -1876,7 +1899,7 @@
     function applyRoute(route, focus = false) {
       if (cancelLoginMotion) cancelLoginMotion();
       if (authorizedPatientDevice) {
-        const blockedRoleRoute = /^(?:doctor\/|staff\/|login\/(?:doctor|staff))/.test(route);
+        const blockedRoleRoute = /^(?:doctor\/|staff\/|(?:login|register)\/(?:doctor|staff))/.test(route);
         const protectedPatientRoute = /^patient\//.test(route) && !patientLoggedInThisSession;
         if (blockedRoleRoute || protectedPatientRoute) {
           route = protectedPatientRoute ? 'login/patient' : 'roles';
@@ -1899,7 +1922,13 @@
 
       const loginMatch = route.match(/^login\/(patient|doctor|staff)$/);
       if (loginMatch) {
-        selectLoginRole(loginMatch[1], focus);
+        selectLoginRole(loginMatch[1], focus, 'login');
+        return;
+      }
+
+      const registerMatch = route.match(/^register\/(patient|doctor|staff)$/);
+      if (registerMatch) {
+        selectLoginRole(registerMatch[1], focus, 'register');
         return;
       }
 
@@ -2000,13 +2029,13 @@
         width: rect.width + 'px', height: rect.height + 'px', borderRadius: '14px' });
       const label = document.createElement('span');
       label.className = 'login-motion-label';
-      label.textContent = 'Continue securely';
+      label.textContent = button.textContent.trim();
       shape.append(label);
       layer.append(shape);
       document.body.append(layer);
       button.disabled = true;
       button.style.visibility = 'hidden';
-      button.setAttribute('aria-label', 'Opening workspace');
+      button.setAttribute('aria-label', selectedAuthMode === 'register' ? 'Creating account' : 'Opening workspace');
       loginForm.setAttribute('aria-busy', 'true');
       const animations = [];
       let cancelled = false;
@@ -2014,7 +2043,7 @@
         layer.remove();
         button.disabled = false;
         button.style.visibility = '';
-        button.setAttribute('aria-label', 'Continue securely');
+        button.setAttribute('aria-label', selectedAuthMode === 'register' ? 'Create account' : 'Continue securely');
         loginForm.removeAttribute('aria-busy');
       };
       const cancel = () => {
