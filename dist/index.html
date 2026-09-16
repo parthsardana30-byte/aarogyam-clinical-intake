@@ -299,9 +299,7 @@
       background: rgba(255,255,255,.92); box-shadow: 0 26px 70px rgba(16,43,39,.12);
     }
     .language-step-heading { margin-bottom: 26px; text-align: center; }
-    .language-step-heading span { color: #d96d20; font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-    .language-step-heading h1 { margin: 7px 0 8px; font-size: clamp(2rem, 4vw, 3.25rem); letter-spacing: -.045em; line-height: 1; }
-    .language-step-heading p { margin: 0; color: var(--ink-soft); font-size: 1rem; }
+    .language-step-heading h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.25rem); letter-spacing: -.045em; line-height: 1; }
     .language-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 10px; margin: 0; padding: 0; border: 0; }
     .language-choice { position: relative; cursor: pointer; }
     .language-choice input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -743,16 +741,14 @@
           <div class="language-step" id="languageStep" hidden>
             <form class="language-card" id="languageForm">
               <div class="language-step-heading">
-                <span>Before we begin</span>
                 <h1>Choose your language</h1>
-                <p>Your check-up questions will appear in the language you select.</p>
               </div>
               <fieldset class="language-options" id="languageOptions">
                 <legend class="sr-only">Select a language for your check-up</legend>
               </fieldset>
               <div class="language-actions">
                 <button class="language-back" id="backToCheckupWelcome" type="button">Back</button>
-                <button class="language-continue" id="confirmLanguage" type="submit" disabled>Continue</button>
+                <button class="language-continue" id="confirmLanguage" type="submit">Continue</button>
               </div>
             </form>
           </div>
@@ -960,6 +956,7 @@
     const startCheckupButton = document.getElementById('startCheckupButton');
     const toast = document.getElementById('toast');
     const indianLanguages = [
+      ['English', 'English'],
       ['Assamese', 'অসমীয়া'], ['Bengali', 'বাংলা'], ['Bodo', 'बड़ो'], ['Dogri', 'डोगरी'],
       ['Gujarati', 'ગુજરાતી'], ['Hindi', 'हिन्दी'], ['Kannada', 'ಕನ್ನಡ'], ['Kashmiri', 'کٲشُر'],
       ['Konkani', 'कोंकणी'], ['Maithili', 'मैथिली'], ['Malayalam', 'മലയാളം'], ['Manipuri', 'মৈতৈলোন্'],
@@ -971,11 +968,11 @@
 
     languageOptions.innerHTML = indianLanguages.map(([english, native]) => `
       <label class="language-choice">
-        <input type="radio" name="checkupLanguage" value="${english}" data-native="${native}">
-        <span>${native} · ${english}</span>
+        <input type="radio" name="checkupLanguage" value="${english}" data-native="${native}" ${english === 'English' ? 'checked' : ''}>
+        <span>${english === 'English' ? 'English' : native + ' · ' + english}</span>
       </label>`).join('');
-    languageSelect.innerHTML = indianLanguages.map(([english, native]) => `<option value="${english}">${native} · ${english}</option>`).join('');
-    languageSelect.value = 'Hindi';
+    languageSelect.innerHTML = indianLanguages.map(([english, native]) => `<option value="${english}">${english === 'English' ? 'English' : native + ' · ' + english}</option>`).join('');
+    languageSelect.value = 'English';
 
     function resetCheckup() {
       checkupLaunch.hidden = false;
@@ -983,7 +980,7 @@
       checkupWelcome.hidden = false;
       languageStep.hidden = true;
       languageForm.reset();
-      confirmLanguage.disabled = true;
+      confirmLanguage.disabled = false;
     }
 
     startCheckupButton.addEventListener('click', () => {
