@@ -258,15 +258,20 @@
     .action-button small { color: #718681; }
 
     .doctor-layout { display: grid; grid-template-columns: 1.28fr .72fr; gap: 18px; }
-    .app-shell.doctor-session .rolebar { display: none; }
-    .app-shell.doctor-session .topbar { border-bottom: 1px solid rgba(16,43,39,.1); border-radius: 26px; }
-    .doctor-workspace { display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 22px; align-items: start; }
+    .app-shell.doctor-session .rolebar,
+    .app-shell.patient-session .rolebar,
+    .app-shell.staff-session .rolebar { display: none; }
+    .app-shell.doctor-session .topbar,
+    .app-shell.patient-session .topbar,
+    .app-shell.staff-session .topbar { border-bottom: 1px solid rgba(16,43,39,.1); border-radius: 26px; }
+    .doctor-workspace, .portal-workspace { display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 22px; align-items: start; }
     .doctor-sidebar {
       position: fixed; z-index: 20; top: 108px; left: max(16px, calc((100vw - 1480px) / 2 + 16px));
       width: 244px; height: calc(100vh - 128px); min-height: 420px; padding: 20px; overflow: hidden;
     }
-    .doctor-main { grid-column: 2; min-width: 0; }
+    .doctor-main, .portal-main { grid-column: 2; min-width: 0; }
     .current-patient-name { color: #1769aa; }
+    .portal-main .intake-grid { grid-template-columns: minmax(210px, .72fr) minmax(410px, 1.55fr) minmax(250px, .88fr); }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
     .doctor-profile strong, .doctor-profile small { display: block; }
@@ -403,10 +408,10 @@
     .remember-label { display: flex; align-items: center; gap: 8px; color: #596f69; }
     .login-submit { width: 100%; }
     @media (max-width: 1080px) {
-      .intake-grid { grid-template-columns: 230px 1fr; }
+      .intake-grid, .portal-main .intake-grid { grid-template-columns: 230px 1fr; }
       .side-stack { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
       .doctor-layout, .dashboard-grid { grid-template-columns: 1fr; }
-      .doctor-workspace { grid-template-columns: 230px minmax(0, 1fr); }
+      .doctor-workspace, .portal-workspace { grid-template-columns: 230px minmax(0, 1fr); }
       .doctor-sidebar { width: 230px; }
       .history-record { grid-template-columns: 1fr 1fr; }
     }
@@ -433,7 +438,7 @@
       .role-tab span, .status-note { display: none; }
       .workspace { padding: 18px 14px 28px; }
       .page-heading { align-items: flex-start; flex-direction: column; }
-      .intake-grid { grid-template-columns: 1fr; }
+      .intake-grid, .portal-main .intake-grid { grid-template-columns: 1fr; }
       .progress-card { display: none; }
       .side-stack { grid-column: auto; grid-template-columns: 1fr; }
       .conversation-card { min-height: 620px; }
@@ -442,9 +447,9 @@
       .message { max-width: 92%; }
       .metric-grid { grid-template-columns: 1fr; }
       .queue-table th:nth-child(3), .queue-table td:nth-child(3) { display: none; }
-      .doctor-workspace { grid-template-columns: 1fr; }
+      .doctor-workspace, .portal-workspace { grid-template-columns: 1fr; }
       .doctor-sidebar { position: static; width: auto; height: auto; min-height: 0; padding: 14px; }
-      .doctor-main { grid-column: auto; }
+      .doctor-main, .portal-main { grid-column: auto; }
       .doctor-profile { display: none; }
       .doctor-nav { grid-template-columns: 1fr 1fr; }
       .history-toolbar { flex-direction: column; align-items: stretch; }
@@ -557,6 +562,29 @@
 
     <main class="workspace">
       <section class="view" id="reception" aria-labelledby="receptionTitle">
+        <div class="portal-workspace">
+          <aside class="card doctor-sidebar portal-sidebar" aria-label="Hospital staff navigation">
+            <div class="doctor-profile">
+              <div class="doctor-profile-mark">SK</div>
+              <strong>Simran Kaur</strong>
+              <small>OPD Coordinator</small>
+            </div>
+            <nav class="doctor-nav">
+              <button class="doctor-nav-button" type="button" aria-selected="true">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="20" cy="18" r="2" fill="currentColor"/></svg>
+                Patient queue
+              </button>
+              <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="Patient history|Previous registrations and visits will appear here.">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                Patient history
+              </button>
+              <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="Documents|Document scanning and uploads are ready.">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M10 13h5M10 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                Documents
+              </button>
+            </nav>
+          </aside>
+          <div class="portal-main">
         <div class="page-heading">
           <div><div class="eyebrow">Reception workspace</div><h1 id="receptionTitle">Today’s intake queue</h1><p class="heading-copy">Start assisted intake and monitor cases before consultation.</p></div>
           <button class="primary-button" data-start-intake>+ Start new intake</button>
@@ -590,9 +618,34 @@
             </div>
           </aside>
         </div>
+          </div>
+        </div>
       </section>
 
       <section class="view active" id="patient" aria-labelledby="patientTitle">
+        <div class="portal-workspace">
+          <aside class="card doctor-sidebar portal-sidebar" aria-label="Patient navigation">
+            <div class="doctor-profile">
+              <div class="doctor-profile-mark">AS</div>
+              <strong>Ananya Sharma</strong>
+              <small>Patient · PT-001</small>
+            </div>
+            <nav class="doctor-nav">
+              <button class="doctor-nav-button" type="button" aria-selected="true">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 5h14v14H5V5Z" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h5M8 17h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                Health intake
+              </button>
+              <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="My records|Your consultation history is ready to review.">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                My records
+              </button>
+              <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="Access and consent|Your record access preferences are available here.">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 2.7 8.1 7 10 4.3-1.9 7-5.5 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Access &amp; consent
+              </button>
+            </nav>
+          </aside>
+          <div class="portal-main">
         <div class="page-heading">
           <div><div class="eyebrow">Patient intake</div><h1 id="patientTitle">Tell us what has changed</h1><p class="heading-copy">Speak naturally. You can review every answer before it reaches the doctor.</p></div>
           <div class="patient-id">Synthetic patient · DEMO-ID</div>
@@ -656,6 +709,8 @@
                 <div class="alert-note">This prototype prepares a draft case sheet. It does not diagnose or prescribe treatment.</div>
               </div>
             </aside>
+          </div>
+        </div>
           </div>
         </div>
       </section>
@@ -780,7 +835,7 @@
 
     const tabs = [...document.querySelectorAll('.role-tab')];
     const views = [...document.querySelectorAll('.view')];
-    const doctorNavButtons = [...document.querySelectorAll('.doctor-nav-button')];
+    const doctorNavButtons = [...document.querySelectorAll('#doctor .doctor-nav-button')];
     const doctorPanels = [...document.querySelectorAll('[data-doctor-panel-content]')];
     const toast = document.getElementById('toast');
     let toastTimer;
@@ -816,7 +871,8 @@
         loginScreen.classList.remove('form-open');
         loginScreen.hidden = true;
         appShell.hidden = false;
-        appShell.classList.toggle('doctor-session', selectedLoginRole === 'doctor');
+        appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
+        appShell.classList.add(`${selectedLoginRole}-session`);
         openView(loginRoles[selectedLoginRole].view);
         if (selectedLoginRole === 'doctor') openDoctorPanel('current');
         submitButton.textContent = 'Continue securely';
@@ -849,7 +905,7 @@
     document.getElementById('logoutButton').addEventListener('click', () => {
       setSettingsOpen(false);
       appShell.hidden = true;
-      appShell.classList.remove('doctor-session');
+      appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
       loginScreen.hidden = false;
       loginScreen.classList.remove('form-open');
       loginForm.reset();
