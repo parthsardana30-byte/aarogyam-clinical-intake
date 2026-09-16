@@ -47,17 +47,29 @@
       outline-offset: 2px;
     }
 
-    .app-shell { min-height: 100vh; }
+    .app-shell {
+      min-height: 100vh;
+      padding: 18px;
+      font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 14% 88%, rgba(255, 236, 160, .48), transparent 34rem),
+        radial-gradient(circle at 91% 8%, rgba(230, 237, 231, .86), transparent 36rem),
+        linear-gradient(145deg, #e9ebea 0%, #f3f3ef 56%, #f6edc9 100%);
+    }
 
     .topbar {
-      height: 74px;
-      padding: 0 28px;
+      min-height: 76px;
+      padding: 0 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 24px;
-      background: var(--ink);
-      color: #fff;
+      background: rgba(255,255,255,.78);
+      color: var(--ink);
+      border: 1px solid rgba(16,43,39,.1);
+      border-bottom: 0;
+      border-radius: 26px 26px 0 0;
+      backdrop-filter: blur(18px);
     }
 
     .brand { display: flex; align-items: center; gap: 13px; min-width: max-content; }
@@ -69,23 +81,25 @@
     }
     .brand-mark svg { width: 29px; height: 29px; }
     .brand-name { font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif; font-size: 1.5rem; font-weight: 720; letter-spacing: -.035em; }
-    .brand-context { color: #bed2cc; font-size: .82rem; margin-top: -2px; }
+    .brand-context { color: #667873; font-size: .82rem; margin-top: -2px; }
 
     .top-actions { display: flex; align-items: center; gap: 12px; }
     .language-select {
-      border: 1px solid rgba(255,255,255,.24); border-radius: 10px;
-      background: rgba(255,255,255,.08); color: #fff; padding: 9px 32px 9px 12px;
+      border: 1px solid rgba(16,43,39,.14); border-radius: 12px;
+      background: rgba(255,255,255,.8); color: var(--ink); padding: 10px 34px 10px 13px;
     }
     .language-select option { color: var(--ink); background: #fff; }
     .privacy-badge {
-      display: flex; align-items: center; gap: 8px; font-size: .84rem; color: #dce8e4;
-      padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,.07);
+      display: flex; align-items: center; gap: 8px; font-size: .84rem; color: #536964;
+      padding: 10px 13px; border: 1px solid rgba(16,43,39,.1); border-radius: 12px; background: rgba(255,255,255,.66);
     }
 
     .rolebar {
-      background: #fff;
-      border-bottom: 1px solid var(--line);
-      padding: 12px 28px;
+      background: rgba(255,255,255,.68);
+      border: 1px solid rgba(16,43,39,.1);
+      border-top: 0;
+      border-radius: 0 0 26px 26px;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -95,9 +109,9 @@
     .role-tabs { display: flex; gap: 6px; }
     .role-tab {
       border: 0; background: transparent; color: var(--ink-soft);
-      border-radius: 10px; padding: 10px 15px; font-weight: 700;
+      border-radius: 13px; padding: 10px 16px; font-weight: 680;
     }
-    .role-tab[aria-selected="true"] { background: var(--mint); color: var(--teal-dark); }
+    .role-tab[aria-selected="true"] { background: #fff; color: var(--teal-dark); box-shadow: 0 8px 22px rgba(16,43,39,.08); }
     .role-tab span { color: #6d8580; font-weight: 500; margin-left: 5px; }
     .status-note { font-size: .84rem; color: #58716c; }
     .status-dot { display: inline-block; width: 8px; height: 8px; background: #42a77c; border-radius: 50%; margin-right: 7px; }
@@ -105,7 +119,7 @@
     .workspace {
       width: min(1480px, 100%);
       margin: 0 auto;
-      padding: 24px 28px 36px;
+      padding: 34px 16px 48px;
     }
 
     .view { display: none; }
@@ -117,18 +131,18 @@
     }
     .eyebrow { color: var(--orange); font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
     h1, h2, h3, p { margin-top: 0; }
-    h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.8rem, 3vw, 2.55rem); line-height: 1.1; margin: 5px 0 5px; }
+    h1 { font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif; font-size: clamp(2rem, 3vw, 2.75rem); font-weight: 560; letter-spacing: -.045em; line-height: 1.08; margin: 6px 0 7px; }
     .heading-copy { color: var(--ink-soft); margin: 0; }
     .patient-id { font-size: .84rem; color: var(--ink-soft); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 9px 13px; }
 
     .intake-grid { display: grid; grid-template-columns: minmax(230px, .72fr) minmax(430px, 1.55fr) minmax(270px, .88fr); gap: 18px; }
-    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .card { background: rgba(255,255,255,.78); border: 1px solid rgba(16,43,39,.1); border-radius: 24px; box-shadow: 0 22px 60px rgba(28,39,36,.08); backdrop-filter: blur(14px); overflow: hidden; }
     .card-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); }
     .card-header h2, .card-header h3 { margin: 0; font-size: 1rem; }
     .card-body { padding: 18px 20px; }
 
     .progress-wrap { padding: 20px; }
-    .progress-number { font: 700 2.3rem/1 Georgia, serif; margin: 8px 0 6px; }
+    .progress-number { font: 700 2.3rem/1 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin: 8px 0 6px; }
     .progress-track { height: 8px; background: #e5ebe8; border-radius: 99px; overflow: hidden; margin: 14px 0 22px; }
     .progress-fill { height: 100%; width: 38%; background: var(--orange); border-radius: inherit; transition: width .35s ease; }
     .step-list { list-style: none; padding: 0; margin: 0; }
@@ -164,7 +178,7 @@
     .mic-button.listening { background: var(--red); animation: pulse 1.4s infinite; }
     @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(183,67,61,.12); } }
     textarea { width: 100%; min-height: 48px; max-height: 120px; resize: vertical; border: 1px solid var(--line-strong); border-radius: 13px; padding: 11px 13px; color: var(--ink); background: #fff; }
-    .primary-button { border: 0; border-radius: 12px; background: var(--ink); color: #fff; padding: 12px 17px; min-height: 48px; font-weight: 760; }
+    .primary-button { border: 0; border-radius: 14px; background: var(--ink); color: #fff; padding: 12px 18px; min-height: 48px; font-weight: 740; box-shadow: 0 12px 26px rgba(16,43,39,.14); }
     .primary-button:hover { background: var(--teal-dark); }
     .composer-help { margin: 8px 3px 0; color: #738984; font-size: .76rem; }
 
@@ -190,11 +204,11 @@
     .status-pill.waiting { background: #f0eee7; color: #625d4e; }
     .status-pill.review { background: var(--orange-soft); color: #8b4b15; }
     .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
-    .metric { padding: 18px; }
-    .metric-value { font: 700 2rem/1 Georgia, serif; }
+    .metric { padding: 22px; }
+    .metric-value { font: 700 2rem/1 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.035em; }
     .metric-label { margin-top: 7px; color: #647a75; font-size: .84rem; }
     .action-list { display: grid; gap: 10px; }
-    .action-button { text-align: left; border: 1px solid var(--line); border-radius: 13px; background: #fff; padding: 13px 14px; color: var(--ink); }
+    .action-button { text-align: left; border: 1px solid rgba(16,43,39,.1); border-radius: 15px; background: rgba(255,255,255,.86); padding: 14px 15px; color: var(--ink); }
     .action-button strong { display: block; }
     .action-button small { color: #718681; }
 
@@ -316,7 +330,7 @@
     .login-row { display: flex; align-items: center; justify-content: flex-start; gap: 14px; margin: 4px 0 24px; font-size: .82rem; }
     .remember-label { display: flex; align-items: center; gap: 8px; color: #596f69; }
     .login-submit { width: 100%; }
-    .logout-button { border: 1px solid rgba(255,255,255,.23); background: transparent; color: #fff; border-radius: 10px; padding: 9px 12px; font-weight: 720; }
+    .logout-button { border: 1px solid rgba(16,43,39,.16); background: var(--ink); color: #fff; border-radius: 12px; padding: 10px 14px; font-weight: 700; }
 
     @media (max-width: 1080px) {
       .intake-grid { grid-template-columns: 230px 1fr; }
