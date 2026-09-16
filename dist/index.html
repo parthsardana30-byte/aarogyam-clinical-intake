@@ -924,22 +924,22 @@
       }
     };
 
-    function selectLoginRole(role) {
+    function selectLoginRole(role, focus = true) {
       selectedLoginRole = role;
       const config = loginRoles[role];
       document.getElementById('formTitle').textContent = config.title;
       document.getElementById('identifierLabel').textContent = config.label;
       document.getElementById('loginIdentifier').placeholder = config.placeholder;
+      appShell.hidden = true;
+      loginScreen.hidden = false;
       rolePicker.hidden = true;
       loginFormShell.hidden = false;
       loginScreen.classList.add('form-open');
-      document.getElementById('loginIdentifier').focus();
+      if (focus) document.getElementById('loginIdentifier').focus();
     }
 
-    document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => selectLoginRole(card.dataset.loginRole)));
-    document.getElementById('backToRoles').addEventListener('click', () => {
-      loginForm.reset(); loginFormShell.hidden = true; rolePicker.hidden = false; loginScreen.classList.remove('form-open');
-    });
+    document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => navigateRoute(`login/${card.dataset.loginRole}`, false, true)));
+    document.getElementById('backToRoles').addEventListener('click', () => navigateRoute('roles'));
 
     const tabs = [...document.querySelectorAll('.role-tab')];
     const views = [...document.querySelectorAll('.view')];
@@ -974,6 +974,18 @@
     languageSelect.innerHTML = indianLanguages.map(([english, native]) => `<option value="${english}">${english === 'English' ? 'English' : native + ' · ' + english}</option>`).join('');
     languageSelect.value = 'English';
 
+    function setCheckupStage(stage, focus = false) {
+      const isStart = stage === 'start';
+      const isLanguage = stage === 'language';
+      checkupLaunch.hidden = stage === 'intake';
+      checkupFlow.hidden = stage !== 'intake';
+      checkupWelcome.hidden = !isStart;
+      languageStep.hidden = !isLanguage;
+      if (focus && isStart) startCheckupButton.focus();
+      if (focus && isLanguage) languageOptions.querySelector('input').focus();
+      if (focus && stage === 'intake') document.getElementById('answerInput').focus();
+    }
+
     function resetCheckup() {
       checkupLaunch.hidden = false;
       checkupFlow.hidden = true;
@@ -983,20 +995,15 @@
       confirmLanguage.disabled = false;
     }
 
-    startCheckupButton.addEventListener('click', () => {
-      checkupWelcome.hidden = true;
-      languageStep.hidden = false;
-      languageOptions.querySelector('input').focus();
-    });
+    startCheckupButton.addEventListener('click', () => navigateRoute('patient/language', false, true));
 
     languageOptions.addEventListener('change', () => {
       confirmLanguage.disabled = !languageForm.elements.checkupLanguage.value;
     });
 
     document.getElementById('backToCheckupWelcome').addEventListener('click', () => {
-      languageStep.hidden = true;
-      checkupWelcome.hidden = false;
-      startCheckupButton.focus();
+      if (routeFromLocation() === 'patient/language' && history.length > 1) history.back();
+      else navigateRoute('patient/start', false, true);
     });
 
     languageForm.addEventListener('submit', event => {
@@ -1004,10 +1011,8 @@
       const selectedLanguage = languageForm.elements.checkupLanguage.value;
       if (!selectedLanguage) return;
       languageSelect.value = selectedLanguage;
-      checkupLaunch.hidden = true;
-      checkupFlow.hidden = false;
+      navigateRoute('patient/intake', false, true);
       showToast('Language selected', `${selectedLanguage} will be used for your check-up.`);
-      document.getElementById('answerInput').focus();
     });
 
     function showToast(title, text) {
@@ -1030,7 +1035,73 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    document.querySelectorAll('[data-doctor-panel]').forEach(button => button.addEventListener('click', () => openDoctorPanel(button.dataset.doctorPanel)));
+    function routeFromLocation() {
+      return location.hash.replace(/^#\/?/, '') || 'roles';
+    }
+
+    function showRolePicker() {
+      appShell.hidden = true;
+      appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
+      loginScreen.hidden = false;
+      loginScreen.classList.remove('form-open');
+      loginForm.reset();
+      loginFormShell.hidden = true;
+      rolePicker.hidden = false;
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
+    function showSession(role, view) {
+      loginScreen.classList.remove('form-open');
+      loginScreen.hidden = true;
+      appShell.hidden = false;
+      appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
+      appShell.classList.add(`${role}-session`);
+      openView(view);
+    }
+
+    function applyRoute(route, focus = false) {
+      if (route === 'roles') {
+        showRolePicker();
+        return;
+      }
+
+      const loginMatch = route.match(/^login\/(patient|doctor|staff)$/);
+      if (loginMatch) {
+        selectLoginRole(loginMatch[1], focus);
+        return;
+      }
+
+      const patientMatch = route.match(/^patient\/(start|language|intake)$/);
+      if (patientMatch) {
+        showSession('patient', 'patient');
+        setCheckupStage(patientMatch[1], focus);
+        return;
+      }
+
+      const doctorMatch = route.match(/^doctor\/(current|history)$/);
+      if (doctorMatch) {
+        showSession('doctor', 'doctor');
+        openDoctorPanel(doctorMatch[1]);
+        return;
+      }
+
+      if (route === 'staff/queue') {
+        showSession('staff', 'reception');
+        return;
+      }
+
+      history.replaceState({ route: 'roles' }, '', '#/roles');
+      showRolePicker();
+    }
+
+    function navigateRoute(route, replace = false, focus = false) {
+      if (routeFromLocation() !== route) {
+        history[replace ? 'replaceState' : 'pushState']({ route }, '', `#/${route}`);
+      }
+      applyRoute(route, focus);
+    }
+
+    document.querySelectorAll('[data-doctor-panel]').forEach(button => button.addEventListener('click', () => navigateRoute(`doctor/${button.dataset.doctorPanel}`)));
 
     loginForm.addEventListener('submit', event => {
       event.preventDefault();
@@ -1038,14 +1109,9 @@
       submitButton.textContent = 'Opening workspace…';
       submitButton.disabled = true;
       setTimeout(() => {
-        loginScreen.classList.remove('form-open');
-        loginScreen.hidden = true;
-        appShell.hidden = false;
-        appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
-        appShell.classList.add(`${selectedLoginRole}-session`);
         if (selectedLoginRole === 'patient') resetCheckup();
-        openView(loginRoles[selectedLoginRole].view);
-        if (selectedLoginRole === 'doctor') openDoctorPanel('current');
+        const destination = selectedLoginRole === 'patient' ? 'patient/start' : selectedLoginRole === 'doctor' ? 'doctor/current' : 'staff/queue';
+        navigateRoute(destination);
         submitButton.textContent = 'Continue securely';
         submitButton.disabled = false;
         showToast('Login successful', `${loginRoles[selectedLoginRole].name} is ready.`);
@@ -1075,20 +1141,16 @@
 
     document.getElementById('logoutButton').addEventListener('click', () => {
       setSettingsOpen(false);
-      appShell.hidden = true;
-      appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
-      loginScreen.hidden = false;
-      loginScreen.classList.remove('form-open');
-      loginForm.reset();
-      loginFormShell.hidden = true;
-      rolePicker.hidden = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      navigateRoute('roles');
     });
 
-    tabs.forEach(tab => tab.addEventListener('click', () => openView(tab.dataset.view)));
+    tabs.forEach(tab => tab.addEventListener('click', () => {
+      const destination = tab.dataset.view === 'patient' ? 'patient/start' : tab.dataset.view === 'doctor' ? 'doctor/current' : 'staff/queue';
+      navigateRoute(destination);
+    }));
     document.querySelectorAll('[data-start-intake]').forEach(button => button.addEventListener('click', () => {
       resetCheckup();
-      openView('patient');
+      navigateRoute('patient/start');
     }));
     document.querySelectorAll('[data-toast]').forEach(button => button.addEventListener('click', () => {
       const [title, text] = button.dataset.toast.split('|'); showToast(title, text);
@@ -1142,6 +1204,11 @@
       showToast('Language changed', `${event.target.value} will be used for the next spoken question.`);
       setSettingsOpen(false);
     });
+
+    window.addEventListener('popstate', () => applyRoute(routeFromLocation()));
+    const initialRoute = routeFromLocation();
+    history.replaceState({ route: initialRoute }, '', `#/${initialRoute}`);
+    applyRoute(initialRoute);
   </script>
 </body>
 </html>
