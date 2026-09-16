@@ -264,10 +264,11 @@
     .app-shell.doctor-session .topbar,
     .app-shell.patient-session .topbar,
     .app-shell.staff-session .topbar { border-bottom: 1px solid rgba(16,43,39,.1); border-radius: 26px; }
-    .doctor-workspace, .portal-workspace { display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 22px; align-items: start; }
+    .doctor-workspace, .portal-workspace { display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 22px; align-items: start; transition: grid-template-columns .24s ease; }
     .doctor-sidebar {
       position: fixed; z-index: 20; top: 108px; left: max(16px, calc((100vw - 1480px) / 2 + 16px));
       width: 244px; height: calc(100vh - 128px); min-height: 420px; padding: 20px; overflow: hidden;
+      transition: width .24s ease, padding .24s ease;
     }
     .doctor-main, .portal-main { grid-column: 2; min-width: 0; }
     .current-patient-name { color: #1769aa; }
@@ -280,6 +281,23 @@
     .doctor-nav-button { width: 100%; display: flex; align-items: center; gap: 9px; border: 0; border-radius: 14px; padding: 12px 10px; background: transparent; color: var(--ink-soft); text-align: left; font-size: .93rem; font-weight: 700; white-space: nowrap; }
     .doctor-nav-button svg { width: 21px; height: 21px; flex: 0 0 auto; }
     .doctor-nav-button[aria-selected="true"] { background: var(--ink); color: #fff; box-shadow: 0 12px 26px rgba(16,43,39,.15); }
+    .sidebar-toggle {
+      position: absolute; right: 14px; bottom: 16px; width: 38px; height: 38px; display: grid; place-items: center;
+      border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.9); color: var(--teal-dark);
+      cursor: pointer; box-shadow: 0 8px 20px rgba(16,43,39,.08);
+    }
+    .sidebar-toggle svg { width: 19px; height: 19px; transition: transform .24s ease; }
+    .app-shell.sidebar-collapsed .doctor-workspace,
+    .app-shell.sidebar-collapsed .portal-workspace { grid-template-columns: 78px minmax(0, 1fr); }
+    .app-shell.sidebar-collapsed .doctor-sidebar { width: 78px; padding: 16px 11px; }
+    .app-shell.sidebar-collapsed .doctor-profile { padding: 2px 0 18px; }
+    .app-shell.sidebar-collapsed .doctor-profile-mark { width: 46px; height: 46px; margin: 0 auto; }
+    .app-shell.sidebar-collapsed .doctor-profile strong,
+    .app-shell.sidebar-collapsed .doctor-profile small,
+    .app-shell.sidebar-collapsed .nav-label { display: none; }
+    .app-shell.sidebar-collapsed .doctor-nav-button { justify-content: center; gap: 0; padding: 13px 8px; }
+    .app-shell.sidebar-collapsed .sidebar-toggle { right: 20px; }
+    .app-shell.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
     .doctor-panel { display: none; }
     .doctor-panel.active { display: block; animation: appear .22s ease-out; }
     .history-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
@@ -452,6 +470,12 @@
       .doctor-main, .portal-main { grid-column: auto; }
       .doctor-profile { display: none; }
       .doctor-nav { grid-template-columns: 1fr 1fr; }
+      .sidebar-toggle { display: none; }
+      .app-shell.sidebar-collapsed .doctor-workspace,
+      .app-shell.sidebar-collapsed .portal-workspace { grid-template-columns: 1fr; }
+      .app-shell.sidebar-collapsed .doctor-sidebar { width: auto; padding: 14px; }
+      .app-shell.sidebar-collapsed .nav-label { display: inline; }
+      .app-shell.sidebar-collapsed .doctor-nav-button { justify-content: flex-start; gap: 9px; padding: 12px 10px; }
       .history-toolbar { flex-direction: column; align-items: stretch; }
       .history-record { grid-template-columns: 1fr; gap: 8px; }
     }
@@ -572,17 +596,20 @@
             <nav class="doctor-nav">
               <button class="doctor-nav-button" type="button" aria-selected="true">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="20" cy="18" r="2" fill="currentColor"/></svg>
-                Patient queue
+                <span class="nav-label">Patient queue</span>
               </button>
               <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="Patient history|Previous registrations and visits will appear here.">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                Patient history
+                <span class="nav-label">Patient history</span>
               </button>
               <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="Documents|Document scanning and uploads are ready.">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M10 13h5M10 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                Documents
+                <span class="nav-label">Documents</span>
               </button>
             </nav>
+            <button class="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </aside>
           <div class="portal-main">
         <div class="page-heading">
@@ -633,17 +660,20 @@
             <nav class="doctor-nav">
               <button class="doctor-nav-button" type="button" aria-selected="true">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 5h14v14H5V5Z" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h5M8 17h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                Health intake
+                <span class="nav-label">Health intake</span>
               </button>
               <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="My records|Your consultation history is ready to review.">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                My records
+                <span class="nav-label">My records</span>
               </button>
               <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="Access and consent|Your record access preferences are available here.">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 2.7 8.1 7 10 4.3-1.9 7-5.5 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Access &amp; consent
+                <span class="nav-label">Access &amp; consent</span>
               </button>
             </nav>
+            <button class="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </aside>
           <div class="portal-main">
         <div class="page-heading">
@@ -726,13 +756,16 @@
             <nav class="doctor-nav">
               <button class="doctor-nav-button" type="button" data-doctor-panel="current" aria-selected="true">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c.8-4.2 3.1-6.3 7-6.3s6.2 2.1 7 6.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                Current patient
+                <span class="nav-label">Current patient</span>
               </button>
               <button class="doctor-nav-button" type="button" data-doctor-panel="history" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                Patient history
+                <span class="nav-label">Patient history</span>
               </button>
             </nav>
+            <button class="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </aside>
 
           <div class="doctor-main">
@@ -837,8 +870,29 @@
     const views = [...document.querySelectorAll('.view')];
     const doctorNavButtons = [...document.querySelectorAll('#doctor .doctor-nav-button')];
     const doctorPanels = [...document.querySelectorAll('[data-doctor-panel-content]')];
+    const sidebarToggles = [...document.querySelectorAll('.sidebar-toggle')];
+    const autoCollapseSidebar = window.matchMedia('(min-width: 761px) and (max-width: 1100px)');
     const toast = document.getElementById('toast');
     let toastTimer;
+
+    function setSidebarCollapsed(collapsed) {
+      appShell.classList.toggle('sidebar-collapsed', collapsed);
+      sidebarToggles.forEach(button => {
+        button.setAttribute('aria-expanded', String(!collapsed));
+        button.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
+        button.title = collapsed ? 'Expand navigation' : 'Collapse navigation';
+      });
+    }
+
+    function syncAutoSidebar() {
+      setSidebarCollapsed(autoCollapseSidebar.matches);
+    }
+
+    sidebarToggles.forEach(button => button.addEventListener('click', () => {
+      setSidebarCollapsed(!appShell.classList.contains('sidebar-collapsed'));
+    }));
+    autoCollapseSidebar.addEventListener('change', syncAutoSidebar);
+    syncAutoSidebar();
 
     function showToast(title, text) {
       document.getElementById('toastTitle').textContent = title;
@@ -873,6 +927,7 @@
         appShell.hidden = false;
         appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
         appShell.classList.add(`${selectedLoginRole}-session`);
+        syncAutoSidebar();
         openView(loginRoles[selectedLoginRole].view);
         if (selectedLoginRole === 'doctor') openDoctorPanel('current');
         submitButton.textContent = 'Continue securely';
