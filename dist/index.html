@@ -276,11 +276,9 @@
     .login-card h2 { font: 620 clamp(1.9rem, 2.5vw, 2.35rem)/1.12 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin: 0; text-wrap: balance; }
 
     .login-form-shell {
-      width: min(1180px, 100%);
-      min-height: 680px;
+      width: min(620px, 100%);
+      min-height: 620px;
       margin: 0 auto;
-      display: grid;
-      grid-template-columns: .82fr 1.18fr;
       overflow: hidden;
       background: #fff;
       border: 1px solid rgba(16, 43, 39, .12);
@@ -288,30 +286,10 @@
       box-shadow: 0 28px 90px rgba(16, 43, 39, .17);
     }
     .login-form-shell[hidden] { display: none; }
-    .login-role-panel {
-      order: 2;
-      position: relative;
-      overflow: hidden;
-      padding: 42px;
-      color: #fff;
-      background:
-        radial-gradient(circle at 78% 18%, rgba(255, 212, 122, .24), transparent 22rem),
-        radial-gradient(circle at 15% 90%, rgba(59, 151, 127, .34), transparent 22rem),
-        linear-gradient(145deg, #183d36 0%, #0c2d28 70%);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .login-role-panel::before { content: ""; position: absolute; inset: 26px; border: 1px solid rgba(255,255,255,.1); border-radius: 26px; pointer-events: none; }
-    .login-role-copy { position: relative; z-index: 2; max-width: 470px; }
-    .login-role-copy .login-card-icon { width: 54px; height: 54px; margin-bottom: 18px; background: rgba(255,255,255,.12); color: #fff; }
-    .login-role-panel h2 { font: 620 2.25rem/1.12 "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif; letter-spacing: -.035em; margin-bottom: 12px; }
-    .login-role-panel p { color: #c9d9d5; font-size: 1rem; }
-    .login-role-panel small { position: relative; z-index: 2; color: #a9c2bb; }
-    .login-form-area { order: 1; padding: 66px 58px 48px; display: flex; flex-direction: column; justify-content: center; }
-    .back-button { border: 0; background: transparent; color: var(--teal); padding: 0; margin-bottom: 25px; font-weight: 750; }
-    .login-form-area h2 { font: 560 2rem/1.2 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin-bottom: 8px; }
-    .login-form-area > p { color: #647873; margin-bottom: 25px; }
+    .login-form-area { min-height: 620px; padding: 52px 62px; display: flex; flex-direction: column; justify-content: center; }
+    .back-button { width: 52px; height: 52px; display: grid; place-items: center; border: 1px solid rgba(14,102,85,.16); border-radius: 50%; background: #f4faf7; color: var(--teal); padding: 0; margin-bottom: 38px; font-size: 2rem; line-height: 1; font-weight: 500; transition: transform .2s ease, background .2s ease; }
+    .back-button:hover { transform: translateX(-4px); background: var(--mint); }
+    .login-form-area h2 { font: 560 2.4rem/1.2 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin-bottom: 30px; }
     .field-group { margin-bottom: 16px; }
     .field-group label { display: block; margin-bottom: 7px; font-size: .84rem; font-weight: 760; }
     .field-group input {
@@ -325,48 +303,10 @@
       font: inherit;
     }
     .field-group input:focus { outline: 3px solid rgba(14, 102, 85, .14); border-color: var(--teal); }
-    .login-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 4px 0 20px; font-size: .82rem; }
+    .login-row { display: flex; align-items: center; justify-content: flex-start; gap: 14px; margin: 4px 0 24px; font-size: .82rem; }
     .remember-label { display: flex; align-items: center; gap: 8px; color: #596f69; }
-    .login-help { color: var(--teal); font-weight: 700; }
     .login-submit { width: 100%; }
-    .demo-login-button { width: 100%; margin-top: 10px; border: 0; background: transparent; color: var(--teal); font-weight: 760; padding: 9px; }
     .logout-button { border: 1px solid rgba(255,255,255,.23); background: transparent; color: #fff; border-radius: 10px; padding: 9px 12px; font-weight: 720; }
-
-    .portal-preview { position: relative; z-index: 2; height: 360px; margin: 26px 10px 28px; }
-    .preview-orbit { position: absolute; inset: 10% 8%; border: 1px dashed rgba(255,255,255,.18); border-radius: 50%; transform: rotate(-8deg); }
-    .preview-core {
-      position: absolute;
-      left: 50%; top: 48%;
-      width: 238px; height: 238px;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      display: grid; place-items: center;
-      background: radial-gradient(circle at 35% 28%, #fff7dc, #f1be5b 45%, #dc7727 100%);
-      box-shadow: 0 32px 90px rgba(0,0,0,.32), inset 0 0 0 16px rgba(255,255,255,.15);
-      color: var(--ink);
-      text-align: center;
-    }
-    .preview-core strong { display: block; font: 700 3.3rem/1 Georgia, serif; }
-    .preview-core span { display: block; margin-top: 7px; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-    .preview-card {
-      position: absolute;
-      min-width: 200px;
-      padding: 15px 17px;
-      border-radius: 16px;
-      color: var(--ink);
-      background: rgba(255,255,255,.94);
-      box-shadow: 0 20px 44px rgba(0,0,0,.24);
-      backdrop-filter: blur(12px);
-    }
-    .preview-card strong { display: block; font-size: .9rem; }
-    .preview-card span { color: #667a75; font-size: .74rem; }
-    .preview-card em { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; color: var(--teal); font-size: .72rem; font-style: normal; font-weight: 800; }
-    .preview-card em::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #37a877; }
-    .preview-card.one { top: 0; left: 2%; transform: rotate(-3deg); }
-    .preview-card.two { top: 72px; right: 0; transform: rotate(3deg); }
-    .preview-card.three { bottom: 0; left: 8%; transform: rotate(2deg); }
-    .preview-card.two em::before { background: var(--orange); }
-    .preview-grid { position: absolute; inset: auto 0 0 auto; width: 120px; height: 90px; opacity: .2; background-image: linear-gradient(rgba(255,255,255,.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.4) 1px, transparent 1px); background-size: 14px 14px; transform: skewX(-12deg); }
 
     @media (max-width: 1080px) {
       .intake-grid { grid-template-columns: 230px 1fr; }
@@ -381,8 +321,6 @@
       .login-brand .brand-context { display: block; }
       .login-cards { grid-template-columns: 1fr; }
       .login-card { min-height: auto; padding: 23px; }
-      .login-form-shell { grid-template-columns: 1fr; }
-      .login-role-panel { display: none; }
       .login-form-area { padding: 26px 22px; }
       .login-footnote { color: var(--ink-soft); }
       .topbar { height: auto; padding: 14px 18px; align-items: flex-start; }
@@ -436,32 +374,14 @@
       </div>
 
       <div class="login-form-shell" id="loginFormShell" hidden>
-        <aside class="login-role-panel">
-          <div class="login-role-copy">
-            <div class="login-card-icon" id="formRoleIcon" aria-hidden="true">✦</div>
-            <h2 id="formRoleName">Patient portal</h2>
-            <p id="formRoleCopy">Continue your intake securely and review what will be shared with the doctor.</p>
-          </div>
-          <div class="portal-preview" aria-hidden="true">
-            <div class="preview-orbit"></div>
-            <div class="preview-core"><div><strong>38%</strong><span>Case ready</span></div></div>
-            <div class="preview-card one"><strong>Identity verified</strong><span>Synthetic demonstration record</span><em>Secure session</em></div>
-            <div class="preview-card two"><strong>Consent scope</strong><span>Current OPD visit only</span><em>Patient controlled</em></div>
-            <div class="preview-card three"><strong>Evidence linked</strong><span>Every field keeps its source</span><em>Clinician review</em></div>
-            <div class="preview-grid"></div>
-          </div>
-          <small>Synthetic prototype only. Do not enter real health information or credentials.</small>
-        </aside>
         <div class="login-form-area">
-          <button class="back-button" id="backToRoles" type="button">← Choose another portal</button>
+          <button class="back-button" id="backToRoles" type="button" aria-label="Choose another portal">←</button>
           <h2 id="formTitle">Welcome back</h2>
-          <p id="formSubtitle">Use demonstration credentials to continue.</p>
           <form id="loginForm">
-            <div class="field-group"><label for="loginIdentifier" id="identifierLabel">Demo patient ID</label><input id="loginIdentifier" autocomplete="username" required placeholder="Enter demo ID" /></div>
-            <div class="field-group"><label for="loginPassword">Password or PIN</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter demo password" /></div>
-            <div class="login-row"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label><span class="login-help">Demo access</span></div>
+            <div class="field-group"><label for="loginIdentifier" id="identifierLabel">Patient ID</label><input id="loginIdentifier" autocomplete="username" required placeholder="Enter patient ID" /></div>
+            <div class="field-group"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter password" /></div>
+            <div class="login-row"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label></div>
             <button class="primary-button login-submit" type="submit">Continue securely</button>
-            <button class="demo-login-button" id="demoLoginButton" type="button">Fill demonstration credentials</button>
           </form>
         </div>
       </div>
@@ -644,49 +564,33 @@
     const loginRoles = {
       patient: {
         name: 'Patient portal',
-        copy: 'Continue your intake securely and review exactly what will be shared with the doctor.',
         title: 'Welcome back',
-        subtitle: 'Use your demonstration patient ID and PIN to continue.',
-        label: 'Demo patient ID',
-        placeholder: 'e.g. DEMO-PATIENT-01',
-        demoId: 'DEMO-PATIENT-01',
-        view: 'patient',
-        icon: 'P'
+        label: 'Patient ID',
+        placeholder: 'Enter patient ID',
+        view: 'patient'
       },
       doctor: {
         name: 'Doctor console',
-        copy: 'Open evidence-linked intake summaries and complete clinician-only examination findings.',
         title: 'Clinician sign in',
-        subtitle: 'Use a demonstration practitioner ID and password.',
-        label: 'Demo practitioner ID',
-        placeholder: 'e.g. DEMO-DOCTOR-01',
-        demoId: 'DEMO-DOCTOR-01',
-        view: 'doctor',
-        icon: 'Dr'
+        label: 'Practitioner ID',
+        placeholder: 'Enter practitioner ID',
+        view: 'doctor'
       },
       staff: {
         name: 'Hospital staff workspace',
-        copy: 'Manage registration, assisted intake, document scanning and the OPD preparation queue.',
         title: 'Staff sign in',
-        subtitle: 'Use a demonstration employee ID and password.',
-        label: 'Demo employee ID',
-        placeholder: 'e.g. DEMO-STAFF-01',
-        demoId: 'DEMO-STAFF-01',
-        view: 'reception',
-        icon: 'HS'
+        label: 'Employee ID',
+        placeholder: 'Enter employee ID',
+        view: 'reception'
       }
     };
 
     function selectLoginRole(role) {
       selectedLoginRole = role;
       const config = loginRoles[role];
-      document.getElementById('formRoleName').textContent = config.name;
-      document.getElementById('formRoleCopy').textContent = config.copy;
       document.getElementById('formTitle').textContent = config.title;
-      document.getElementById('formSubtitle').textContent = config.subtitle;
       document.getElementById('identifierLabel').textContent = config.label;
       document.getElementById('loginIdentifier').placeholder = config.placeholder;
-      document.getElementById('formRoleIcon').textContent = config.icon;
       rolePicker.hidden = true;
       loginFormShell.hidden = false;
       document.getElementById('loginIdentifier').focus();
@@ -695,10 +599,6 @@
     document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => selectLoginRole(card.dataset.loginRole)));
     document.getElementById('backToRoles').addEventListener('click', () => {
       loginForm.reset(); loginFormShell.hidden = true; rolePicker.hidden = false;
-    });
-    document.getElementById('demoLoginButton').addEventListener('click', () => {
-      document.getElementById('loginIdentifier').value = loginRoles[selectedLoginRole].demoId;
-      document.getElementById('loginPassword').value = 'demo123';
     });
 
     const tabs = [...document.querySelectorAll('.role-tab')];
@@ -731,7 +631,7 @@
         openView(loginRoles[selectedLoginRole].view);
         submitButton.textContent = 'Continue securely';
         submitButton.disabled = false;
-        showToast('Demo login successful', `${loginRoles[selectedLoginRole].name} is ready.`);
+        showToast('Login successful', `${loginRoles[selectedLoginRole].name} is ready.`);
       }, 420);
     });
 
