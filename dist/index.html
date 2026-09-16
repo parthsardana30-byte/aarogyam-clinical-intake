@@ -58,7 +58,7 @@
     }
 
     .topbar {
-      position: relative; z-index: 50;
+      position: sticky; top: 14px; z-index: 50;
       min-height: 76px;
       padding: 0 24px;
       display: flex;
@@ -242,7 +242,11 @@
     .app-shell.doctor-session .rolebar { display: none; }
     .app-shell.doctor-session .topbar { border-bottom: 1px solid rgba(16,43,39,.1); border-radius: 26px; }
     .doctor-workspace { display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 22px; align-items: start; }
-    .doctor-sidebar { position: sticky; top: 18px; padding: 20px; min-height: 560px; }
+    .doctor-sidebar {
+      position: sticky; top: 108px; height: calc(100vh - 128px); min-height: 420px; padding: 20px;
+      align-self: start; overflow: hidden;
+    }
+    .current-patient-name { color: #1769aa; }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
     .doctor-profile strong, .doctor-profile small { display: block; }
@@ -657,8 +661,7 @@
           <div class="doctor-main">
             <div class="doctor-panel active" data-doctor-panel-content="current">
               <div class="page-heading">
-                <div><div class="eyebrow">Current patient</div><h1 id="doctorTitle">Patient A’s case</h1><p class="heading-copy">Review the intake draft and verify each clinical finding.</p></div>
-                <div class="patient-id">PT-001 · Intake 76% complete</div>
+                <div><h1 id="doctorTitle"><span class="current-patient-name">Patient A</span>’s case</h1></div>
               </div>
               <div class="doctor-layout">
                 <article class="card">
