@@ -243,9 +243,10 @@
     .app-shell.doctor-session .topbar { border-bottom: 1px solid rgba(16,43,39,.1); border-radius: 26px; }
     .doctor-workspace { display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 22px; align-items: start; }
     .doctor-sidebar {
-      position: sticky; top: 108px; height: calc(100vh - 128px); min-height: 420px; padding: 20px;
-      align-self: start; overflow: hidden;
+      position: fixed; z-index: 20; top: 108px; left: max(16px, calc((100vw - 1480px) / 2 + 16px));
+      width: 244px; height: calc(100vh - 128px); min-height: 420px; padding: 20px; overflow: hidden;
     }
+    .doctor-main { grid-column: 2; min-width: 0; }
     .current-patient-name { color: #1769aa; }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
@@ -387,6 +388,7 @@
       .side-stack { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
       .doctor-layout, .dashboard-grid { grid-template-columns: 1fr; }
       .doctor-workspace { grid-template-columns: 210px minmax(0, 1fr); }
+      .doctor-sidebar { width: 210px; }
       .history-record { grid-template-columns: 1fr 1fr; }
     }
 
@@ -422,7 +424,8 @@
       .metric-grid { grid-template-columns: 1fr; }
       .queue-table th:nth-child(3), .queue-table td:nth-child(3) { display: none; }
       .doctor-workspace { grid-template-columns: 1fr; }
-      .doctor-sidebar { position: static; min-height: 0; padding: 14px; }
+      .doctor-sidebar { position: static; width: auto; height: auto; min-height: 0; padding: 14px; }
+      .doctor-main { grid-column: auto; }
       .doctor-profile { display: none; }
       .doctor-nav { grid-template-columns: 1fr 1fr; }
       .history-toolbar { flex-direction: column; align-items: stretch; }
@@ -665,7 +668,6 @@
               </div>
               <div class="doctor-layout">
                 <article class="card">
-                  <div class="card-header"><h2>30-second clinical view</h2></div>
                   <section class="summary-section"><h3>Chief concern</h3><p><strong>Abdominal heaviness with reduced appetite</strong><span class="source-tag">Voice · verified</span></p><p>Reported for approximately 2–3 days, more noticeable after meals.</p></section>
                   <section class="summary-section"><h3>Relevant context</h3><ul class="summary-list"><li>No vomiting reported <span class="source-tag">Patient answer</span></li><li>Bowel movement once daily; feels incomplete <span class="source-tag">Patient answer</span></li><li>Similar episode documented three months ago <span class="source-tag">Prior visit</span></li></ul></section>
                   <section class="summary-section"><h3>Ayurvedic intake</h3><p>Appetite reduced; post-meal heaviness; sleep unchanged. Clinician examination fields such as Nadi and Sparsha remain intentionally blank.</p></section>
