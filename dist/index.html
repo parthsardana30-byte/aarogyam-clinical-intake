@@ -281,12 +281,6 @@
     .doctor-nav-button { width: 100%; display: flex; align-items: center; gap: 9px; border: 0; border-radius: 14px; padding: 12px 10px; background: transparent; color: var(--ink-soft); text-align: left; font-size: .93rem; font-weight: 700; white-space: nowrap; }
     .doctor-nav-button svg { width: 21px; height: 21px; flex: 0 0 auto; }
     .doctor-nav-button[aria-selected="true"] { background: var(--ink); color: #fff; box-shadow: 0 12px 26px rgba(16,43,39,.15); }
-    .sidebar-toggle {
-      position: absolute; right: 14px; bottom: 16px; width: 38px; height: 38px; display: grid; place-items: center;
-      border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.9); color: var(--teal-dark);
-      cursor: pointer; box-shadow: 0 8px 20px rgba(16,43,39,.08);
-    }
-    .sidebar-toggle svg { width: 19px; height: 19px; transition: transform .24s ease; }
     .app-shell.sidebar-collapsed .doctor-workspace,
     .app-shell.sidebar-collapsed .portal-workspace { grid-template-columns: 78px minmax(0, 1fr); }
     .app-shell.sidebar-collapsed .doctor-sidebar { width: 78px; padding: 16px 11px; }
@@ -296,8 +290,22 @@
     .app-shell.sidebar-collapsed .doctor-profile small,
     .app-shell.sidebar-collapsed .nav-label { display: none; }
     .app-shell.sidebar-collapsed .doctor-nav-button { justify-content: center; gap: 0; padding: 13px 8px; }
-    .app-shell.sidebar-collapsed .sidebar-toggle { right: 20px; }
-    .app-shell.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
+    .app-shell.sidebar-collapsed .doctor-sidebar:hover,
+    .app-shell.sidebar-collapsed .doctor-sidebar:focus-within {
+      width: 244px; padding: 20px; box-shadow: 0 24px 70px rgba(16,43,39,.18);
+    }
+    .app-shell.sidebar-collapsed .doctor-sidebar:hover .doctor-profile,
+    .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-profile { padding: 4px 4px 22px; }
+    .app-shell.sidebar-collapsed .doctor-sidebar:hover .doctor-profile-mark,
+    .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-profile-mark { width: 48px; height: 48px; margin: 0 0 14px; }
+    .app-shell.sidebar-collapsed .doctor-sidebar:hover .doctor-profile strong,
+    .app-shell.sidebar-collapsed .doctor-sidebar:hover .doctor-profile small,
+    .app-shell.sidebar-collapsed .doctor-sidebar:hover .nav-label,
+    .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-profile strong,
+    .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-profile small,
+    .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .nav-label { display: block; }
+    .app-shell.sidebar-collapsed .doctor-sidebar:hover .doctor-nav-button,
+    .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-nav-button { justify-content: flex-start; gap: 9px; padding: 12px 10px; }
     .doctor-panel { display: none; }
     .doctor-panel.active { display: block; animation: appear .22s ease-out; }
     .history-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
@@ -431,6 +439,8 @@
       .doctor-layout, .dashboard-grid { grid-template-columns: 1fr; }
       .doctor-workspace, .portal-workspace { grid-template-columns: 230px minmax(0, 1fr); }
       .doctor-sidebar { width: 230px; }
+      .app-shell.sidebar-collapsed .doctor-sidebar:hover,
+      .app-shell.sidebar-collapsed .doctor-sidebar:focus-within { width: 230px; }
       .history-record { grid-template-columns: 1fr 1fr; }
     }
 
@@ -470,7 +480,6 @@
       .doctor-main, .portal-main { grid-column: auto; }
       .doctor-profile { display: none; }
       .doctor-nav { grid-template-columns: 1fr 1fr; }
-      .sidebar-toggle { display: none; }
       .app-shell.sidebar-collapsed .doctor-workspace,
       .app-shell.sidebar-collapsed .portal-workspace { grid-template-columns: 1fr; }
       .app-shell.sidebar-collapsed .doctor-sidebar { width: auto; padding: 14px; }
@@ -545,7 +554,7 @@
     </div>
   </section>
 
-  <div class="app-shell" id="appShell" hidden>
+  <div class="app-shell sidebar-collapsed" id="appShell" hidden>
     <header class="topbar">
       <div class="brand" aria-label="ArogSevak home">
         <div class="brand-mark" aria-hidden="true">
@@ -607,9 +616,6 @@
                 <span class="nav-label">Documents</span>
               </button>
             </nav>
-            <button class="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
           </aside>
           <div class="portal-main">
         <div class="page-heading">
@@ -671,9 +677,6 @@
                 <span class="nav-label">Access &amp; consent</span>
               </button>
             </nav>
-            <button class="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
           </aside>
           <div class="portal-main">
         <div class="page-heading">
@@ -763,9 +766,6 @@
                 <span class="nav-label">Patient history</span>
               </button>
             </nav>
-            <button class="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
           </aside>
 
           <div class="doctor-main">
@@ -870,29 +870,8 @@
     const views = [...document.querySelectorAll('.view')];
     const doctorNavButtons = [...document.querySelectorAll('#doctor .doctor-nav-button')];
     const doctorPanels = [...document.querySelectorAll('[data-doctor-panel-content]')];
-    const sidebarToggles = [...document.querySelectorAll('.sidebar-toggle')];
-    const autoCollapseSidebar = window.matchMedia('(min-width: 761px) and (max-width: 1100px)');
     const toast = document.getElementById('toast');
     let toastTimer;
-
-    function setSidebarCollapsed(collapsed) {
-      appShell.classList.toggle('sidebar-collapsed', collapsed);
-      sidebarToggles.forEach(button => {
-        button.setAttribute('aria-expanded', String(!collapsed));
-        button.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
-        button.title = collapsed ? 'Expand navigation' : 'Collapse navigation';
-      });
-    }
-
-    function syncAutoSidebar() {
-      setSidebarCollapsed(autoCollapseSidebar.matches);
-    }
-
-    sidebarToggles.forEach(button => button.addEventListener('click', () => {
-      setSidebarCollapsed(!appShell.classList.contains('sidebar-collapsed'));
-    }));
-    autoCollapseSidebar.addEventListener('change', syncAutoSidebar);
-    syncAutoSidebar();
 
     function showToast(title, text) {
       document.getElementById('toastTitle').textContent = title;
@@ -927,7 +906,6 @@
         appShell.hidden = false;
         appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
         appShell.classList.add(`${selectedLoginRole}-session`);
-        syncAutoSidebar();
         openView(loginRoles[selectedLoginRole].view);
         if (selectedLoginRole === 'doctor') openDoctorPanel('current');
         submitButton.textContent = 'Continue securely';
