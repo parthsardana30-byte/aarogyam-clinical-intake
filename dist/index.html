@@ -265,7 +265,7 @@
             <option>English</option><option selected>हिन्दी</option><option>ਪੰਜਾਬੀ</option><option>मराठी</option>
           </select>
         </label>
-        <div class="privacy-badge">🔒 Consent active · Demo record</div>
+        <div class="privacy-badge">🔒 Synthetic demonstration · No patient data</div>
       </div>
     </header>
 
@@ -296,10 +296,10 @@
               <table class="queue-table">
                 <thead><tr><th>Patient</th><th>Status</th><th>Language</th><th>Wait</th></tr></thead>
                 <tbody>
-                  <tr><td><strong>Meera Sharma</strong><br><small>OPD-1042</small></td><td><span class="status-pill review">Doctor review</span></td><td>Hindi</td><td>18 min</td></tr>
-                  <tr><td><strong>Rajesh Kumar</strong><br><small>OPD-1043</small></td><td><span class="status-pill">Intake active</span></td><td>Hindi</td><td>12 min</td></tr>
-                  <tr><td><strong>Gurpreet Singh</strong><br><small>OPD-1044</small></td><td><span class="status-pill waiting">Waiting</span></td><td>Punjabi</td><td>7 min</td></tr>
-                  <tr><td><strong>Fatima Shaikh</strong><br><small>OPD-1045</small></td><td><span class="status-pill waiting">Waiting</span></td><td>Marathi</td><td>3 min</td></tr>
+                  <tr><td><strong>Demo Patient A</strong><br><small>DEMO-001</small></td><td><span class="status-pill review">Doctor review</span></td><td>Hindi</td><td>18 min</td></tr>
+                  <tr><td><strong>Demo Patient B</strong><br><small>DEMO-002</small></td><td><span class="status-pill">Intake active</span></td><td>Hindi</td><td>12 min</td></tr>
+                  <tr><td><strong>Demo Patient C</strong><br><small>DEMO-003</small></td><td><span class="status-pill waiting">Waiting</span></td><td>Punjabi</td><td>7 min</td></tr>
+                  <tr><td><strong>Demo Patient D</strong><br><small>DEMO-004</small></td><td><span class="status-pill waiting">Waiting</span></td><td>Marathi</td><td>3 min</td></tr>
                 </tbody>
               </table>
             </div>
@@ -318,7 +318,7 @@
       <section class="view active" id="patient" aria-labelledby="patientTitle">
         <div class="page-heading">
           <div><div class="eyebrow">Patient intake</div><h1 id="patientTitle">Tell us what has changed</h1><p class="heading-copy">Speak naturally. You can review every answer before it reaches the doctor.</p></div>
-          <div class="patient-id">Demo patient · ABHA ending 2841</div>
+          <div class="patient-id">Synthetic patient · DEMO-ID</div>
         </div>
 
         <div class="intake-grid">
@@ -344,7 +344,7 @@
               <div class="safety-label">No diagnosis · clinician reviewed</div>
             </div>
             <div class="messages" id="messages" aria-live="polite">
-              <div class="message ai"><p>Namaste Meera ji. What is the main problem that brought you to the clinic today?</p><small>Asked from the chief complaint pathway</small></div>
+              <div class="message ai"><p>Namaste. What is the main problem that brought you to the clinic today?</p><small>Asked from the chief complaint pathway</small></div>
               <div class="message user"><p>I feel heaviness in my stomach and I don’t feel hungry.</p><small>Voice answer · patient confirmed</small></div>
               <div class="message ai"><p>When did the stomach heaviness begin?</p><small>Follow-up selected because duration is missing</small></div>
             </div>
@@ -385,8 +385,8 @@
 
       <section class="view" id="doctor" aria-labelledby="doctorTitle">
         <div class="page-heading">
-          <div><div class="eyebrow">Doctor review</div><h1 id="doctorTitle">Meera Sharma’s case</h1><p class="heading-copy">A concise draft with every finding linked to its source.</p></div>
-          <div class="patient-id">OPD-1042 · Intake 76% complete</div>
+          <div><div class="eyebrow">Doctor review</div><h1 id="doctorTitle">Demo Patient A’s case</h1><p class="heading-copy">A synthetic draft with every finding linked to its source.</p></div>
+          <div class="patient-id">DEMO-001 · Intake 76% complete</div>
         </div>
         <div class="doctor-layout">
           <article class="card">
