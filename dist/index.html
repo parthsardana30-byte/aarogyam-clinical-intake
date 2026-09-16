@@ -439,6 +439,9 @@
     .device-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 18px; }
     .device-method { min-height: 50px; border: 1px solid var(--line-strong); border-radius: 14px; background: #f8faf9; color: var(--ink-soft); font: inherit; font-weight: 760; cursor: pointer; transition: .2s ease; }
     .device-method[aria-selected="true"] { border-color: var(--teal); background: var(--mint); color: var(--teal-dark); box-shadow: inset 0 0 0 1px rgba(14,102,85,.08); }
+    .device-enrollment-link { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; padding:13px 14px; border:1px solid var(--line-strong); border-radius:14px; background:#f8faf9; }
+    .device-enrollment-link span { color:var(--soft); font-size:.8rem; line-height:1.35; }
+    .device-enrollment-link a { flex:0 0 auto; color:var(--teal); font-weight:780; text-decoration:none; }
     .device-method-panel[hidden] { display: none; }
     .device-scanner { position: relative; min-height: 210px; display: grid; place-items: center; overflow: hidden; margin-bottom: 14px; border-radius: 17px; background: linear-gradient(145deg, #102b27, #17483f); }
     .device-scanner video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -455,6 +458,14 @@
     .device-cancel { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
     .device-authorize { border: 0; background: var(--ink); color: #fff; }
     .device-authorize:disabled { cursor: not-allowed; opacity: .42; }
+    .authorized-devices { margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+    .authorized-devices h3 { margin:0 0 10px; font-size:.95rem; }
+    .authorized-device-list { display:grid; gap:8px; }
+    .authorized-device-item { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 12px; border-radius:12px; background:#f4f8f6; }
+    .authorized-device-item strong, .authorized-device-item small { display:block; }
+    .authorized-device-item small { margin-top:2px; color:var(--soft); font-size:.72rem; }
+    .authorized-device-state { color:var(--teal); font-size:.75rem; font-weight:780; }
+    .authorized-device-empty { margin:0; color:var(--soft); font-size:.82rem; }
 
     .login-screen {
       min-height: 100vh;
@@ -506,6 +517,8 @@
     .login-intro { text-align: center; margin: 0 auto 42px; max-width: 700px; }
     .login-intro h1 { margin: 0; color: #0b2634; font-family: inherit; font-weight: 590; letter-spacing: -.05em; font-size: clamp(2.35rem, 4.6vw, 3.8rem); }
     .login-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .login-screen.device-patient-only .login-cards { grid-template-columns: minmax(260px, 390px); justify-content: center; }
+    .login-screen.device-patient-only .login-card:not([data-login-role="patient"]) { display: none; }
     .login-card {
       --portal-accent: #0f887f;
       --portal-accent-rgb: 15, 136, 127;
@@ -1164,6 +1177,7 @@
         <button class="device-dialog-close" id="closeDeviceDialog" type="button" aria-label="Close">×</button>
       </div>
       <label class="device-field" id="deviceNameField">Device name<input id="deviceName" required maxlength="60" placeholder="e.g. Reception desk tablet" /></label>
+      <div class="device-enrollment-link"><span id="deviceSetupHelp">Open this link on the device you want to authorize.</span><a id="deviceSetupLink" href="/device-enroll.html" target="_blank" rel="noopener">Open setup page ↗</a></div>
       <div class="device-methods" role="tablist" aria-label="Authorization method">
         <button class="device-method" id="deviceMethodScan" type="button" role="tab" aria-selected="true" aria-controls="deviceScanPanel">Scan QR code</button>
         <button class="device-method" id="deviceMethodManual" type="button" role="tab" aria-selected="false" aria-controls="deviceManualPanel">Enter code manually</button>
@@ -1180,6 +1194,10 @@
         <button class="device-cancel" id="cancelDeviceDialog" type="button">Cancel</button>
         <button class="device-authorize" id="authorizeDeviceButton" type="submit" disabled>Authorize device</button>
       </div>
+      <section class="authorized-devices" aria-labelledby="authorizedDevicesTitle">
+        <h3 id="authorizedDevicesTitle">Authorized devices</h3>
+        <div class="authorized-device-list" id="authorizedDeviceList"><p class="authorized-device-empty">No authorized devices yet.</p></div>
+      </section>
     </form>
   </dialog>
 
@@ -1192,6 +1210,8 @@
     const loginForm = document.getElementById('loginForm');
     const appShell = document.getElementById('appShell');
     let selectedLoginRole = 'patient';
+    let authorizedPatientDevice = false;
+    let patientLoggedInThisSession = false;
 
     const loginRoles = {
       patient: {
@@ -1446,6 +1466,7 @@
       ['[data-doctor-panel-content="history"] .page-heading h1', 'history.title'], ['[data-doctor-panel-content="history"] .heading-copy', 'history.subtitle'], ['[data-doctor-panel-content="history"] .history-toolbar button', 'history.recent'],
       ['#deviceDialogTitle', 'device.title'], ['#deviceDialogTitle + p', 'device.subtitle'], ['#deviceNameField', 'device.name', 'direct'], ['#deviceCodeField', 'device.code', 'direct'],
       ['#deviceMethodScan', 'device.scan'], ['#deviceMethodManual', 'device.manual'], ['#deviceScanStatus', 'device.scanHelp'], ['#startDeviceQrScan', 'device.startScanner'],
+      ['#deviceSetupHelp', 'device.setupHelp'], ['#deviceSetupLink', 'device.openSetup'], ['#authorizedDevicesTitle', 'device.listTitle'],
       ['#cancelDeviceDialog', 'device.cancel'], ['#deviceForm .device-authorize', 'device.authorize']
     ];
 
@@ -1631,12 +1652,50 @@
     const deviceManualPanel = document.getElementById('deviceManualPanel');
     const deviceScanStatus = document.getElementById('deviceScanStatus');
     const deviceQrVideo = document.getElementById('deviceQrVideo');
+    const authorizedDeviceList = document.getElementById('authorizedDeviceList');
     let deviceAuthorizationMethod = 'qr';
     let deviceQrStream = null;
     let deviceQrFrame = 0;
 
     function updateDeviceAuthorizeState() {
       authorizeDeviceButton.disabled = !deviceNameInput.value.trim() || !/^\d{6}$/.test(deviceCodeInput.value);
+    }
+
+    function renderAuthorizedDevices(devices) {
+      authorizedDeviceList.replaceChildren();
+      if (!devices.length) {
+        const empty = document.createElement('p');
+        empty.className = 'authorized-device-empty';
+        empty.textContent = 'No authorized devices yet.';
+        authorizedDeviceList.appendChild(empty);
+        return;
+      }
+      devices.forEach(device => {
+        const item = document.createElement('div');
+        item.className = 'authorized-device-item';
+        const copy = document.createElement('div');
+        const name = document.createElement('strong');
+        const meta = document.createElement('small');
+        const state = document.createElement('span');
+        name.textContent = device.name;
+        meta.textContent = `Authorized ${new Date(device.authorizedAt).toLocaleDateString()}`;
+        state.className = 'authorized-device-state';
+        state.textContent = 'Active';
+        copy.append(name, meta);
+        item.append(copy, state);
+        authorizedDeviceList.appendChild(item);
+      });
+    }
+
+    async function loadAuthorizedDevices() {
+      try {
+        const response = await fetch('/api/devices', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Could not load authorized devices');
+        const payload = await response.json();
+        renderAuthorizedDevices(payload.devices || []);
+      } catch (_) {
+        authorizedDeviceList.innerHTML = '<p class="authorized-device-empty">Backend unavailable. Start the ArogSevak server to load devices.</p>';
+      }
     }
 
     function stopDeviceQrScanner() {
@@ -1730,6 +1789,7 @@
       setDeviceAuthorizationMethod('qr');
       updateDeviceAuthorizeState();
       deviceDialog.showModal();
+      void loadAuthorizedDevices();
       requestAnimationFrame(() => deviceNameInput.focus());
     });
     deviceMethodScan.addEventListener('click', () => setDeviceAuthorizationMethod('qr'));
@@ -1743,7 +1803,7 @@
     document.getElementById('closeDeviceDialog').addEventListener('click', closeDeviceDialog);
     document.getElementById('cancelDeviceDialog').addEventListener('click', closeDeviceDialog);
     deviceDialog.addEventListener('click', event => { if (event.target === deviceDialog) closeDeviceDialog(); });
-    deviceForm.addEventListener('submit', event => {
+    deviceForm.addEventListener('submit', async event => {
       event.preventDefault();
       if (!deviceForm.reportValidity() || !/^\d{6}$/.test(deviceCodeInput.value)) {
         if (!/^\d{6}$/.test(deviceCodeInput.value)) {
@@ -1754,15 +1814,25 @@
         }
         return;
       }
-      const deviceName = deviceNameInput.value.trim();
-      const authorizedDevice = { name: deviceName, method: deviceAuthorizationMethod, authorizedAt: new Date().toISOString() };
       try {
-        const savedDevices = JSON.parse(localStorage.getItem('arogSevakAuthorizedDevices') || '[]');
-        savedDevices.push(authorizedDevice);
-        localStorage.setItem('arogSevakAuthorizedDevices', JSON.stringify(savedDevices));
-      } catch (_) {}
-      closeDeviceDialog();
-      showToast('Device authorized', `${deviceName} is now trusted for this workspace.`);
+        authorizeDeviceButton.disabled = true;
+        const deviceName = deviceNameInput.value.trim();
+        const response = await fetch('/api/device-authorizations', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: deviceName, code: deviceCodeInput.value })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Device authorization failed');
+        deviceForm.reset();
+        deviceCodeInput.value = '';
+        setDeviceAuthorizationMethod('qr');
+        updateDeviceAuthorizeState();
+        await loadAuthorizedDevices();
+        showToast('Device authorized', `${deviceName} is now trusted and limited to the patient flow.`);
+      } catch (error) {
+        showToast('Authorization failed', error.message);
+        updateDeviceAuthorizeState();
+      }
     });
 
     function openView(id) {
@@ -1789,6 +1859,7 @@
       loginForm.reset();
       loginFormShell.hidden = true;
       rolePicker.hidden = false;
+      if (authorizedPatientDevice) document.getElementById('loginTitle').textContent = 'Patient device access';
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
 
@@ -1804,6 +1875,14 @@
     let cancelLoginMotion = null;
     function applyRoute(route, focus = false) {
       if (cancelLoginMotion) cancelLoginMotion();
+      if (authorizedPatientDevice) {
+        const blockedRoleRoute = /^(?:doctor\/|staff\/|login\/(?:doctor|staff))/.test(route);
+        const protectedPatientRoute = /^patient\//.test(route) && !patientLoggedInThisSession;
+        if (blockedRoleRoute || protectedPatientRoute) {
+          route = protectedPatientRoute ? 'login/patient' : 'roles';
+          history.replaceState({ route }, '', `#/${route}`);
+        }
+      }
       if (route === 'patient/intake') {
         route = 'patient/voice';
         history.replaceState({ route }, '', '#/patient/voice');
@@ -1990,7 +2069,10 @@
         if (cancelled) return;
         cancelLoginMotion = null;
         layer.remove();
-        if (role === 'patient') resetCheckup();
+        if (role === 'patient') {
+          patientLoggedInThisSession = true;
+          resetCheckup();
+        }
         navigateRoute(role === 'patient' ? 'patient/start' : role === 'doctor' ? 'doctor/current' : 'staff/queue');
       } catch (error) {
         if (!cancelled) console.error('Login transition failed', error);
@@ -2023,6 +2105,7 @@
 
     document.getElementById('logoutButton').addEventListener('click', () => {
       setSettingsOpen(false);
+      patientLoggedInThisSession = false;
       navigateRoute('roles');
     });
 
@@ -2173,9 +2256,22 @@
     });
 
     window.addEventListener('popstate', () => applyRoute(routeFromLocation()));
-    const initialRoute = routeFromLocation();
-    history.replaceState({ route: initialRoute }, '', `#/${initialRoute}`);
-    applyRoute(initialRoute);
+
+    async function initializeDevicePolicy() {
+      try {
+        const response = await fetch('/api/device-session', { cache: 'no-store' });
+        const session = response.ok ? await response.json() : { authorized: false };
+        authorizedPatientDevice = session.authorized === true && session.allowedRole === 'patient';
+      } catch (_) {
+        authorizedPatientDevice = false;
+      }
+      loginScreen.classList.toggle('device-patient-only', authorizedPatientDevice);
+      const initialRoute = routeFromLocation();
+      history.replaceState({ route: initialRoute }, '', `#/${initialRoute}`);
+      applyRoute(initialRoute);
+    }
+
+    void initializeDevicePolicy();
   </script>
 </body>
 </html>
