@@ -1,0 +1,7 @@
+tmp/
+.docx-review/
+.sites-runtime/
+*.log
+.DS_Store
+Thumbs.db
+
