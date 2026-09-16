@@ -17,5 +17,6 @@
   "doctor.nav.current": "Current patient", "doctor.nav.history": "Patient history", "doctor.chiefConcern": "Chief concern", "doctor.context": "Relevant context", "doctor.ayurvedic": "Ayurvedic intake", "doctor.flags": "Review flags",
   "doctor.approve": "Approve draft", "doctor.edit": "Edit case sheet", "doctor.evidence": "View all evidence", "doctor.timeline": "Longitudinal timeline", "doctor.completeHistory": "View complete history",
   "history.title": "Patient history", "history.subtitle": "Review previous consultations and follow-up records.", "history.search": "Search by patient name or ID", "history.recent": "Recent visits", "history.open": "Open record",
-  "device.title": "Authorize a device", "device.subtitle": "Add a trusted reception device to this workspace.", "device.name": "Device name", "device.namePlaceholder": "e.g. Reception desk tablet", "device.code": "Authorization code", "device.codePlaceholder": "6-digit code", "device.cancel": "Cancel", "device.authorize": "Authorize device"
+  "device.title": "Authorize a device", "device.subtitle": "Add a trusted reception device to this workspace.", "device.name": "Device name", "device.namePlaceholder": "e.g. Reception desk tablet", "device.code": "Authorization code", "device.codePlaceholder": "6-digit code",
+  "device.scan": "Scan QR code", "device.manual": "Enter code manually", "device.scanHelp": "Point the camera at the device QR code.", "device.startScanner": "Start QR scanner", "device.cancel": "Cancel", "device.authorize": "Authorize device"
 }

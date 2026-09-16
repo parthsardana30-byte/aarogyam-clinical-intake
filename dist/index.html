@@ -366,6 +366,7 @@
     .doctor-profile small { margin-top: 3px; color: #687d78; }
     .doctor-nav { display: grid; gap: 8px; }
     .doctor-nav-button { width: 100%; display: flex; align-items: center; gap: 9px; border: 0; border-radius: 14px; padding: 12px 10px; background: transparent; color: var(--ink-soft); text-align: left; font-size: .93rem; font-weight: 700; white-space: nowrap; }
+    .doctor-nav-button[hidden] { display: none !important; }
     .doctor-nav-button svg { width: 21px; height: 21px; flex: 0 0 auto; }
     .doctor-nav-button[aria-selected="true"] { background: var(--ink); color: #fff; box-shadow: 0 12px 26px rgba(16,43,39,.15); }
     .app-shell.sidebar-collapsed .doctor-workspace,
@@ -435,6 +436,17 @@
     .device-dialog-head h2 { margin: 0 0 5px; font-size: 1.45rem; }
     .device-dialog-head p { margin: 0; color: var(--ink-soft); font-size: .9rem; }
     .device-dialog-close { width: 38px; height: 38px; border: 0; border-radius: 11px; background: #eef4f1; color: var(--ink); font-size: 1.35rem; cursor: pointer; }
+    .device-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 18px; }
+    .device-method { min-height: 50px; border: 1px solid var(--line-strong); border-radius: 14px; background: #f8faf9; color: var(--ink-soft); font: inherit; font-weight: 760; cursor: pointer; transition: .2s ease; }
+    .device-method[aria-selected="true"] { border-color: var(--teal); background: var(--mint); color: var(--teal-dark); box-shadow: inset 0 0 0 1px rgba(14,102,85,.08); }
+    .device-method-panel[hidden] { display: none; }
+    .device-scanner { position: relative; min-height: 210px; display: grid; place-items: center; overflow: hidden; margin-bottom: 14px; border-radius: 17px; background: linear-gradient(145deg, #102b27, #17483f); }
+    .device-scanner video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .device-scan-frame { position: relative; z-index: 1; width: 145px; aspect-ratio: 1; border: 2px solid rgba(255,255,255,.9); border-radius: 18px; box-shadow: 0 0 0 999px rgba(5,25,22,.26); }
+    .device-scan-frame::after { content: ""; position: absolute; left: 10px; right: 10px; top: 50%; height: 2px; background: #67e2c5; box-shadow: 0 0 12px #67e2c5; animation: qrScan 1.8s ease-in-out infinite alternate; }
+    @keyframes qrScan { from { transform: translateY(-52px); } to { transform: translateY(52px); } }
+    .device-scan-status { min-height: 20px; margin: 0 0 12px; color: var(--ink-soft); font-size: .82rem; text-align: center; }
+    .device-start-scan { width: 100%; min-height: 47px; border: 1px solid var(--line-strong); border-radius: 13px; background: #fff; color: var(--ink); font: inherit; font-weight: 760; cursor: pointer; }
     .device-field { display: grid; gap: 7px; margin-bottom: 15px; color: #49635d; font-size: .82rem; font-weight: 750; }
     .device-field input { min-height: 49px; padding: 11px 13px; border: 1px solid var(--line-strong); border-radius: 13px; background: #f8faf9; color: var(--ink); font: inherit; }
     .device-field input:focus { outline: 3px solid rgba(14,102,85,.13); border-color: var(--teal); }
@@ -442,6 +454,7 @@
     .device-dialog-actions button { min-height: 44px; border-radius: 12px; padding: 0 16px; font: inherit; font-weight: 750; cursor: pointer; }
     .device-cancel { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
     .device-authorize { border: 0; background: var(--ink); color: #fff; }
+    .device-authorize:disabled { cursor: not-allowed; opacity: .42; }
 
     .login-screen {
       min-height: 100vh;
@@ -962,7 +975,7 @@
               <small>Patient · PT-001</small>
             </div>
             <nav class="doctor-nav">
-              <button class="doctor-nav-button" type="button" aria-selected="true">
+              <button class="doctor-nav-button" type="button" aria-selected="true" hidden>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 5h14v14H5V5Z" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h5M8 17h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 <span class="nav-label">Start check-up</span>
               </button>
@@ -1027,7 +1040,7 @@
         </div>
         <section class="patient-records" id="patientRecords" aria-labelledby="patientRecordsTitle" hidden>
           <div class="records-heading">
-            <div><h1 id="patientRecordsTitle" tabindex="-1">My records</h1><p>Your consultations, care notes and shared documents in one place.</p></div>
+            <div><h1 id="patientRecordsTitle" tabindex="-1">My records</h1></div>
           </div>
           <div class="records-summary" aria-label="Record summary">
             <article class="records-summary-card"><span>Consultations</span><strong>3 visits</strong></article>
@@ -1150,11 +1163,22 @@
         <div><h2 id="deviceDialogTitle">Authorize a device</h2><p>Add a trusted reception device to this workspace.</p></div>
         <button class="device-dialog-close" id="closeDeviceDialog" type="button" aria-label="Close">×</button>
       </div>
-      <label class="device-field">Device name<input id="deviceName" required maxlength="60" placeholder="e.g. Reception desk tablet" /></label>
-      <label class="device-field">Authorization code<input id="deviceCode" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit code" /></label>
+      <label class="device-field" id="deviceNameField">Device name<input id="deviceName" required maxlength="60" placeholder="e.g. Reception desk tablet" /></label>
+      <div class="device-methods" role="tablist" aria-label="Authorization method">
+        <button class="device-method" id="deviceMethodScan" type="button" role="tab" aria-selected="true" aria-controls="deviceScanPanel">Scan QR code</button>
+        <button class="device-method" id="deviceMethodManual" type="button" role="tab" aria-selected="false" aria-controls="deviceManualPanel">Enter code manually</button>
+      </div>
+      <section class="device-method-panel" id="deviceScanPanel" role="tabpanel" aria-labelledby="deviceMethodScan">
+        <div class="device-scanner"><video id="deviceQrVideo" playsinline muted></video><div class="device-scan-frame" aria-hidden="true"></div></div>
+        <p class="device-scan-status" id="deviceScanStatus" aria-live="polite">Point the camera at the device QR code.</p>
+        <button class="device-start-scan" id="startDeviceQrScan" type="button">Start QR scanner</button>
+      </section>
+      <section class="device-method-panel" id="deviceManualPanel" role="tabpanel" aria-labelledby="deviceMethodManual" hidden>
+        <label class="device-field" id="deviceCodeField">Authorization code<input id="deviceCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code" /></label>
+      </section>
       <div class="device-dialog-actions">
         <button class="device-cancel" id="cancelDeviceDialog" type="button">Cancel</button>
-        <button class="device-authorize" type="submit">Authorize device</button>
+        <button class="device-authorize" id="authorizeDeviceButton" type="submit" disabled>Authorize device</button>
       </div>
     </form>
   </dialog>
@@ -1420,7 +1444,9 @@
       ['#doctor .summary-section:nth-child(1) h3', 'doctor.chiefConcern'], ['#doctor .summary-section:nth-child(2) h3', 'doctor.context'], ['#doctor .summary-section:nth-child(3) h3', 'doctor.ayurvedic'], ['#doctor .summary-section:nth-child(4) h3', 'doctor.flags'],
       ['#doctor .doctor-actions .primary-button', 'doctor.approve'], ['#doctor .doctor-actions .secondary-button:nth-child(2)', 'doctor.edit'], ['#doctor .doctor-actions .secondary-button:nth-child(3)', 'doctor.evidence'], ['#doctor .doctor-layout aside .card-header h2', 'doctor.timeline'], ['#doctor .doctor-layout aside .secondary-button', 'doctor.completeHistory'],
       ['[data-doctor-panel-content="history"] .page-heading h1', 'history.title'], ['[data-doctor-panel-content="history"] .heading-copy', 'history.subtitle'], ['[data-doctor-panel-content="history"] .history-toolbar button', 'history.recent'],
-      ['#deviceDialogTitle', 'device.title'], ['#deviceDialogTitle + p', 'device.subtitle'], ['#deviceForm .device-field:nth-of-type(1)', 'device.name', 'direct'], ['#deviceForm .device-field:nth-of-type(2)', 'device.code', 'direct'], ['#cancelDeviceDialog', 'device.cancel'], ['#deviceForm .device-authorize', 'device.authorize']
+      ['#deviceDialogTitle', 'device.title'], ['#deviceDialogTitle + p', 'device.subtitle'], ['#deviceNameField', 'device.name', 'direct'], ['#deviceCodeField', 'device.code', 'direct'],
+      ['#deviceMethodScan', 'device.scan'], ['#deviceMethodManual', 'device.manual'], ['#deviceScanStatus', 'device.scanHelp'], ['#startDeviceQrScan', 'device.startScanner'],
+      ['#cancelDeviceDialog', 'device.cancel'], ['#deviceForm .device-authorize', 'device.authorize']
     ];
 
     function setBoundText(element, value, mode) {
@@ -1596,23 +1622,140 @@
       toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
     }
 
+    const deviceNameInput = document.getElementById('deviceName');
+    const deviceCodeInput = document.getElementById('deviceCode');
+    const authorizeDeviceButton = document.getElementById('authorizeDeviceButton');
+    const deviceMethodScan = document.getElementById('deviceMethodScan');
+    const deviceMethodManual = document.getElementById('deviceMethodManual');
+    const deviceScanPanel = document.getElementById('deviceScanPanel');
+    const deviceManualPanel = document.getElementById('deviceManualPanel');
+    const deviceScanStatus = document.getElementById('deviceScanStatus');
+    const deviceQrVideo = document.getElementById('deviceQrVideo');
+    let deviceAuthorizationMethod = 'qr';
+    let deviceQrStream = null;
+    let deviceQrFrame = 0;
+
+    function updateDeviceAuthorizeState() {
+      authorizeDeviceButton.disabled = !deviceNameInput.value.trim() || !/^\d{6}$/.test(deviceCodeInput.value);
+    }
+
+    function stopDeviceQrScanner() {
+      cancelAnimationFrame(deviceQrFrame);
+      deviceQrFrame = 0;
+      deviceQrStream?.getTracks().forEach(track => track.stop());
+      deviceQrStream = null;
+      deviceQrVideo.srcObject = null;
+    }
+
+    function setDeviceAuthorizationMethod(method) {
+      deviceAuthorizationMethod = method;
+      const scanSelected = method === 'qr';
+      deviceMethodScan.setAttribute('aria-selected', String(scanSelected));
+      deviceMethodManual.setAttribute('aria-selected', String(!scanSelected));
+      deviceScanPanel.hidden = !scanSelected;
+      deviceManualPanel.hidden = scanSelected;
+      if (!scanSelected) {
+        stopDeviceQrScanner();
+        requestAnimationFrame(() => deviceCodeInput.focus());
+      }
+      updateDeviceAuthorizeState();
+    }
+
+    function authorizationCodeFromQr(value) {
+      const raw = String(value || '');
+      try {
+        const candidate = new URL(raw);
+        const queryCode = candidate.searchParams.get('code') || candidate.searchParams.get('authorizationCode');
+        if (/^\d{6}$/.test(queryCode || '')) return queryCode;
+      } catch (_) {}
+      return raw.match(/(?:^|\D)(\d{6})(?:\D|$)/)?.[1] || '';
+    }
+
+    async function startDeviceQrScanner() {
+      stopDeviceQrScanner();
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        deviceScanStatus.textContent = 'Camera scanning requires HTTPS. Enter the code manually.';
+        return;
+      }
+      if (!('BarcodeDetector' in window)) {
+        deviceScanStatus.textContent = 'QR scanning is not supported in this browser. Enter the code manually.';
+        return;
+      }
+      deviceScanStatus.textContent = 'Starting camera…';
+      try {
+        deviceQrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+        deviceQrVideo.srcObject = deviceQrStream;
+        await deviceQrVideo.play();
+        deviceScanStatus.textContent = 'Scanning for a QR code…';
+        const detector = new BarcodeDetector({ formats: ['qr_code'] });
+        const scanFrame = async () => {
+          if (!deviceQrStream || deviceDialog.open === false) return;
+          try {
+            const codes = await detector.detect(deviceQrVideo);
+            const authorizationCode = authorizationCodeFromQr(codes[0]?.rawValue);
+            if (authorizationCode) {
+              deviceCodeInput.value = authorizationCode;
+              deviceScanStatus.textContent = 'QR code scanned successfully.';
+              stopDeviceQrScanner();
+              updateDeviceAuthorizeState();
+              return;
+            }
+            if (codes.length) deviceScanStatus.textContent = 'This QR code does not contain a valid 6-digit authorization code.';
+          } catch (_) {}
+          deviceQrFrame = requestAnimationFrame(scanFrame);
+        };
+        deviceQrFrame = requestAnimationFrame(scanFrame);
+      } catch (error) {
+        stopDeviceQrScanner();
+        deviceScanStatus.textContent = error.name === 'NotAllowedError'
+          ? 'Camera permission was not granted. Enter the code manually.'
+          : 'Camera could not be opened. Enter the code manually.';
+      }
+    }
+
     function closeDeviceDialog() {
+      stopDeviceQrScanner();
       deviceDialog.close();
       deviceForm.reset();
+      deviceCodeInput.value = '';
+      deviceScanStatus.textContent = structuredMessages['device.scanHelp'] || 'Point the camera at the device QR code.';
+      setDeviceAuthorizationMethod('qr');
+      updateDeviceAuthorizeState();
     }
 
     document.getElementById('addAuthorizedDevice').addEventListener('click', () => {
+      deviceForm.reset();
+      deviceCodeInput.value = '';
+      deviceScanStatus.textContent = structuredMessages['device.scanHelp'] || 'Point the camera at the device QR code.';
+      setDeviceAuthorizationMethod('qr');
+      updateDeviceAuthorizeState();
       deviceDialog.showModal();
-      requestAnimationFrame(() => document.getElementById('deviceName').focus());
+      requestAnimationFrame(() => deviceNameInput.focus());
+    });
+    deviceMethodScan.addEventListener('click', () => setDeviceAuthorizationMethod('qr'));
+    deviceMethodManual.addEventListener('click', () => setDeviceAuthorizationMethod('manual'));
+    document.getElementById('startDeviceQrScan').addEventListener('click', startDeviceQrScanner);
+    deviceNameInput.addEventListener('input', updateDeviceAuthorizeState);
+    deviceCodeInput.addEventListener('input', () => {
+      deviceCodeInput.value = deviceCodeInput.value.replace(/\D/g, '').slice(0, 6);
+      updateDeviceAuthorizeState();
     });
     document.getElementById('closeDeviceDialog').addEventListener('click', closeDeviceDialog);
     document.getElementById('cancelDeviceDialog').addEventListener('click', closeDeviceDialog);
     deviceDialog.addEventListener('click', event => { if (event.target === deviceDialog) closeDeviceDialog(); });
     deviceForm.addEventListener('submit', event => {
       event.preventDefault();
-      if (!deviceForm.reportValidity()) return;
-      const deviceName = document.getElementById('deviceName').value.trim();
-      const authorizedDevice = { name: deviceName, authorizedAt: new Date().toISOString() };
+      if (!deviceForm.reportValidity() || !/^\d{6}$/.test(deviceCodeInput.value)) {
+        if (!/^\d{6}$/.test(deviceCodeInput.value)) {
+          setDeviceAuthorizationMethod('manual');
+          deviceCodeInput.setCustomValidity('Enter a valid 6-digit authorization code.');
+          deviceCodeInput.reportValidity();
+          deviceCodeInput.setCustomValidity('');
+        }
+        return;
+      }
+      const deviceName = deviceNameInput.value.trim();
+      const authorizedDevice = { name: deviceName, method: deviceAuthorizationMethod, authorizedAt: new Date().toISOString() };
       try {
         const savedDevices = JSON.parse(localStorage.getItem('arogSevakAuthorizedDevices') || '[]');
         savedDevices.push(authorizedDevice);
