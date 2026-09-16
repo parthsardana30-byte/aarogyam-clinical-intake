@@ -319,7 +319,11 @@
     .language-continue { min-width: 180px; border: 0; background: var(--ink); color: #fff; }
     .language-continue:disabled { cursor: not-allowed; opacity: .42; }
     .voice-session { min-height: calc(100dvh - 194px); display: grid; place-items: center; padding: 28px; }
-    .voice-stage { width: min(680px, 100%); display: grid; justify-items: center; text-align: center; }
+    .voice-experience { width: min(1080px, 100%); display: grid; grid-template-columns: minmax(310px, .82fr) minmax(420px, 1.18fr); gap: 18px; align-items: stretch; }
+    .voice-stage {
+      display: grid; align-content: center; justify-items: center; padding: 30px; border: 1px solid rgba(16,43,39,.1);
+      border-radius: 28px; background: rgba(255,255,255,.78); box-shadow: 0 22px 60px rgba(28,39,36,.08); text-align: center;
+    }
     .voice-language { margin-bottom: 22px; color: var(--teal); font-size: .82rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
     .voice-orb {
       position: relative; width: clamp(170px, 22vw, 230px); aspect-ratio: 1; display: grid; place-items: center;
@@ -338,12 +342,26 @@
     .voice-status { margin-top: 34px; color: var(--teal); font-size: .9rem; font-weight: 800; }
     .voice-stage h1 { margin: 8px 0 10px; font-size: clamp(2.35rem, 5vw, 4.2rem); letter-spacing: -.055em; line-height: 1; }
     .voice-question { max-width: 580px; min-height: 58px; margin: 0; color: var(--ink-soft); font-size: clamp(1.05rem, 2vw, 1.3rem); line-height: 1.45; }
-    .voice-controls { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 28px; }
-    .voice-mic, .voice-end { min-height: 54px; border-radius: 16px; padding: 0 22px; font: inherit; font-weight: 780; cursor: pointer; }
-    .voice-mic { display: inline-flex; align-items: center; gap: 10px; border: 0; background: var(--ink); color: #fff; }
-    .voice-mic svg { width: 21px; height: 21px; }
-    .voice-mic[aria-pressed="true"] { background: #b9571d; }
+    .auto-mic { display: inline-flex; align-items: center; gap: 9px; margin-top: 24px; color: var(--teal); font-size: .88rem; font-weight: 760; }
+    .auto-mic-dot { width: 9px; height: 9px; border-radius: 50%; background: #42a77c; box-shadow: 0 0 0 6px rgba(66,167,124,.13); }
+    .auto-mic.error { color: #a64c20; }
+    .auto-mic.error .auto-mic-dot { background: #dd7a24; box-shadow: 0 0 0 6px rgba(221,122,36,.13); }
+    .voice-end { min-height: 48px; margin-top: 22px; border-radius: 15px; padding: 0 22px; font: inherit; font-weight: 780; cursor: pointer; }
     .voice-end { border: 1px solid var(--line-strong); background: rgba(255,255,255,.82); color: var(--ink); }
+    .voice-chat { min-height: 470px; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; border: 1px solid rgba(16,43,39,.1); border-radius: 28px; background: rgba(255,255,255,.88); box-shadow: 0 22px 60px rgba(28,39,36,.08); }
+    .voice-chat-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .voice-chat-head strong { font-size: 1.05rem; }
+    .voice-chat-head span { color: #657c76; font-size: .8rem; }
+    .voice-chat-messages { display: flex; flex-direction: column; gap: 12px; min-height: 0; padding: 20px; overflow-y: auto; }
+    .voice-chat-message { max-width: 84%; padding: 13px 15px; border-radius: 17px; line-height: 1.42; }
+    .voice-chat-message.ai { align-self: flex-start; border: 1px solid var(--line); border-bottom-left-radius: 5px; background: #f4f8f6; }
+    .voice-chat-message.user { align-self: flex-end; border-bottom-right-radius: 5px; background: var(--ink); color: #fff; }
+    .voice-chat-message p { margin: 0; }
+    .voice-chat-message small { display: block; margin-top: 6px; color: #718681; font-size: .72rem; }
+    .voice-chat-message.user small { color: rgba(255,255,255,.68); }
+    .voice-chat-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 16px; border-top: 1px solid var(--line); background: rgba(248,250,249,.92); }
+    .voice-chat-input { min-width: 0; min-height: 50px; border: 1px solid var(--line-strong); border-radius: 14px; padding: 0 14px; background: #fff; color: var(--ink); font: inherit; }
+    .voice-chat-send { min-width: 92px; border: 0; border-radius: 14px; background: var(--ink); color: #fff; font: inherit; font-weight: 780; cursor: pointer; }
     .portal-main .intake-grid { grid-template-columns: minmax(210px, .72fr) minmax(410px, 1.55fr) minmax(250px, .88fr); }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
@@ -514,6 +532,7 @@
       .app-shell.sidebar-collapsed .doctor-sidebar:hover,
       .app-shell.sidebar-collapsed .doctor-sidebar:focus-within { width: 230px; }
       .history-record { grid-template-columns: 1fr 1fr; }
+      .voice-experience { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 760px) {
@@ -565,8 +584,10 @@
       .language-actions { align-items: stretch; flex-direction: column-reverse; }
       .language-back, .language-continue { width: 100%; }
       .voice-session { min-height: auto; padding: 42px 0; }
-      .voice-controls { align-items: stretch; flex-direction: column; width: 100%; }
-      .voice-mic, .voice-end { justify-content: center; width: 100%; }
+      .voice-stage { padding: 34px 20px; }
+      .voice-chat { min-height: 520px; }
+      .voice-chat-form { grid-template-columns: 1fr; }
+      .voice-chat-send { min-height: 48px; }
     }
 
     @media (max-height: 620px) {
@@ -784,21 +805,26 @@
         </div>
         <div class="checkup-flow" id="checkupFlow" hidden>
           <section class="voice-session" aria-labelledby="voicePrompt">
-            <div class="voice-stage">
-              <div class="voice-language" id="voiceLanguage">English conversation</div>
-              <div class="voice-orb" id="voiceOrb" aria-hidden="true">
-                <svg viewBox="0 0 32 32" fill="none"><path d="M7 11.5c2.5-4 11-4 14-.5 2 2.5.5 5.5-3 6.5l-6.5 2c-3 1-3 4.5 0 5.5 3.5 1 8.5-.5 10.5-3.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M23 6v6M20 9h6" stroke="#f4a261" stroke-width="2.5" stroke-linecap="round"/></svg>
-              </div>
-              <div class="voice-status" id="voiceStatus" role="status" aria-live="polite">ArogSevak is ready</div>
-              <h1 id="voicePrompt">Hello, Ananya</h1>
-              <p class="voice-question" id="voiceQuestion">What health concern would you like to discuss today?</p>
-              <div class="voice-controls">
-                <button class="voice-mic" id="micButton" type="button" aria-label="Start speaking" aria-pressed="false">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  <span id="micLabel">Tap to answer</span>
-                </button>
+            <div class="voice-experience">
+              <div class="voice-stage">
+                <div class="voice-language" id="voiceLanguage">English conversation</div>
+                <div class="voice-orb" id="voiceOrb" aria-hidden="true">
+                  <svg viewBox="0 0 32 32" fill="none"><path d="M7 11.5c2.5-4 11-4 14-.5 2 2.5.5 5.5-3 6.5l-6.5 2c-3 1-3 4.5 0 5.5 3.5 1 8.5-.5 10.5-3.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M23 6v6M20 9h6" stroke="#f4a261" stroke-width="2.5" stroke-linecap="round"/></svg>
+                </div>
+                <div class="voice-status" id="voiceStatus" role="status" aria-live="polite">ArogSevak is ready</div>
+                <h1 id="voicePrompt">Hello, Ananya</h1>
+                <p class="voice-question" id="voiceQuestion">What health concern would you like to discuss today?</p>
+                <div class="auto-mic" id="autoMicStatus"><span class="auto-mic-dot"></span><span id="autoMicText">Connecting microphone…</span></div>
                 <button class="voice-end" id="endVoiceSession" type="button">End check-up</button>
               </div>
+              <aside class="voice-chat" aria-label="Live check-up chat">
+                <div class="voice-chat-head"><strong>Live chat</strong><span>Voice transcript appears here</span></div>
+                <div class="voice-chat-messages" id="voiceChatMessages" aria-live="polite"></div>
+                <form class="voice-chat-form" id="voiceChatForm">
+                  <input class="voice-chat-input" id="voiceChatInput" type="text" autocomplete="off" aria-label="Type a message" placeholder="Type a message…">
+                  <button class="voice-chat-send" type="submit">Send</button>
+                </form>
+              </aside>
             </div>
           </section>
         </div>
@@ -949,6 +975,7 @@
     ];
     let toastTimer;
     let voiceTimer;
+    let microphoneStream = null;
 
     languageOptions.innerHTML = indianLanguages.map(([english, native]) => `
       <label class="language-choice">
@@ -966,11 +993,13 @@
       checkupFlow.hidden = !isVoice;
       checkupWelcome.hidden = !isStart;
       languageStep.hidden = !isLanguage;
-      if (!isVoice) clearTimeout(voiceTimer);
-      if (isVoice) prepareVoiceSession(languageSelect.value);
+      if (!isVoice) {
+        clearTimeout(voiceTimer);
+        stopMicrophone();
+      }
+      if (isVoice) startVoiceSession(languageSelect.value);
       if (focus && isStart) startCheckupButton.focus();
       if (focus && isLanguage) languageOptions.querySelector('input').focus();
-      if (focus && isVoice) document.getElementById('micButton').focus();
     }
 
     function resetCheckup() {
@@ -999,7 +1028,6 @@
       if (!selectedLanguage) return;
       languageSelect.value = selectedLanguage;
       navigateRoute('patient/voice', false, true);
-      startVoiceSession(selectedLanguage);
       showToast('Language selected', `${selectedLanguage} will be used for your check-up.`);
     });
 
@@ -1051,6 +1079,10 @@
       if (route === 'patient/intake') {
         route = 'patient/voice';
         history.replaceState({ route }, '', '#/patient/voice');
+      }
+      if (route !== 'patient/voice') {
+        clearTimeout(voiceTimer);
+        stopMicrophone();
       }
 
       if (route === 'roles') {
@@ -1149,48 +1181,129 @@
       const [title, text] = button.dataset.toast.split('|'); showToast(title, text);
     }));
 
-    const micButton = document.getElementById('micButton');
-    const micLabel = document.getElementById('micLabel');
     const voiceOrb = document.getElementById('voiceOrb');
     const voiceStatus = document.getElementById('voiceStatus');
     const voiceLanguage = document.getElementById('voiceLanguage');
     const voiceQuestion = document.getElementById('voiceQuestion');
+    const autoMicStatus = document.getElementById('autoMicStatus');
+    const autoMicText = document.getElementById('autoMicText');
+    const voiceChatMessages = document.getElementById('voiceChatMessages');
+    const voiceChatForm = document.getElementById('voiceChatForm');
+    const voiceChatInput = document.getElementById('voiceChatInput');
     const voicePrompts = {
       English: 'What health concern would you like to discuss today?',
       Hindi: 'आज आप किस स्वास्थ्य समस्या के बारे में बात करना चाहेंगी?'
     };
+    const speechLanguageCodes = {
+      English: 'en-IN', Assamese: 'as-IN', Bengali: 'bn-IN', Bodo: 'brx-IN', Dogri: 'doi-IN', Gujarati: 'gu-IN',
+      Hindi: 'hi-IN', Kannada: 'kn-IN', Kashmiri: 'ks-IN', Konkani: 'gom-IN', Maithili: 'mai-IN', Malayalam: 'ml-IN',
+      Manipuri: 'mni-IN', Marathi: 'mr-IN', Nepali: 'ne-NP', Odia: 'or-IN', Punjabi: 'pa-IN', Sanskrit: 'sa-IN',
+      Santali: 'sat-IN', Sindhi: 'sd-IN', Tamil: 'ta-IN', Telugu: 'te-IN', Urdu: 'ur-IN'
+    };
+    const followUpQuestions = [
+      'Thank you. When did this concern begin?',
+      'Does anything make it feel better or worse?',
+      'Have you noticed any other symptoms with it?'
+    ];
+    let followUpIndex = 0;
+
+    function appendChatMessage(text, type, note) {
+      const message = document.createElement('div');
+      message.className = `voice-chat-message ${type}`;
+      const body = document.createElement('p');
+      body.textContent = text;
+      const meta = document.createElement('small');
+      meta.textContent = note;
+      message.append(body, meta);
+      voiceChatMessages.appendChild(message);
+      voiceChatMessages.scrollTop = voiceChatMessages.scrollHeight;
+    }
+
+    function stopMicrophone() {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      if (!microphoneStream) return;
+      microphoneStream.getTracks().forEach(track => track.stop());
+      microphoneStream = null;
+    }
+
+    function speakAI(text, language) {
+      if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = speechLanguageCodes[language] || 'en-IN';
+      utterance.rate = .96;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    async function openMicrophone() {
+      if (microphoneStream?.active) {
+        autoMicStatus.classList.remove('error');
+        autoMicText.textContent = 'Microphone connected automatically';
+        return;
+      }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        autoMicStatus.classList.add('error');
+        autoMicText.textContent = 'Microphone is not supported — use chat';
+        return;
+      }
+      autoMicStatus.classList.remove('error');
+      autoMicText.textContent = 'Connecting microphone…';
+      try {
+        microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        autoMicText.textContent = 'Microphone connected automatically';
+      } catch (error) {
+        autoMicStatus.classList.add('error');
+        autoMicText.textContent = 'Microphone permission needed — use chat';
+      }
+    }
 
     function prepareVoiceSession(language) {
       clearTimeout(voiceTimer);
-      micButton.setAttribute('aria-pressed', 'false');
-      micLabel.textContent = 'Tap to answer';
       voiceOrb.classList.remove('listening');
       voiceLanguage.textContent = `${language} conversation`;
       voiceStatus.textContent = 'ArogSevak is ready';
       voiceQuestion.textContent = voicePrompts[language] || 'Please tell me what health concern you would like to discuss today.';
+      followUpIndex = 0;
+      voiceChatMessages.replaceChildren();
+      appendChatMessage(voiceQuestion.textContent, 'ai', 'ArogSevak · speaking');
     }
 
     function startVoiceSession(language) {
       prepareVoiceSession(language);
+      openMicrophone();
       voiceStatus.textContent = `ArogSevak is speaking in ${language}…`;
+      speakAI(voiceQuestion.textContent, language);
       voiceTimer = setTimeout(() => {
         voiceStatus.textContent = 'Listening…';
-        micButton.setAttribute('aria-pressed', 'true');
-        micLabel.textContent = 'Listening…';
         voiceOrb.classList.add('listening');
       }, 1800);
     }
 
-    micButton.addEventListener('click', () => {
-      const listening = micButton.getAttribute('aria-pressed') === 'true';
-      micButton.setAttribute('aria-pressed', String(!listening));
-      micLabel.textContent = listening ? 'Tap to answer' : 'Listening…';
-      voiceOrb.classList.toggle('listening', !listening);
-      voiceStatus.textContent = listening ? 'ArogSevak is ready' : 'Listening…';
+    voiceChatForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const message = voiceChatInput.value.trim();
+      if (!message) return;
+      appendChatMessage(message, 'user', 'You · typed');
+      voiceChatInput.value = '';
+      voiceOrb.classList.remove('listening');
+      voiceStatus.textContent = 'ArogSevak is speaking…';
+      const reply = followUpQuestions[followUpIndex % followUpQuestions.length];
+      followUpIndex += 1;
+      clearTimeout(voiceTimer);
+      voiceTimer = setTimeout(() => {
+        voiceQuestion.textContent = reply;
+        appendChatMessage(reply, 'ai', 'ArogSevak · speaking');
+        speakAI(reply, languageSelect.value);
+        voiceTimer = setTimeout(() => {
+          voiceStatus.textContent = 'Listening…';
+          voiceOrb.classList.add('listening');
+        }, 1400);
+      }, 500);
     });
 
     document.getElementById('endVoiceSession').addEventListener('click', () => {
       clearTimeout(voiceTimer);
+      stopMicrophone();
       resetCheckup();
       navigateRoute('patient/start');
     });
