@@ -249,16 +249,15 @@
     .login-brand .brand-mark { width: 38px; height: 38px; border-radius: 12px; box-shadow: none; }
     .login-brand .brand-name { font-family: inherit; font-size: 1.35rem; font-weight: 620; letter-spacing: -.03em; }
     .login-brand .brand-context { color: #66716e; font-size: .76rem; }
-    .login-intro { text-align: center; margin: 0 auto 34px; max-width: 700px; }
-    .login-intro h1 { margin-bottom: 10px; font-family: inherit; font-weight: 520; letter-spacing: -.045em; font-size: clamp(2rem, 4vw, 3.35rem); }
-    .login-intro p { color: var(--ink-soft); margin-bottom: 0; font-size: 1.02rem; }
-    .demo-ribbon { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 17px; color: #40534f; background: rgba(255,255,255,.55); border: 1px solid rgba(16,43,39,.16); border-radius: 999px; padding: 7px 13px; font-size: .73rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .login-intro { text-align: center; margin: 0 auto 42px; max-width: 700px; }
+    .login-intro h1 { margin: 0; font-family: inherit; font-weight: 520; letter-spacing: -.045em; font-size: clamp(2.35rem, 4.6vw, 3.8rem); }
     .login-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .login-card {
-      min-height: 316px;
-      padding: 30px;
+      min-height: 280px;
+      padding: 34px;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       border: 1px solid rgba(16, 43, 39, .1);
       border-radius: 28px;
       background: rgba(255,255,255,.7);
@@ -270,15 +269,11 @@
     }
     .login-card:hover { transform: translateY(-7px); border-color: rgba(14, 102, 85, .4); box-shadow: 0 30px 80px rgba(16, 43, 39, .16); }
     .login-card:focus-visible { outline: 4px solid rgba(221, 122, 36, .3); outline-offset: 3px; }
-    .login-card-icon { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 19px; margin-bottom: 23px; color: var(--teal); background: var(--mint); }
+    .login-card-icon { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 21px; margin-bottom: 27px; color: var(--teal); background: var(--mint); }
     .login-card:nth-child(2) .login-card-icon { color: #9b5418; background: var(--orange-soft); }
     .login-card:nth-child(3) .login-card-icon { color: #315d70; background: #e4eff3; }
-    .login-card-icon svg { width: 34px; height: 34px; }
-    .login-card h2 { font: 620 1.48rem/1.2 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.025em; margin-bottom: 10px; }
-    .login-card p { color: #5e716d; margin-bottom: 22px; }
-    .login-card-action { margin-top: auto; display: flex; justify-content: space-between; align-items: center; color: var(--teal-dark); font-weight: 800; }
-    .login-card-action span:last-child { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: #fff; font-size: 1.1rem; }
-    .login-footnote { position: relative; z-index: 1; margin: 34px auto 0; color: #68736f; text-align: center; font-size: .82rem; }
+    .login-card-icon svg { width: 38px; height: 38px; }
+    .login-card h2 { font: 620 clamp(1.9rem, 2.5vw, 2.35rem)/1.12 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin: 0; text-wrap: balance; }
 
     .login-form-shell {
       width: min(1180px, 100%);
@@ -422,28 +417,20 @@
 
       <div id="rolePicker">
         <div class="login-intro">
-          <div class="demo-ribbon">● Secure prototype access</div>
           <h1 id="loginTitle">Choose your care portal</h1>
-          <p>One connected platform, designed around the work each person needs to complete.</p>
         </div>
         <div class="login-cards">
           <button class="login-card" type="button" data-login-role="patient">
             <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4.8 20c.7-4.2 3-6.3 7.2-6.3s6.5 2.1 7.2 6.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
             <h2>Patient Login</h2>
-            <p>Complete your pre-consultation intake, review health records and control consent from one place.</p>
-            <span class="login-card-action"><span>Enter patient portal</span><span>→</span></span>
           </button>
           <button class="login-card" type="button" data-login-role="doctor">
             <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 4v3a3 3 0 0 0 6 0V4M7 4h2M15 4h2M12 10v2a6 6 0 0 0 6 6h1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="19" cy="18" r="2" stroke="currentColor" stroke-width="1.8"/></svg></span>
             <h2>Doctor Login</h2>
-            <p>Review evidence-linked case sheets, longitudinal changes, contradictions and clinician-only findings.</p>
-            <span class="login-card-action"><span>Enter doctor console</span><span>→</span></span>
           </button>
           <button class="login-card" type="button" data-login-role="staff">
             <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V8l8-4 8 4v12M8 20v-5h8v5M9 10h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <h2>Hospital Staff Login</h2>
-            <p>Register patients, start assisted intake, scan documents and manage the OPD preparation queue.</p>
-            <span class="login-card-action"><span>Enter staff workspace</span><span>→</span></span>
           </button>
         </div>
       </div>
@@ -478,7 +465,6 @@
           </form>
         </div>
       </div>
-      <p class="login-footnote">Privacy-first demonstration · Role-based access · Clinician review required</p>
     </div>
   </section>
 
