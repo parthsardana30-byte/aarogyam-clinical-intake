@@ -213,6 +213,28 @@
     .action-button small { color: #718681; }
 
     .doctor-layout { display: grid; grid-template-columns: 1.28fr .72fr; gap: 18px; }
+    .app-shell.doctor-session .rolebar { display: none; }
+    .app-shell.doctor-session .topbar { border-bottom: 1px solid rgba(16,43,39,.1); border-radius: 26px; }
+    .doctor-workspace { display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 22px; align-items: start; }
+    .doctor-sidebar { position: sticky; top: 18px; padding: 20px; min-height: 560px; }
+    .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+    .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
+    .doctor-profile strong, .doctor-profile small { display: block; }
+    .doctor-profile small { margin-top: 3px; color: #687d78; }
+    .doctor-nav { display: grid; gap: 8px; }
+    .doctor-nav-button { width: 100%; display: flex; align-items: center; gap: 11px; border: 0; border-radius: 14px; padding: 12px 13px; background: transparent; color: var(--ink-soft); text-align: left; font-weight: 700; }
+    .doctor-nav-button svg { width: 21px; height: 21px; flex: 0 0 auto; }
+    .doctor-nav-button[aria-selected="true"] { background: var(--ink); color: #fff; box-shadow: 0 12px 26px rgba(16,43,39,.15); }
+    .doctor-panel { display: none; }
+    .doctor-panel.active { display: block; animation: appear .22s ease-out; }
+    .history-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
+    .history-search { flex: 1; min-height: 48px; border: 1px solid var(--line-strong); border-radius: 14px; padding: 11px 14px; background: rgba(255,255,255,.82); color: var(--ink); font: inherit; }
+    .history-list { display: grid; gap: 12px; }
+    .history-record { display: grid; grid-template-columns: 1.2fr .85fr .8fr auto; align-items: center; gap: 16px; padding: 18px 20px; }
+    .history-record strong, .history-record small { display: block; }
+    .history-record small, .history-meta { color: #6b807b; }
+    .history-condition { font-weight: 650; }
+    .history-record .secondary-button { white-space: nowrap; }
     .summary-section { padding: 18px 20px; border-bottom: 1px solid var(--line); }
     .summary-section:last-child { border-bottom: 0; }
     .summary-section h3 { font-size: .8rem; color: #657a75; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 9px; }
@@ -336,6 +358,8 @@
       .intake-grid { grid-template-columns: 230px 1fr; }
       .side-stack { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
       .doctor-layout, .dashboard-grid { grid-template-columns: 1fr; }
+      .doctor-workspace { grid-template-columns: 210px minmax(0, 1fr); }
+      .history-record { grid-template-columns: 1fr 1fr; }
     }
 
     @media (max-width: 760px) {
@@ -370,6 +394,12 @@
       .message { max-width: 92%; }
       .metric-grid { grid-template-columns: 1fr; }
       .queue-table th:nth-child(3), .queue-table td:nth-child(3) { display: none; }
+      .doctor-workspace { grid-template-columns: 1fr; }
+      .doctor-sidebar { position: static; min-height: 0; padding: 14px; }
+      .doctor-profile { display: none; }
+      .doctor-nav { grid-template-columns: 1fr 1fr; }
+      .history-toolbar { flex-direction: column; align-items: stretch; }
+      .history-record { grid-template-columns: 1fr; gap: 8px; }
     }
 
     @media (max-height: 620px) {
@@ -572,29 +602,69 @@
       </section>
 
       <section class="view" id="doctor" aria-labelledby="doctorTitle">
-        <div class="page-heading">
-          <div><div class="eyebrow">Doctor review</div><h1 id="doctorTitle">Demo Patient A’s case</h1><p class="heading-copy">A synthetic draft with every finding linked to its source.</p></div>
-          <div class="patient-id">DEMO-001 · Intake 76% complete</div>
-        </div>
-        <div class="doctor-layout">
-          <article class="card">
-            <div class="card-header"><h2>30-second clinical view</h2></div>
-            <section class="summary-section"><h3>Chief concern</h3><p><strong>Abdominal heaviness with reduced appetite</strong><span class="source-tag">Voice · verified</span></p><p>Reported for approximately 2–3 days, more noticeable after meals.</p></section>
-            <section class="summary-section"><h3>Relevant context</h3><ul class="summary-list"><li>No vomiting reported <span class="source-tag">Patient answer</span></li><li>Bowel movement once daily; feels incomplete <span class="source-tag">Patient answer</span></li><li>Similar episode documented three months ago <span class="source-tag">Prior visit</span></li></ul></section>
-            <section class="summary-section"><h3>Ayurvedic intake</h3><p>Appetite reduced; post-meal heaviness; sleep unchanged. Clinician examination fields such as Nadi and Sparsha remain intentionally blank.</p></section>
-            <section class="summary-section"><h3>Review flags</h3><div class="warning-row"><strong>1 contradiction to review:</strong> patient reports no regular medicines, while an uploaded prescription lists metformin.</div><div class="doctor-actions"><button class="primary-button" data-toast="Encounter approved|The demo case sheet is marked as clinician reviewed.">Approve draft</button><button class="secondary-button" data-toast="Edit mode|Clinician editing is available in the next implementation phase.">Edit case sheet</button><button class="secondary-button" data-toast="Evidence panel|All three patient-supplied source statements are available.">View all evidence</button></div></section>
-          </article>
-          <aside class="card">
-            <div class="card-header"><h2>Longitudinal timeline</h2></div>
-            <div class="card-body">
-              <ol class="timeline">
-                <li><time>Today · 10:42</time><strong>Adaptive intake</strong><p>Voice history captured in Hindi and mapped to the draft case sheet.</p></li>
-                <li><time>14 Jun 2026</time><strong>Prescription uploaded</strong><p>Source image retained; medication field awaits clinician confirmation.</p></li>
-                <li><time>02 May 2026</time><strong>Previous AYUSH visit</strong><p>Similar digestive complaint recorded at the same facility.</p></li>
-              </ol>
-              <button class="secondary-button" style="width:100%" data-toast="Access history|This record was viewed only by the assigned demo clinician.">View access history</button>
+        <div class="doctor-workspace">
+          <aside class="card doctor-sidebar" aria-label="Doctor navigation">
+            <div class="doctor-profile">
+              <div class="doctor-profile-mark">DR</div>
+              <strong>Doctor workspace</strong>
+              <small>Clinical review</small>
             </div>
+            <nav class="doctor-nav">
+              <button class="doctor-nav-button" type="button" data-doctor-panel="current" aria-selected="true">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c.8-4.2 3.1-6.3 7-6.3s6.2 2.1 7 6.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                Current patient
+              </button>
+              <button class="doctor-nav-button" type="button" data-doctor-panel="history" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                Patient history
+              </button>
+            </nav>
           </aside>
+
+          <div class="doctor-main">
+            <div class="doctor-panel active" data-doctor-panel-content="current">
+              <div class="page-heading">
+                <div><div class="eyebrow">Current patient</div><h1 id="doctorTitle">Patient A’s case</h1><p class="heading-copy">Review the intake draft and verify each clinical finding.</p></div>
+                <div class="patient-id">PT-001 · Intake 76% complete</div>
+              </div>
+              <div class="doctor-layout">
+                <article class="card">
+                  <div class="card-header"><h2>30-second clinical view</h2></div>
+                  <section class="summary-section"><h3>Chief concern</h3><p><strong>Abdominal heaviness with reduced appetite</strong><span class="source-tag">Voice · verified</span></p><p>Reported for approximately 2–3 days, more noticeable after meals.</p></section>
+                  <section class="summary-section"><h3>Relevant context</h3><ul class="summary-list"><li>No vomiting reported <span class="source-tag">Patient answer</span></li><li>Bowel movement once daily; feels incomplete <span class="source-tag">Patient answer</span></li><li>Similar episode documented three months ago <span class="source-tag">Prior visit</span></li></ul></section>
+                  <section class="summary-section"><h3>Ayurvedic intake</h3><p>Appetite reduced; post-meal heaviness; sleep unchanged. Clinician examination fields such as Nadi and Sparsha remain intentionally blank.</p></section>
+                  <section class="summary-section"><h3>Review flags</h3><div class="warning-row"><strong>1 contradiction to review:</strong> patient reports no regular medicines, while an uploaded prescription lists metformin.</div><div class="doctor-actions"><button class="primary-button" data-toast="Encounter approved|The case sheet is marked as clinician reviewed.">Approve draft</button><button class="secondary-button" data-toast="Edit mode|Clinician editing is available in the next implementation phase.">Edit case sheet</button><button class="secondary-button" data-toast="Evidence panel|All three patient-supplied source statements are available.">View all evidence</button></div></section>
+                </article>
+                <aside class="card">
+                  <div class="card-header"><h2>Longitudinal timeline</h2></div>
+                  <div class="card-body">
+                    <ol class="timeline">
+                      <li><time>Today · 10:42</time><strong>Adaptive intake</strong><p>Voice history captured in Hindi and mapped to the draft case sheet.</p></li>
+                      <li><time>14 Jun 2026</time><strong>Prescription uploaded</strong><p>Source image retained; medication field awaits clinician confirmation.</p></li>
+                      <li><time>02 May 2026</time><strong>Previous AYUSH visit</strong><p>Similar digestive complaint recorded at the same facility.</p></li>
+                    </ol>
+                    <button class="secondary-button" style="width:100%" data-doctor-panel="history">View complete history</button>
+                  </div>
+                </aside>
+              </div>
+            </div>
+
+            <div class="doctor-panel" data-doctor-panel-content="history">
+              <div class="page-heading">
+                <div><div class="eyebrow">Patient records</div><h1>Patient history</h1><p class="heading-copy">Review previous consultations and follow-up records.</p></div>
+              </div>
+              <div class="history-toolbar">
+                <input class="history-search" type="search" aria-label="Search patient history" placeholder="Search by patient name or ID" />
+                <button class="secondary-button" type="button">Recent visits</button>
+              </div>
+              <div class="history-list">
+                <article class="card history-record"><div><strong>Ananya Sharma</strong><small>PT-001</small></div><div><span class="history-condition">Digestive discomfort</span><small>02 May 2026</small></div><div class="history-meta">Follow-up due</div><button class="secondary-button" type="button" data-toast="Record opened|Ananya Sharma’s previous consultation is ready for review.">Open record</button></article>
+                <article class="card history-record"><div><strong>Rohan Mehta</strong><small>PT-014</small></div><div><span class="history-condition">Joint stiffness</span><small>28 Apr 2026</small></div><div class="history-meta">Reviewed</div><button class="secondary-button" type="button" data-toast="Record opened|Rohan Mehta’s previous consultation is ready for review.">Open record</button></article>
+                <article class="card history-record"><div><strong>Meera Joshi</strong><small>PT-029</small></div><div><span class="history-condition">Sleep disturbance</span><small>21 Apr 2026</small></div><div class="history-meta">Reviewed</div><button class="secondary-button" type="button" data-toast="Record opened|Meera Joshi’s previous consultation is ready for review.">Open record</button></article>
+                <article class="card history-record"><div><strong>Kabir Singh</strong><small>PT-042</small></div><div><span class="history-condition">Seasonal allergy</span><small>16 Apr 2026</small></div><div class="history-meta">Closed</div><button class="secondary-button" type="button" data-toast="Record opened|Kabir Singh’s previous consultation is ready for review.">Open record</button></article>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -653,6 +723,8 @@
 
     const tabs = [...document.querySelectorAll('.role-tab')];
     const views = [...document.querySelectorAll('.view')];
+    const doctorNavButtons = [...document.querySelectorAll('.doctor-nav-button')];
+    const doctorPanels = [...document.querySelectorAll('[data-doctor-panel-content]')];
     const toast = document.getElementById('toast');
     let toastTimer;
 
@@ -670,6 +742,14 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function openDoctorPanel(id) {
+      doctorNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.doctorPanel === id)));
+      doctorPanels.forEach(panel => panel.classList.toggle('active', panel.dataset.doctorPanelContent === id));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('[data-doctor-panel]').forEach(button => button.addEventListener('click', () => openDoctorPanel(button.dataset.doctorPanel)));
+
     loginForm.addEventListener('submit', event => {
       event.preventDefault();
       const submitButton = loginForm.querySelector('[type="submit"]');
@@ -679,7 +759,9 @@
         loginScreen.classList.remove('form-open');
         loginScreen.hidden = true;
         appShell.hidden = false;
+        appShell.classList.toggle('doctor-session', selectedLoginRole === 'doctor');
         openView(loginRoles[selectedLoginRole].view);
+        if (selectedLoginRole === 'doctor') openDoctorPanel('current');
         submitButton.textContent = 'Continue securely';
         submitButton.disabled = false;
         showToast('Login successful', `${loginRoles[selectedLoginRole].name} is ready.`);
@@ -688,6 +770,7 @@
 
     document.getElementById('logoutButton').addEventListener('click', () => {
       appShell.hidden = true;
+      appShell.classList.remove('doctor-session');
       loginScreen.hidden = false;
       loginScreen.classList.remove('form-open');
       loginForm.reset();
