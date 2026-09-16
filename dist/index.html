@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#102b27" />
+  <meta name="theme-color" content="#0b2634" />
   <meta name="description" content="ArogSevak is an evidence-linked, voice-first patient intake workspace for AYUSH outpatient care." />
   <title>ArogSevak Clinical Intake</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230e6655'/%3E%3Cpath d='M16 23c5-8 22-8 28-1 4 5 1 11-6 13l-13 4c-6 2-6 9 0 11 7 2 17-1 21-7' fill='none' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M46 12v12M40 18h12' stroke='%23f4a261' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230b2634'/%3E%3Cpath d='M14 50 29 15c1-2 4-2 5 0l16 35' fill='none' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M20 39h9l4-10 5 15 4-8h9' fill='none' stroke='%232dd4bf' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <style>
     :root {
       color-scheme: light;
@@ -78,13 +78,13 @@
     .brand-mark {
       width: 42px; height: 42px; border-radius: 13px;
       display: grid; place-items: center;
-      background: linear-gradient(145deg, var(--teal), var(--teal-dark)); color: #fff;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.2);
+      background: linear-gradient(145deg, #123b4d, #071e2a); color: #fff;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.2), 0 8px 24px rgba(11,38,52,.18);
       animation: brandBreathe 3.8s ease-in-out infinite;
       transform-origin: center;
     }
-    .brand-mark svg { width: 29px; height: 29px; animation: brandGlyph 3.8s ease-in-out infinite; }
-    .brand-mark svg path:last-child { transform-box: fill-box; transform-origin: center; animation: brandSpark 2.2s ease-in-out infinite; }
+    .brand-mark svg { width: 30px; height: 30px; animation: brandGlyph 3.8s ease-in-out infinite; }
+    .brand-mark svg .brand-pulse { stroke-dasharray: 1; stroke-dashoffset: 0; animation: brandPulse 3.8s ease-in-out infinite; }
     @keyframes brandBreathe {
       0%, 100% { transform: translateY(0) scale(1); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2), 0 7px 18px rgba(14,102,85,.12); }
       50% { transform: translateY(-3px) scale(1.035); box-shadow: inset 0 0 0 1px rgba(255,255,255,.28), 0 13px 28px rgba(14,102,85,.24); }
@@ -94,12 +94,9 @@
       45% { transform: rotate(-4deg); }
       55% { transform: rotate(3deg); }
     }
-    @keyframes brandSpark {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.34); opacity: .72; }
-    }
+    @keyframes brandPulse { 0%, 18% { stroke-dashoffset: 1; opacity: .35; } 52%, 100% { stroke-dashoffset: 0; opacity: 1; } }
     @media (prefers-reduced-motion: reduce) {
-      .brand-mark, .brand-mark svg, .brand-mark svg path:last-child { animation: none; }
+      .brand-mark, .brand-mark svg, .brand-mark svg .brand-pulse { animation: none; stroke-dashoffset: 0; }
     }
     .brand-name { font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif; font-size: 1.5rem; font-weight: 720; letter-spacing: -.035em; }
     .brand-context { color: #667873; font-size: .82rem; margin-top: -2px; }
@@ -428,6 +425,23 @@
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast strong { display: block; margin-bottom: 2px; }
     .toast small { color: #c9d8d4; }
+    .device-dialog {
+      width: min(470px, calc(100vw - 32px)); padding: 0; border: 1px solid rgba(16,43,39,.12);
+      border-radius: 24px; background: #fff; color: var(--ink); box-shadow: 0 30px 90px rgba(16,43,39,.28);
+    }
+    .device-dialog::backdrop { background: rgba(8,28,25,.48); backdrop-filter: blur(7px); }
+    .device-dialog-form { padding: 26px; }
+    .device-dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+    .device-dialog-head h2 { margin: 0 0 5px; font-size: 1.45rem; }
+    .device-dialog-head p { margin: 0; color: var(--ink-soft); font-size: .9rem; }
+    .device-dialog-close { width: 38px; height: 38px; border: 0; border-radius: 11px; background: #eef4f1; color: var(--ink); font-size: 1.35rem; cursor: pointer; }
+    .device-field { display: grid; gap: 7px; margin-bottom: 15px; color: #49635d; font-size: .82rem; font-weight: 750; }
+    .device-field input { min-height: 49px; padding: 11px 13px; border: 1px solid var(--line-strong); border-radius: 13px; background: #f8faf9; color: var(--ink); font: inherit; }
+    .device-field input:focus { outline: 3px solid rgba(14,102,85,.13); border-color: var(--teal); }
+    .device-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+    .device-dialog-actions button { min-height: 44px; border-radius: 12px; padding: 0 16px; font: inherit; font-weight: 750; cursor: pointer; }
+    .device-cancel { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
+    .device-authorize { border: 0; background: var(--ink); color: #fff; }
 
     .login-screen {
       min-height: 100vh;
@@ -445,7 +459,7 @@
       position: absolute;
       inset: 18px;
       height: auto;
-      border: 1px solid rgba(16, 43, 39, .08);
+      border: 1px solid rgba(22, 63, 82, .11);
       border-radius: 34px;
       background: transparent;
       transform: none;
@@ -457,33 +471,51 @@
     .login-screen.form-open .login-brand { display: none; }
     .login-brand { display: flex; align-items: center; justify-content: flex-start; gap: 11px; margin: 0 0 56px; }
     .login-brand .brand-mark { width: 38px; height: 38px; border-radius: 12px; box-shadow: none; }
-    .login-brand .brand-name { font-family: inherit; font-size: 1.35rem; font-weight: 620; letter-spacing: -.03em; }
+    .login-brand .brand-name { color: #0b2634; font-family: inherit; font-size: 1.35rem; font-weight: 680; letter-spacing: -.035em; }
     .login-brand .brand-context { color: #66716e; font-size: .76rem; }
+    .role-language-control {
+      position: absolute; top: 2px; right: 0; z-index: 8; min-width: 178px; height: 46px;
+      display: flex; align-items: center; gap: 9px; padding: 0 13px;
+      border: 1px solid rgba(28,73,94,.16); border-radius: 15px;
+      background: rgba(255,255,255,.82); color: #153746;
+      box-shadow: 0 10px 28px rgba(19,55,73,.08); backdrop-filter: blur(14px);
+      transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    .role-language-control:hover { transform: translateY(-1px); border-color: rgba(15,136,127,.38); box-shadow: 0 14px 32px rgba(19,55,73,.12); }
+    .role-language-control:focus-within { outline: 3px solid rgba(15,136,127,.14); border-color: #0f887f; }
+    .role-language-control svg { width: 20px; height: 20px; flex: 0 0 auto; color: #0f887f; pointer-events: none; }
+    .role-language-select {
+      min-width: 0; width: 100%; height: 100%; padding: 0 24px 0 0; border: 0; outline: 0;
+      appearance: none; background: transparent; color: inherit; font: inherit; font-size: .88rem; font-weight: 720; cursor: pointer;
+    }
+    .role-language-chevron { position: absolute; right: 12px; width: 15px !important; height: 15px !important; color: #59726c !important; }
+    .login-screen.form-open .role-language-control { display: none; }
     .login-intro { text-align: center; margin: 0 auto 42px; max-width: 700px; }
-    .login-intro h1 { margin: 0; font-family: inherit; font-weight: 520; letter-spacing: -.045em; font-size: clamp(2.35rem, 4.6vw, 3.8rem); }
+    .login-intro h1 { margin: 0; color: #0b2634; font-family: inherit; font-weight: 590; letter-spacing: -.05em; font-size: clamp(2.35rem, 4.6vw, 3.8rem); }
     .login-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .login-card {
-      --portal-accent: #0e6655;
-      --portal-accent-rgb: 14, 102, 85;
+      --portal-accent: #0f887f;
+      --portal-accent-rgb: 15, 136, 127;
       min-height: 350px;
       padding: 40px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      border: 1px solid rgba(16, 43, 39, .1);
+      border: 1px solid rgba(28, 73, 94, .13);
       border-radius: 28px;
-      background: rgba(255,255,255,.7);
+      background: rgba(255,255,255,.82);
       backdrop-filter: blur(16px);
-      color: var(--ink);
+      color: #102f3e;
       text-align: left;
       position: relative;
       isolation: isolate;
       overflow: hidden;
-      box-shadow: 0 22px 60px rgba(28, 39, 36, .08);
+      box-shadow: 0 22px 60px rgba(19, 55, 73, .09);
       transition: transform .52s cubic-bezier(.2,.75,.25,1), box-shadow .52s ease, border-color .35s ease;
     }
-    .login-card:nth-child(2) { --portal-accent: #a75c20; --portal-accent-rgb: 167, 92, 32; }
-    .login-card:nth-child(3) { --portal-accent: #315f79; --portal-accent-rgb: 49, 95, 121; }
+    .login-card:nth-child(2) { --portal-accent: #5964cf; --portal-accent-rgb: 89, 100, 207; }
+    .login-card:nth-child(3) { --portal-accent: #16758e; --portal-accent-rgb: 22, 117, 142; }
+    #rolePicker[dir="rtl"] .login-card { text-align: right; }
     .login-card::before {
       content: "";
       position: absolute;
@@ -516,20 +548,20 @@
     .login-card:is(:hover, :focus-visible) { transform: translateY(-9px) scale(1.012); border-color: rgba(var(--portal-accent-rgb), .42); box-shadow: 0 32px 85px rgba(var(--portal-accent-rgb), .18); }
     .login-card:is(:hover, :focus-visible)::before { opacity: 1; transform: scale(4.8); }
     .login-card:is(:hover, :focus-visible)::after { opacity: 1; transform: scale(1.32); }
-    .login-card:focus-visible { outline: 4px solid rgba(221, 122, 36, .3); outline-offset: 3px; }
+    .login-card:focus-visible { outline: 4px solid rgba(var(--portal-accent-rgb), .25); outline-offset: 3px; }
     .login-card-icon { width: 88px; height: 88px; display: grid; place-items: center; border-radius: 27px; margin-bottom: 31px; color: var(--teal); background: linear-gradient(145deg, #eef8f3, #d9ebe3); box-shadow: inset 0 0 0 1px rgba(14,102,85,.08), 0 12px 28px rgba(14,102,85,.1); }
     .login-card:nth-child(2) .login-card-icon { color: #9b5418; background: linear-gradient(145deg, #fff7ee, #ffe8cf); box-shadow: inset 0 0 0 1px rgba(155,84,24,.08), 0 12px 28px rgba(155,84,24,.1); }
     .login-card:nth-child(3) .login-card-icon { color: #315d70; background: linear-gradient(145deg, #f0f7fa, #dbeaf0); box-shadow: inset 0 0 0 1px rgba(49,93,112,.08), 0 12px 28px rgba(49,93,112,.1); }
     .login-card .login-card-icon {
       width: 96px; height: 96px; border-radius: 30px; color: #fff;
       position: relative;
-      background: linear-gradient(145deg, #218d7a, #0c5448);
+      background: linear-gradient(145deg, #19a99b, #0c6e68);
       border: 1px solid rgba(255,255,255,.5);
-      box-shadow: inset 0 2px 0 rgba(255,255,255,.24), 0 14px 26px rgba(14,102,85,.2);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.26), 0 14px 28px rgba(15,136,127,.24);
       transition: transform .58s cubic-bezier(.16,1,.3,1), box-shadow .48s ease;
     }
-    .login-card:nth-child(2) .login-card-icon { background: linear-gradient(145deg, #d99043, #995019); box-shadow: inset 0 2px 0 rgba(255,255,255,.24), 0 14px 26px rgba(155,84,24,.2); }
-    .login-card:nth-child(3) .login-card-icon { background: linear-gradient(145deg, #4e8eaf, #28556f); box-shadow: inset 0 2px 0 rgba(255,255,255,.24), 0 14px 26px rgba(49,93,112,.2); }
+    .login-card:nth-child(2) .login-card-icon { background: linear-gradient(145deg, #7884ed, #464dad); box-shadow: inset 0 2px 0 rgba(255,255,255,.26), 0 14px 28px rgba(89,100,207,.25); }
+    .login-card:nth-child(3) .login-card-icon { background: linear-gradient(145deg, #28a4bd, #105d78); box-shadow: inset 0 2px 0 rgba(255,255,255,.26), 0 14px 28px rgba(22,117,142,.25); }
     .login-card-icon::before,
     .login-card-icon::after {
       content: "\2726";
@@ -542,10 +574,19 @@
     }
     .login-card-icon::before { right: -19px; top: -15px; font-size: 25px; transform: translate(-8px, 9px) scale(.25) rotate(-24deg); }
     .login-card-icon::after { left: -15px; bottom: -12px; font-size: 16px; transform: translate(10px, -8px) scale(.2) rotate(22deg); }
-    .login-card-icon svg { width: 64px; height: 64px; }
+    .login-card-icon svg { width: 68px; height: 68px; overflow: visible; }
+    .login-card-icon svg [stroke] { stroke-dasharray: 1; stroke-dashoffset: 0; }
+    .login-card-icon .icon-glow { fill: rgba(255,255,255,.1); stroke: rgba(255,255,255,.22); }
+    .login-card-icon .icon-accent { color: #bff9ef; }
+    .login-card:nth-child(2) .login-card-icon .icon-accent { color: #dce1ff; }
+    .login-card:nth-child(3) .login-card-icon .icon-accent { color: #cff6ff; }
     .login-card:is(:hover, :focus-visible) .login-card-icon { transform: translateY(-6px) scale(1.06) rotate(-4deg); box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 18px 38px rgba(var(--portal-accent-rgb), .35), 0 0 0 9px rgba(var(--portal-accent-rgb), .09); }
     .login-card:is(:hover, :focus-visible) .login-card-icon::before { animation: portal-spark-one .78s .08s cubic-bezier(.2,.8,.2,1) both; }
     .login-card:is(:hover, :focus-visible) .login-card-icon::after { animation: portal-spark-two .82s .18s cubic-bezier(.2,.8,.2,1) both; }
+    .login-card:is(:hover, :focus-visible) .login-card-icon svg [stroke] { animation: icon-line-draw .72s cubic-bezier(.65,0,.25,1) both; }
+    .login-card:is(:hover, :focus-visible) .login-card-icon svg [stroke]:nth-child(2) { animation-delay: .08s; }
+    .login-card:is(:hover, :focus-visible) .login-card-icon svg [stroke]:nth-child(n+3) { animation-delay: .14s; }
+    @keyframes icon-line-draw { from { stroke-dashoffset: 1; opacity: .25; } 55% { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
     @keyframes portal-spark-one { 0% { opacity: 0; transform: translate(-8px,9px) scale(.25) rotate(-24deg); } 48%, 72% { opacity: 1; } 100% { opacity: .72; transform: translate(0,0) scale(1) rotate(0); } }
     @keyframes portal-spark-two { 0% { opacity: 0; transform: translate(10px,-8px) scale(.2) rotate(22deg); } 52%, 76% { opacity: .92; } 100% { opacity: .58; transform: translate(0,0) scale(1) rotate(0); } }
     .login-card h2 { position: relative; z-index: 1; font: 620 clamp(1.9rem, 2.5vw, 2.35rem)/1.12 "Aptos", "Segoe UI", sans-serif; letter-spacing: -.04em; margin: 0; text-wrap: balance; transition: color .32s ease, transform .48s cubic-bezier(.16,1,.3,1); }
@@ -556,6 +597,7 @@
       .login-card, .login-card::before, .login-card::after, .login-card .login-card-icon, .login-card h2, .login-card h2::after { transition: none; }
       .login-card:is(:hover, :focus-visible), .login-card:is(:hover, :focus-visible) .login-card-icon, .login-card:is(:hover, :focus-visible) h2 { transform: none; }
       .login-card:is(:hover, :focus-visible) .login-card-icon::before, .login-card:is(:hover, :focus-visible) .login-card-icon::after { animation: none; opacity: .7; transform: none; }
+      .login-card-icon svg [stroke] { animation: none !important; stroke-dashoffset: 0 !important; }
     }
 
     .login-form-shell {
@@ -596,88 +638,66 @@
     .login-row { display: flex; align-items: center; justify-content: flex-start; gap: 14px; margin: 4px 0 24px; font-size: .82rem; }
     .remember-label { display: flex; align-items: center; gap: 8px; color: #596f69; }
     .login-submit {
-      width: 100%;
-      min-width: 58px;
-      height: 56px;
-      margin-inline: auto;
-      position: relative;
-      display: block;
-      overflow: hidden;
-      z-index: 3;
-      border-radius: 14px;
-      box-shadow: 0 12px 28px rgba(16,43,39,.2);
-      transition: width .5s cubic-bezier(.16,1,.3,1), border-radius .5s cubic-bezier(.16,1,.3,1), background .3s ease, box-shadow .3s ease, transform .2s ease;
+      width: 100%; height: 56px; position: relative; display: block;
+      border-radius: 14px; background: #126b59;
+      box-shadow: 0 10px 24px rgba(16,43,39,.16);
+      transition: background .2s, box-shadow .2s;
     }
-    .login-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 17px 34px rgba(14,102,85,.28); }
-    .login-submit-label,
-    .login-submit-loader {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      z-index: 2;
-      transition: opacity .24s ease, transform .42s cubic-bezier(.16,1,.3,1);
+    .login-submit:hover:not(:disabled) {
+      background: #16816b; box-shadow: 0 12px 28px rgba(16,43,39,.22);
     }
-    .login-submit-label { opacity: 1; transform: translateY(0); }
-    .login-submit-loader { opacity: 0; overflow: visible; transform: scale(.65); }
-    .login-submit-orbit {
-      width: 108px;
-      height: 108px;
-      position: relative;
-      display: block;
+    .login-submit-label { white-space: nowrap; }
+    .login-motion {
+      position: fixed; inset: 0; z-index: 10000; pointer-events: none;
     }
-    .login-submit-orbit::before,
-    .login-submit-orbit::after {
-      content: "";
-      position: absolute;
-      left: 45px;
-      top: 45px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #16866c;
-      box-shadow: -7px 0 rgba(22,134,108,.42), -14px 0 rgba(22,134,108,.18);
+    .login-motion-shape, .login-motion-dot {
+      position: absolute; background: #126b59;
     }
-    .login-submit.is-loading,
-    .login-submit.is-launching { width: 58px; border-radius: 50%; overflow: visible; cursor: wait; }
-    .login-submit.is-loading { background: transparent; box-shadow: none; }
-    .login-submit.is-loading .login-submit-label,
-    .login-submit.is-launching .login-submit-label { opacity: 0; transform: translateY(-18px); }
-    .login-submit.is-loading .login-submit-loader { opacity: 1; transform: translateY(0) scale(1); }
-    .login-submit.is-loading .login-submit-orbit::before { animation: secure-orbit-one .86s cubic-bezier(.5,0,.5,1) infinite; }
-    .login-submit.is-loading .login-submit-orbit::after { animation: secure-orbit-two .86s cubic-bezier(.5,0,.5,1) infinite; }
-    .login-submit.is-launching { background: #16866c; box-shadow: 0 0 0 8px rgba(22,134,108,.12); }
-    .login-submit.is-launching .login-submit-loader { opacity: 0; transform: scale(.3); }
-    .login-submit-wash {
-      position: fixed;
-      left: 50%;
-      top: 50%;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      z-index: 1;
-      pointer-events: none;
-      background: #16866c;
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(.2);
-      transition: transform .68s cubic-bezier(.7,0,.18,1), opacity .12s ease;
+    .login-motion-shape { overflow: hidden; }
+    .login-motion-label {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      color: white; font: inherit; font-weight: 700; white-space: nowrap;
     }
-    .login-submit.is-launching .login-submit-wash { opacity: 1; transform: translate(-50%, -50%) scale(52); }
-    @keyframes secure-orbit-one {
-      0% { transform: rotate(0deg) translateX(42px) scale(.72); }
-      50% { transform: rotate(180deg) translateX(42px) scale(1.08); }
-      100% { transform: rotate(360deg) translateX(42px) scale(.72); }
+    .login-motion-dot {
+      width: 20px; height: 20px; border-radius: 50%;
+      margin: -10px 0 0 -10px;
     }
-    @keyframes secure-orbit-two {
-      0% { transform: rotate(180deg) translateX(42px) scale(1.08); }
-      50% { transform: rotate(360deg) translateX(42px) scale(.72); }
-      100% { transform: rotate(540deg) translateX(42px) scale(1.08); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .login-submit, .login-submit-label, .login-submit-loader, .login-submit-wash { transition: none; }
-      .login-submit.is-loading .login-submit-orbit::before,
-      .login-submit.is-loading .login-submit-orbit::after { animation: none; }
-    }
+    .patient-records { animation: appear .24s ease-out; }
+    .records-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+    .records-heading h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.1rem); letter-spacing: -.045em; line-height: 1.05; }
+    .records-heading p { margin: 8px 0 0; color: #627873; }
+    .records-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+    .records-summary-card { padding: 18px 20px; border: 1px solid rgba(16,43,39,.1); border-radius: 19px; background: rgba(255,255,255,.78); box-shadow: 0 14px 38px rgba(16,43,39,.06); }
+    .records-summary-card span { display: block; color: #687d78; font-size: .8rem; font-weight: 720; }
+    .records-summary-card strong { display: block; margin-top: 4px; color: var(--ink); font-size: 1.35rem; }
+    .records-toolbar { display: grid; grid-template-columns: 1fr 190px; gap: 12px; margin-bottom: 16px; }
+    .records-search, .records-filter { min-height: 48px; border: 1px solid var(--line-strong); border-radius: 14px; background: rgba(255,255,255,.88); color: var(--ink); font: inherit; }
+    .records-search { padding: 0 15px; }
+    .records-filter { padding: 0 38px 0 13px; cursor: pointer; }
+    .records-search:focus, .records-filter:focus { outline: 3px solid rgba(14,102,85,.13); border-color: var(--teal); }
+    .patient-records-layout { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(310px, .82fr); gap: 18px; align-items: start; }
+    .patient-record-list { display: grid; gap: 11px; }
+    .patient-record-item { width: 100%; display: grid; grid-template-columns: 50px minmax(0,1fr) auto; align-items: center; gap: 14px; padding: 16px; border: 1px solid rgba(16,43,39,.1); border-radius: 18px; background: rgba(255,255,255,.86); color: var(--ink); text-align: left; box-shadow: 0 12px 34px rgba(16,43,39,.05); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+    .patient-record-item:hover { transform: translateY(-2px); border-color: rgba(14,102,85,.32); box-shadow: 0 17px 42px rgba(16,43,39,.09); }
+    .patient-record-item[aria-selected="true"] { border-color: rgba(14,102,85,.42); background: #f4faf7; box-shadow: 0 16px 42px rgba(14,102,85,.1); }
+    .record-icon { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 15px; background: var(--mint); color: var(--teal); }
+    .record-icon svg { width: 24px; height: 24px; }
+    .record-copy strong, .record-copy small { display: block; }
+    .record-copy strong { font-size: 1rem; }
+    .record-copy small { margin-top: 3px; color: #6b807b; }
+    .record-status { padding: 6px 10px; border-radius: 999px; background: #e6f3ed; color: #176451; font-size: .75rem; font-weight: 760; white-space: nowrap; }
+    .record-status.follow-up { background: #fff0df; color: #9b5418; }
+    .records-empty { padding: 30px; border: 1px dashed var(--line-strong); border-radius: 18px; color: #677c77; text-align: center; }
+    .record-detail { position: sticky; top: 110px; overflow: hidden; }
+    .record-detail-top { padding: 20px; border-bottom: 1px solid var(--line); background: linear-gradient(145deg, #eef8f3, #fff); }
+    .record-detail-top span { color: #637973; font-size: .78rem; font-weight: 720; }
+    .record-detail-top h2 { margin: 5px 0 0; font-size: 1.45rem; }
+    .record-detail-body { display: grid; gap: 17px; padding: 20px; }
+    .record-detail-row span { display: block; color: #687e78; font-size: .76rem; font-weight: 760; text-transform: uppercase; letter-spacing: .06em; }
+    .record-detail-row p { margin: 5px 0 0; color: var(--ink-soft); }
+    .record-files { display: grid; gap: 8px; }
+    .record-file { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; background: #f8faf9; color: var(--ink); font-weight: 700; }
+    .record-file small { color: #70837f; font-weight: 500; }
     @media (max-width: 1080px) {
       .intake-grid, .portal-main .intake-grid { grid-template-columns: 230px 1fr; }
       .side-stack { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
@@ -688,6 +708,8 @@
       .app-shell.sidebar-collapsed .doctor-sidebar:focus-within { width: 230px; }
       .history-record { grid-template-columns: 1fr 1fr; }
       .voice-experience { grid-template-columns: 1fr; }
+      .patient-records-layout { grid-template-columns: 1fr; }
+      .record-detail { position: static; }
     }
 
     @media (max-width: 760px) {
@@ -695,6 +717,10 @@
       .login-screen::before { inset: 8px; border-radius: 24px; }
       .login-brand { justify-content: flex-start; margin-bottom: 28px; }
       .login-brand .brand-context { display: block; }
+      .role-language-control { top: -2px; min-width: 52px; width: 52px; padding: 0 14px; }
+      .role-language-control > svg:first-child { width: 22px; height: 22px; }
+      .role-language-select { position: absolute; inset: 0; width: 100%; opacity: 0; }
+      .role-language-chevron { display: none; }
       .login-cards { grid-template-columns: 1fr; }
       .login-card { min-height: auto; padding: 23px; }
       .login-screen.form-open { padding: 12px; }
@@ -743,6 +769,10 @@
       .voice-chat { min-height: 520px; }
       .voice-chat-form { grid-template-columns: 1fr; }
       .voice-chat-send { min-height: 48px; }
+      .records-heading { align-items: flex-start; flex-direction: column; }
+      .records-summary, .records-toolbar { grid-template-columns: 1fr; }
+      .patient-record-item { grid-template-columns: 46px minmax(0,1fr); }
+      .record-status { grid-column: 2; justify-self: start; }
     }
 
     @media (max-height: 620px) {
@@ -759,10 +789,16 @@
     <div class="login-container">
       <div class="login-brand">
         <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" fill="none"><path d="M7 11.5c2.5-4 11-4 14-0.5 2 2.5.5 5.5-3 6.5l-6.5 2c-3 1-3 4.5 0 5.5 3.5 1 8.5-.5 10.5-3.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M23 6v6M20 9h6" stroke="#f4a261" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 32 32" fill="none"><path class="brand-a" d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path class="brand-pulse" pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div><div class="brand-name">ArogSevak</div></div>
       </div>
+
+      <label class="role-language-control" for="roleLanguageSelect" aria-label="Change language">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3c2.3 2.45 3.45 5.45 3.45 9S14.3 18.55 12 21c-2.3-2.45-3.45-5.45-3.45-9S9.7 5.45 12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <select class="role-language-select" id="roleLanguageSelect" aria-label="Website language"></select>
+        <svg class="role-language-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </label>
 
       <div id="rolePicker">
         <div class="login-intro">
@@ -770,16 +806,16 @@
         </div>
         <div class="login-cards">
           <button class="login-card" type="button" data-login-role="patient">
-            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle cx="27" cy="22" r="9" fill="white" fill-opacity=".16" stroke="currentColor" stroke-width="2.5"/><path d="M11 51v-4a16 16 0 0 1 32 0v4" fill="white" fill-opacity=".1" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M15 51h24" stroke="currentColor" stroke-opacity=".5" stroke-width="2.5" stroke-linecap="round"/><rect x="40" y="29" width="19" height="23" rx="7" fill="#e1f5ec"/><path d="M49.5 35v11M44 40.5h11" stroke="#0c6655" stroke-width="2.5" stroke-linecap="round"/></svg></span>
-            <h2>Patient Login</h2>
+            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><circle pathLength="1" cx="25" cy="23" r="8" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" d="M11 49c1.6-9.2 6.3-13.8 14-13.8 5.4 0 9.4 2.3 11.8 6.8" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><circle pathLength="1" class="icon-accent" cx="45" cy="42" r="10" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" class="icon-accent" d="M45 37v10M40 42h10" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/></svg></span>
+            <h2 id="patientLoginLabel">Patient Login</h2>
           </button>
           <button class="login-card" type="button" data-login-role="doctor">
-            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M15 13v12a12 12 0 0 0 24 0V13" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M15 13h6M33 13h6" stroke="#ffe2b5" stroke-width="5" stroke-linecap="round"/><path d="M27 37v4a12 12 0 0 0 24 0v-5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="51" cy="29" r="8" fill="#fff0d9"/><circle cx="51" cy="29" r="3.5" stroke="#a05b22" stroke-width="2"/><path d="M20 29a8 8 0 0 0 14 0" stroke="currentColor" stroke-opacity=".35" stroke-width="2" stroke-linecap="round"/></svg></span>
-            <h2>Doctor Login</h2>
+            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><path pathLength="1" d="M17 14v12a11 11 0 0 0 22 0V14M17 14h5M34 14h5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path pathLength="1" d="M28 37v5a11 11 0 0 0 22 0v-4" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><circle pathLength="1" class="icon-accent" cx="50" cy="32" r="7" stroke="currentColor" stroke-width="2.8"/><circle cx="50" cy="32" r="2" fill="currentColor"/></svg></span>
+            <h2 id="doctorLoginLabel">Doctor Login</h2>
           </button>
           <button class="login-card" type="button" data-login-role="staff">
-            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><rect x="13" y="15" width="38" height="40" rx="7" fill="white" fill-opacity=".1" stroke="currentColor" stroke-width="2.5"/><rect x="24" y="9" width="16" height="12" rx="4" fill="#deedf7"/><path d="M32 12v6M29 15h6" stroke="#315d70" stroke-width="2" stroke-linecap="round"/><circle cx="26" cy="33" r="5" fill="white" fill-opacity=".18" stroke="currentColor" stroke-width="2"/><path d="M18 46a8 8 0 0 1 16 0M39 31h5M39 38h5M39 45h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-            <h2>Hospital Staff Login</h2>
+            <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><path pathLength="1" d="M15 23a5 5 0 0 1 5-5h24a5 5 0 0 1 5 5v27H15V23Z" stroke="currentColor" stroke-width="2.7" stroke-linejoin="round"/><path pathLength="1" class="icon-accent" d="M25 18v-5h14v5M32 27v10M27 32h10" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><path pathLength="1" d="M21 50V40h9v10M38 42h5M38 36h5" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/></svg></span>
+            <h2 id="staffLoginLabel">Hospital Staff Login</h2>
           </button>
         </div>
       </div>
@@ -792,7 +828,7 @@
             </button>
             <div class="login-form-brand" aria-label="ArogSevak">
               <div class="brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 32 32" fill="none"><path d="M7 11.5c2.5-4 11-4 14-0.5 2 2.5.5 5.5-3 6.5l-6.5 2c-3 1-3 4.5 0 5.5 3.5 1 8.5-.5 10.5-3.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M23 6v6M20 9h6" stroke="#f4a261" stroke-width="2.5" stroke-linecap="round"/></svg>
+                <svg viewBox="0 0 32 32" fill="none"><path class="brand-a" d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path class="brand-pulse" pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </div>
               <div class="brand-name">ArogSevak</div>
             </div>
@@ -805,8 +841,6 @@
             <div class="login-row"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label></div>
             <button class="primary-button login-submit" type="submit" aria-label="Continue securely">
               <span class="login-submit-label">Continue securely</span>
-              <span class="login-submit-loader" aria-hidden="true"><span class="login-submit-orbit"></span></span>
-              <span class="login-submit-wash" aria-hidden="true"></span>
             </button>
           </form>
         </div>
@@ -818,7 +852,7 @@
     <header class="topbar">
       <div class="brand" aria-label="ArogSevak home">
         <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" fill="none"><path d="M7 11.5c2.5-4 11-4 14-0.5 2 2.5.5 5.5-3 6.5l-6.5 2c-3 1-3 4.5 0 5.5 3.5 1 8.5-.5 10.5-3.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M23 6v6M20 9h6" stroke="#f4a261" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 32 32" fill="none"><path class="brand-a" d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path class="brand-pulse" pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div class="brand-name">ArogSevak</div>
       </div>
@@ -863,7 +897,7 @@
               <small>OPD Coordinator</small>
             </div>
             <nav class="doctor-nav">
-              <button class="doctor-nav-button" type="button" aria-selected="true">
+              <button class="doctor-nav-button" type="button" data-patient-route="start" aria-selected="true">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="20" cy="18" r="2" fill="currentColor"/></svg>
                 <span class="nav-label">Patient queue</span>
               </button>
@@ -875,11 +909,15 @@
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M10 13h5M10 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 <span class="nav-label">Documents</span>
               </button>
+              <button class="doctor-nav-button" id="addAuthorizedDevice" type="button" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M9 7h6M12 11v6M9 14h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span class="nav-label">Add authorized device</span>
+              </button>
             </nav>
           </aside>
           <div class="portal-main">
         <div class="page-heading">
-          <div><div class="eyebrow">Reception workspace</div><h1 id="receptionTitle">Today’s intake queue</h1><p class="heading-copy">Start assisted intake and monitor cases before consultation.</p></div>
+          <div><h1 id="receptionTitle">Today’s intake queue</h1></div>
           <button class="primary-button" data-start-intake>+ Start new intake</button>
         </div>
         <div class="metric-grid">
@@ -928,7 +966,7 @@
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 5h14v14H5V5Z" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h5M8 17h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 <span class="nav-label">Start check-up</span>
               </button>
-              <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="My records|Your consultation history is ready to review.">
+              <button class="doctor-nav-button" type="button" data-patient-route="records" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 <span class="nav-label">My records</span>
               </button>
@@ -968,7 +1006,7 @@
               <div class="voice-stage">
                 <div class="voice-language" id="voiceLanguage">English conversation</div>
                 <div class="voice-orb" id="voiceOrb" aria-hidden="true">
-                  <svg viewBox="0 0 32 32" fill="none"><path d="M7 11.5c2.5-4 11-4 14-.5 2 2.5.5 5.5-3 6.5l-6.5 2c-3 1-3 4.5 0 5.5 3.5 1 8.5-.5 10.5-3.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M23 6v6M20 9h6" stroke="#f4a261" stroke-width="2.5" stroke-linecap="round"/></svg>
+                  <svg viewBox="0 0 32 32" fill="none"><path d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
                 <div class="voice-status" id="voiceStatus" role="status" aria-live="polite">ArogSevak is ready</div>
                 <h1 id="voicePrompt">Hello, Ananya</h1>
@@ -987,6 +1025,54 @@
             </div>
           </section>
         </div>
+        <section class="patient-records" id="patientRecords" aria-labelledby="patientRecordsTitle" hidden>
+          <div class="records-heading">
+            <div><h1 id="patientRecordsTitle" tabindex="-1">My records</h1><p>Your consultations, care notes and shared documents in one place.</p></div>
+          </div>
+          <div class="records-summary" aria-label="Record summary">
+            <article class="records-summary-card"><span>Consultations</span><strong>3 visits</strong></article>
+            <article class="records-summary-card"><span>Documents</span><strong>4 files</strong></article>
+            <article class="records-summary-card"><span>Next follow-up</span><strong>21 Sep</strong></article>
+          </div>
+          <div class="records-toolbar">
+            <input class="records-search" id="patientRecordSearch" type="search" placeholder="Search visits, doctors or concerns" aria-label="Search patient records">
+            <select class="records-filter" id="patientRecordFilter" aria-label="Filter patient records">
+              <option value="all">All records</option>
+              <option value="visit">Consultations</option>
+              <option value="document">Documents</option>
+            </select>
+          </div>
+          <div class="patient-records-layout">
+            <div class="patient-record-list" id="patientRecordList" aria-label="Patient record list">
+              <button class="patient-record-item" type="button" data-record-id="digestive" data-record-type="visit" aria-selected="true">
+                <span class="record-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M10 13h5M10 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                <span class="record-copy"><strong>Digestive discomfort</strong><small>Dr. Aarav Mehta · 02 May 2026</small></span><span class="record-status follow-up">Follow-up due</span>
+              </button>
+              <button class="patient-record-item" type="button" data-record-id="joints" data-record-type="visit" aria-selected="false">
+                <span class="record-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span class="record-copy"><strong>Joint stiffness review</strong><small>Dr. Nisha Rao · 12 Jan 2026</small></span><span class="record-status">Completed</span>
+              </button>
+              <button class="patient-record-item" type="button" data-record-id="annual" data-record-type="visit" aria-selected="false">
+                <span class="record-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 2.7 8.1 7 10 4.3-1.9 7-5.5 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span class="record-copy"><strong>Annual health review</strong><small>Dr. Aarav Mehta · 04 Sep 2025</small></span><span class="record-status">Completed</span>
+              </button>
+              <button class="patient-record-item" type="button" data-record-id="prescription" data-record-type="document" aria-selected="false">
+                <span class="record-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18H6V3Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                <span class="record-copy"><strong>Prescription upload</strong><small>Added 14 Jun 2026 · PDF</small></span><span class="record-status">Document</span>
+              </button>
+              <div class="records-empty" id="patientRecordsEmpty" hidden>No matching records found.</div>
+            </div>
+            <aside class="card record-detail" id="patientRecordDetail" aria-live="polite">
+              <div class="record-detail-top"><span id="recordDetailMeta">02 May 2026 · Consultation</span><h2 id="recordDetailTitle">Digestive discomfort</h2></div>
+              <div class="record-detail-body">
+                <div class="record-detail-row"><span>Clinician</span><p id="recordDetailDoctor">Dr. Aarav Mehta · General Surgeon</p></div>
+                <div class="record-detail-row"><span>Visit summary</span><p id="recordDetailSummary">Abdominal heaviness and reduced appetite for 2–3 days, especially after meals.</p></div>
+                <div class="record-detail-row"><span>Care plan</span><p id="recordDetailPlan">Light meals, regular hydration and a follow-up consultation if symptoms continue.</p></div>
+                <div class="record-detail-row"><span>Documents</span><div class="record-files" id="recordDetailFiles"><div class="record-file"><span>Visit summary</span><small>PDF</small></div><div class="record-file"><span>Prescription</span><small>PDF</small></div></div></div>
+              </div>
+            </aside>
+          </div>
+        </section>
           </div>
         </div>
       </section>
@@ -1058,6 +1144,21 @@
     </main>
   </div>
 
+  <dialog class="device-dialog" id="deviceDialog" aria-labelledby="deviceDialogTitle">
+    <form class="device-dialog-form" id="deviceForm">
+      <div class="device-dialog-head">
+        <div><h2 id="deviceDialogTitle">Authorize a device</h2><p>Add a trusted reception device to this workspace.</p></div>
+        <button class="device-dialog-close" id="closeDeviceDialog" type="button" aria-label="Close">×</button>
+      </div>
+      <label class="device-field">Device name<input id="deviceName" required maxlength="60" placeholder="e.g. Reception desk tablet" /></label>
+      <label class="device-field">Authorization code<input id="deviceCode" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit code" /></label>
+      <div class="device-dialog-actions">
+        <button class="device-cancel" id="cancelDeviceDialog" type="button">Cancel</button>
+        <button class="device-authorize" type="submit">Authorize device</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"><strong id="toastTitle"></strong><small id="toastText"></small></div>
 
   <script>
@@ -1095,9 +1196,16 @@
     function selectLoginRole(role, focus = true) {
       selectedLoginRole = role;
       const config = loginRoles[role];
-      document.getElementById('formTitle').textContent = config.title;
-      document.getElementById('identifierLabel').textContent = config.label;
-      document.getElementById('loginIdentifier').placeholder = config.placeholder;
+      const currentLanguage = (() => { try { return localStorage.getItem('arogSevakLanguage') || 'English'; } catch (_) { return 'English'; } })();
+      const hindiLogin = {
+        patient: ['रोगी लॉगिन', 'रोगी आईडी', 'रोगी आईडी दर्ज करें'],
+        doctor: ['चिकित्सक लॉगिन', 'चिकित्सक आईडी', 'चिकित्सक आईडी दर्ज करें'],
+        staff: ['स्टाफ लॉगिन', 'कर्मचारी आईडी', 'कर्मचारी आईडी दर्ज करें']
+      };
+      const localized = currentLanguage === 'Hindi' ? hindiLogin[role] : [config.title, config.label, config.placeholder];
+      document.getElementById('formTitle').textContent = localized[0];
+      document.getElementById('identifierLabel').textContent = localized[1];
+      document.getElementById('loginIdentifier').placeholder = localized[2];
       appShell.hidden = true;
       loginScreen.hidden = false;
       rolePicker.hidden = true;
@@ -1113,16 +1221,21 @@
     const views = [...document.querySelectorAll('.view')];
     const doctorNavButtons = [...document.querySelectorAll('#doctor .doctor-nav-button')];
     const doctorPanels = [...document.querySelectorAll('[data-doctor-panel-content]')];
+    const patientNavButtons = [...document.querySelectorAll('#patient [data-patient-route]')];
     const checkupLaunch = document.getElementById('checkupLaunch');
     const checkupFlow = document.getElementById('checkupFlow');
+    const patientRecords = document.getElementById('patientRecords');
     const checkupWelcome = document.getElementById('checkupWelcome');
     const languageStep = document.getElementById('languageStep');
     const languageForm = document.getElementById('languageForm');
     const languageOptions = document.getElementById('languageOptions');
     const confirmLanguage = document.getElementById('confirmLanguage');
     const languageSelect = document.getElementById('languageSelect');
+    const roleLanguageSelect = document.getElementById('roleLanguageSelect');
     const startCheckupButton = document.getElementById('startCheckupButton');
     const toast = document.getElementById('toast');
+    const deviceDialog = document.getElementById('deviceDialog');
+    const deviceForm = document.getElementById('deviceForm');
     const indianLanguages = [
       ['English', 'English'],
       ['Assamese', 'অসমীয়া'], ['Bengali', 'বাংলা'], ['Bodo', 'बड़ो'], ['Dogri', 'डोगरी'],
@@ -1132,6 +1245,246 @@
       ['Sanskrit', 'संस्कृतम्'], ['Santali', 'ᱥᱟᱱᱛᱟᱲᱤ'], ['Sindhi', 'سنڌي'], ['Tamil', 'தமிழ்'],
       ['Telugu', 'తెలుగు'], ['Urdu', 'اُردُو']
     ];
+    const roleTranslations = {
+      English: ['Choose your care portal', 'Patient Login', 'Doctor Login', 'Hospital Staff Login'],
+      Assamese: ['আপোনাৰ সেৱা প’ৰ্টেল বাছনি কৰক', 'ৰোগী লগইন', 'চিকিৎসক লগইন', 'চিকিৎসালয় কৰ্মচাৰী লগইন'],
+      Bengali: ['আপনার সেবা পোর্টাল বেছে নিন', 'রোগী লগইন', 'ডাক্তার লগইন', 'হাসপাতাল কর্মী লগইন'],
+      Bodo: ['नोंथांनि सेवा पोर्टालखौ सायख', 'रोगी लॉगिन', 'डाक्टार लॉगिन', 'हास्पिटाल स्टाफ लॉगिन'],
+      Dogri: ['अपना सेवा पोर्टल चुनो', 'मरीज लॉगिन', 'डॉक्टर लॉगिन', 'अस्पताल स्टाफ लॉगिन'],
+      Gujarati: ['તમારું સેવા પોર્ટલ પસંદ કરો', 'દર્દી લૉગિન', 'ડૉક્ટર લૉગિન', 'હૉસ્પિટલ સ્ટાફ લૉગિન'],
+      Hindi: ['अपना सेवा पोर्टल चुनें', 'रोगी लॉगिन', 'डॉक्टर लॉगिन', 'अस्पताल स्टाफ लॉगिन'],
+      Kannada: ['ನಿಮ್ಮ ಸೇವಾ ಪೋರ್ಟಲ್ ಆಯ್ಕೆಮಾಡಿ', 'ರೋಗಿ ಲಾಗಿನ್', 'ವೈದ್ಯರ ಲಾಗಿನ್', 'ಆಸ್ಪತ್ರೆ ಸಿಬ್ಬಂದಿ ಲಾಗಿನ್'],
+      Kashmiri: ['پنُن خدمت پورٹل ژارِو', 'مریض لاگ اِن', 'ڈاکٹر لاگ اِن', 'ہسپتال عملہ لاگ اِن'],
+      Konkani: ['तुमचें सेवा पोर्टल निवडात', 'दुयेंती लॉगिन', 'डॉक्टर लॉगिन', 'हॉस्पिटल कर्मचारी लॉगिन'],
+      Maithili: ['अपन सेवा पोर्टल चुनू', 'रोगी लॉगिन', 'डॉक्टर लॉगिन', 'अस्पताल कर्मचारी लॉगिन'],
+      Malayalam: ['നിങ്ങളുടെ സേവന പോർട്ടൽ തിരഞ്ഞെടുക്കുക', 'രോഗി ലോഗിൻ', 'ഡോക്ടർ ലോഗിൻ', 'ആശുപത്രി ജീവനക്കാരുടെ ലോഗിൻ'],
+      Manipuri: ['নহাক্কী সেবা পোর্টেল খনবীয়ু', 'লাইয়েংফম লগইন', 'ডাক্তার লগইন', 'হাসপাতাল স্টাফ লগইন'],
+      Marathi: ['तुमचे सेवा पोर्टल निवडा', 'रुग्ण लॉगिन', 'डॉक्टर लॉगिन', 'रुग्णालय कर्मचारी लॉगिन'],
+      Nepali: ['आफ्नो सेवा पोर्टल छान्नुहोस्', 'बिरामी लगइन', 'डाक्टर लगइन', 'अस्पताल कर्मचारी लगइन'],
+      Odia: ['ଆପଣଙ୍କ ସେବା ପୋର୍ଟାଲ ବାଛନ୍ତୁ', 'ରୋଗୀ ଲଗଇନ୍', 'ଡାକ୍ତର ଲଗଇନ୍', 'ହସ୍ପିଟାଲ କର୍ମଚାରୀ ଲଗଇନ୍'],
+      Punjabi: ['ਆਪਣਾ ਸੇਵਾ ਪੋਰਟਲ ਚੁਣੋ', 'ਮਰੀਜ਼ ਲਾਗਇਨ', 'ਡਾਕਟਰ ਲਾਗਇਨ', 'ਹਸਪਤਾਲ ਸਟਾਫ ਲਾਗਇਨ'],
+      Sanskrit: ['स्वसेवा-पोर्टलं चिनुत', 'रोगी प्रवेशः', 'चिकित्सक प्रवेशः', 'चिकित्सालय-कर्मचारी प्रवेशः'],
+      Santali: ['ᱟᱢᱟᱜ ᱥᱮᱣᱟ ᱯᱳᱨᱴᱟᱞ ᱵᱟᱪᱷᱟᱣ ᱢᱮ', 'ᱨᱩᱣᱟᱹ ᱞᱚᱜᱤᱱ', 'ᱰᱟᱠᱛᱟᱨ ᱞᱚᱜᱤᱱ', 'ᱦᱟᱥᱯᱟᱛᱟᱞ ᱥᱴᱟᱯᱷ ᱞᱚᱜᱤᱱ'],
+      Sindhi: ['پنهنجو خدمت پورٽل چونڊيو', 'مريض لاگ اِن', 'ڊاڪٽر لاگ اِن', 'اسپتال اسٽاف لاگ اِن'],
+      Tamil: ['உங்கள் சேவைத் தளத்தைத் தேர்ந்தெடுக்கவும்', 'நோயாளர் உள்நுழைவு', 'மருத்துவர் உள்நுழைவு', 'மருத்துவமனை ஊழியர் உள்நுழைவு'],
+      Telugu: ['మీ సేవా పోర్టల్‌ను ఎంచుకోండి', 'రోగి లాగిన్', 'డాక్టర్ లాగిన్', 'ఆసుపత్రి సిబ్బంది లాగిన్'],
+      Urdu: ['اپنا سروس پورٹل منتخب کریں', 'مریض لاگ اِن', 'ڈاکٹر لاگ اِن', 'ہسپتال عملہ لاگ اِن']
+    };
+    const interfaceLanguageCodes = {
+      English: 'en', Assamese: 'as', Bengali: 'bn', Bodo: 'brx', Dogri: 'doi', Gujarati: 'gu', Hindi: 'hi',
+      Kannada: 'kn', Kashmiri: 'ks', Konkani: 'gom', Maithili: 'mai', Malayalam: 'ml', Manipuri: 'mni',
+      Marathi: 'mr', Nepali: 'ne', Odia: 'or', Punjabi: 'pa', Sanskrit: 'sa', Santali: 'sat', Sindhi: 'sd',
+      Tamil: 'ta', Telugu: 'te', Urdu: 'ur'
+    };
+    const globalUiKeys = ['Settings', 'Language', 'Log out', 'Patient queue', 'Patient history', 'Documents', 'Start check-up', 'My records', 'Access & consent', 'Current patient', 'Initiate check-up', 'Choose your language', 'Back', 'Continue', 'Recent visits', 'Open record', 'End check-up', 'Live chat', 'Send'];
+    const globalUiPacks = {
+      Assamese: ['ছেটিংছ', 'ভাষা', 'লগ আউট', 'ৰোগীৰ শাৰী', 'ৰোগীৰ ইতিহাস', 'নথিপত্ৰ', 'চেক-আপ আৰম্ভ কৰক', 'মোৰ ৰেকৰ্ড', 'প্ৰৱেশ আৰু সন্মতি', 'বৰ্তমান ৰোগী', 'চেক-আপ আৰম্ভ কৰক', 'আপোনাৰ ভাষা বাছনি কৰক', 'পিছলৈ', 'আগবাঢ়ক', 'শেহতীয়া ভিজিট', 'ৰেকৰ্ড খোলক', 'চেক-আপ শেষ কৰক', 'লাইভ চেট', 'পঠিয়াওক'],
+      Bengali: ['সেটিংস', 'ভাষা', 'লগ আউট', 'রোগীর সারি', 'রোগীর ইতিহাস', 'নথি', 'চেক-আপ শুরু করুন', 'আমার রেকর্ড', 'অ্যাক্সেস ও সম্মতি', 'বর্তমান রোগী', 'চেক-আপ শুরু করুন', 'আপনার ভাষা বেছে নিন', 'পিছনে', 'চালিয়ে যান', 'সাম্প্রতিক ভিজিট', 'রেকর্ড খুলুন', 'চেক-আপ শেষ করুন', 'লাইভ চ্যাট', 'পাঠান'],
+      Bodo: ['सेटिंस', 'राव', 'लग आउट', 'रोगी सारि', 'रोगी जारिमिन', 'लाइजाम', 'चेक-आप जागाय', 'आंनि रेकर्ड', 'हाबनाय आरो गनायथि', 'दानि रोगी', 'चेक-आप जागाय', 'नोंथांनि राव सायख', 'उनथिं', 'सोलाय लां', 'गोदान नायनाय', 'रेकर्ड खेव', 'चेक-आप जोब', 'लाइभ चैट', 'दैथाय'],
+      Dogri: ['सेटिंग्स', 'भाशा', 'लॉग आउट', 'मरीज कतार', 'मरीज इतिहास', 'दस्तावेज', 'चेक-अप शुरू करो', 'मेरे रिकॉर्ड', 'पहुंच ते सहमति', 'मौजूदा मरीज', 'चेक-अप शुरू करो', 'अपनी भाशा चुनो', 'पिच्छें', 'जारी रक्खो', 'हालिया मुलाकातां', 'रिकॉर्ड खोलो', 'चेक-अप खत्म करो', 'लाइव चैट', 'भेजो'],
+      Gujarati: ['સેટિંગ્સ', 'ભાષા', 'લૉગ આઉટ', 'દર્દીની કતાર', 'દર્દીનો ઇતિહાસ', 'દસ્તાવેજો', 'ચેક-અપ શરૂ કરો', 'મારા રેકોર્ડ્સ', 'ઍક્સેસ અને સંમતિ', 'વર્તમાન દર્દી', 'ચેક-અપ શરૂ કરો', 'તમારી ભાષા પસંદ કરો', 'પાછળ', 'આગળ વધો', 'તાજેતરની મુલાકાતો', 'રેકોર્ડ ખોલો', 'ચેક-અપ પૂર્ણ કરો', 'લાઇવ ચેટ', 'મોકલો'],
+      Hindi: ['सेटिंग्स', 'भाषा', 'लॉग आउट', 'रोगी कतार', 'रोगी का इतिहास', 'दस्तावेज़', 'चेक-अप शुरू करें', 'मेरे रिकॉर्ड', 'एक्सेस और सहमति', 'वर्तमान रोगी', 'चेक-अप शुरू करें', 'अपनी भाषा चुनें', 'वापस', 'जारी रखें', 'हाल की विज़िट', 'रिकॉर्ड खोलें', 'चेक-अप समाप्त करें', 'लाइव चैट', 'भेजें'],
+      Kannada: ['ಸೆಟ್ಟಿಂಗ್‌ಗಳು', 'ಭಾಷೆ', 'ಲಾಗ್ ಔಟ್', 'ರೋಗಿಗಳ ಸರದಿ', 'ರೋಗಿಯ ಇತಿಹಾಸ', 'ದಾಖಲೆಗಳು', 'ತಪಾಸಣೆ ಆರಂಭಿಸಿ', 'ನನ್ನ ದಾಖಲೆಗಳು', 'ಪ್ರವೇಶ ಮತ್ತು ಸಮ್ಮತಿ', 'ಪ್ರಸ್ತುತ ರೋಗಿ', 'ತಪಾಸಣೆ ಆರಂಭಿಸಿ', 'ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ', 'ಹಿಂದೆ', 'ಮುಂದುವರಿಸಿ', 'ಇತ್ತೀಚಿನ ಭೇಟಿಗಳು', 'ದಾಖಲೆ ತೆರೆಯಿರಿ', 'ತಪಾಸಣೆ ಮುಗಿಸಿ', 'ಲೈವ್ ಚಾಟ್', 'ಕಳುಹಿಸಿ'],
+      Kashmiri: ['سیٹنگز', 'زبان', 'لاگ آؤٹ', 'مریض قطار', 'مریض تاریخ', 'دستاویز', 'چیک اپ شروع', 'میٲنۍ ریکارڈ', 'رسائی تہٕ رضامندی', 'موجودہ مریض', 'چیک اپ شروع', 'پننۍ زبان ژارِو', 'واپس', 'جاری تھاو', 'تازٕ ملاقات', 'ریکارڈ کھولیو', 'چیک اپ ختم', 'لائیو چیٹ', 'سوزیو'],
+      Konkani: ['सेटिंग्स', 'भास', 'लॉग आउट', 'दुयेंती रांग', 'दुयेंती इतिहास', 'कागदपत्रां', 'तपासणी सुरू करात', 'म्हजी नोंद', 'प्रवेश आनी संमती', 'सध्याचो दुयेंती', 'तपासणी सुरू करात', 'तुमची भास निवडात', 'फाटीं', 'चालू दवरात', 'हालींच्यो भेटी', 'नोंद उगडात', 'तपासणी सोंपोवची', 'लायव्ह चॅट', 'धाडात'],
+      Maithili: ['सेटिंग्स', 'भाषा', 'लॉग आउट', 'रोगी कतार', 'रोगी इतिहास', 'दस्तावेज', 'जाँच शुरू करू', 'हमर रिकॉर्ड', 'पहुँच आ सहमति', 'वर्तमान रोगी', 'जाँच शुरू करू', 'अपन भाषा चुनू', 'पाछाँ', 'जारी राखू', 'हालक भेंट', 'रिकॉर्ड खोलू', 'जाँच समाप्त करू', 'लाइव चैट', 'पठाउ'],
+      Malayalam: ['ക്രമീകരണങ്ങൾ', 'ഭാഷ', 'ലോഗ് ഔട്ട്', 'രോഗികളുടെ നിര', 'രോഗിയുടെ ചരിത്രം', 'രേഖകൾ', 'പരിശോധന ആരംഭിക്കുക', 'എന്റെ രേഖകൾ', 'ആക്സസും സമ്മതവും', 'നിലവിലെ രോഗി', 'പരിശോധന ആരംഭിക്കുക', 'നിങ്ങളുടെ ഭാഷ തിരഞ്ഞെടുക്കുക', 'പിന്നിലേക്ക്', 'തുടരുക', 'സമീപകാല സന്ദർശനങ്ങൾ', 'രേഖ തുറക്കുക', 'പരിശോധന അവസാനിപ്പിക്കുക', 'ലൈവ് ചാറ്റ്', 'അയയ്ക്കുക'],
+      Manipuri: ['সেটিংস', 'লোন', 'লগ আউট', 'লাইয়েংফম সারি', 'লাইয়েংফমগী ইতিহাস', 'চে-চাং', 'চেক-আপ হৌদোকউ', 'ঐগী রেকর্ড', 'অ্যাক্সেস অমসুং সম্মতি', 'হৌজিক্কী লাইয়েংফম', 'চেক-আপ হৌদোকউ', 'নহাক্কী লোন খল্লু', 'হন্দোকউ', 'মখা চত্থৌ', 'নৌনা লাকপা', 'রেকর্ড হাংদোকউ', 'চেক-আপ লোইশিল্লু', 'লাইভ চ্যাট', 'থারকউ'],
+      Marathi: ['सेटिंग्ज', 'भाषा', 'लॉग आउट', 'रुग्ण रांग', 'रुग्ण इतिहास', 'कागदपत्रे', 'तपासणी सुरू करा', 'माझे रेकॉर्ड', 'प्रवेश आणि संमती', 'सध्याचा रुग्ण', 'तपासणी सुरू करा', 'तुमची भाषा निवडा', 'मागे', 'पुढे सुरू ठेवा', 'अलीकडील भेटी', 'रेकॉर्ड उघडा', 'तपासणी समाप्त करा', 'लाइव्ह चॅट', 'पाठवा'],
+      Nepali: ['सेटिङहरू', 'भाषा', 'लग आउट', 'बिरामीको पालो', 'बिरामी इतिहास', 'कागजातहरू', 'जाँच सुरु गर्नुहोस्', 'मेरा रेकर्डहरू', 'पहुँच र सहमति', 'हालको बिरामी', 'जाँच सुरु गर्नुहोस्', 'आफ्नो भाषा छान्नुहोस्', 'पछाडि', 'जारी राख्नुहोस्', 'हालका भेटहरू', 'रेकर्ड खोल्नुहोस्', 'जाँच समाप्त गर्नुहोस्', 'लाइभ च्याट', 'पठाउनुहोस्'],
+      Odia: ['ସେଟିଂସ୍', 'ଭାଷା', 'ଲଗ୍ ଆଉଟ୍', 'ରୋଗୀ ଧାଡ଼ି', 'ରୋଗୀ ଇତିହାସ', 'ଦଲିଲ', 'ଚେକ୍-ଅପ୍ ଆରମ୍ଭ କରନ୍ତୁ', 'ମୋ ରେକର୍ଡ', 'ପ୍ରବେଶ ଏବଂ ସମ୍ମତି', 'ବର୍ତ୍ତମାନର ରୋଗୀ', 'ଚେକ୍-ଅପ୍ ଆରମ୍ଭ କରନ୍ତୁ', 'ଆପଣଙ୍କ ଭାଷା ବାଛନ୍ତୁ', 'ପଛକୁ', 'ଜାରି ରଖନ୍ତୁ', 'ସାମ୍ପ୍ରତିକ ଭିଜିଟ୍', 'ରେକର୍ଡ ଖୋଲନ୍ତୁ', 'ଚେକ୍-ଅପ୍ ଶେଷ କରନ୍ତୁ', 'ଲାଇଭ୍ ଚାଟ୍', 'ପଠାନ୍ତୁ'],
+      Punjabi: ['ਸੈਟਿੰਗਾਂ', 'ਭਾਸ਼ਾ', 'ਲਾਗ ਆਉਟ', 'ਮਰੀਜ਼ ਕਤਾਰ', 'ਮਰੀਜ਼ ਦਾ ਇਤਿਹਾਸ', 'ਦਸਤਾਵੇਜ਼', 'ਚੈੱਕ-ਅਪ ਸ਼ੁਰੂ ਕਰੋ', 'ਮੇਰੇ ਰਿਕਾਰਡ', 'ਪਹੁੰਚ ਅਤੇ ਸਹਿਮਤੀ', 'ਮੌਜੂਦਾ ਮਰੀਜ਼', 'ਚੈੱਕ-ਅਪ ਸ਼ੁਰੂ ਕਰੋ', 'ਆਪਣੀ ਭਾਸ਼ਾ ਚੁਣੋ', 'ਵਾਪਸ', 'ਜਾਰੀ ਰੱਖੋ', 'ਹਾਲੀਆ ਮੁਲਾਕਾਤਾਂ', 'ਰਿਕਾਰਡ ਖੋਲ੍ਹੋ', 'ਚੈੱਕ-ਅਪ ਖਤਮ ਕਰੋ', 'ਲਾਈਵ ਚੈਟ', 'ਭੇਜੋ'],
+      Sanskrit: ['विन्यासाः', 'भाषा', 'निर्गच्छतु', 'रोगिपङ्क्तिः', 'रोगिवृत्तान्तः', 'अभिलेखाः', 'परीक्षणम् आरभताम्', 'मम अभिलेखाः', 'प्रवेशः अनुमतिश्च', 'वर्तमानः रोगी', 'परीक्षणम् आरभताम्', 'भाषां चिनुत', 'पृष्ठतः', 'अग्रे गच्छतु', 'सद्यः दर्शनानि', 'अभिलेखं उद्घाटयतु', 'परीक्षणं समापयतु', 'सजीव वार्ता', 'प्रेषयतु'],
+      Santali: ['ᱥᱮᱴᱤᱝ', 'ᱯᱟᱹᱨᱥᱤ', 'ᱞᱚᱜ ᱟᱣᱩᱴ', 'ᱨᱩᱣᱟᱹ ᱛᱷᱟᱨ', 'ᱨᱩᱣᱟᱹ ᱱᱟᱜᱟᱢ', 'ᱫᱚᱞᱤᱞ', 'ᱪᱮᱠ-ᱟᱯ ᱮᱦᱚᱵ', 'ᱤᱧᱟᱹᱜ ᱨᱮᱠᱚᱨᱰ', 'ᱟᱹᱛᱩᱨ ᱟᱨ ᱥᱟᱹᱦᱤ', 'ᱱᱤᱛᱚᱜ ᱨᱩᱣᱟᱹ', 'ᱪᱮᱠ-ᱟᱯ ᱮᱦᱚᱵ', 'ᱟᱢᱟᱜ ᱯᱟᱹᱨᱥᱤ ᱵᱟᱪᱷᱟᱣ', 'ᱛᱟᱭᱚᱢ', 'ᱞᱟᱦᱟ', 'ᱱᱟᱶᱟ ᱧᱮᱞ', 'ᱨᱮᱠᱚᱨᱰ ᱠᱷᱩᱞᱟᱹ', 'ᱪᱮᱠ-ᱟᱯ ᱢᱩᱪᱟᱹᱫ', 'ᱞᱟᱭᱤᱵ ᱪᱮᱴ', 'ᱠᱩᱞ'],
+      Sindhi: ['سيٽنگون', 'ٻولي', 'لاگ آئوٽ', 'مريضن جي قطار', 'مريض جي تاريخ', 'دستاويز', 'چيڪ اپ شروع ڪريو', 'منهنجا رڪارڊ', 'رسائي ۽ رضامندي', 'موجوده مريض', 'چيڪ اپ شروع ڪريو', 'پنهنجي ٻولي چونڊيو', 'واپس', 'جاري رکو', 'تازيون ملاقاتون', 'رڪارڊ کوليو', 'چيڪ اپ ختم ڪريو', 'لائيو چيٽ', 'موڪليو'],
+      Tamil: ['அமைப்புகள்', 'மொழி', 'வெளியேறு', 'நோயாளர் வரிசை', 'நோயாளர் வரலாறு', 'ஆவணங்கள்', 'பரிசோதனையைத் தொடங்கவும்', 'எனது பதிவுகள்', 'அணுகல் மற்றும் ஒப்புதல்', 'தற்போதைய நோயாளர்', 'பரிசோதனையைத் தொடங்கவும்', 'உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்', 'பின்செல்', 'தொடரவும்', 'சமீபத்திய வருகைகள்', 'பதிவைத் திறக்கவும்', 'பரிசோதனையை முடிக்கவும்', 'நேரடி அரட்டை', 'அனுப்பு'],
+      Telugu: ['సెట్టింగ్‌లు', 'భాష', 'లాగ్ అవుట్', 'రోగుల వరుస', 'రోగి చరిత్ర', 'పత్రాలు', 'చెక్-అప్ ప్రారంభించండి', 'నా రికార్డులు', 'యాక్సెస్ మరియు సమ్మతి', 'ప్రస్తుత రోగి', 'చెక్-అప్ ప్రారంభించండి', 'మీ భాషను ఎంచుకోండి', 'వెనుకకు', 'కొనసాగించండి', 'ఇటీవలి సందర్శనలు', 'రికార్డు తెరవండి', 'చెక్-అప్ ముగించండి', 'లైవ్ చాట్', 'పంపండి'],
+      Urdu: ['سیٹنگز', 'زبان', 'لاگ آؤٹ', 'مریضوں کی قطار', 'مریض کی تاریخ', 'دستاویزات', 'چیک اپ شروع کریں', 'میرے ریکارڈز', 'رسائی اور رضامندی', 'موجودہ مریض', 'چیک اپ شروع کریں', 'اپنی زبان منتخب کریں', 'واپس', 'جاری رکھیں', 'حالیہ وزٹس', 'ریکارڈ کھولیں', 'چیک اپ ختم کریں', 'لائیو چیٹ', 'بھیجیں']
+    };
+    const extendedUiTranslations = {
+      Hindi: {
+        'Welcome back': 'वापसी पर स्वागत है', 'Patient ID': 'रोगी आईडी', 'Password': 'पासवर्ड',
+        'Keep me signed in on this device': 'इस डिवाइस पर साइन इन रखें', 'Continue securely': 'सुरक्षित रूप से जारी रखें',
+        'Reception': 'रिसेप्शन', 'queue': 'कतार', 'Patient': 'रोगी', 'intake': 'इनटेक', 'Doctor': 'डॉक्टर', 'review': 'समीक्षा',
+        'Prototype services available': 'प्रोटोटाइप सेवाएँ उपलब्ध हैं', 'OPD Coordinator': 'ओपीडी समन्वयक',
+        'Workspace preferences': 'वर्कस्पेस प्राथमिकताएँ',
+        'Today’s intake queue': 'आज की इनटेक कतार',
+        '+ Start new intake': '+ नया इनटेक शुरू करें',
+        'Patients registered today': 'आज पंजीकृत रोगी',
+        'Average intake time': 'औसत इनटेक समय',
+        'Cases ready for doctors': 'डॉक्टरों के लिए तैयार केस',
+        'Status': 'स्थिति', 'LANGUAGE': 'भाषा', 'Wait': 'प्रतीक्षा',
+        'Doctor review': 'डॉक्टर समीक्षा', 'Intake active': 'इनटेक जारी', 'Waiting': 'प्रतीक्षारत',
+        'Reception actions': 'रिसेप्शन कार्य',
+        'Begin assisted intake': 'सहायता प्राप्त इनटेक शुरू करें',
+        'Open the patient conversation': 'रोगी की बातचीत खोलें',
+        'Scan previous document': 'पिछला दस्तावेज़ स्कैन करें',
+        'Add a prescription or report': 'प्रिस्क्रिप्शन या रिपोर्ट जोड़ें',
+        'Review consent requests': 'सहमति अनुरोध देखें',
+        'Check pending record access': 'लंबित रिकॉर्ड एक्सेस जाँचें',
+        'Add authorized device': 'अधिकृत डिवाइस जोड़ें',
+        'Authorize a device': 'डिवाइस अधिकृत करें',
+        'Add a trusted reception device to this workspace.': 'इस वर्कस्पेस में विश्वसनीय रिसेप्शन डिवाइस जोड़ें।',
+        'Device name': 'डिवाइस का नाम', 'Authorization code': 'अधिकरण कोड', 'Cancel': 'रद्द करें', 'Authorize device': 'डिवाइस अधिकृत करें',
+        'Hello,': 'नमस्ते,',
+        'Patient · PT-001': 'रोगी · PT-001', 'English conversation': 'अंग्रेज़ी बातचीत',
+        'ArogSevak is ready': 'ArogSevak तैयार है',
+        'Hello, Ananya': 'नमस्ते, अनन्या',
+        'What health concern would you like to discuss today?': 'आज आप किस स्वास्थ्य समस्या पर बात करना चाहेंगी?',
+        'Connecting microphone…': 'माइक्रोफ़ोन कनेक्ट हो रहा है…',
+        'Voice transcript appears here': 'आवाज़ का लेख यहाँ दिखाई देगा',
+        'Type a message…': 'संदेश लिखें…',
+        'Your consultations, care notes and shared documents in one place.': 'आपकी सलाह, देखभाल नोट्स और साझा दस्तावेज़ एक ही स्थान पर।',
+        'Consultations': 'परामर्श', '3 visits': '3 विज़िट', '4 files': '4 फ़ाइलें', 'Next follow-up': 'अगला फॉलो-अप', 'All records': 'सभी रिकॉर्ड',
+        'Digestive discomfort': 'पाचन संबंधी परेशानी', 'Joint stiffness review': 'जोड़ों की अकड़न की समीक्षा',
+        'Annual health review': 'वार्षिक स्वास्थ्य समीक्षा', 'Prescription upload': 'प्रिस्क्रिप्शन अपलोड',
+        'Completed': 'पूर्ण', 'Document': 'दस्तावेज़', 'No matching records found.': 'कोई मेल खाता रिकॉर्ड नहीं मिला।',
+        'Clinician': 'चिकित्सक', 'Visit summary': 'विज़िट सारांश', 'Care plan': 'देखभाल योजना',
+        'Abdominal heaviness and reduced appetite for 2–3 days, especially after meals.': '2–3 दिनों से पेट में भारीपन और भूख कम होना, विशेषकर भोजन के बाद।',
+        'Light meals, regular hydration and a follow-up consultation if symptoms continue.': 'हल्का भोजन करें, नियमित पानी पिएँ और लक्षण जारी रहें तो फॉलो-अप परामर्श लें।',
+        'Prescription': 'प्रिस्क्रिप्शन', 'General Surgeon': 'जनरल सर्जन',
+        'Patient A': 'रोगी A', 'Chief concern': 'मुख्य समस्या', 'Relevant context': 'संबंधित जानकारी',
+        '’s case': ' का केस', 'Abdominal heaviness with reduced appetite': 'भूख कम होने के साथ पेट में भारीपन',
+        'Reported for approximately 2–3 days, more noticeable after meals.': 'लगभग 2–3 दिनों से बताया गया, भोजन के बाद अधिक महसूस होता है।',
+        'No vomiting reported': 'उल्टी की शिकायत नहीं', 'Bowel movement once daily; feels incomplete': 'दिन में एक बार मल त्याग; अधूरा महसूस होता है',
+        'Similar episode documented three months ago': 'तीन महीने पहले भी ऐसी घटना दर्ज हुई थी',
+        'Ayurvedic intake': 'आयुर्वेदिक इनटेक', 'Review flags': 'समीक्षा संकेत',
+        'Appetite reduced; post-meal heaviness; sleep unchanged. Clinician examination fields such as Nadi and Sparsha remain intentionally blank.': 'भूख कम; भोजन के बाद भारीपन; नींद में बदलाव नहीं। नाड़ी और स्पर्श जैसे चिकित्सकीय परीक्षण क्षेत्र जानबूझकर खाली रखे गए हैं।',
+        '1 contradiction to review:': 'समीक्षा के लिए 1 विरोधाभास:',
+        'patient reports no regular medicines, while an uploaded prescription lists metformin.': 'रोगी नियमित दवा न लेने की बात करता है, जबकि अपलोड किए गए प्रिस्क्रिप्शन में मेटफॉर्मिन दर्ज है।',
+        'Approve draft': 'ड्राफ़्ट स्वीकृत करें', 'Edit case sheet': 'केस शीट संपादित करें', 'View all evidence': 'सभी प्रमाण देखें',
+        'Longitudinal timeline': 'समयक्रम', 'Today · 10:42': 'आज · 10:42', 'Adaptive intake': 'अनुकूलित इनटेक',
+        'Voice history captured in Hindi and mapped to the draft case sheet.': 'हिंदी में वॉइस हिस्ट्री लेकर ड्राफ़्ट केस शीट में जोड़ी गई।',
+        'Prescription uploaded': 'प्रिस्क्रिप्शन अपलोड किया गया',
+        'Source image retained; medication field awaits clinician confirmation.': 'स्रोत चित्र सुरक्षित है; दवा क्षेत्र चिकित्सक की पुष्टि की प्रतीक्षा में है।',
+        'Previous AYUSH visit': 'पिछली आयुष विज़िट', 'Similar digestive complaint recorded at the same facility.': 'इसी केंद्र पर ऐसी ही पाचन शिकायत दर्ज हुई थी।',
+        'Review previous consultations and follow-up records.': 'पिछले परामर्श और फॉलो-अप रिकॉर्ड देखें।',
+        'Joint stiffness': 'जोड़ों की अकड़न', 'Sleep disturbance': 'नींद में परेशानी', 'Seasonal allergy': 'मौसमी एलर्जी',
+        'Follow-up due': 'फॉलो-अप बाकी', 'Reviewed': 'समीक्षित', 'Closed': 'बंद'
+      },
+      Punjabi: {
+        'Workspace preferences': 'ਵਰਕਸਪੇਸ ਤਰਜੀਹਾਂ', 'Today’s intake queue': 'ਅੱਜ ਦੀ ਇਨਟੇਕ ਕਤਾਰ', '+ Start new intake': '+ ਨਵੀਂ ਇਨਟੇਕ ਸ਼ੁਰੂ ਕਰੋ',
+        'Patients registered today': 'ਅੱਜ ਰਜਿਸਟਰ ਹੋਏ ਮਰੀਜ਼', 'Average intake time': 'ਔਸਤ ਇਨਟੇਕ ਸਮਾਂ', 'Cases ready for doctors': 'ਡਾਕਟਰਾਂ ਲਈ ਤਿਆਰ ਕੇਸ',
+        'Patient': 'ਮਰੀਜ਼', 'Status': 'ਸਥਿਤੀ', 'LANGUAGE': 'ਭਾਸ਼ਾ', 'Wait': 'ਉਡੀਕ', 'Reception actions': 'ਰਿਸੈਪਸ਼ਨ ਕਾਰਵਾਈਆਂ',
+        'Add authorized device': 'ਅਧਿਕਾਰਤ ਡਿਵਾਈਸ ਜੋੜੋ', 'Hello,': 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ,', 'Completed': 'ਪੂਰਾ', 'Document': 'ਦਸਤਾਵੇਜ਼'
+      },
+      Marathi: {
+        'Workspace preferences': 'वर्कस्पेस प्राधान्ये', 'Today’s intake queue': 'आजची इनटेक रांग', '+ Start new intake': '+ नवीन इनटेक सुरू करा',
+        'Patients registered today': 'आज नोंदणीकृत रुग्ण', 'Average intake time': 'सरासरी इनटेक वेळ', 'Cases ready for doctors': 'डॉक्टरांसाठी तयार प्रकरणे',
+        'Patient': 'रुग्ण', 'Status': 'स्थिती', 'LANGUAGE': 'भाषा', 'Wait': 'प्रतीक्षा', 'Reception actions': 'रिसेप्शन कृती',
+        'Add authorized device': 'अधिकृत डिव्हाइस जोडा', 'Hello,': 'नमस्कार,', 'Completed': 'पूर्ण', 'Document': 'कागदपत्र'
+      }
+    };
+    const extendedUiKeys = [...new Set(Object.values(extendedUiTranslations).flatMap(pack => Object.keys(pack)))];
+    const translatableTextNodes = [];
+    const textWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue.trim() || ['SCRIPT', 'STYLE', 'OPTION'].includes(node.parentElement?.tagName)) return NodeFilter.FILTER_REJECT;
+        return globalUiKeys.includes(node.nodeValue.trim()) || extendedUiKeys.includes(node.nodeValue.trim()) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    while (textWalker.nextNode()) translatableTextNodes.push({ node: textWalker.currentNode, source: textWalker.currentNode.nodeValue.trim() });
+
+    function uiDictionary(language = languageSelect?.value || 'English') {
+      const pack = globalUiPacks[language];
+      return {
+        ...(pack ? Object.fromEntries(globalUiKeys.map((key, index) => [key, pack[index]])) : {}),
+        ...(extendedUiTranslations[language] || {})
+      };
+    }
+
+    function uiText(source, language = languageSelect?.value || 'English') {
+      return uiDictionary(language)[source] || source;
+    }
+
+    const localeFiles = { English: 'en', Hindi: 'hi' };
+    let structuredMessages = {};
+    let localeRequest = 0;
+    const localeBindings = [
+      ['.settings-menu-head strong', 'settings.title'], ['.settings-menu-head small', 'settings.subtitle'], ['.settings-field > span', 'settings.language'], ['#logoutButton span', 'settings.logout'],
+      ['#reception .doctor-nav-button:nth-child(1) .nav-label', 'staff.nav.queue'], ['#reception .doctor-nav-button:nth-child(2) .nav-label', 'staff.nav.history'], ['#reception .doctor-nav-button:nth-child(3) .nav-label', 'staff.nav.documents'], ['#addAuthorizedDevice .nav-label', 'staff.nav.authorizeDevice'],
+      ['#receptionTitle', 'staff.title'], ['#reception .page-heading [data-start-intake]', 'staff.startIntake', 'direct'],
+      ['#reception .metric:nth-child(1) .metric-label', 'staff.metrics.registered'], ['#reception .metric:nth-child(2) .metric-label', 'staff.metrics.average'], ['#reception .metric:nth-child(3) .metric-label', 'staff.metrics.ready'],
+      ['#reception th:nth-child(1)', 'staff.table.patient'], ['#reception th:nth-child(2)', 'staff.table.status'], ['#reception th:nth-child(3)', 'staff.table.language'], ['#reception th:nth-child(4)', 'staff.table.wait'],
+      ['#reception .status-pill.review', 'staff.status.review'], ['#reception .status-pill:not(.review):not(.waiting)', 'staff.status.active'], ['#reception .status-pill.waiting', 'staff.status.waiting'],
+      ['#reception .dashboard-grid aside .card-header h2', 'staff.actions.title'], ['#reception .action-button:nth-child(1) strong', 'staff.actions.begin'], ['#reception .action-button:nth-child(1) small', 'staff.actions.beginHelp'],
+      ['#reception .action-button:nth-child(2) strong', 'staff.actions.scan'], ['#reception .action-button:nth-child(2) small', 'staff.actions.scanHelp'], ['#reception .action-button:nth-child(3) strong', 'staff.actions.consent'], ['#reception .action-button:nth-child(3) small', 'staff.actions.consentHelp'],
+      ['#patient .doctor-nav-button:nth-child(1) .nav-label', 'patient.nav.start'], ['#patient .doctor-nav-button:nth-child(2) .nav-label', 'patient.nav.records'], ['#patient .doctor-nav-button:nth-child(3) .nav-label', 'patient.nav.consent'],
+      ['#startCheckupButton', 'patient.start', 'direct'], ['#languageForm h1', 'patient.chooseLanguage'], ['#backToCheckupWelcome', 'common.back'], ['#confirmLanguage', 'common.continue'],
+      ['#voiceStatus', 'patient.voice.ready'], ['#voiceQuestion', 'patient.voice.question'], ['#autoMicText', 'patient.voice.connecting'], ['#endVoiceSession', 'patient.voice.end'],
+      ['.voice-chat-head strong', 'patient.chat.title'], ['.voice-chat-head span', 'patient.chat.subtitle'], ['.voice-chat-send', 'common.send'],
+      ['#patientRecordsTitle', 'records.title'], ['#patientRecords .records-heading p', 'records.subtitle'], ['#patientRecords .records-summary-card:nth-child(1) span', 'records.consultations'], ['#patientRecords .records-summary-card:nth-child(2) span', 'records.documents'], ['#patientRecords .records-summary-card:nth-child(3) span', 'records.followup'],
+      ['#patientRecordFilter option[value="all"]', 'records.filter.all'], ['#patientRecordFilter option[value="visit"]', 'records.filter.visits'], ['#patientRecordFilter option[value="document"]', 'records.filter.documents'], ['#patientRecordsEmpty', 'records.empty'],
+      ['#patientRecords .record-detail-row:nth-child(1) > span', 'records.clinician'], ['#patientRecords .record-detail-row:nth-child(2) > span', 'records.summary'], ['#patientRecords .record-detail-row:nth-child(3) > span', 'records.plan'],
+      ['#doctor .doctor-nav-button:nth-child(1) .nav-label', 'doctor.nav.current'], ['#doctor .doctor-nav-button:nth-child(2) .nav-label', 'doctor.nav.history'],
+      ['#doctor .summary-section:nth-child(1) h3', 'doctor.chiefConcern'], ['#doctor .summary-section:nth-child(2) h3', 'doctor.context'], ['#doctor .summary-section:nth-child(3) h3', 'doctor.ayurvedic'], ['#doctor .summary-section:nth-child(4) h3', 'doctor.flags'],
+      ['#doctor .doctor-actions .primary-button', 'doctor.approve'], ['#doctor .doctor-actions .secondary-button:nth-child(2)', 'doctor.edit'], ['#doctor .doctor-actions .secondary-button:nth-child(3)', 'doctor.evidence'], ['#doctor .doctor-layout aside .card-header h2', 'doctor.timeline'], ['#doctor .doctor-layout aside .secondary-button', 'doctor.completeHistory'],
+      ['[data-doctor-panel-content="history"] .page-heading h1', 'history.title'], ['[data-doctor-panel-content="history"] .heading-copy', 'history.subtitle'], ['[data-doctor-panel-content="history"] .history-toolbar button', 'history.recent'],
+      ['#deviceDialogTitle', 'device.title'], ['#deviceDialogTitle + p', 'device.subtitle'], ['#deviceForm .device-field:nth-of-type(1)', 'device.name', 'direct'], ['#deviceForm .device-field:nth-of-type(2)', 'device.code', 'direct'], ['#cancelDeviceDialog', 'device.cancel'], ['#deviceForm .device-authorize', 'device.authorize']
+    ];
+
+    function setBoundText(element, value, mode) {
+      if (!element || value == null) return;
+      if (mode === 'direct') {
+        const textNode = [...element.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.nodeValue.trim());
+        if (textNode) textNode.nodeValue = textNode.nodeValue.replace(textNode.nodeValue.trim(), value);
+        return;
+      }
+      element.textContent = value;
+    }
+
+    function applyStructuredLocale(messages) {
+      localeBindings.forEach(([selector, key, mode]) => document.querySelectorAll(selector).forEach(element => setBoundText(element, messages[key], mode)));
+      if (messages['patient.chat.placeholder']) document.getElementById('voiceChatInput').placeholder = messages['patient.chat.placeholder'];
+      if (messages['records.search']) document.getElementById('patientRecordSearch').placeholder = messages['records.search'];
+      if (messages['history.search']) document.querySelector('.history-search').placeholder = messages['history.search'];
+      if (messages['device.namePlaceholder']) document.getElementById('deviceName').placeholder = messages['device.namePlaceholder'];
+      if (messages['device.codePlaceholder']) document.getElementById('deviceCode').placeholder = messages['device.codePlaceholder'];
+    }
+
+    async function loadStructuredLocale(language) {
+      const code = localeFiles[language] || 'en';
+      const request = ++localeRequest;
+      try {
+        const response = await fetch(`locales/${code}.json`, { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`Locale ${code} failed with ${response.status}`);
+        const messages = await response.json();
+        if (request !== localeRequest) return;
+        structuredMessages = !localeFiles[language] && language !== 'English'
+          ? Object.fromEntries(Object.entries(messages).map(([key, value]) => [key, uiText(value, language)]))
+          : messages;
+        applyStructuredLocale(structuredMessages);
+      } catch (error) {
+        console.error('Locale loading failed', error);
+      }
+    }
+
+    async function translateDynamicText(text, language = languageSelect.value) {
+      const staticMatch = uiText(text, language);
+      if (staticMatch !== text) return staticMatch;
+      const endpoint = window.AROGSEVAK_TRANSLATION_ENDPOINT;
+      if (!endpoint || language === 'English') return text;
+      try {
+        const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, targetLanguage: language }) });
+        if (!response.ok) throw new Error(`Translation failed with ${response.status}`);
+        const payload = await response.json();
+        return payload.translation || text;
+      } catch (error) {
+        console.error('Dynamic translation failed', error);
+        return text;
+      }
+    }
+
+    function translateApplicationUI(language) {
+      const translations = uiDictionary(language);
+      translatableTextNodes.forEach(({ node, source }) => { node.nodeValue = node.nodeValue.replace(node.nodeValue.trim(), translations[source] || source); });
+      document.querySelector('#voiceChatInput')?.setAttribute('placeholder', translations['Type a message…'] || 'Type a message…');
+      document.getElementById('loginPassword').placeholder = language === 'Hindi' ? 'पासवर्ड दर्ज करें' : 'Enter password';
+      document.getElementById('patientRecordSearch').placeholder = language === 'Hindi' ? 'विज़िट, डॉक्टर या समस्या खोजें' : 'Search visits, doctors or concerns';
+      document.querySelector('.history-search').placeholder = language === 'Hindi' ? 'रोगी के नाम या आईडी से खोजें' : 'Search by patient name or ID';
+      document.getElementById('deviceName').placeholder = language === 'Hindi' ? 'जैसे रिसेप्शन डेस्क टैबलेट' : 'e.g. Reception desk tablet';
+      document.getElementById('deviceCode').placeholder = language === 'Hindi' ? '6 अंकों का कोड' : '6-digit code';
+    }
     let toastTimer;
     let voiceTimer;
     let microphoneStream = null;
@@ -1142,7 +1495,38 @@
         <span>${english === 'English' ? 'English' : native + ' · ' + english}</span>
       </label>`).join('');
     languageSelect.innerHTML = indianLanguages.map(([english, native]) => `<option value="${english}">${english === 'English' ? 'English' : native + ' · ' + english}</option>`).join('');
-    languageSelect.value = 'English';
+    roleLanguageSelect.innerHTML = indianLanguages.map(([english, native]) => `<option value="${english}">${english === 'English' ? 'English' : native + ' · ' + english}</option>`).join('');
+    let savedLanguage = 'English';
+    try { savedLanguage = localStorage.getItem('arogSevakLanguage') || 'English'; } catch (_) {}
+    if (!indianLanguages.some(([english]) => english === savedLanguage)) savedLanguage = 'English';
+    languageSelect.value = savedLanguage;
+    roleLanguageSelect.value = savedLanguage;
+    const savedLanguageRadio = languageOptions.querySelector(`input[value="${savedLanguage}"]`);
+    if (savedLanguageRadio) savedLanguageRadio.checked = true;
+    function translateRolePicker(language) {
+      const copy = roleTranslations[language] || roleTranslations.English;
+      document.getElementById('loginTitle').textContent = copy[0];
+      document.getElementById('patientLoginLabel').textContent = copy[1];
+      document.getElementById('doctorLoginLabel').textContent = copy[2];
+      document.getElementById('staffLoginLabel').textContent = copy[3];
+      document.documentElement.lang = interfaceLanguageCodes[language] || 'en';
+      document.getElementById('rolePicker').dir = ['Kashmiri', 'Sindhi', 'Urdu'].includes(language) ? 'rtl' : 'ltr';
+      translateApplicationUI(language);
+      void loadStructuredLocale(language);
+    }
+
+    translateRolePicker(savedLanguage);
+
+    function setPreferredLanguage(language) {
+      languageSelect.value = language;
+      roleLanguageSelect.value = language;
+      const radio = languageOptions.querySelector(`input[value="${language}"]`);
+      if (radio) radio.checked = true;
+      translateRolePicker(language);
+      try { localStorage.setItem('arogSevakLanguage', language); } catch (_) {}
+    }
+
+    roleLanguageSelect.addEventListener('change', event => setPreferredLanguage(event.target.value));
 
     function setCheckupStage(stage, focus = false) {
       const isStart = stage === 'start';
@@ -1150,6 +1534,8 @@
       const isVoice = stage === 'voice';
       checkupLaunch.hidden = isVoice;
       checkupFlow.hidden = !isVoice;
+      patientRecords.hidden = true;
+      patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'start')));
       checkupWelcome.hidden = !isStart;
       languageStep.hidden = !isLanguage;
       if (!isVoice) {
@@ -1159,6 +1545,17 @@
       if (isVoice) startVoiceSession(languageSelect.value);
       if (focus && isStart) startCheckupButton.focus();
       if (focus && isLanguage) languageOptions.querySelector('input').focus();
+    }
+
+    function showPatientRecords(focus = false) {
+      clearTimeout(voiceTimer);
+      stopMicrophone();
+      checkupLaunch.hidden = true;
+      checkupFlow.hidden = true;
+      patientRecords.hidden = false;
+      patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'records')));
+      if (focus) document.getElementById('patientRecordsTitle').focus({ preventScroll: true });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function resetCheckup() {
@@ -1185,18 +1582,45 @@
       event.preventDefault();
       const selectedLanguage = languageForm.elements.checkupLanguage.value;
       if (!selectedLanguage) return;
-      languageSelect.value = selectedLanguage;
+      setPreferredLanguage(selectedLanguage);
       navigateRoute('patient/voice', false, true);
       showToast('Language selected', `${selectedLanguage} will be used for your check-up.`);
     });
 
-    function showToast(title, text) {
-      document.getElementById('toastTitle').textContent = title;
-      document.getElementById('toastText').textContent = text;
+    async function showToast(title, text) {
+      const language = languageSelect.value;
+      document.getElementById('toastTitle').textContent = await translateDynamicText(title, language);
+      document.getElementById('toastText').textContent = await translateDynamicText(text, language);
       toast.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
     }
+
+    function closeDeviceDialog() {
+      deviceDialog.close();
+      deviceForm.reset();
+    }
+
+    document.getElementById('addAuthorizedDevice').addEventListener('click', () => {
+      deviceDialog.showModal();
+      requestAnimationFrame(() => document.getElementById('deviceName').focus());
+    });
+    document.getElementById('closeDeviceDialog').addEventListener('click', closeDeviceDialog);
+    document.getElementById('cancelDeviceDialog').addEventListener('click', closeDeviceDialog);
+    deviceDialog.addEventListener('click', event => { if (event.target === deviceDialog) closeDeviceDialog(); });
+    deviceForm.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!deviceForm.reportValidity()) return;
+      const deviceName = document.getElementById('deviceName').value.trim();
+      const authorizedDevice = { name: deviceName, authorizedAt: new Date().toISOString() };
+      try {
+        const savedDevices = JSON.parse(localStorage.getItem('arogSevakAuthorizedDevices') || '[]');
+        savedDevices.push(authorizedDevice);
+        localStorage.setItem('arogSevakAuthorizedDevices', JSON.stringify(savedDevices));
+      } catch (_) {}
+      closeDeviceDialog();
+      showToast('Device authorized', `${deviceName} is now trusted for this workspace.`);
+    });
 
     function openView(id) {
       tabs.forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.view === id)));
@@ -1234,7 +1658,9 @@
       openView(view);
     }
 
+    let cancelLoginMotion = null;
     function applyRoute(route, focus = false) {
+      if (cancelLoginMotion) cancelLoginMotion();
       if (route === 'patient/intake') {
         route = 'patient/voice';
         history.replaceState({ route }, '', '#/patient/voice');
@@ -1255,10 +1681,11 @@
         return;
       }
 
-      const patientMatch = route.match(/^patient\/(start|language|voice)$/);
+      const patientMatch = route.match(/^patient\/(start|language|voice|records)$/);
       if (patientMatch) {
         showSession('patient', 'patient');
-        setCheckupStage(patientMatch[1], focus);
+        if (patientMatch[1] === 'records') showPatientRecords(focus);
+        else setCheckupStage(patientMatch[1], focus);
         return;
       }
 
@@ -1286,27 +1713,148 @@
     }
 
     document.querySelectorAll('[data-doctor-panel]').forEach(button => button.addEventListener('click', () => navigateRoute(`doctor/${button.dataset.doctorPanel}`)));
+    patientNavButtons.forEach(button => button.addEventListener('click', () => navigateRoute(`patient/${button.dataset.patientRoute}`, false, true)));
 
-    loginForm.addEventListener('submit', event => {
+    const patientRecordData = {
+      digestive: { meta: '02 May 2026 · Consultation', title: 'Digestive discomfort', doctor: 'Dr. Aarav Mehta · General Surgeon', summary: 'Abdominal heaviness and reduced appetite for 2–3 days, especially after meals.', plan: 'Light meals, regular hydration and a follow-up consultation if symptoms continue.', files: [['Visit summary', 'PDF'], ['Prescription', 'PDF']] },
+      joints: { meta: '12 Jan 2026 · Consultation', title: 'Joint stiffness review', doctor: 'Dr. Nisha Rao · AYUSH Physician', summary: 'Morning stiffness in both knees with improvement after gentle movement.', plan: 'Continue the prescribed mobility routine and review again if swelling or pain increases.', files: [['Consultation note', 'PDF']] },
+      annual: { meta: '04 Sep 2025 · Health review', title: 'Annual health review', doctor: 'Dr. Aarav Mehta · General Surgeon', summary: 'Routine preventive review with no new symptoms or urgent concerns reported.', plan: 'Maintain current diet and activity routine. Repeat preventive review after twelve months.', files: [['Health review', 'PDF']] },
+      prescription: { meta: '14 Jun 2026 · Document', title: 'Prescription upload', doctor: 'Uploaded by Ananya Sharma', summary: 'A prescription shared with the care team for medication reconciliation.', plan: 'This document is available to the treating clinician during the next consultation.', files: [['Prescription · 14 Jun 2026', 'PDF']] }
+    };
+    const patientRecordItems = [...document.querySelectorAll('.patient-record-item')];
+    const patientRecordSearch = document.getElementById('patientRecordSearch');
+    const patientRecordFilter = document.getElementById('patientRecordFilter');
+    const patientRecordsEmpty = document.getElementById('patientRecordsEmpty');
+
+    async function selectPatientRecord(id) {
+      const record = patientRecordData[id];
+      if (!record) return;
+      const language = languageSelect.value;
+      const translated = await Promise.all([
+        record.meta, record.title, record.doctor, record.summary, record.plan,
+        ...record.files.flatMap(file => file)
+      ].map(value => translateDynamicText(value, language)));
+      const [meta, title, doctor, summary, plan, ...fileParts] = translated;
+      patientRecordItems.forEach(item => item.setAttribute('aria-selected', String(item.dataset.recordId === id)));
+      document.getElementById('recordDetailMeta').textContent = meta;
+      document.getElementById('recordDetailTitle').textContent = title;
+      document.getElementById('recordDetailDoctor').textContent = doctor;
+      document.getElementById('recordDetailSummary').textContent = summary;
+      document.getElementById('recordDetailPlan').textContent = plan;
+      document.getElementById('recordDetailFiles').innerHTML = record.files.map((_, index) => `<div class="record-file"><span>${fileParts[index * 2]}</span><small>${fileParts[index * 2 + 1]}</small></div>`).join('');
+    }
+
+    function filterPatientRecords() {
+      const query = patientRecordSearch.value.trim().toLowerCase();
+      const type = patientRecordFilter.value;
+      const visible = patientRecordItems.filter(item => {
+        const matchesType = type === 'all' || item.dataset.recordType === type;
+        const matchesQuery = !query || item.textContent.toLowerCase().includes(query);
+        item.hidden = !(matchesType && matchesQuery);
+        return !item.hidden;
+      });
+      patientRecordsEmpty.hidden = visible.length > 0;
+      const selected = patientRecordItems.find(item => item.getAttribute('aria-selected') === 'true');
+      if (visible.length && (!selected || selected.hidden)) selectPatientRecord(visible[0].dataset.recordId);
+    }
+
+    patientRecordItems.forEach(item => item.addEventListener('click', () => selectPatientRecord(item.dataset.recordId)));
+    patientRecordSearch.addEventListener('input', filterPatientRecords);
+    patientRecordFilter.addEventListener('change', filterPatientRecords);
+
+    loginForm.addEventListener('submit', async event => {
       event.preventDefault();
-      const submitButton = loginForm.querySelector('[type="submit"]');
-      submitButton.classList.remove('is-launching');
-      submitButton.classList.add('is-loading');
-      submitButton.setAttribute('aria-label', 'Opening workspace');
-      submitButton.disabled = true;
-      setTimeout(() => {
-        submitButton.classList.remove('is-loading');
-        submitButton.classList.add('is-launching');
-        setTimeout(() => {
-          if (selectedLoginRole === 'patient') resetCheckup();
-          const destination = selectedLoginRole === 'patient' ? 'patient/start' : selectedLoginRole === 'doctor' ? 'doctor/current' : 'staff/queue';
-          navigateRoute(destination);
-          submitButton.classList.remove('is-launching');
-          submitButton.setAttribute('aria-label', 'Continue securely');
-          submitButton.disabled = false;
-          showToast('Login successful', `${loginRoles[selectedLoginRole].name} is ready.`);
-        }, 680);
-      }, 900);
+      const button = loginForm.querySelector('[type="submit"]');
+      if (button.disabled) return;
+      const role = selectedLoginRole;
+      const rect = button.getBoundingClientRect();
+      const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2;
+      const layer = document.createElement('div');
+      layer.className = 'login-motion';
+      layer.setAttribute('aria-hidden', 'true');
+      const shape = document.createElement('div');
+      shape.className = 'login-motion-shape';
+      Object.assign(shape.style, { left: rect.left + 'px', top: rect.top + 'px',
+        width: rect.width + 'px', height: rect.height + 'px', borderRadius: '14px' });
+      const label = document.createElement('span');
+      label.className = 'login-motion-label';
+      label.textContent = 'Continue securely';
+      shape.append(label);
+      layer.append(shape);
+      document.body.append(layer);
+      button.disabled = true;
+      button.style.visibility = 'hidden';
+      button.setAttribute('aria-label', 'Opening workspace');
+      loginForm.setAttribute('aria-busy', 'true');
+      const animations = [];
+      let cancelled = false;
+      const cleanup = () => {
+        layer.remove();
+        button.disabled = false;
+        button.style.visibility = '';
+        button.setAttribute('aria-label', 'Continue securely');
+        loginForm.removeAttribute('aria-busy');
+      };
+      const cancel = () => {
+        cancelled = true;
+        animations.forEach(animation => animation.cancel());
+        cleanup();
+        cancelLoginMotion = null;
+      };
+      cancelLoginMotion = cancel;
+      const play = (element, frames, duration, easing = 'cubic-bezier(.65,0,.35,1)') => {
+        const animation = element.animate(frames, { duration, easing, fill: 'forwards' });
+        animations.push(animation);
+        return animation.finished;
+      };
+      try {
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          await Promise.all([
+            play(label, [{ opacity: 1 }, { opacity: 0 }], 140),
+            play(shape, [
+              { left: rect.left + 'px', width: rect.width + 'px', borderRadius: '14px' },
+              { left: (x - 28) + 'px', width: '56px', borderRadius: '50%' }
+            ], 420)
+          ]);
+          shape.style.opacity = '0';
+          const dots = [0, Math.PI].map(angle => {
+            const dot = document.createElement('div');
+            dot.className = 'login-motion-dot';
+            dot.style.left = x + 'px'; dot.style.top = y + 'px';
+            layer.append(dot);
+            return { dot, angle };
+          });
+          await Promise.all(dots.map(({ dot, angle }) => {
+            const frames = Array.from({ length: 97 }, (_, i) => {
+              const t = i / 96;
+              const spread = Math.min(1, t / .16, (1 - t) / .16);
+              const radius = 36 * Math.sin(spread * Math.PI / 2);
+              const rotation = angle + t * Math.PI * 4;
+              return {
+                transform: 'translate(' + Math.cos(rotation) * radius + 'px,' +
+                  Math.sin(rotation) * radius + 'px) scale(' + (1 + (1 - spread) * .4) + ')',
+                boxShadow: t > .16 && t < .84 ?
+                  (Math.sin(rotation) * 5) + 'px ' + (-Math.cos(rotation) * 5) +
+                  'px 0 rgba(18,107,89,.3)' : '0 0 0 rgba(18,107,89,0)'
+              };
+            });
+            return play(dot, frames, 1300, 'linear');
+          }));
+          dots.forEach(({ dot }) => dot.remove());
+          shape.style.opacity = '1';
+          await play(shape, [{ transform: 'scale(.5)' }, { transform: 'scale(1)' }], 160);
+        }
+        if (cancelled) return;
+        cancelLoginMotion = null;
+        layer.remove();
+        if (role === 'patient') resetCheckup();
+        navigateRoute(role === 'patient' ? 'patient/start' : role === 'doctor' ? 'doctor/current' : 'staff/queue');
+      } catch (error) {
+        if (!cancelled) console.error('Login transition failed', error);
+      } finally {
+        cleanup();
+        if (cancelLoginMotion === cancel) cancelLoginMotion = null;
+      }
     });
 
     const settingsButton = document.getElementById('settingsButton');
@@ -1423,45 +1971,45 @@
       }
     }
 
-    function prepareVoiceSession(language) {
+    async function prepareVoiceSession(language) {
       clearTimeout(voiceTimer);
       voiceOrb.classList.remove('listening');
-      voiceLanguage.textContent = `${language} conversation`;
-      voiceStatus.textContent = 'ArogSevak is ready';
-      voiceQuestion.textContent = voicePrompts[language] || 'Please tell me what health concern you would like to discuss today.';
+      voiceLanguage.textContent = await translateDynamicText(`${language} conversation`, language);
+      voiceStatus.textContent = await translateDynamicText('ArogSevak is ready', language);
+      voiceQuestion.textContent = voicePrompts[language] || await translateDynamicText('Please tell me what health concern you would like to discuss today.', language);
       followUpIndex = 0;
       voiceChatMessages.replaceChildren();
-      appendChatMessage(voiceQuestion.textContent, 'ai', 'ArogSevak · speaking');
+      appendChatMessage(voiceQuestion.textContent, 'ai', await translateDynamicText('ArogSevak · speaking', language));
     }
 
-    function startVoiceSession(language) {
-      prepareVoiceSession(language);
+    async function startVoiceSession(language) {
+      await prepareVoiceSession(language);
       openMicrophone();
-      voiceStatus.textContent = `ArogSevak is speaking in ${language}…`;
+      voiceStatus.textContent = await translateDynamicText(`ArogSevak is speaking in ${language}…`, language);
       speakAI(voiceQuestion.textContent, language);
-      voiceTimer = setTimeout(() => {
-        voiceStatus.textContent = 'Listening…';
+      voiceTimer = setTimeout(async () => {
+        voiceStatus.textContent = await translateDynamicText('Listening…', language);
         voiceOrb.classList.add('listening');
       }, 1800);
     }
 
-    voiceChatForm.addEventListener('submit', event => {
+    voiceChatForm.addEventListener('submit', async event => {
       event.preventDefault();
       const message = voiceChatInput.value.trim();
       if (!message) return;
-      appendChatMessage(message, 'user', 'You · typed');
+      appendChatMessage(message, 'user', await translateDynamicText('You · typed'));
       voiceChatInput.value = '';
       voiceOrb.classList.remove('listening');
-      voiceStatus.textContent = 'ArogSevak is speaking…';
-      const reply = followUpQuestions[followUpIndex % followUpQuestions.length];
+      voiceStatus.textContent = await translateDynamicText('ArogSevak is speaking…');
+      const reply = await translateDynamicText(followUpQuestions[followUpIndex % followUpQuestions.length]);
       followUpIndex += 1;
       clearTimeout(voiceTimer);
-      voiceTimer = setTimeout(() => {
+      voiceTimer = setTimeout(async () => {
         voiceQuestion.textContent = reply;
-        appendChatMessage(reply, 'ai', 'ArogSevak · speaking');
+        appendChatMessage(reply, 'ai', await translateDynamicText('ArogSevak · speaking'));
         speakAI(reply, languageSelect.value);
-        voiceTimer = setTimeout(() => {
-          voiceStatus.textContent = 'Listening…';
+        voiceTimer = setTimeout(async () => {
+          voiceStatus.textContent = await translateDynamicText('Listening…');
           voiceOrb.classList.add('listening');
         }, 1400);
       }, 500);
@@ -1475,6 +2023,7 @@
     });
 
     languageSelect.addEventListener('change', event => {
+      setPreferredLanguage(event.target.value);
       if (routeFromLocation() === 'patient/voice') startVoiceSession(event.target.value);
       showToast('Language changed', `${event.target.value} will be used for the next spoken question.`);
       setSettingsOpen(false);
