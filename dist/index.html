@@ -28,6 +28,7 @@
     }
 
     * { box-sizing: border-box; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
     html { font-size: 16px; }
 
@@ -276,7 +277,7 @@
     .checkup-launch {
       min-height: calc(100vh - 176px); display: grid; place-items: center; padding: 28px;
     }
-    .checkup-launch[hidden], .checkup-flow[hidden] { display: none; }
+    .checkup-launch[hidden], .checkup-flow[hidden], .checkup-welcome[hidden], .language-step[hidden] { display: none; }
     .checkup-welcome { display: grid; justify-items: center; gap: 54px; text-align: center; }
     .checkup-welcome-title {
       margin: 0; color: var(--ink); font-size: clamp(3rem, 7vw, 5.25rem); font-weight: 650;
@@ -292,6 +293,33 @@
     .checkup-launch-button:hover { transform: translateY(-3px); background: #16483f; box-shadow: 0 24px 52px rgba(16,43,39,.28); }
     .checkup-launch-button:focus-visible { outline: 4px solid rgba(244,162,97,.42); outline-offset: 4px; }
     .checkup-launch-button svg { width: 22px; height: 22px; }
+    .language-step { width: min(930px, 100%); }
+    .language-card {
+      padding: clamp(24px, 4vw, 42px); border: 1px solid rgba(182, 200, 194, .72); border-radius: 30px;
+      background: rgba(255,255,255,.92); box-shadow: 0 26px 70px rgba(16,43,39,.12);
+    }
+    .language-step-heading { margin-bottom: 26px; text-align: center; }
+    .language-step-heading span { color: #d96d20; font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .language-step-heading h1 { margin: 7px 0 8px; font-size: clamp(2rem, 4vw, 3.25rem); letter-spacing: -.045em; line-height: 1; }
+    .language-step-heading p { margin: 0; color: var(--ink-soft); font-size: 1rem; }
+    .language-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 10px; margin: 0; padding: 0; border: 0; }
+    .language-choice { position: relative; cursor: pointer; }
+    .language-choice input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .language-choice span {
+      min-height: 50px; display: flex; align-items: center; justify-content: center; padding: 9px 12px;
+      border: 1px solid var(--line-strong); border-radius: 14px; background: #fbfcfb; color: var(--ink);
+      font-size: .94rem; font-weight: 720; text-align: center; transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease;
+    }
+    .language-choice:hover span { border-color: var(--teal); transform: translateY(-1px); }
+    .language-choice input:checked + span { border-color: var(--teal); background: var(--mint); color: var(--teal); box-shadow: 0 0 0 2px rgba(14,102,85,.08); }
+    .language-choice input:focus-visible + span { outline: 3px solid rgba(244,162,97,.42); outline-offset: 2px; }
+    .language-actions { display: flex; justify-content: center; gap: 12px; margin-top: 26px; }
+    .language-back, .language-continue {
+      min-height: 52px; border-radius: 15px; padding: 0 24px; font: inherit; font-weight: 780; cursor: pointer;
+    }
+    .language-back { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
+    .language-continue { min-width: 180px; border: 0; background: var(--ink); color: #fff; }
+    .language-continue:disabled { cursor: not-allowed; opacity: .42; }
     .portal-main .intake-grid { grid-template-columns: minmax(210px, .72fr) minmax(410px, 1.55fr) minmax(250px, .88fr); }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
@@ -507,6 +535,11 @@
       .app-shell.sidebar-collapsed .doctor-nav-button { justify-content: flex-start; gap: 9px; padding: 12px 10px; }
       .history-toolbar { flex-direction: column; align-items: stretch; }
       .history-record { grid-template-columns: 1fr; gap: 8px; }
+      .checkup-launch { min-height: auto; padding: 34px 0; }
+      .language-card { border-radius: 22px; }
+      .language-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .language-actions { align-items: stretch; flex-direction: column-reverse; }
+      .language-back, .language-continue { width: 100%; }
     }
 
     @media (max-height: 620px) {
@@ -700,12 +733,28 @@
           </aside>
           <div class="portal-main">
         <div class="checkup-launch" id="checkupLaunch">
-          <div class="checkup-welcome">
+          <div class="checkup-welcome" id="checkupWelcome">
             <h1 class="checkup-welcome-title">Hello, <span>Ananya</span></h1>
             <button class="checkup-launch-button" id="startCheckupButton" type="button">
               Initiate check-up
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
+          </div>
+          <div class="language-step" id="languageStep" hidden>
+            <form class="language-card" id="languageForm">
+              <div class="language-step-heading">
+                <span>Before we begin</span>
+                <h1>Choose your language</h1>
+                <p>Your check-up questions will appear in the language you select.</p>
+              </div>
+              <fieldset class="language-options" id="languageOptions">
+                <legend class="sr-only">Select a language for your check-up</legend>
+              </fieldset>
+              <div class="language-actions">
+                <button class="language-back" id="backToCheckupWelcome" type="button">Back</button>
+                <button class="language-continue" id="confirmLanguage" type="submit" disabled>Continue</button>
+              </div>
+            </form>
           </div>
         </div>
         <div class="checkup-flow" id="checkupFlow" hidden>
@@ -902,18 +951,65 @@
     const doctorPanels = [...document.querySelectorAll('[data-doctor-panel-content]')];
     const checkupLaunch = document.getElementById('checkupLaunch');
     const checkupFlow = document.getElementById('checkupFlow');
+    const checkupWelcome = document.getElementById('checkupWelcome');
+    const languageStep = document.getElementById('languageStep');
+    const languageForm = document.getElementById('languageForm');
+    const languageOptions = document.getElementById('languageOptions');
+    const confirmLanguage = document.getElementById('confirmLanguage');
+    const languageSelect = document.getElementById('languageSelect');
     const startCheckupButton = document.getElementById('startCheckupButton');
     const toast = document.getElementById('toast');
+    const indianLanguages = [
+      ['Assamese', 'অসমীয়া'], ['Bengali', 'বাংলা'], ['Bodo', 'बड़ो'], ['Dogri', 'डोगरी'],
+      ['Gujarati', 'ગુજરાતી'], ['Hindi', 'हिन्दी'], ['Kannada', 'ಕನ್ನಡ'], ['Kashmiri', 'کٲشُر'],
+      ['Konkani', 'कोंकणी'], ['Maithili', 'मैथिली'], ['Malayalam', 'മലയാളം'], ['Manipuri', 'মৈতৈলোন্'],
+      ['Marathi', 'मराठी'], ['Nepali', 'नेपाली'], ['Odia', 'ଓଡ଼ିଆ'], ['Punjabi', 'ਪੰਜਾਬੀ'],
+      ['Sanskrit', 'संस्कृतम्'], ['Santali', 'ᱥᱟᱱᱛᱟᱲᱤ'], ['Sindhi', 'سنڌي'], ['Tamil', 'தமிழ்'],
+      ['Telugu', 'తెలుగు'], ['Urdu', 'اُردُو']
+    ];
     let toastTimer;
+
+    languageOptions.innerHTML = indianLanguages.map(([english, native]) => `
+      <label class="language-choice">
+        <input type="radio" name="checkupLanguage" value="${english}" data-native="${native}">
+        <span>${native} · ${english}</span>
+      </label>`).join('');
+    languageSelect.innerHTML = indianLanguages.map(([english, native]) => `<option value="${english}">${native} · ${english}</option>`).join('');
+    languageSelect.value = 'Hindi';
 
     function resetCheckup() {
       checkupLaunch.hidden = false;
       checkupFlow.hidden = true;
+      checkupWelcome.hidden = false;
+      languageStep.hidden = true;
+      languageForm.reset();
+      confirmLanguage.disabled = true;
     }
 
     startCheckupButton.addEventListener('click', () => {
+      checkupWelcome.hidden = true;
+      languageStep.hidden = false;
+      languageOptions.querySelector('input').focus();
+    });
+
+    languageOptions.addEventListener('change', () => {
+      confirmLanguage.disabled = !languageForm.elements.checkupLanguage.value;
+    });
+
+    document.getElementById('backToCheckupWelcome').addEventListener('click', () => {
+      languageStep.hidden = true;
+      checkupWelcome.hidden = false;
+      startCheckupButton.focus();
+    });
+
+    languageForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const selectedLanguage = languageForm.elements.checkupLanguage.value;
+      if (!selectedLanguage) return;
+      languageSelect.value = selectedLanguage;
       checkupLaunch.hidden = true;
       checkupFlow.hidden = false;
+      showToast('Language selected', `${selectedLanguage} will be used for your check-up.`);
       document.getElementById('answerInput').focus();
     });
 
@@ -1045,7 +1141,7 @@
       composerHelp.textContent = 'Your answer has been added with its original wording and source.';
     });
 
-    document.getElementById('languageSelect').addEventListener('change', event => {
+    languageSelect.addEventListener('change', event => {
       showToast('Language changed', `${event.target.value} will be used for the next spoken question.`);
       setSettingsOpen(false);
     });
