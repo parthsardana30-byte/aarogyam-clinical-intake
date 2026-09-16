@@ -58,6 +58,7 @@
     }
 
     .topbar {
+      position: relative; z-index: 50;
       min-height: 76px;
       padding: 0 24px;
       display: flex;
@@ -83,16 +84,41 @@
     .brand-name { font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif; font-size: 1.5rem; font-weight: 720; letter-spacing: -.035em; }
     .brand-context { color: #667873; font-size: .82rem; margin-top: -2px; }
 
-    .top-actions { display: flex; align-items: center; gap: 12px; }
+    .top-actions { display: flex; align-items: center; margin-left: auto; }
+    .settings-wrap { position: relative; }
+    .settings-button {
+      width: 48px; height: 48px; display: grid; place-items: center; border: 0; border-radius: 15px;
+      background: var(--ink); color: #fff; cursor: pointer; box-shadow: 0 10px 24px rgba(16,43,39,.18);
+      transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .settings-button:hover { transform: translateY(-1px); background: #16483f; box-shadow: 0 13px 28px rgba(16,43,39,.23); }
+    .settings-button:focus-visible { outline: 3px solid rgba(244,162,97,.42); outline-offset: 3px; }
+    .settings-button svg { width: 23px; height: 23px; }
+    .settings-menu {
+      position: absolute; z-index: 40; top: calc(100% + 12px); right: 0; width: 280px; padding: 14px;
+      border: 1px solid rgba(16,43,39,.12); border-radius: 20px; background: rgba(255,255,255,.97);
+      box-shadow: 0 24px 60px rgba(16,43,39,.2); backdrop-filter: blur(18px);
+    }
+    .settings-menu[hidden] { display: none; }
+    .settings-menu-head { padding: 4px 4px 14px; border-bottom: 1px solid var(--line); }
+    .settings-menu-head strong, .settings-menu-head small { display: block; }
+    .settings-menu-head strong { font-size: 1.05rem; }
+    .settings-menu-head small { margin-top: 3px; color: var(--ink-soft); font-size: .8rem; }
+    .settings-field { display: block; padding: 14px 4px; }
+    .settings-field > span { display: block; margin-bottom: 7px; color: #526b65; font-size: .8rem; font-weight: 750; }
     .language-select {
-      border: 1px solid rgba(16,43,39,.14); border-radius: 12px;
-      background: rgba(255,255,255,.8); color: var(--ink); padding: 10px 34px 10px 13px;
+      width: 100%; min-height: 44px; border: 1px solid rgba(16,43,39,.14); border-radius: 12px;
+      background: #f5f8f6; color: var(--ink); padding: 10px 36px 10px 12px; font: inherit; cursor: pointer;
     }
+    .language-select:focus { outline: 3px solid rgba(14,102,85,.13); border-color: var(--teal); }
     .language-select option { color: var(--ink); background: #fff; }
-    .privacy-badge {
-      display: flex; align-items: center; gap: 8px; font-size: .84rem; color: #536964;
-      padding: 10px 13px; border: 1px solid rgba(16,43,39,.1); border-radius: 12px; background: rgba(255,255,255,.66);
+    .settings-logout {
+      width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px;
+      border: 1px solid rgba(181,78,38,.16); border-radius: 12px; background: #fff7f0; color: #9a451f;
+      font: inherit; font-weight: 750; cursor: pointer; transition: background .18s ease, border-color .18s ease;
     }
+    .settings-logout:hover { background: #ffeddf; border-color: rgba(181,78,38,.3); }
+    .settings-logout svg { width: 19px; height: 19px; }
 
     .rolebar {
       background: rgba(255,255,255,.68);
@@ -352,8 +378,6 @@
     .login-row { display: flex; align-items: center; justify-content: flex-start; gap: 14px; margin: 4px 0 24px; font-size: .82rem; }
     .remember-label { display: flex; align-items: center; gap: 8px; color: #596f69; }
     .login-submit { width: 100%; }
-    .logout-button { border: 1px solid rgba(16,43,39,.16); background: var(--ink); color: #fff; border-radius: 12px; padding: 10px 14px; font-weight: 700; }
-
     @media (max-width: 1080px) {
       .intake-grid { grid-template-columns: 230px 1fr; }
       .side-stack { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
@@ -377,9 +401,8 @@
       .login-form-brand .brand-name { font-size: 1.35rem; }
       .back-button { width: 44px; height: 44px; border-radius: 14px; }
       .login-footnote { color: var(--ink-soft); }
-      .topbar { height: auto; padding: 14px 18px; align-items: flex-start; }
-      .brand-context, .privacy-badge { display: none; }
-      .language-select { max-width: 112px; }
+      .topbar { height: auto; padding: 14px 18px; }
+      .settings-menu { width: min(280px, calc(100vw - 48px)); }
       .rolebar { padding: 10px 14px; overflow-x: auto; }
       .role-tabs { min-width: max-content; }
       .role-tab span, .status-note { display: none; }
@@ -473,17 +496,27 @@
         <div class="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 32 32" fill="none"><path d="M7 11.5c2.5-4 11-4 14-0.5 2 2.5.5 5.5-3 6.5l-6.5 2c-3 1-3 4.5 0 5.5 3.5 1 8.5-.5 10.5-3.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M23 6v6M20 9h6" stroke="#f4a261" stroke-width="2.5" stroke-linecap="round"/></svg>
         </div>
-        <div><div class="brand-name">ArogSevak</div><div class="brand-context">AYUSH clinical intake workspace</div></div>
+        <div class="brand-name">ArogSevak</div>
       </div>
       <div class="top-actions">
-        <label>
-          <span class="sr-only" hidden>Conversation language</span>
-          <select class="language-select" id="languageSelect" aria-label="Conversation language">
-            <option>English</option><option selected>हिन्दी</option><option>ਪੰਜਾਬੀ</option><option>मराठी</option>
-          </select>
-        </label>
-        <div class="privacy-badge">🔒 Synthetic demonstration · No patient data</div>
-        <button class="logout-button" id="logoutButton" type="button">Log out</button>
+        <div class="settings-wrap">
+          <button class="settings-button" id="settingsButton" type="button" aria-label="Open settings" aria-expanded="false" aria-controls="settingsMenu">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z" stroke="currentColor" stroke-width="1.8"/><path d="M19.2 13.1a7.4 7.4 0 0 0 0-2.2l2-1.55-2-3.45-2.5 1a8 8 0 0 0-1.9-1.1L14.4 3h-4.8l-.4 2.8a8 8 0 0 0-1.9 1.1l-2.5-1-2 3.45 2 1.55a7.4 7.4 0 0 0 0 2.2l-2 1.55 2 3.45 2.5-1a8 8 0 0 0 1.9 1.1l.4 2.8h4.8l.4-2.8a8 8 0 0 0 1.9-1.1l2.5 1 2-3.45-2-1.55Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="settings-menu" id="settingsMenu" hidden>
+            <div class="settings-menu-head"><strong>Settings</strong><small>Workspace preferences</small></div>
+            <label class="settings-field" for="languageSelect">
+              <span>Language</span>
+              <select class="language-select" id="languageSelect" aria-label="Conversation language">
+                <option>English</option><option selected>हिन्दी</option><option>ਪੰਜਾਬੀ</option><option>मराठी</option>
+              </select>
+            </label>
+            <button class="settings-logout" id="logoutButton" type="button">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 5H6.8A1.8 1.8 0 0 0 5 6.8v10.4A1.8 1.8 0 0 0 6.8 19H10M14.5 8l4 4-4 4M9 12h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Log out</span>
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -768,7 +801,29 @@
       }, 420);
     });
 
+    const settingsButton = document.getElementById('settingsButton');
+    const settingsMenu = document.getElementById('settingsMenu');
+
+    function setSettingsOpen(open) {
+      settingsMenu.hidden = !open;
+      settingsButton.setAttribute('aria-expanded', String(open));
+    }
+
+    settingsButton.addEventListener('click', event => {
+      event.stopPropagation();
+      setSettingsOpen(settingsMenu.hidden);
+    });
+    settingsMenu.addEventListener('click', event => event.stopPropagation());
+    document.addEventListener('click', () => setSettingsOpen(false));
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !settingsMenu.hidden) {
+        setSettingsOpen(false);
+        settingsButton.focus();
+      }
+    });
+
     document.getElementById('logoutButton').addEventListener('click', () => {
+      setSettingsOpen(false);
       appShell.hidden = true;
       appShell.classList.remove('doctor-session');
       loginScreen.hidden = false;
@@ -829,7 +884,10 @@
       composerHelp.textContent = 'Your answer has been added with its original wording and source.';
     });
 
-    document.getElementById('languageSelect').addEventListener('change', event => showToast('Language changed', `${event.target.value} will be used for the next spoken question.`));
+    document.getElementById('languageSelect').addEventListener('change', event => {
+      showToast('Language changed', `${event.target.value} will be used for the next spoken question.`);
+      setSettingsOpen(false);
+    });
   </script>
 </body>
 </html>
