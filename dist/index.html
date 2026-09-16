@@ -603,44 +603,80 @@
       position: relative;
       display: block;
       overflow: hidden;
+      z-index: 3;
       border-radius: 14px;
       box-shadow: 0 12px 28px rgba(16,43,39,.2);
       transition: width .5s cubic-bezier(.16,1,.3,1), border-radius .5s cubic-bezier(.16,1,.3,1), background .3s ease, box-shadow .3s ease, transform .2s ease;
     }
     .login-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 17px 34px rgba(14,102,85,.28); }
     .login-submit-label,
-    .login-submit-loader,
-    .login-submit-success {
+    .login-submit-loader {
       position: absolute;
       inset: 0;
       display: grid;
       place-items: center;
+      z-index: 2;
       transition: opacity .24s ease, transform .42s cubic-bezier(.16,1,.3,1);
     }
     .login-submit-label { opacity: 1; transform: translateY(0); }
-    .login-submit-loader { opacity: 0; transform: translateY(18px) scale(.65); }
-    .login-submit-success { opacity: 0; transform: scale(.4) rotate(-18deg); }
-    .login-submit-spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(255,255,255,.32);
-      border-top-color: #fff;
-      border-radius: 50%;
+    .login-submit-loader { opacity: 0; overflow: visible; transform: scale(.65); }
+    .login-submit-orbit {
+      width: 108px;
+      height: 108px;
+      position: relative;
+      display: block;
     }
-    .login-submit-success svg { width: 27px; height: 27px; }
+    .login-submit-orbit::before,
+    .login-submit-orbit::after {
+      content: "";
+      position: absolute;
+      left: 45px;
+      top: 45px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #16866c;
+      box-shadow: -7px 0 rgba(22,134,108,.42), -14px 0 rgba(22,134,108,.18);
+    }
     .login-submit.is-loading,
-    .login-submit.is-success { width: 58px; border-radius: 50%; cursor: wait; }
+    .login-submit.is-launching { width: 58px; border-radius: 50%; overflow: visible; cursor: wait; }
+    .login-submit.is-loading { background: transparent; box-shadow: none; }
     .login-submit.is-loading .login-submit-label,
-    .login-submit.is-success .login-submit-label { opacity: 0; transform: translateY(-18px); }
+    .login-submit.is-launching .login-submit-label { opacity: 0; transform: translateY(-18px); }
     .login-submit.is-loading .login-submit-loader { opacity: 1; transform: translateY(0) scale(1); }
-    .login-submit.is-loading .login-submit-spinner { animation: secure-button-spin .75s linear infinite; }
-    .login-submit.is-success { background: #178563; box-shadow: 0 12px 30px rgba(23,133,99,.32); cursor: default; }
-    .login-submit.is-success .login-submit-loader { opacity: 0; transform: scale(.45); }
-    .login-submit.is-success .login-submit-success { opacity: 1; transform: scale(1) rotate(0); }
-    @keyframes secure-button-spin { to { transform: rotate(360deg); } }
+    .login-submit.is-loading .login-submit-orbit::before { animation: secure-orbit-one .86s cubic-bezier(.5,0,.5,1) infinite; }
+    .login-submit.is-loading .login-submit-orbit::after { animation: secure-orbit-two .86s cubic-bezier(.5,0,.5,1) infinite; }
+    .login-submit.is-launching { background: #16866c; box-shadow: 0 0 0 8px rgba(22,134,108,.12); }
+    .login-submit.is-launching .login-submit-loader { opacity: 0; transform: scale(.3); }
+    .login-submit-wash {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      z-index: 1;
+      pointer-events: none;
+      background: #16866c;
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(.2);
+      transition: transform .68s cubic-bezier(.7,0,.18,1), opacity .12s ease;
+    }
+    .login-submit.is-launching .login-submit-wash { opacity: 1; transform: translate(-50%, -50%) scale(52); }
+    @keyframes secure-orbit-one {
+      0% { transform: rotate(0deg) translateX(42px) scale(.72); }
+      50% { transform: rotate(180deg) translateX(42px) scale(1.08); }
+      100% { transform: rotate(360deg) translateX(42px) scale(.72); }
+    }
+    @keyframes secure-orbit-two {
+      0% { transform: rotate(180deg) translateX(42px) scale(1.08); }
+      50% { transform: rotate(360deg) translateX(42px) scale(.72); }
+      100% { transform: rotate(540deg) translateX(42px) scale(1.08); }
+    }
     @media (prefers-reduced-motion: reduce) {
-      .login-submit, .login-submit-label, .login-submit-loader, .login-submit-success { transition: none; }
-      .login-submit.is-loading .login-submit-spinner { animation-duration: 1.4s; }
+      .login-submit, .login-submit-label, .login-submit-loader, .login-submit-wash { transition: none; }
+      .login-submit.is-loading .login-submit-orbit::before,
+      .login-submit.is-loading .login-submit-orbit::after { animation: none; }
     }
     @media (max-width: 1080px) {
       .intake-grid, .portal-main .intake-grid { grid-template-columns: 230px 1fr; }
@@ -769,8 +805,8 @@
             <div class="login-row"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label></div>
             <button class="primary-button login-submit" type="submit" aria-label="Continue securely">
               <span class="login-submit-label">Continue securely</span>
-              <span class="login-submit-loader" aria-hidden="true"><span class="login-submit-spinner"></span></span>
-              <span class="login-submit-success" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none"><path d="m7 14.5 4.3 4.3L21 9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="login-submit-loader" aria-hidden="true"><span class="login-submit-orbit"></span></span>
+              <span class="login-submit-wash" aria-hidden="true"></span>
             </button>
           </form>
         </div>
@@ -1254,24 +1290,23 @@
     loginForm.addEventListener('submit', event => {
       event.preventDefault();
       const submitButton = loginForm.querySelector('[type="submit"]');
-      submitButton.classList.remove('is-success');
+      submitButton.classList.remove('is-launching');
       submitButton.classList.add('is-loading');
       submitButton.setAttribute('aria-label', 'Opening workspace');
       submitButton.disabled = true;
       setTimeout(() => {
         submitButton.classList.remove('is-loading');
-        submitButton.classList.add('is-success');
-        submitButton.setAttribute('aria-label', 'Login successful');
+        submitButton.classList.add('is-launching');
         setTimeout(() => {
           if (selectedLoginRole === 'patient') resetCheckup();
           const destination = selectedLoginRole === 'patient' ? 'patient/start' : selectedLoginRole === 'doctor' ? 'doctor/current' : 'staff/queue';
           navigateRoute(destination);
-          submitButton.classList.remove('is-success');
+          submitButton.classList.remove('is-launching');
           submitButton.setAttribute('aria-label', 'Continue securely');
           submitButton.disabled = false;
           showToast('Login successful', `${loginRoles[selectedLoginRole].name} is ready.`);
-        }, 520);
-      }, 680);
+        }, 680);
+      }, 900);
     });
 
     const settingsButton = document.getElementById('settingsButton');
