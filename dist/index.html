@@ -380,18 +380,18 @@
     .voice-chat-message p { margin: 0; }
     .voice-chat-message small { display: block; margin-top: 9px; font-size: .7rem; color: #b4cfc1; letter-spacing: .01em; }
     .voice-chat-message.user small { color: #557462; }
-    .voice-chat-form { width: min(780px, calc(100% - 16px)); margin: 0 auto 8px; padding: 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; border: 1px solid #cbd8cd; border-radius: 18px; background: rgba(255,255,255,.91); box-shadow: inset 0 1px 0 #fff, 0 12px 32px rgba(37,68,47,.08); backdrop-filter: blur(20px); }
+    .voice-chat-form { width: min(780px, calc(100% - 16px)); margin: 0 auto 8px; padding: 10px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; border: 1px solid #cbd8cd; border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: inset 0 1px 0 #fff, 0 12px 32px rgba(37,68,47,.08); backdrop-filter: blur(20px); }
     .voice-chat-form:focus-within { border-color: #7da58e; box-shadow: 0 0 0 3px rgba(101,146,118,.1), 0 12px 32px rgba(37,68,47,.08); }
     .voice-chat-input { min-width: 0; min-height: 48px; border: 0; padding: 9px 12px; border-radius: 8px; font: inherit; font-size: 1rem; background: transparent; color: var(--ink); }
     .voice-chat-input::placeholder { color: #849489; }
     .voice-chat-input:focus { outline: none; }
-    .voice-chat-send { position: relative; top: 6px; min-width: 48px; height: 48px; display: grid; place-items: center; border: 0; border-radius: 12px; background: #193f32; color: #f3fff6; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 3px 7px rgba(21,49,37,.12); transition: background .2s, transform .2s; }
+    .voice-chat-send { min-width: 48px; height: 48px; display: grid; place-items: center; border: 0; border-radius: 12px; background: #193f32; color: #f3fff6; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 3px 7px rgba(21,49,37,.12); transition: background .2s, transform .2s; }
     .voice-chat-send:hover { background: #2b604b; transform: translateY(-1px); }
     .voice-chat-send:disabled { opacity: .45; cursor: default; transform: none; }
-    .voice-composer-tools { display: none; }
-    .voice-talk { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 12px; border: 1px solid #cbdcd1; border-radius: 9px; background: #edf5ef; color: #265d46; font: inherit; font-size: .82rem; font-weight: 700; white-space: nowrap; }
-    .voice-talk[aria-pressed="true"] { background: #193f32; border-color: #193f32; color: #fff; }
-    .voice-input-status { margin: 0; font-size: .76rem; color: #718378; line-height: 1.4; }
+    .voice-talk { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 48px; padding: 9px 15px; border: 1px solid #b9d3c5; border-radius: 12px; background: linear-gradient(145deg, #eef8f2, #dcece4); color: #174c38; font: inherit; font-size: .86rem; font-weight: 750; white-space: nowrap; cursor: pointer; box-shadow: inset 0 1px 0 #fff, 0 4px 12px rgba(26,80,56,.08); }
+    .voice-talk:hover { border-color: #7eaf97; transform: translateY(-1px); }
+    .voice-talk[aria-pressed="true"] { background: #193f32; border-color: #193f32; color: #fff; box-shadow: 0 0 0 4px rgba(40,126,91,.12); }
+    .voice-input-status { grid-column: 1 / -1; margin: -2px 8px 1px; font-size: .76rem; color: #718378; line-height: 1.4; }
     .voice-input-status.error { color: #9a4329; }
     @media (prefers-reduced-motion: reduce) { .voice-chat-message, .voice-orb, .voice-orb.listening, .voice-orb.speaking, .voice-orb.connecting { animation: none; } }
     .portal-main .intake-grid { grid-template-columns: minmax(210px, .72fr) minmax(410px, 1.55fr) minmax(250px, .88fr); }
@@ -1305,12 +1305,10 @@
                 <p class="voice-question" id="voiceQuestion">What health concern would you like to discuss today?</p>
                 <div class="voice-chat-messages" id="voiceChatMessages" aria-live="polite"></div>
                 <form class="voice-chat-form" id="voiceChatForm">
+                  <button class="voice-talk" id="voiceTalkButton" type="button" aria-pressed="false" aria-describedby="voiceInputStatus"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-3 0h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span id="voiceTalkLabel">Talk</span></button>
                   <input class="voice-chat-input" id="voiceChatInput" type="text" autocomplete="off" aria-label="Type a message" placeholder="Type a message…">
                   <button class="voice-chat-send" type="submit" aria-label="Send message" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only voice-chat-send-label">Send</span></button>
-                  <div class="voice-composer-tools">
-                    <button class="voice-talk" id="voiceTalkButton" type="button" aria-pressed="false" aria-describedby="voiceInputStatus"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-3 0h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span id="voiceTalkLabel">Talk</span></button>
-                    <p class="voice-input-status" id="voiceInputStatus" role="status">Speak or type, at your pace.</p>
-                  </div>
+                  <p class="voice-input-status" id="voiceInputStatus" role="status">Tap Talk to start the live AI voice session.</p>
                 </form>
               </aside>
             </div>
@@ -2980,13 +2978,6 @@
       Manipuri: 'mni-IN', Marathi: 'mr-IN', Nepali: 'ne-NP', Odia: 'or-IN', Punjabi: 'pa-IN', Sanskrit: 'sa-IN',
       Santali: 'sat-IN', Sindhi: 'sd-IN', Tamil: 'ta-IN', Telugu: 'te-IN', Urdu: 'ur-IN'
     };
-    const followUpQuestions = [
-      'Thank you. When did this concern begin?',
-      'Does anything make it feel better or worse?',
-      'Have you noticed any other symptoms with it?'
-    ];
-    let followUpIndex = 0;
-
     function appendChatMessage(text, type, note) {
       const message = document.createElement('div');
       message.className = `voice-chat-message ${type}`;
@@ -3004,7 +2995,6 @@
     const voiceInputStatus = document.getElementById('voiceInputStatus');
     const voiceAudioToggle = document.getElementById('voiceAudioToggle');
     const voiceSendButton = voiceChatForm.querySelector('[type="submit"]');
-    const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
     let voiceGeneration = 0;
     let replyPending = false;
@@ -3012,6 +3002,7 @@
     let elevenConversation = null;
     let elevenConnecting = false;
     let elevenConsentGranted = false;
+    let elevenStartPromise = null;
 
     function setVoiceHint(text, error = false) {
       voiceInputStatus.textContent = text;
@@ -3019,11 +3010,11 @@
     }
 
     function syncVoiceControls() {
-      voiceTalkButton.setAttribute('aria-pressed', String(!!recognition));
-      voiceTalkLabel.textContent = recognition ? 'Stop' : 'Talk';
-      if (!elevenConversation && !elevenConnecting) voiceOrb.classList.toggle('listening', !!recognition);
+      const voiceActive = !!elevenConversation || elevenConnecting;
+      voiceTalkButton.setAttribute('aria-pressed', String(voiceActive));
+      voiceTalkLabel.textContent = elevenConnecting ? 'Connecting…' : voiceActive ? 'Stop' : 'Talk';
       voiceSendButton.disabled = replyPending || !voiceChatInput.value.trim();
-      voiceTalkButton.disabled = replyPending;
+      voiceTalkButton.disabled = false;
       voiceChatMessages.setAttribute('aria-busy', String(replyPending));
     }
 
@@ -3037,7 +3028,7 @@
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       replyPending = false;
       syncVoiceControls();
-      setVoiceHint('Speak or type, at your pace.');
+      setVoiceHint('Tap Talk to start the live AI voice session.');
     }
 
     function setAgentOrbState(state = 'idle') {
@@ -3072,19 +3063,26 @@
       syncVoiceControls();
     }
 
-    async function startElevenLabsSession() {
-      if (elevenConnecting || elevenConversation) return;
+    function startElevenLabsSession() {
+      if (elevenConversation?.isOpen()) return Promise.resolve(elevenConversation);
+      if (elevenStartPromise) return elevenStartPromise;
+      elevenStartPromise = connectElevenLabsSession().finally(() => { elevenStartPromise = null; });
+      return elevenStartPromise;
+    }
+
+    async function connectElevenLabsSession() {
       if (!elevenConsentGranted) {
         elevenConsentGranted = window.confirm('To start voice chat, your microphone audio and conversation transcript will be processed by ElevenLabs. Continue?');
-        if (!elevenConsentGranted) return;
+        if (!elevenConsentGranted) return null;
       }
       if (!window.ElevenLabsClient?.Conversation) {
         showToast('Voice agent unavailable', 'The voice client could not be loaded. Please refresh and try again.');
-        return;
+        return null;
       }
       elevenConnecting = true;
       setAgentOrbState('connecting');
       setVoiceHint('Connecting to Arogyam voice…');
+      syncVoiceControls();
       try {
         const response = await fetch('/api/elevenlabs/signed-url', { cache: 'no-store' });
         const payload = await response.json().catch(() => ({}));
@@ -3113,12 +3111,16 @@
           }
         });
         elevenConversation = session;
+        syncVoiceControls();
+        return session;
       } catch (error) {
         elevenConnecting = false;
         setAgentOrbState();
         const message = error instanceof Error ? error.message : 'Could not connect to the voice agent.';
         setVoiceHint(message, true);
         showToast('Voice agent unavailable', message);
+        syncVoiceControls();
+        return null;
       }
     }
 
@@ -3150,10 +3152,9 @@
       voiceLanguage.textContent = language;
       voiceStatus.textContent = 'Arogyam is ready';
       voiceQuestion.textContent = question;
-      followUpIndex = 0;
       voiceChatInput.value = '';
       voiceChatMessages.replaceChildren();
-      appendChatMessage(question, 'ai', 'Arogyam');
+      setVoiceHint('Tap Talk to start the live AI voice session.');
       syncVoiceControls();
     }
 
@@ -3166,118 +3167,21 @@
     async function sendPatientMessage(source = 'typed') {
       const message = voiceChatInput.value.trim();
       if (!message || replyPending) return;
-      if (elevenConversation?.isOpen()) {
-        elevenConversation.sendUserMessage(message);
-        voiceChatInput.value = '';
-        replyPending = true;
-        syncVoiceControls();
-        setVoiceHint('Arogyam is thinking…');
+      const session = elevenConversation?.isOpen() ? elevenConversation : await startElevenLabsSession();
+      if (!session?.isOpen()) {
+        setVoiceHint('Live AI is not connected. Tap Talk and try again.', true);
         return;
       }
-      const generation = voiceGeneration;
-      const previous = recognition;
-      recognition = null;
-      if (previous) previous.abort();
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      appendChatMessage(message, 'user', source === 'voice' ? 'You · voice' : 'You');
+      session.sendUserMessage(message);
       voiceChatInput.value = '';
       replyPending = true;
       syncVoiceControls();
-      setVoiceHint('Preparing the next question…');
-      try {
-        const reply = await translateDynamicText(followUpQuestions[followUpIndex % followUpQuestions.length]);
-        if (generation !== voiceGeneration) return;
-        followUpIndex += 1;
-        voiceQuestion.textContent = reply;
-        appendChatMessage(reply, 'ai', 'Arogyam');
-        setVoiceHint('Your turn — tap Talk or type a reply.');
-        speakAI(reply, languageSelect.value);
-      } catch (_) {
-        if (generation === voiceGeneration) setVoiceHint('Could not load the next question. Please try again.', true);
-      } finally {
-        if (generation === voiceGeneration) {
-          replyPending = false;
-          syncVoiceControls();
-        }
-      }
+      setVoiceHint('Arogyam is thinking…');
     }
 
     voiceTalkButton.addEventListener('click', () => {
-      if (recognition) {
-        const previous = recognition;
-        recognition = null;
-        previous.abort();
-        syncVoiceControls();
-        setVoiceHint('Microphone stopped. Review your text, then send.');
-        return;
-      }
-      if (!SpeechRecognitionApi) {
-        setVoiceHint('Voice input is unavailable here. Try Chrome or Edge, or type your reply.', true);
-        return;
-      }
-      if (!window.isSecureContext) {
-        setVoiceHint('Open the secure HTTPS site to use voice input.', true);
-        return;
-      }
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      const session = new SpeechRecognitionApi();
-      const generation = voiceGeneration;
-      const draft = voiceChatInput.value.trim();
-      let finalTranscript = '';
-      let failed = false;
-      session.lang = speechLanguageCodes[languageSelect.value] || 'en-IN';
-      session.continuous = false;
-      session.interimResults = true;
-      session.maxAlternatives = 1;
-      recognition = session;
-      readRepliesAloud = true;
-      voiceAudioToggle.setAttribute('aria-pressed', 'true');
-      setVoiceHint('Starting microphone…');
-      syncVoiceControls();
-      session.onstart = () => {
-        if (recognition === session) setVoiceHint('Listening — speak now. Tap Stop to pause.');
-      };
-      session.onresult = event => {
-        if (recognition !== session || generation !== voiceGeneration) return;
-        let finalText = '';
-        let interimText = '';
-        for (let i = 0; i < event.results.length; i++) {
-          if (event.results[i].isFinal) finalText += event.results[i][0].transcript + ' ';
-          else interimText += event.results[i][0].transcript + ' ';
-        }
-        finalTranscript = finalText.trim();
-        voiceChatInput.value = [draft, finalText.trim(), interimText.trim()].filter(Boolean).join(' ');
-        syncVoiceControls();
-      };
-      session.onerror = event => {
-        if (recognition !== session) return;
-        failed = true;
-        recognition = null;
-        session.abort();
-        const errors = {
-          'not-allowed': 'Microphone access is blocked. Allow it in your browser, then tap Talk.',
-          'service-not-allowed': 'Voice input is blocked by this browser. Try Chrome or Edge.',
-          'audio-capture': 'No microphone found. Connect one and try again.',
-          'network': 'Voice connection failed. Check your connection and try again.',
-          'no-speech': 'No speech detected. Tap Talk to try again.',
-          'language-not-supported': 'This voice language is unavailable. Change language or type your reply.'
-        };
-        setVoiceHint(errors[event.error] || 'Voice input stopped. Tap Talk to try again.', true);
-        syncVoiceControls();
-      };
-      session.onend = () => {
-        if (recognition !== session || generation !== voiceGeneration) return;
-        recognition = null;
-        syncVoiceControls();
-        if (!failed && finalTranscript) void sendPatientMessage('voice');
-        else if (!failed) setVoiceHint('No speech captured. Tap Talk to try again.');
-      };
-      try { session.start(); }
-      catch (_) {
-        recognition = null;
-        syncVoiceControls();
-        setVoiceHint('Could not start voice input. Tap Talk to retry or type your reply.', true);
-      }
+      if (elevenConversation || elevenConnecting) void stopElevenLabsSession();
+      else void startElevenLabsSession();
     });
 
     voiceOrb.addEventListener('click', () => {
