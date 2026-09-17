@@ -1478,6 +1478,29 @@
       return digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
     }
 
+    function patientSignupIdentityIsValid() {
+      const digits = patientIdentityNumber.value.replace(/\D/g, '');
+      return selectedPatientSignupMethod === 'abha' ? digits.length === 14
+        : selectedPatientSignupMethod === 'aadhaar' && digits.length === 12;
+    }
+
+    function patientSignupVerificationIsComplete() {
+      return selectedLoginRole === 'patient'
+        && selectedAuthMode === 'register'
+        && Boolean(signupOtpRequestId)
+        && Boolean(signupOtpVerificationToken)
+        && Boolean(signupOtpPhone)
+        && normalizedSignupPhone() === signupOtpPhone
+        && patientSignupIdentityIsValid()
+        && loginPassword.value.length >= 6;
+    }
+
+    function updatePatientSignupContinueState() {
+      if (selectedLoginRole === 'patient' && selectedAuthMode === 'register') {
+        loginSubmitButton.disabled = !patientSignupVerificationIsComplete();
+      }
+    }
+
     function setSignupOtpStatus(message = '', state = '') {
       signupOtpStatus.textContent = message;
       signupOtpStatus.className = `signup-otp-status${state ? ` is-${state}` : ''}`;
@@ -1498,7 +1521,7 @@
       sendSignupOtp.textContent = 'Send OTP';
       verifySignupOtp.disabled = false;
       setSignupOtpStatus();
-      if (selectedLoginRole === 'patient' && selectedAuthMode === 'register') loginSubmitButton.disabled = true;
+      updatePatientSignupContinueState();
     }
 
     function startSignupOtpCooldown(seconds = 30) {
@@ -1758,7 +1781,7 @@
           signupOtpVerificationToken = data.verificationToken;
           signupOtpCode.disabled = true;
           loginIdentifier.readOnly = true;
-          loginSubmitButton.disabled = false;
+          updatePatientSignupContinueState();
           setSignupOtpStatus('Phone number verified.', 'success');
           return;
         }
@@ -1771,7 +1794,7 @@
         signupOtpVerificationToken = data.verificationToken;
         signupOtpCode.disabled = true;
         loginIdentifier.readOnly = true;
-        loginSubmitButton.disabled = false;
+        updatePatientSignupContinueState();
         setSignupOtpStatus('Phone number verified.', 'success');
       } catch (error) {
         verifySignupOtp.disabled = false;
@@ -1780,9 +1803,13 @@
     });
 
     loginIdentifier.addEventListener('input', () => {
-      if (selectedLoginRole !== 'patient' || selectedAuthMode !== 'register' || !signupOtpPhone) return;
-      if (normalizedSignupPhone() !== signupOtpPhone) resetSignupOtp(false);
+      if (selectedLoginRole !== 'patient' || selectedAuthMode !== 'register') return;
+      if (signupOtpPhone && normalizedSignupPhone() !== signupOtpPhone) resetSignupOtp(false);
+      updatePatientSignupContinueState();
     });
+
+    patientIdentityNumber.addEventListener('input', updatePatientSignupContinueState);
+    loginPassword.addEventListener('input', updatePatientSignupContinueState);
 
     patientDetailsForm.addEventListener('submit', event => {
       event.preventDefault();
@@ -2696,6 +2723,17 @@
       if (role === 'patient' && selectedAuthMode === 'register') {
         if (!signupOtpRequestId || !signupOtpVerificationToken) {
           setSignupOtpStatus('Verify your phone number before creating the account.', 'error');
+          return;
+        }
+        if (normalizedSignupPhone() !== signupOtpPhone) {
+          resetSignupOtp(false);
+          setSignupOtpStatus('The mobile number changed. Verify the new number before continuing.', 'error');
+          return;
+        }
+        if (loginPassword.value.length < 6) {
+          loginStatus.textContent = 'Password must contain at least 6 characters.';
+          loginPassword.focus();
+          updatePatientSignupContinueState();
           return;
         }
         if (!loginForm.reportValidity()) return;
