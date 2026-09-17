@@ -718,6 +718,7 @@
     .signup-otp-status.is-error { color: #a33c32; }
     .signup-otp-status.is-success { color: #08745f; font-weight: 720; }
     .login-submit:disabled { cursor: not-allowed; opacity: .56; box-shadow: none; }
+    .login-status { min-height: 18px; margin: -12px 2px 10px; color: #a33c32; font-size: .78rem; }
     .patient-registration-step[hidden] { display: none; }
     .registration-progress { display: flex; gap: 7px; margin: -8px 0 20px; }
     .registration-progress span { flex: 1; height: 5px; border-radius: 99px; background: #dfe8e4; }
@@ -990,6 +991,7 @@
             </div>
             <div class="field-group"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter password" /></div>
             <div class="login-row" id="loginRememberRow"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label></div>
+            <p class="login-status" id="loginStatus" role="status" aria-live="polite"></p>
             <button class="primary-button login-submit" type="submit" aria-label="Continue securely">
               <span class="login-submit-label">Continue securely</span>
             </button>
@@ -1376,6 +1378,7 @@
     const signupOtpStatus = document.getElementById('signupOtpStatus');
     const loginSubmitButton = document.querySelector('.login-submit');
     const loginRememberRow = document.getElementById('loginRememberRow');
+    const loginStatus = document.getElementById('loginStatus');
     const loginPassword = document.getElementById('loginPassword');
     const patientDetailsForm = document.getElementById('patientDetailsForm');
     const patientConditionsForm = document.getElementById('patientConditionsForm');
@@ -1397,32 +1400,15 @@
     let signupOtpVerificationToken = null;
     let signupOtpPhone = null;
     let signupOtpCountdown = null;
+    let patientRegistrationPassword = '';
     let authorizedPatientDevice = false;
     let patientLoggedInThisSession = false;
     patientDateOfBirth.max = new Date().toISOString().slice(0, 10);
 
     const loginRoles = {
-      patient: {
-        name: 'Patient portal',
-        title: 'Welcome back',
-        label: 'Patient ID',
-        placeholder: 'Enter patient ID',
-        view: 'patient'
-      },
-      doctor: {
-        name: 'Doctor console',
-        title: 'Clinician sign in',
-        label: 'Practitioner ID',
-        placeholder: 'Enter practitioner ID',
-        view: 'doctor'
-      },
-      staff: {
-        name: 'Hospital staff workspace',
-        title: 'Staff sign in',
-        label: 'Employee ID',
-        placeholder: 'Enter employee ID',
-        view: 'reception'
-      }
+      patient: { title: 'Welcome back', label: 'Patient ID', placeholder: 'Enter patient ID' },
+      doctor: { title: 'Clinician sign in', label: 'Practitioner ID', placeholder: 'Enter practitioner ID' },
+      staff: { title: 'Staff sign in', label: 'Employee ID', placeholder: 'Enter employee ID' }
     };
 
     function normalizedSignupPhone() {
@@ -1500,10 +1486,13 @@
       document.getElementById('identifierLabel').textContent = isPatientRegistration ? (currentLanguage === 'Hindi' ? 'मोबाइल नंबर' : 'Mobile number') : localized[1];
       document.getElementById('loginIdentifier').placeholder = isPatientRegistration ? (currentLanguage === 'Hindi' ? 'मोबाइल नंबर दर्ज करें' : 'Enter mobile number') : localized[2];
       document.getElementById('loginIdentifier').setAttribute('inputmode', isPatientRegistration ? 'tel' : 'text');
+      loginPassword.autocomplete = isPatientRegistration ? 'new-password' : 'current-password';
+      loginPassword.minLength = isPatientRegistration ? 6 : 0;
       const submitLabel = document.querySelector('.login-submit-label');
       submitLabel.textContent = mode === 'register' ? (currentLanguage === 'Hindi' ? 'खाता बनाएँ' : 'Create account') : (currentLanguage === 'Hindi' ? 'सुरक्षित रूप से जारी रखें' : 'Continue securely');
       submitLabel.closest('button').setAttribute('aria-label', submitLabel.textContent);
       selectedPatientSignupMethod = null;
+      patientRegistrationPassword = '';
       patientSignupMethods.hidden = !isPatientRegistration;
       loginForm.hidden = isPatientRegistration;
       patientDetailsForm.hidden = true;
@@ -1511,6 +1500,7 @@
       patientDetailsForm.reset();
       patientConditionsForm.reset();
       patientRegistrationStatus.textContent = '';
+      loginStatus.textContent = '';
       patientLoginDocuments.hidden = !(role === 'patient' && mode === 'login');
       loginRememberRow.hidden = isPatientRegistration;
       resetSignupOtp(true);
@@ -1643,7 +1633,7 @@
             phone: signupOtpPhone,
             identityMethod: selectedPatientSignupMethod,
             identityNumber: patientIdentityNumber.value,
-            password: loginPassword.value,
+            password: patientRegistrationPassword,
             fullName: patientFullName.value,
             dateOfBirth: patientDateOfBirth.value,
             gender: patientGender.value,
@@ -1657,6 +1647,7 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not create account');
         try { localStorage.setItem('arogPatientId', data.patient.id); } catch (_) {}
+        patientRegistrationPassword = '';
         patientLoggedInThisSession = true;
         resetCheckup();
         navigateRoute('patient/start');
@@ -2413,8 +2404,25 @@
           return;
         }
         if (!loginForm.reportValidity()) return;
+        patientRegistrationPassword = loginPassword.value;
         showPatientRegistrationStep('details');
         return;
+      }
+      if (role === 'patient' && selectedAuthMode === 'login') {
+        loginStatus.textContent = '';
+        try {
+          const response = await fetch('/api/patient-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier: loginIdentifier.value, password: loginPassword.value })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Could not sign in');
+          try { localStorage.setItem('arogPatientId', data.patient.id); } catch (_) {}
+        } catch (error) {
+          loginStatus.textContent = error.message || 'Could not sign in.';
+          return;
+        }
       }
       const rect = button.getBoundingClientRect();
       const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2;

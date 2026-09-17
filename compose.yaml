@@ -5,6 +5,9 @@ services:
     build: .
     container_name: aarogyam-site
     restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PATIENT_DATA_KEY: ${PATIENT_DATA_KEY}
     volumes:
       - ./data:/app/data
     networks:

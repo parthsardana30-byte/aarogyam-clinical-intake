@@ -1,7 +1,8 @@
 import http from 'node:http';
-import { createHash, randomBytes, randomInt, randomUUID, scryptSync } from 'node:crypto';
+import { createCipheriv, createHash, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from 'node:crypto';
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import QRCode from 'qrcode';
 
 const host = process.env.HOST || '127.0.0.1';
@@ -9,7 +10,7 @@ const port = Number(process.env.PORT || 4173);
 const publicRoot = resolve('dist');
 const dataRoot = resolve(process.env.DATA_DIR || 'data');
 const devicesFile = join(dataRoot, 'authorized-devices.json');
-const patientsFile = join(dataRoot, 'patients.json');
+const patientsDbFile = join(dataRoot, 'patients.sqlite');
 const enrollmentTtlMs = 10 * 60 * 1000;
 const signupOtpTtlMs = 5 * 60 * 1000;
 const signupOtpCooldownMs = 30 * 1000;
@@ -18,6 +19,7 @@ const signupOtps = new Map();
 const signupOtpLastSent = new Map();
 let devices = [];
 let patients = [];
+let patientsDb;
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8', '.html': 'text/html; charset=utf-8', '.ico': 'image/x-icon',
@@ -36,8 +38,47 @@ async function loadDevices() {
 
 async function loadPatients() {
   await mkdir(dataRoot, { recursive: true });
-  try { patients = JSON.parse(await readFile(patientsFile, 'utf8')); }
-  catch (error) { if (error.code !== 'ENOENT') throw error; }
+  patientsDb = new DatabaseSync(patientsDbFile);
+  patientsDb.exec(`
+    PRAGMA journal_mode = WAL;
+    PRAGMA foreign_keys = ON;
+    CREATE TABLE IF NOT EXISTS patients (
+      id TEXT PRIMARY KEY,
+      phone TEXT NOT NULL UNIQUE,
+      identity_method TEXT NOT NULL,
+      identity_ciphertext TEXT,
+      identity_iv TEXT,
+      identity_tag TEXT,
+      identity_last4 TEXT NOT NULL,
+      password_salt TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      full_name TEXT NOT NULL,
+      date_of_birth TEXT NOT NULL,
+      gender TEXT NOT NULL,
+      height_cm REAL NOT NULL,
+      weight_kg REAL NOT NULL,
+      blood_group TEXT NOT NULL,
+      conditions_json TEXT NOT NULL,
+      allergies TEXT,
+      abha_link_status TEXT NOT NULL DEFAULT 'unlinked',
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS patients_phone_idx ON patients(phone);
+  `);
+  const rows = patientsDb.prepare('SELECT * FROM patients').all();
+  patients = rows.map(row => ({
+    id: row.id,
+    phone: row.phone,
+    identity: { method: row.identity_method, last4: row.identity_last4 },
+    password: { salt: row.password_salt, hash: row.password_hash },
+    profile: {
+      fullName: row.full_name, dateOfBirth: row.date_of_birth, gender: row.gender,
+      heightCm: row.height_cm, weightKg: row.weight_kg, bloodGroup: row.blood_group
+    },
+    health: { conditions: JSON.parse(row.conditions_json), allergies: row.allergies },
+    abhaLinkStatus: row.abha_link_status,
+    createdAt: row.created_at
+  }));
 }
 
 async function saveDevices() {
@@ -46,10 +87,20 @@ async function saveDevices() {
   await rename(temporary, devicesFile);
 }
 
-async function savePatients() {
-  const temporary = `${patientsFile}.tmp`;
-  await writeFile(temporary, JSON.stringify(patients, null, 2), { mode: 0o600 });
-  await rename(temporary, patientsFile);
+function patientEncryptionKey() {
+  const configured = process.env.PATIENT_DATA_KEY;
+  if (!configured && process.env.NODE_ENV === 'production') throw new Error('PATIENT_DATA_KEY is required in production');
+  if (!configured) return createHash('sha256').update('arogsevak-local-development-key').digest();
+  const decoded = Buffer.from(configured, 'base64');
+  if (decoded.length !== 32) throw new Error('PATIENT_DATA_KEY must be a base64-encoded 32-byte key');
+  return decoded;
+}
+
+function encryptIdentityNumber(value) {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', patientEncryptionKey(), iv);
+  const ciphertext = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
+  return { ciphertext: ciphertext.toString('base64'), iv: iv.toString('base64'), tag: cipher.getAuthTag().toString('base64') };
 }
 
 function cookies(request) {
@@ -150,19 +201,6 @@ async function verifySignupOtp(request, response) {
   sendJson(response, 200, { verified: true, verificationToken });
 }
 
-async function confirmSignupOtp(request, response) {
-  purgeExpiredSignupOtps();
-  const body = await readJson(request);
-  const phone = normalizeIndianPhone(body.phone);
-  const entry = signupOtps.get(String(body.id || ''));
-  const token = String(body.verificationToken || '');
-  if (!entry || !phone || entry.phone !== phone || !entry.verifiedTokenHash || hash(token) !== entry.verifiedTokenHash) {
-    return sendJson(response, 401, { error: 'Phone verification is required' });
-  }
-  entry.consumed = true;
-  sendJson(response, 200, { verified: true });
-}
-
 const allowedBloodGroups = new Set(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']);
 const allowedGenders = new Set(['Female', 'Male', 'Non-binary', 'Prefer not to say']);
 const allowedConditions = new Set([
@@ -209,19 +247,52 @@ async function createPatientRegistration(request, response) {
   if (password.length < 6 || password.length > 128) return sendJson(response, 400, { error: 'Password must contain at least 6 characters' });
 
   const passwordSalt = randomBytes(16).toString('hex');
+  let patientId;
+  do { patientId = `AS-${randomInt(100000, 1000000)}`; }
+  while (patients.some(item => item.id === patientId));
+  const encryptedIdentity = encryptIdentityNumber(identityNumber);
   const patient = {
-    id: `AS-${randomInt(100000, 1000000)}`,
+    id: patientId,
     phone,
     identity: { method: identityMethod, last4: identityNumber.slice(-4) },
     password: { salt: passwordSalt, hash: scryptSync(password, passwordSalt, 64).toString('hex') },
     profile: { fullName, dateOfBirth, gender, heightCm, weightKg, bloodGroup },
     health: { conditions, allergies: allergies || null },
+    abhaLinkStatus: identityMethod === 'abha' ? 'pending_verification' : 'unlinked',
     createdAt: new Date().toISOString()
   };
+  patientsDb.prepare(`
+    INSERT INTO patients (
+      id, phone, identity_method, identity_ciphertext, identity_iv, identity_tag, identity_last4,
+      password_salt, password_hash, full_name, date_of_birth, gender, height_cm, weight_kg,
+      blood_group, conditions_json, allergies, abha_link_status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    patient.id, patient.phone, patient.identity.method, encryptedIdentity.ciphertext, encryptedIdentity.iv,
+    encryptedIdentity.tag, patient.identity.last4, patient.password.salt, patient.password.hash,
+    patient.profile.fullName, patient.profile.dateOfBirth, patient.profile.gender, patient.profile.heightCm,
+    patient.profile.weightKg, patient.profile.bloodGroup, JSON.stringify(patient.health.conditions),
+    patient.health.allergies, patient.abhaLinkStatus, patient.createdAt
+  );
   patients.push(patient);
-  await savePatients();
   otpEntry.consumed = true;
   sendJson(response, 201, { patient: { id: patient.id, fullName: patient.profile.fullName } });
+}
+
+async function loginPatient(request, response) {
+  const body = await readJson(request);
+  const identifier = String(body.identifier || '').trim().toUpperCase();
+  const password = String(body.password || '');
+  const patient = patients.find(item => item.id.toUpperCase() === identifier);
+  if (!patient || !password || !patient.password?.salt || !patient.password?.hash) {
+    return sendJson(response, 401, { error: 'Patient ID or password is incorrect' });
+  }
+  const candidate = scryptSync(password, patient.password.salt, 64);
+  const stored = Buffer.from(patient.password.hash, 'hex');
+  if (stored.length !== candidate.length || !timingSafeEqual(stored, candidate)) {
+    return sendJson(response, 401, { error: 'Patient ID or password is incorrect' });
+  }
+  sendJson(response, 200, { patient: { id: patient.id, fullName: patient.profile.fullName } });
 }
 
 async function createEnrollment(request, response) {
@@ -303,8 +374,8 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/device-enrollments') return await createEnrollment(request, response);
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/request') return await requestSignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
-    if (request.method === 'POST' && url.pathname === '/api/signup-otp/confirm') return await confirmSignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-registrations') return await createPatientRegistration(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/patient-login') return await loginPatient(request, response);
     const statusMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/status$/i);
     if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1]);
     if (request.method === 'POST' && url.pathname === '/api/device-authorizations') return await authorizeDevice(request, response);
