@@ -262,6 +262,17 @@
     .app-shell.doctor-session .topbar,
     .app-shell.patient-session .topbar,
     .app-shell.staff-session .topbar { border-bottom: 1px solid rgba(16,43,39,.1); border-radius: 26px; }
+    .app-shell.patient-session.checkup-active .topbar { display: none; }
+    .app-shell.patient-session.checkup-active .workspace { padding-top: 18px; }
+    .checkup-language-control {
+      position: fixed; top: 20px; right: 24px; z-index: 60;
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+      border: 1px solid rgba(16,43,39,.14); border-radius: 14px;
+      background: rgba(255,255,255,.88); box-shadow: 0 12px 30px rgba(16,43,39,.1); backdrop-filter: blur(16px);
+    }
+    .checkup-language-control[hidden] { display: none; }
+    .checkup-language-control svg { width: 18px; height: 18px; color: var(--teal); }
+    .checkup-language-select { max-width: 170px; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: .86rem; font-weight: 720; cursor: pointer; }
     .doctor-workspace, .portal-workspace { display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 22px; align-items: start; transition: grid-template-columns .24s ease; }
     .doctor-sidebar {
       position: fixed; z-index: 20; top: 108px; left: max(16px, calc((100vw - 1480px) / 2 + 16px));
@@ -329,6 +340,7 @@
     @keyframes voicePulse { 50% { transform: scale(1.06); } }
     .voice-chat { height: 100%; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
     .voice-chat-head { display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 8px 8px 14px; border-bottom: 0; }
+    .app-shell.checkup-active.voice-mode .voice-chat-head { padding-right: 190px; }
     .voice-chat-title, .voice-audio-toggle { display: none !important; }
     .voice-chat-title h1 { font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 650; letter-spacing: -.04em; margin: 0; line-height: 1.2; }
     .voice-chat-title::before { content: "AROGYAM"; display: block; margin-bottom: 7px; font-size: .63rem; letter-spacing: .18em; font-weight: 750; color: #538375; }
@@ -902,6 +914,9 @@
       .voice-experience { height: max(440px, calc(100dvh - 145px)); }
       .voice-orb { width: 180px; }
       .voice-chat-head { padding: 8px 4px 16px; align-items: center; }
+      .checkup-language-control { top: 12px; right: 14px; padding: 7px 10px; }
+      .checkup-language-select { max-width: 128px; font-size: .78rem; }
+      .app-shell.checkup-active.voice-mode .voice-chat-head { padding-top: 60px; padding-right: 4px; }
       .voice-chat-title h1 { font-size: 1.3rem; }
       .voice-live-tools { gap: 6px; }
       .voice-audio-toggle { padding: 9px; }
@@ -1222,6 +1237,10 @@
             </nav>
           </aside>
           <div class="portal-main">
+        <label class="checkup-language-control" id="checkupLanguageControl" for="checkupLanguageSelect" hidden>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.2 2.5 3.4 5.5 3.4 9S14.2 18.5 12 21M12 3C9.8 5.5 8.6 8.5 8.6 12S9.8 18.5 12 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <select class="checkup-language-select" id="checkupLanguageSelect" aria-label="Check-up language"></select>
+        </label>
         <div class="checkup-launch" id="checkupLaunch">
           <div class="checkup-welcome" id="checkupWelcome">
             <h1 class="checkup-welcome-title">Hello, <span id="patientWelcomeName">Patient</span></h1>
@@ -2007,6 +2026,8 @@
     const languageOptions = document.getElementById('languageOptions');
     const confirmLanguage = document.getElementById('confirmLanguage');
     const languageSelect = document.getElementById('languageSelect');
+    const checkupLanguageControl = document.getElementById('checkupLanguageControl');
+    const checkupLanguageSelect = document.getElementById('checkupLanguageSelect');
     const roleLanguageSelect = document.getElementById('roleLanguageSelect');
     const startCheckupButton = document.getElementById('startCheckupButton');
     const toast = document.getElementById('toast');
@@ -2273,11 +2294,13 @@
         <span>${english === 'English' ? 'English' : native + ' · ' + english}</span>
       </label>`).join('');
     languageSelect.innerHTML = indianLanguages.map(([english, native]) => `<option value="${english}">${english === 'English' ? 'English' : native + ' · ' + english}</option>`).join('');
+    checkupLanguageSelect.innerHTML = languageSelect.innerHTML;
     roleLanguageSelect.innerHTML = indianLanguages.map(([english, native]) => `<option value="${english}">${english === 'English' ? 'English' : native + ' · ' + english}</option>`).join('');
     let savedLanguage = 'English';
     try { savedLanguage = localStorage.getItem('arogSevakLanguage') || 'English'; } catch (_) {}
     if (!indianLanguages.some(([english]) => english === savedLanguage)) savedLanguage = 'English';
     languageSelect.value = savedLanguage;
+    checkupLanguageSelect.value = savedLanguage;
     roleLanguageSelect.value = savedLanguage;
     const savedLanguageRadio = languageOptions.querySelector(`input[value="${savedLanguage}"]`);
     if (savedLanguageRadio) savedLanguageRadio.checked = true;
@@ -2298,6 +2321,7 @@
 
     function setPreferredLanguage(language) {
       languageSelect.value = language;
+      checkupLanguageSelect.value = language;
       roleLanguageSelect.value = language;
       const radio = languageOptions.querySelector(`input[value="${language}"]`);
       if (radio) radio.checked = true;
@@ -2585,7 +2609,8 @@
 
     function showRolePicker() {
       appShell.hidden = true;
-      appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
+      appShell.classList.remove('doctor-session', 'patient-session', 'staff-session', 'checkup-active', 'voice-mode');
+      checkupLanguageControl.hidden = true;
       loginScreen.hidden = false;
       loginScreen.classList.remove('form-open');
       loginForm.reset();
@@ -2599,7 +2624,8 @@
       loginScreen.classList.remove('form-open');
       loginScreen.hidden = true;
       appShell.hidden = false;
-      appShell.classList.remove('doctor-session', 'patient-session', 'staff-session');
+      appShell.classList.remove('doctor-session', 'patient-session', 'staff-session', 'checkup-active', 'voice-mode');
+      checkupLanguageControl.hidden = true;
       appShell.classList.add(`${role}-session`);
       openView(view);
     }
@@ -2661,8 +2687,11 @@
       if (patientMatch) {
         showSession('patient', 'patient');
         const isVoiceRoute = patientMatch[1] === 'voice';
+        const isCheckupActive = patientMatch[1] === 'language' || isVoiceRoute;
         patientView.classList.toggle('voice-route', isVoiceRoute);
         appShell.classList.toggle('voice-mode', isVoiceRoute);
+        appShell.classList.toggle('checkup-active', isCheckupActive);
+        checkupLanguageControl.hidden = !isCheckupActive;
         if (patientMatch[1] === 'records') showPatientRecords(focus);
         else setCheckupStage(patientMatch[1], focus);
         return;
@@ -3179,6 +3208,12 @@
       if (routeFromLocation() === 'patient/voice') startVoiceSession(event.target.value);
       showToast('Language changed', `${event.target.value} will be used for the next spoken question.`);
       setSettingsOpen(false);
+    });
+
+    checkupLanguageSelect.addEventListener('change', event => {
+      setPreferredLanguage(event.target.value);
+      if (routeFromLocation() === 'patient/voice') startVoiceSession(event.target.value);
+      showToast('Language changed', `${event.target.value} will be used for your check-up.`);
     });
 
     window.addEventListener('popstate', () => applyRoute(routeFromLocation()));
