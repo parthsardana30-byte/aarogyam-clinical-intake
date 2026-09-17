@@ -7,4 +7,6 @@ Thumbs.db
 node_modules/
 data/authorized-devices.json
 data/authorized-devices.json.tmp
+data/patients.json
+data/patients.json.tmp
 

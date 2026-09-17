@@ -718,6 +718,28 @@
     .signup-otp-status.is-error { color: #a33c32; }
     .signup-otp-status.is-success { color: #08745f; font-weight: 720; }
     .login-submit:disabled { cursor: not-allowed; opacity: .56; box-shadow: none; }
+    .patient-registration-step[hidden] { display: none; }
+    .registration-progress { display: flex; gap: 7px; margin: -8px 0 20px; }
+    .registration-progress span { flex: 1; height: 5px; border-radius: 99px; background: #dfe8e4; }
+    .registration-progress span.is-complete, .registration-progress span.is-current { background: #16816b; }
+    .registration-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .registration-grid .field-group { margin-bottom: 0; }
+    .registration-grid .field-group.is-wide { grid-column: 1 / -1; }
+    .registration-grid select {
+      width: 100%; min-height: 50px; padding: 12px 36px 12px 14px; border: 1px solid var(--line-strong);
+      border-radius: 12px; color: var(--ink); background: #fbfcfb; font: inherit;
+    }
+    .registration-grid select:focus { outline: 3px solid rgba(14,102,85,.14); border-color: var(--teal); }
+    .registration-actions { display: grid; grid-template-columns: auto minmax(170px,1fr); gap: 10px; margin-top: 22px; }
+    .registration-back { min-height: 50px; border: 1px solid var(--line-strong); border-radius: 13px; background: #fff; color: var(--ink); padding: 10px 18px; font: inherit; font-weight: 740; }
+    .registration-next { min-height: 50px; border: 0; border-radius: 13px; background: #126b59; color: #fff; padding: 10px 18px; font: inherit; font-weight: 760; }
+    .condition-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 16px; padding: 0; border: 0; }
+    .condition-option { display: flex; align-items: center; gap: 9px; min-height: 48px; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 12px; background: #f9fbfa; font-size: .84rem; font-weight: 680; }
+    .condition-option:has(input:checked) { border-color: #16816b; background: #edf7f4; color: #0d6655; }
+    .condition-option input { width: 17px; height: 17px; accent-color: #16816b; }
+    .condition-allergies { display: block; margin-top: 4px; font-size: .84rem; font-weight: 760; }
+    .condition-allergies textarea { min-height: 74px; margin-top: 7px; resize: vertical; }
+    .registration-status { min-height: 18px; margin: 10px 0 0; color: #a33c32; font-size: .78rem; }
     .login-row { display: flex; align-items: center; justify-content: flex-start; gap: 14px; margin: 4px 0 24px; font-size: .82rem; }
     .login-row[hidden] { display: none; }
     .remember-label { display: flex; align-items: center; gap: 8px; color: #596f69; }
@@ -814,6 +836,7 @@
       .login-form-brand .brand-mark { width: 42px; height: 42px; }
       .login-form-brand .brand-name { font-size: 1.35rem; }
       .back-button { width: 44px; height: 44px; border-radius: 14px; }
+      .registration-grid, .condition-options { grid-template-columns: 1fr; }
       .login-footnote { color: var(--ink-soft); }
       .topbar { height: auto; padding: 14px 18px; }
       .settings-menu { width: min(280px, calc(100vw - 48px)); }
@@ -934,11 +957,11 @@
           <section class="patient-signup-methods" id="patientSignupMethods" aria-label="Patient signup method" hidden>
             <div class="patient-signup-grid">
               <button class="patient-signup-option" type="button" data-patient-signup="abha">
-                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/abha-card-4k.png" alt="" /></span>
+                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/abha-card-ui.png" alt="" decoding="async" /></span>
                 <span><strong>Sign up using ABHA ID</strong></span>
               </button>
               <button class="patient-signup-option" type="button" data-patient-signup="aadhaar">
-                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/aadhaar-card-4k.png" alt="" /></span>
+                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/aadhaar-card-ui.png" alt="" decoding="async" /></span>
                 <span><strong>Sign up using Aadhaar card</strong></span>
               </button>
             </div>
@@ -947,11 +970,11 @@
             <button class="signup-method-back" id="changeSignupMethod" type="button" hidden>← Change verification method</button>
             <div class="patient-login-documents" id="patientLoginDocuments" aria-label="Supported patient identity cards" hidden>
               <div class="patient-login-document">
-                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/abha-card-4k.png" alt="" /></span>
+                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/abha-card-ui.png" alt="" decoding="async" /></span>
                 <span>ABHA card</span>
               </div>
               <div class="patient-login-document">
-                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/aadhaar-card-4k.png" alt="" /></span>
+                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/aadhaar-card-ui.png" alt="" decoding="async" /></span>
                 <span>Aadhaar card</span>
               </div>
             </div>
@@ -970,6 +993,35 @@
             <button class="primary-button login-submit" type="submit" aria-label="Continue securely">
               <span class="login-submit-label">Continue securely</span>
             </button>
+          </form>
+          <form class="patient-registration-step" id="patientDetailsForm" hidden>
+            <div class="registration-progress" aria-label="Registration step 2 of 3"><span class="is-complete"></span><span class="is-current"></span><span></span></div>
+            <div class="registration-grid">
+              <div class="field-group is-wide"><label for="patientFullName">Full name</label><input id="patientFullName" required maxlength="80" autocomplete="name" placeholder="Enter your full name" /></div>
+              <div class="field-group"><label for="patientDateOfBirth">Date of birth</label><input id="patientDateOfBirth" type="date" required autocomplete="bday" /></div>
+              <div class="field-group"><label for="patientGender">Gender</label><select id="patientGender" required><option value="">Select</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+              <div class="field-group"><label for="patientHeight">Height (cm)</label><input id="patientHeight" type="number" required min="50" max="250" inputmode="decimal" placeholder="e.g. 165" /></div>
+              <div class="field-group"><label for="patientWeight">Weight (kg)</label><input id="patientWeight" type="number" required min="2" max="350" step="0.1" inputmode="decimal" placeholder="e.g. 62" /></div>
+              <div class="field-group is-wide"><label for="patientBloodGroup">Blood group</label><select id="patientBloodGroup" required><option value="Unknown">I don’t know</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+            </div>
+            <div class="registration-actions"><button class="registration-back" id="backToVerification" type="button">Back</button><button class="registration-next" type="submit">Continue</button></div>
+          </form>
+          <form class="patient-registration-step" id="patientConditionsForm" hidden>
+            <div class="registration-progress" aria-label="Registration step 3 of 3"><span class="is-complete"></span><span class="is-complete"></span><span class="is-current"></span></div>
+            <fieldset class="condition-options" aria-label="Existing health conditions">
+              <label class="condition-option"><input type="checkbox" name="patientCondition" value="heart_disease" />Heart disease</label>
+              <label class="condition-option"><input type="checkbox" name="patientCondition" value="hypertension" />High blood pressure</label>
+              <label class="condition-option"><input type="checkbox" name="patientCondition" value="diabetes" />Diabetes</label>
+              <label class="condition-option"><input type="checkbox" name="patientCondition" value="asthma" />Asthma</label>
+              <label class="condition-option"><input type="checkbox" name="patientCondition" value="thyroid" />Thyroid condition</label>
+              <label class="condition-option"><input type="checkbox" name="patientCondition" value="kidney_disease" />Kidney disease</label>
+              <label class="condition-option"><input type="checkbox" name="patientCondition" value="liver_disease" />Liver disease</label>
+              <label class="condition-option"><input type="checkbox" name="patientCondition" value="arthritis" />Arthritis</label>
+              <label class="condition-option"><input type="checkbox" name="patientCondition" value="none" />None of these</label>
+            </fieldset>
+            <label class="condition-allergies" for="patientAllergies">Known allergies or important notes (optional)<textarea id="patientAllergies" maxlength="300" placeholder="Medicines, food or other allergies"></textarea></label>
+            <p class="registration-status" id="patientRegistrationStatus" role="status" aria-live="polite"></p>
+            <div class="registration-actions"><button class="registration-back" id="backToDetails" type="button">Back</button><button class="registration-next" id="completePatientRegistration" type="submit">Create account</button></div>
           </form>
         </div>
       </div>
@@ -1324,6 +1376,18 @@
     const signupOtpStatus = document.getElementById('signupOtpStatus');
     const loginSubmitButton = document.querySelector('.login-submit');
     const loginRememberRow = document.getElementById('loginRememberRow');
+    const loginPassword = document.getElementById('loginPassword');
+    const patientDetailsForm = document.getElementById('patientDetailsForm');
+    const patientConditionsForm = document.getElementById('patientConditionsForm');
+    const patientFullName = document.getElementById('patientFullName');
+    const patientDateOfBirth = document.getElementById('patientDateOfBirth');
+    const patientGender = document.getElementById('patientGender');
+    const patientHeight = document.getElementById('patientHeight');
+    const patientWeight = document.getElementById('patientWeight');
+    const patientBloodGroup = document.getElementById('patientBloodGroup');
+    const patientAllergies = document.getElementById('patientAllergies');
+    const patientRegistrationStatus = document.getElementById('patientRegistrationStatus');
+    const patientConditionInputs = [...document.querySelectorAll('input[name="patientCondition"]')];
     const changeSignupMethod = document.getElementById('changeSignupMethod');
     const appShell = document.getElementById('appShell');
     let selectedLoginRole = 'patient';
@@ -1335,6 +1399,7 @@
     let signupOtpCountdown = null;
     let authorizedPatientDevice = false;
     let patientLoggedInThisSession = false;
+    patientDateOfBirth.max = new Date().toISOString().slice(0, 10);
 
     const loginRoles = {
       patient: {
@@ -1403,6 +1468,18 @@
       }, 1000);
     }
 
+    function showPatientRegistrationStep(step) {
+      const isVerification = step === 'verification';
+      const isDetails = step === 'details';
+      loginForm.hidden = !isVerification;
+      patientDetailsForm.hidden = !isDetails;
+      patientConditionsForm.hidden = step !== 'conditions';
+      document.getElementById('formTitle').textContent = isVerification ? 'Create patient account' : isDetails ? 'Tell us about you' : 'Health conditions';
+      loginFormShell.classList.add('patient-signup-details');
+      if (isDetails) patientFullName.focus();
+      if (step === 'conditions') patientRegistrationStatus.textContent = '';
+    }
+
     function selectLoginRole(role, focus = true, mode = 'login') {
       selectedLoginRole = role;
       selectedAuthMode = mode;
@@ -1429,6 +1506,11 @@
       selectedPatientSignupMethod = null;
       patientSignupMethods.hidden = !isPatientRegistration;
       loginForm.hidden = isPatientRegistration;
+      patientDetailsForm.hidden = true;
+      patientConditionsForm.hidden = true;
+      patientDetailsForm.reset();
+      patientConditionsForm.reset();
+      patientRegistrationStatus.textContent = '';
       patientLoginDocuments.hidden = !(role === 'patient' && mode === 'login');
       loginRememberRow.hidden = isPatientRegistration;
       resetSignupOtp(true);
@@ -1526,6 +1608,62 @@
     loginIdentifier.addEventListener('input', () => {
       if (selectedLoginRole !== 'patient' || selectedAuthMode !== 'register' || !signupOtpPhone) return;
       if (normalizedSignupPhone() !== signupOtpPhone) resetSignupOtp(false);
+    });
+
+    patientDetailsForm.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!patientDetailsForm.reportValidity()) return;
+      showPatientRegistrationStep('conditions');
+    });
+
+    document.getElementById('backToVerification').addEventListener('click', () => showPatientRegistrationStep('verification'));
+    document.getElementById('backToDetails').addEventListener('click', () => showPatientRegistrationStep('details'));
+
+    patientConditionInputs.forEach(input => input.addEventListener('change', () => {
+      if (input.value === 'none' && input.checked) patientConditionInputs.forEach(other => { if (other !== input) other.checked = false; });
+      if (input.value !== 'none' && input.checked) {
+        const none = patientConditionInputs.find(other => other.value === 'none');
+        if (none) none.checked = false;
+      }
+    }));
+
+    patientConditionsForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const submit = document.getElementById('completePatientRegistration');
+      if (submit.disabled) return;
+      submit.disabled = true;
+      patientRegistrationStatus.textContent = 'Creating your account…';
+      const conditions = patientConditionInputs.filter(input => input.checked).map(input => input.value);
+      try {
+        const response = await fetch('/api/patient-registrations', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            otpRequestId: signupOtpRequestId,
+            otpVerificationToken: signupOtpVerificationToken,
+            phone: signupOtpPhone,
+            identityMethod: selectedPatientSignupMethod,
+            identityNumber: patientIdentityNumber.value,
+            password: loginPassword.value,
+            fullName: patientFullName.value,
+            dateOfBirth: patientDateOfBirth.value,
+            gender: patientGender.value,
+            heightCm: Number(patientHeight.value),
+            weightKg: Number(patientWeight.value),
+            bloodGroup: patientBloodGroup.value,
+            conditions,
+            allergies: patientAllergies.value
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not create account');
+        try { localStorage.setItem('arogPatientId', data.patient.id); } catch (_) {}
+        patientLoggedInThisSession = true;
+        resetCheckup();
+        navigateRoute('patient/start');
+      } catch (error) {
+        patientRegistrationStatus.textContent = error.message || 'Could not create account.';
+        submit.disabled = false;
+      }
     });
 
     document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => navigateRoute(`login/${card.dataset.loginRole}`, false, true)));
@@ -2274,18 +2412,9 @@
           setSignupOtpStatus('Verify your phone number before creating the account.', 'error');
           return;
         }
-        try {
-          const response = await fetch('/api/signup-otp/confirm', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: signupOtpRequestId, phone: signupOtpPhone, verificationToken: signupOtpVerificationToken })
-          });
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.error || 'Phone verification expired');
-        } catch (error) {
-          resetSignupOtp(false);
-          setSignupOtpStatus(error.message || 'Phone verification expired. Request a new OTP.', 'error');
-          return;
-        }
+        if (!loginForm.reportValidity()) return;
+        showPatientRegistrationStep('details');
+        return;
       }
       const rect = button.getBoundingClientRect();
       const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2;

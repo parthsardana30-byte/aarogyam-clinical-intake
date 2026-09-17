@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { createHash, randomBytes, randomInt, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomInt, randomUUID, scryptSync } from 'node:crypto';
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 import QRCode from 'qrcode';
@@ -9,6 +9,7 @@ const port = Number(process.env.PORT || 4173);
 const publicRoot = resolve('dist');
 const dataRoot = resolve(process.env.DATA_DIR || 'data');
 const devicesFile = join(dataRoot, 'authorized-devices.json');
+const patientsFile = join(dataRoot, 'patients.json');
 const enrollmentTtlMs = 10 * 60 * 1000;
 const signupOtpTtlMs = 5 * 60 * 1000;
 const signupOtpCooldownMs = 30 * 1000;
@@ -16,6 +17,7 @@ const enrollments = new Map();
 const signupOtps = new Map();
 const signupOtpLastSent = new Map();
 let devices = [];
+let patients = [];
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8', '.html': 'text/html; charset=utf-8', '.ico': 'image/x-icon',
@@ -32,10 +34,22 @@ async function loadDevices() {
   catch (error) { if (error.code !== 'ENOENT') throw error; }
 }
 
+async function loadPatients() {
+  await mkdir(dataRoot, { recursive: true });
+  try { patients = JSON.parse(await readFile(patientsFile, 'utf8')); }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
+}
+
 async function saveDevices() {
   const temporary = `${devicesFile}.tmp`;
   await writeFile(temporary, JSON.stringify(devices, null, 2));
   await rename(temporary, devicesFile);
+}
+
+async function savePatients() {
+  const temporary = `${patientsFile}.tmp`;
+  await writeFile(temporary, JSON.stringify(patients, null, 2), { mode: 0o600 });
+  await rename(temporary, patientsFile);
 }
 
 function cookies(request) {
@@ -132,6 +146,7 @@ async function verifySignupOtp(request, response) {
   if (!/^\d{6}$/.test(otp) || hash(otp) !== entry.otpHash) return sendJson(response, 400, { error: 'Incorrect OTP' });
   const verificationToken = randomBytes(32).toString('base64url');
   entry.verifiedTokenHash = hash(verificationToken);
+  entry.expiresAt = Date.now() + 30 * 60 * 1000;
   sendJson(response, 200, { verified: true, verificationToken });
 }
 
@@ -146,6 +161,67 @@ async function confirmSignupOtp(request, response) {
   }
   entry.consumed = true;
   sendJson(response, 200, { verified: true });
+}
+
+const allowedBloodGroups = new Set(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']);
+const allowedGenders = new Set(['Female', 'Male', 'Non-binary', 'Prefer not to say']);
+const allowedConditions = new Set([
+  'heart_disease', 'hypertension', 'diabetes', 'asthma', 'thyroid',
+  'kidney_disease', 'liver_disease', 'arthritis', 'none'
+]);
+
+async function createPatientRegistration(request, response) {
+  purgeExpiredSignupOtps();
+  const body = await readJson(request);
+  const phone = normalizeIndianPhone(body.phone);
+  const otpEntry = signupOtps.get(String(body.otpRequestId || ''));
+  const verificationToken = String(body.otpVerificationToken || '');
+  if (!otpEntry || !phone || otpEntry.phone !== phone || !otpEntry.verifiedTokenHash || hash(verificationToken) !== otpEntry.verifiedTokenHash) {
+    return sendJson(response, 401, { error: 'Phone verification is required or has expired' });
+  }
+  if (patients.some(patient => patient.phone === phone)) return sendJson(response, 409, { error: 'An account already exists for this phone number' });
+
+  const identityMethod = body.identityMethod === 'abha' ? 'abha' : body.identityMethod === 'aadhaar' ? 'aadhaar' : null;
+  const identityNumber = String(body.identityNumber || '').replace(/\D/g, '');
+  const identityValid = identityMethod === 'abha' ? /^\d{14}$/.test(identityNumber) : identityMethod === 'aadhaar' && /^\d{12}$/.test(identityNumber);
+  const fullName = String(body.fullName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+  const dateOfBirth = String(body.dateOfBirth || '');
+  const date = new Date(`${dateOfBirth}T00:00:00Z`);
+  const earliestBirthDate = new Date();
+  earliestBirthDate.setUTCFullYear(earliestBirthDate.getUTCFullYear() - 120);
+  const gender = String(body.gender || '');
+  const heightCm = Number(body.heightCm);
+  const weightKg = Number(body.weightKg);
+  const bloodGroup = String(body.bloodGroup || 'Unknown');
+  const password = String(body.password || '');
+  const allergies = String(body.allergies || '').trim().slice(0, 300);
+  let conditions = Array.isArray(body.conditions) ? [...new Set(body.conditions.map(String))] : [];
+  conditions = conditions.filter(condition => allowedConditions.has(condition));
+  if (conditions.includes('none')) conditions = ['none'];
+
+  if (!identityMethod || !identityValid) return sendJson(response, 400, { error: 'Identity number is invalid' });
+  if (fullName.length < 2) return sendJson(response, 400, { error: 'Enter your full name' });
+  if (Number.isNaN(date.getTime()) || date > new Date() || date < earliestBirthDate) return sendJson(response, 400, { error: 'Enter a valid date of birth' });
+  if (!allowedGenders.has(gender)) return sendJson(response, 400, { error: 'Select a valid gender option' });
+  if (!Number.isFinite(heightCm) || heightCm < 50 || heightCm > 250) return sendJson(response, 400, { error: 'Height must be between 50 and 250 cm' });
+  if (!Number.isFinite(weightKg) || weightKg < 2 || weightKg > 350) return sendJson(response, 400, { error: 'Weight must be between 2 and 350 kg' });
+  if (!allowedBloodGroups.has(bloodGroup)) return sendJson(response, 400, { error: 'Select a valid blood group' });
+  if (password.length < 6 || password.length > 128) return sendJson(response, 400, { error: 'Password must contain at least 6 characters' });
+
+  const passwordSalt = randomBytes(16).toString('hex');
+  const patient = {
+    id: `AS-${randomInt(100000, 1000000)}`,
+    phone,
+    identity: { method: identityMethod, last4: identityNumber.slice(-4) },
+    password: { salt: passwordSalt, hash: scryptSync(password, passwordSalt, 64).toString('hex') },
+    profile: { fullName, dateOfBirth, gender, heightCm, weightKg, bloodGroup },
+    health: { conditions, allergies: allergies || null },
+    createdAt: new Date().toISOString()
+  };
+  patients.push(patient);
+  await savePatients();
+  otpEntry.consumed = true;
+  sendJson(response, 201, { patient: { id: patient.id, fullName: patient.profile.fullName } });
 }
 
 async function createEnrollment(request, response) {
@@ -220,7 +296,7 @@ async function serveStatic(request, response) {
   }
 }
 
-await loadDevices();
+await Promise.all([loadDevices(), loadPatients()]);
 const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
@@ -228,6 +304,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/request') return await requestSignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/confirm') return await confirmSignupOtp(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/patient-registrations') return await createPatientRegistration(request, response);
     const statusMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/status$/i);
     if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1]);
     if (request.method === 'POST' && url.pathname === '/api/device-authorizations') return await authorizeDevice(request, response);
