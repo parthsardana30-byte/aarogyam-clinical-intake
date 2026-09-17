@@ -16,7 +16,7 @@
   "records.clinician": "चिकित्सक", "records.summary": "विज़िट सारांश", "records.plan": "देखभाल योजना",
   "doctor.nav.current": "वर्तमान रोगी", "doctor.nav.history": "रोगी का इतिहास", "doctor.chiefConcern": "मुख्य समस्या", "doctor.context": "संबंधित जानकारी", "doctor.ayurvedic": "आयुर्वेदिक इनटेक", "doctor.flags": "समीक्षा संकेत",
   "doctor.approve": "ड्राफ़्ट स्वीकृत करें", "doctor.edit": "केस शीट संपादित करें", "doctor.evidence": "सभी प्रमाण देखें", "doctor.timeline": "समयक्रम", "doctor.completeHistory": "पूरा इतिहास देखें",
-  "history.title": "रोगी का इतिहास", "history.subtitle": "पिछले परामर्श और फॉलो-अप रिकॉर्ड देखें।", "history.search": "रोगी के नाम या आईडी से खोजें", "history.recent": "हाल की विज़िट", "history.open": "रिकॉर्ड खोलें",
+  "history.title": "अनन्या शर्मा का मेडिकल इतिहास", "history.subtitle": "तारीख के क्रम में सभी उपलब्ध परामर्श और दस्तावेज़।", "history.search": "समस्या, दवा, तारीख या दस्तावेज़ खोजें", "history.recent": "इतिहास निर्यात करें", "history.open": "रिकॉर्ड खोलें",
   "device.title": "डिवाइस अधिकृत करें", "device.subtitle": "इस वर्कस्पेस में विश्वसनीय रिसेप्शन डिवाइस जोड़ें।", "device.name": "डिवाइस का नाम", "device.namePlaceholder": "जैसे रिसेप्शन डेस्क टैबलेट", "device.code": "अधिकरण कोड", "device.codePlaceholder": "6 अंकों का कोड",
   "device.scan": "QR कोड स्कैन करें", "device.manual": "कोड मैन्युअली दर्ज करें", "device.scanHelp": "कैमरा डिवाइस के QR कोड की ओर रखें।", "device.startScanner": "QR स्कैनर शुरू करें",
   "device.setupHelp": "यह लिंक उस डिवाइस पर खोलें जिसे अधिकृत करना है।", "device.openSetup": "सेटअप पेज खोलें ↗", "device.listTitle": "अधिकृत डिवाइस", "device.cancel": "रद्द करें", "device.authorize": "डिवाइस अधिकृत करें"

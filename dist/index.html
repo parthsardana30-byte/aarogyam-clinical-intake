@@ -435,6 +435,113 @@
     .timeline strong { display: block; margin: 2px 0; }
     .timeline p { color: var(--ink-soft); font-size: .83rem; margin: 0; }
 
+    .clinical-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
+    .clinical-heading h1 { margin-bottom: 5px; }
+    .clinical-heading .heading-copy { max-width: 680px; }
+    .prototype-label { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #d7cba7; border-radius: 999px; padding: 7px 10px; background: #fff9e9; color: #725b1e; font-size: .73rem; font-weight: 780; white-space: nowrap; }
+    .prototype-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #d9a520; box-shadow: 0 0 0 3px rgba(217,165,32,.13); }
+    .queue-overview { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr) auto; gap: 12px; margin-bottom: 18px; }
+    .queue-person { display: flex; align-items: center; gap: 13px; min-width: 0; padding: 17px 18px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.82); }
+    .queue-person.current { border-color: rgba(14,102,85,.32); background: linear-gradient(135deg, #f1faf6, #fff); box-shadow: inset 4px 0 0 var(--teal); }
+    .queue-position { width: 40px; height: 40px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 13px; background: #edf3f0; color: var(--ink); font-weight: 850; }
+    .queue-person.current .queue-position { background: var(--teal); color: #fff; }
+    .queue-person-copy { min-width: 0; }
+    .queue-person-copy small, .queue-person-copy strong, .queue-person-copy span { display: block; }
+    .queue-person-copy small { margin-bottom: 3px; color: #718681; font-size: .72rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+    .queue-person-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .queue-person-copy span { margin-top: 2px; color: #687d78; font-size: .8rem; }
+    .queue-action { min-width: 160px; display: grid; place-items: center; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.82); text-align: center; }
+    .queue-action strong { display: block; margin-bottom: 8px; font-size: .82rem; }
+    .clinical-grid { display: grid; grid-template-columns: minmax(0,1.55fr) minmax(280px,.72fr); gap: 18px; align-items: start; }
+    .clinical-stack { display: grid; gap: 18px; }
+    .ai-summary-card { overflow: hidden; }
+    .ai-summary-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 21px 22px; border-bottom: 1px solid var(--line); background: linear-gradient(135deg, #f4fbf8, #fffdf8); }
+    .ai-summary-head h2 { margin: 3px 0 5px; font-size: 1.28rem; }
+    .ai-summary-head p { margin: 0; color: var(--ink-soft); font-size: .84rem; }
+    .ai-spark { display: inline-flex; align-items: center; gap: 6px; color: var(--teal); font-size: .72rem; font-weight: 820; letter-spacing: .07em; text-transform: uppercase; }
+    .ai-spark::before { content: "✦"; }
+    .review-badge { display: inline-flex; flex: 0 0 auto; border-radius: 999px; padding: 7px 10px; background: var(--orange-soft); color: #784315; font-size: .71rem; font-weight: 800; }
+    .patient-identity { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 13px; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+    .patient-avatar { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 16px; background: #1769aa; color: #fff; font-size: .9rem; font-weight: 850; }
+    .patient-identity strong, .patient-identity small { display: block; }
+    .patient-identity small { margin-top: 3px; color: #6b807b; }
+    .patient-identity-meta { color: #607671; font-size: .78rem; text-align: right; }
+    .summary-block { padding: 18px 22px; border-bottom: 1px solid var(--line); }
+    .summary-block:last-of-type { border-bottom: 0; }
+    .summary-block h3 { margin: 0 0 8px; color: #657a75; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
+    .summary-block p { margin: 0; line-height: 1.58; }
+    .summary-facts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 10px; }
+    .summary-fact { padding: 11px 12px; border-radius: 12px; background: #f5f8f7; }
+    .summary-fact small, .summary-fact strong { display: block; }
+    .summary-fact small { margin-bottom: 3px; color: #72847f; }
+    .summary-disclaimer { display: flex; align-items: center; gap: 9px; padding: 13px 22px; background: #fff9eb; color: #6c571f; font-size: .78rem; }
+    .patient-snapshot .card-body { display: grid; gap: 14px; }
+    .vital-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 9px; }
+    .vital { padding: 12px; border-radius: 13px; background: #f4f8f6; }
+    .vital small, .vital strong { display: block; }
+    .vital small { color: #718681; font-size: .72rem; }
+    .vital strong { margin-top: 3px; font-size: 1.02rem; }
+    .clinical-alert { padding: 13px 14px; border: 1px solid #efcfb1; border-radius: 13px; background: #fff4e8; color: #74451e; font-size: .82rem; line-height: 1.45; }
+    .record-preview-list { display: grid; gap: 0; }
+    .record-preview { display: grid; grid-template-columns: 82px minmax(0,1fr) auto; gap: 13px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--line); }
+    .record-preview:last-child { border-bottom: 0; }
+    .record-date { color: #607671; font-size: .73rem; font-weight: 780; }
+    .record-preview strong, .record-preview small { display: block; }
+    .record-preview small { margin-top: 3px; color: #718681; }
+    .record-type { border-radius: 999px; padding: 5px 8px; background: #eef4f1; color: #49675f; font-size: .68rem; font-weight: 800; }
+    .document-list { display: grid; gap: 9px; }
+    .document-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 13px; background: #fbfcfb; }
+    .document-row strong, .document-row small { display: block; }
+    .document-row small { margin-top: 2px; color: #718681; }
+    .document-format { color: var(--teal); font-size: .7rem; font-weight: 850; }
+    .records-assistant { margin-top: 18px; overflow: hidden; }
+    .assistant-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 20px 22px 15px; }
+    .assistant-head h2 { margin: 2px 0 5px; font-size: 1.16rem; }
+    .assistant-head p { margin: 0; color: var(--ink-soft); font-size: .83rem; }
+    .assistant-form { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 9px; padding: 0 22px 12px; }
+    .assistant-input { min-height: 48px; border: 1px solid var(--line-strong); border-radius: 13px; padding: 10px 13px; background: #fff; color: var(--ink); font: inherit; }
+    .assistant-suggestions { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 22px 17px; }
+    .assistant-chip { border: 1px solid var(--line-strong); border-radius: 999px; padding: 7px 10px; background: #f8faf9; color: var(--ink-soft); font-size: .76rem; cursor: pointer; }
+    .assistant-answer { margin: 0 22px 21px; padding: 14px 15px; border-left: 4px solid var(--teal); border-radius: 10px; background: var(--mint-2); color: var(--ink-soft); font-size: .84rem; line-height: 1.55; }
+    .assistant-answer strong { color: var(--ink); }
+    .history-patient-bar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 16px; padding: 17px 19px; }
+    .history-patient-bar strong, .history-patient-bar small { display: block; }
+    .history-patient-bar small { margin-top: 3px; color: #6b807b; }
+    .history-filters { display: flex; flex-wrap: wrap; gap: 7px; }
+    .history-filter { border: 1px solid var(--line-strong); border-radius: 999px; padding: 8px 12px; background: #fff; color: var(--ink-soft); font: inherit; font-size: .78rem; font-weight: 740; cursor: pointer; }
+    .history-filter[aria-pressed="true"] { border-color: var(--teal); background: var(--mint); color: var(--teal); }
+    .dated-history { position: relative; display: grid; gap: 13px; margin-left: 14px; padding-left: 25px; }
+    .dated-history::before { content: ""; position: absolute; left: 5px; top: 18px; bottom: 18px; width: 2px; background: #d3e0db; }
+    .dated-record { position: relative; padding: 19px 20px; }
+    .dated-record::before { content: ""; position: absolute; left: -26px; top: 25px; width: 11px; height: 11px; border: 3px solid #f4f7f5; border-radius: 50%; background: var(--teal); box-sizing: content-box; }
+    .dated-record[hidden] { display: none; }
+    .dated-record-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 11px; }
+    .dated-record-head time { color: var(--teal); font-size: .75rem; font-weight: 820; letter-spacing: .04em; }
+    .dated-record h3 { margin: 3px 0 0; font-size: 1rem; }
+    .dated-record p { margin: 0 0 11px; color: var(--ink-soft); line-height: 1.55; }
+    .record-source-links { display: flex; flex-wrap: wrap; gap: 7px; }
+    .record-source-links button { border: 1px solid var(--line); border-radius: 9px; padding: 7px 9px; background: #f7faf8; color: var(--ink); font-size: .75rem; font-weight: 720; }
+    .history-empty { display: none; padding: 26px; color: #6b807b; text-align: center; }
+    .history-empty.visible { display: block; }
+    @media (max-width: 1180px) {
+      .queue-overview { grid-template-columns: 1fr 1fr; }
+      .queue-action { grid-column: 1 / -1; display: flex; justify-content: space-between; }
+      .clinical-grid { grid-template-columns: 1fr; }
+      .clinical-stack { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    }
+    @media (max-width: 760px) {
+      .clinical-heading { align-items: flex-start; flex-direction: column; }
+      .queue-overview, .clinical-stack { grid-template-columns: 1fr; }
+      .queue-action { grid-column: auto; }
+      .summary-facts { grid-template-columns: 1fr; }
+      .patient-identity { grid-template-columns: auto 1fr; }
+      .patient-identity-meta { grid-column: 1 / -1; text-align: left; }
+      .record-preview { grid-template-columns: 70px 1fr; }
+      .record-type { grid-column: 2; justify-self: start; }
+      .assistant-form { grid-template-columns: 1fr; }
+      .history-patient-bar, .dated-record-head { align-items: flex-start; flex-direction: column; }
+    }
+
     .toast { position: fixed; z-index: 10; right: 24px; bottom: 24px; width: min(360px, calc(100% - 48px)); background: var(--ink); color: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 20px 60px rgba(0,0,0,.22); transform: translateY(120%); opacity: 0; transition: .25s ease; }
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast strong { display: block; margin-bottom: 2px; }
@@ -504,7 +611,34 @@
     }
     .login-container { width: min(1240px, 100%); margin: 0 auto; position: relative; z-index: 1; }
     .login-screen.form-open { height: 100dvh; min-height: 0; padding: 20px; overflow: hidden; }
-    .login-screen.form-open .login-container { height: 100%; display: grid; place-items: center; }
+    .login-screen.form-open.doctor-hospital-background {
+      background:
+        linear-gradient(135deg, rgba(7, 28, 33, .58), rgba(9, 60, 53, .42)),
+        var(--doctor-hospital-background) center / cover no-repeat;
+    }
+    .login-screen.form-open.doctor-hospital-background::before { border-color: rgba(255,255,255,.34); }
+    .hospital-backdrop-identity {
+      position: absolute; top: 50%; left: 20px; z-index: 2; transform: translateY(-50%);
+      width: 108px; min-height: 220px; padding: 15px 10px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #fff; text-align: center;
+      border: 1px solid rgba(255,255,255,.4); border-radius: 22px;
+      background: linear-gradient(135deg, rgba(8,53,49,.9), rgba(11,38,52,.82));
+      box-shadow: 0 18px 42px rgba(3,24,27,.32), inset 0 1px 0 rgba(255,255,255,.18);
+      backdrop-filter: blur(14px) saturate(1.12);
+      pointer-events: none;
+    }
+    .hospital-backdrop-identity[hidden] { display: none; }
+    .hospital-backdrop-mark {
+      width: 45px; height: 45px; flex: 0 0 auto; display: grid; place-items: center;
+      border-radius: 14px; color: #d9fff6; background: rgba(255,255,255,.12);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.2);
+    }
+    .hospital-backdrop-mark svg { width: 25px; height: 25px; }
+    .hospital-backdrop-copy { min-width: 0; display: grid; gap: 7px; }
+    .hospital-backdrop-copy small { color: rgba(226,255,249,.76); font-size: .55rem; font-weight: 780; line-height: 1.35; letter-spacing: .1em; text-transform: uppercase; }
+    .hospital-backdrop-copy strong { font-size: .92rem; line-height: 1.12; letter-spacing: -.015em; }
+    .hospital-backdrop-copy span { color: rgba(255,255,255,.82); font-size: .68rem; line-height: 1.3; }
+    .login-screen.form-open .login-container { height: 100%; display: grid; place-items: center; z-index: 3; }
     .login-screen.form-open .login-brand { display: none; }
     .login-brand { display: flex; align-items: center; justify-content: flex-start; gap: 11px; margin: 0 0 56px; }
     .login-brand .brand-mark { width: 38px; height: 38px; border-radius: 12px; box-shadow: none; }
@@ -661,6 +795,8 @@
     }
     .login-form-shell.patient-login-details .login-form-area { justify-content:flex-start; overflow-y:auto; padding-top:30px; padding-bottom:28px; scrollbar-gutter:stable; }
     .login-form-shell.patient-signup-details { height: min(720px, calc(100dvh - 40px)); }
+    .login-form-shell.doctor-registration-details { height: min(850px, calc(100dvh - 40px)); }
+    .login-form-shell.doctor-registration-details .login-form-area { justify-content:flex-start; overflow-y:auto; padding-top:30px; padding-bottom:30px; scrollbar-gutter:stable; }
     .login-form-shell.patient-signup-details .login-form-area {
       justify-content: flex-start;
       overflow-y: auto;
@@ -711,7 +847,7 @@
     .signup-method-back:hover { text-decoration: underline; }
     .field-group { margin-bottom: 16px; }
     .field-group label { display: block; margin-bottom: 7px; font-size: .84rem; font-weight: 760; }
-    .field-group input {
+    .field-group input, .field-group select {
       width: 100%;
       min-height: 50px;
       padding: 12px 14px;
@@ -721,7 +857,16 @@
       background: #fbfcfb;
       font: inherit;
     }
-    .field-group input:focus { outline: 3px solid rgba(14, 102, 85, .14); border-color: var(--teal); }
+    .field-group select { padding-right: 38px; }
+    .field-group input:focus, .field-group select:focus { outline: 3px solid rgba(14, 102, 85, .14); border-color: var(--teal); }
+    .field-help { display:block; margin:7px 2px 0; color:var(--ink-soft); font-size:.75rem; line-height:1.4; }
+    .doctor-profile-fields { display:grid; grid-template-columns:1fr 1fr; gap:0 14px; margin:2px 0 2px; }
+    .doctor-profile-fields[hidden] { display:none; }
+    .doctor-profile-fields .is-wide { grid-column:1 / -1; }
+    .doctor-profile-heading { grid-column:1 / -1; margin:3px 0 14px; padding-top:15px; border-top:1px solid var(--line); }
+    .doctor-profile-heading strong, .doctor-profile-heading small { display:block; }
+    .doctor-profile-heading strong { font-size:.92rem; }
+    .doctor-profile-heading small { margin-top:3px; color:var(--ink-soft); font-size:.74rem; line-height:1.4; }
     .signup-otp-panel { margin: -4px 0 16px; }
     .signup-otp-panel[hidden], .signup-otp-verify[hidden] { display: none; }
     .signup-otp-send, .signup-otp-verify button {
@@ -856,6 +1001,7 @@
       .record-detail { position: static; }
     }
 
+    @media (max-width: 820px), (max-height: 760px) { .hospital-backdrop-identity { display: none; } }
     @media (max-width: 760px) {
       .login-screen { padding: 24px 14px 40px; }
       .login-screen::before { inset: 8px; border-radius: 24px; }
@@ -868,6 +1014,7 @@
       .login-cards { grid-template-columns: 1fr; }
       .login-card { min-height: auto; padding: 23px; }
       .login-screen.form-open { padding: 12px; }
+      .hospital-backdrop-identity { display: none; }
       .login-form-shell { height: calc(100dvh - 24px); }
       .login-form-area { padding: 30px 22px 22px; }
       .login-form-header { grid-template-columns: 44px 1fr 44px; gap: 10px; margin-bottom: 22px; }
@@ -875,6 +1022,8 @@
       .login-form-brand .brand-name { font-size: 1.35rem; }
       .back-button { width: 44px; height: 44px; border-radius: 14px; }
       .registration-grid, .condition-options { grid-template-columns: 1fr; }
+      .doctor-profile-fields { grid-template-columns:1fr; }
+      .doctor-profile-fields .is-wide { grid-column:auto; }
       .login-footnote { color: var(--ink-soft); }
       .topbar { height: auto; padding: 14px 18px; }
       .settings-menu { width: min(280px, calc(100vw - 48px)); }
@@ -946,6 +1095,10 @@
 </head>
 <body>
   <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
+    <div class="hospital-backdrop-identity" id="hospitalBackdropIdentity" hidden aria-hidden="true">
+      <span class="hospital-backdrop-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4.5 21V6.5h15V21M8 6.5V3h8v3.5M12 9v7M8.5 12.5h7M7.5 21v-3.5h3V21M13.5 21v-3.5h3V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="hospital-backdrop-copy"><small>Verified branch</small><strong id="hospitalBackdropName">Civil Hospital</strong><span id="hospitalBackdropLocation"></span></span>
+    </div>
     <div class="login-container">
       <div class="login-brand">
         <div class="brand-mark" aria-hidden="true">
@@ -1041,7 +1194,25 @@
               </div>
             </div>
             <div class="field-group" id="patientIdentityGroup" hidden><label for="patientIdentityNumber" id="patientIdentityLabel">ABHA ID</label><input id="patientIdentityNumber" inputmode="numeric" placeholder="Enter your ABHA ID" /></div>
+            <div class="field-group" id="doctorHospitalGroup" hidden>
+              <label for="doctorHospital">Hospital branch</label>
+              <select id="doctorHospital">
+                <option value="">Select your hospital branch</option>
+              </select>
+              <small class="field-help" id="doctorHospitalHelp">Choose the branch that issued your doctor ID.</small>
+            </div>
             <div class="field-group"><label for="loginIdentifier" id="identifierLabel">Patient ID</label><input id="loginIdentifier" autocomplete="username" required placeholder="Enter patient ID" /></div>
+            <div class="doctor-profile-fields" id="doctorProfileFields" hidden>
+              <div class="doctor-profile-heading"><strong>Professional details</strong><small>These details identify the clinician in hospital records and patient-facing workflows.</small></div>
+              <div class="field-group is-wide"><label for="doctorFullName">Full name</label><input id="doctorFullName" autocomplete="name" maxlength="80" placeholder="Dr. full name" /></div>
+              <div class="field-group"><label for="doctorDegree">Degree / qualification</label><input id="doctorDegree" maxlength="80" placeholder="e.g. MBBS, MS" /></div>
+              <div class="field-group"><label for="doctorSpecialty">Specialty</label><select id="doctorSpecialty"><option value="">Select specialty</option><option>General Medicine</option><option>Gynaecology</option><option>Orthopaedics</option><option>Paediatrics</option><option>General Surgery</option><option>Cardiology</option><option>Dermatology</option><option>ENT</option><option>Ophthalmology</option><option>Psychiatry</option><option>AYUSH Medicine</option><option>Other</option></select></div>
+              <div class="field-group"><label for="doctorMedicalRegistration">Medical registration no.</label><input id="doctorMedicalRegistration" maxlength="30" autocomplete="off" placeholder="e.g. G-48219" /></div>
+              <div class="field-group"><label for="doctorExperience">Years of experience</label><input id="doctorExperience" type="number" min="0" max="70" step="1" placeholder="e.g. 8" /></div>
+              <div class="field-group"><label for="doctorRoom">Room / OPD no.</label><input id="doctorRoom" maxlength="20" placeholder="e.g. OPD-204" /></div>
+              <div class="field-group"><label for="doctorPhone">Mobile number</label><input id="doctorPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="13" placeholder="10-digit mobile number" /></div>
+              <div class="field-group is-wide"><label for="doctorEmail">Professional email</label><input id="doctorEmail" type="email" autocomplete="email" maxlength="120" placeholder="doctor@hospital.in" /></div>
+            </div>
             <div class="signup-otp-panel" id="signupOtpPanel" hidden>
               <button class="signup-otp-send" id="sendSignupOtp" type="button">Send OTP</button>
               <div id="msg91Captcha" class="signup-otp-captcha"></div>
@@ -1351,8 +1522,8 @@
           <aside class="card doctor-sidebar" aria-label="Doctor navigation">
             <div class="doctor-profile">
               <div class="doctor-profile-mark">AM</div>
-              <strong>Dr. Aarav Mehta</strong>
-              <small>MBBS, MS · General Surgeon</small>
+              <strong id="doctorSidebarName">Dr. Aarav Mehta</strong>
+              <small id="doctorSidebarHospital">MBBS, MS · General Surgeon</small>
             </div>
             <nav class="doctor-nav">
               <button class="doctor-nav-button" type="button" data-doctor-panel="current" aria-selected="true">
@@ -1368,44 +1539,89 @@
 
           <div class="doctor-main">
             <div class="doctor-panel active" data-doctor-panel-content="current">
-              <div class="page-heading">
-                <div><h1 id="doctorTitle"><span class="current-patient-name">Patient A</span>’s case</h1></div>
+              <div class="page-heading clinical-heading">
+                <div><div class="eyebrow">Doctor dashboard</div><h1 id="doctorTitle">Clinical workspace</h1><p class="heading-copy">Review the active patient, their AI-assisted intake and supporting longitudinal evidence.</p></div>
+                <span class="prototype-label">Demo patient data</span>
               </div>
-              <div class="doctor-layout">
-                <article class="card">
-                  <section class="summary-section"><h3>Chief concern</h3><p><strong>Abdominal heaviness with reduced appetite</strong></p><p>Reported for approximately 2–3 days, more noticeable after meals.</p></section>
-                  <section class="summary-section"><h3>Relevant context</h3><ul class="summary-list"><li>No vomiting reported</li><li>Bowel movement once daily; feels incomplete</li><li>Similar episode documented three months ago</li></ul></section>
-                  <section class="summary-section"><h3>Ayurvedic intake</h3><p>Appetite reduced; post-meal heaviness; sleep unchanged. Clinician examination fields such as Nadi and Sparsha remain intentionally blank.</p></section>
-                  <section class="summary-section"><h3>Review flags</h3><div class="warning-row"><strong>1 contradiction to review:</strong> patient reports no regular medicines, while an uploaded prescription lists metformin.</div><div class="doctor-actions"><button class="primary-button" data-toast="Encounter approved|The case sheet is marked as clinician reviewed.">Approve draft</button><button class="secondary-button" data-toast="Edit mode|Clinician editing is available in the next implementation phase.">Edit case sheet</button><button class="secondary-button" data-toast="Evidence panel|All three patient-supplied source statements are available.">View all evidence</button></div></section>
+
+              <section class="queue-overview" aria-label="Patient queue">
+                <article class="queue-person current">
+                  <div class="queue-position">01</div>
+                  <div class="queue-person-copy"><small>Current patient · in consultation</small><strong>Ananya Sharma</strong><span>PT-001 · Arrived 10:32 AM</span></div>
                 </article>
-                <aside class="card">
-                  <div class="card-header"><h2>Longitudinal timeline</h2></div>
-                  <div class="card-body">
-                    <ol class="timeline">
-                      <li><time>Today · 10:42</time><strong>Adaptive intake</strong><p>Voice history captured in Hindi and mapped to the draft case sheet.</p></li>
-                      <li><time>14 Jun 2026</time><strong>Prescription uploaded</strong><p>Source image retained; medication field awaits clinician confirmation.</p></li>
-                      <li><time>02 May 2026</time><strong>Previous AYUSH visit</strong><p>Similar digestive complaint recorded at the same facility.</p></li>
-                    </ol>
-                    <button class="secondary-button" style="width:100%" data-doctor-panel="history">View complete history</button>
+                <article class="queue-person">
+                  <div class="queue-position">02</div>
+                  <div class="queue-person-copy"><small>Next patient · waiting 8 min</small><strong>Rohan Mehta</strong><span>PT-014 · Appointment 11:15 AM</span></div>
+                </article>
+                <div class="queue-action"><strong>3 more patients waiting</strong><button class="secondary-button" type="button" data-toast="Patient notified|Rohan Mehta has been notified to be ready next.">Notify next patient</button></div>
+              </section>
+
+              <div class="clinical-grid">
+                <article class="card ai-summary-card">
+                  <header class="ai-summary-head">
+                    <div><span class="ai-spark">AI intake summary</span><h2>Patient-reported consultation brief</h2><p>Generated from the patient’s guided pre-consultation assessment.</p></div>
+                    <span class="review-badge">Clinician review required</span>
+                  </header>
+                  <div class="patient-identity">
+                    <div class="patient-avatar">AS</div>
+                    <div><strong>Ananya Sharma</strong><small>42 years · Female · PT-001</small></div>
+                    <div class="patient-identity-meta">Hindi intake<br>Completed 10:42 AM</div>
                   </div>
-                </aside>
+                  <section class="summary-block"><h3>Presenting concern</h3><p><strong>Abdominal heaviness and reduced appetite for 2–3 days.</strong> Symptoms are more noticeable after meals and are accompanied by bloating. Patient reports no vomiting or fever.</p></section>
+                  <section class="summary-block"><h3>Patient-reported context</h3><div class="summary-facts"><div class="summary-fact"><small>Bowel movement</small><strong>Daily, feels incomplete</strong></div><div class="summary-fact"><small>Pain score</small><strong>3/10 · intermittent</strong></div><div class="summary-fact"><small>Sleep</small><strong>No recent change</strong></div><div class="summary-fact"><small>Similar episode</small><strong>May 2026</strong></div></div></section>
+                  <section class="summary-block"><h3>Medication and safety context</h3><p>Patient reported no regular medicines during intake. A previous uploaded prescription dated 14 June lists <strong>metformin 500 mg</strong>; confirm current usage. No known drug allergy is recorded.</p><div class="clinical-alert"><strong>Needs confirmation:</strong> medication history conflicts with a previous prescription.</div></section>
+                  <div class="summary-disclaimer"><span aria-hidden="true">ⓘ</span><span>This AI-generated draft supports review and does not replace the clinician’s assessment or diagnosis.</span></div>
+                </article>
+
+                <div class="clinical-stack">
+                  <aside class="card patient-snapshot">
+                    <div class="card-header"><div><div class="eyebrow">At a glance</div><h2>Current patient</h2></div><span class="status-pill">In consultation</span></div>
+                    <div class="card-body">
+                      <div class="vital-grid"><div class="vital"><small>Blood pressure</small><strong>128/82</strong></div><div class="vital"><small>Pulse</small><strong>78 bpm</strong></div><div class="vital"><small>Temperature</small><strong>98.4°F</strong></div><div class="vital"><small>SpO₂</small><strong>98%</strong></div></div>
+                      <div class="clinical-alert"><strong>Clinical flag:</strong> confirm whether metformin is currently being taken.</div>
+                      <button class="primary-button" type="button" data-toast="Encounter started|Ananya Sharma’s consultation workspace is now active.">Start encounter notes</button>
+                    </div>
+                  </aside>
+
+                  <aside class="card">
+                    <div class="card-header"><div><div class="eyebrow">Recent evidence</div><h2>Past medical records</h2></div><button class="secondary-button" type="button" data-doctor-panel="history">View all</button></div>
+                    <div class="card-body record-preview-list">
+                      <div class="record-preview"><time class="record-date">14 Jun 2026</time><div><strong>Prescription review</strong><small>Metformin listed; status unconfirmed</small></div><span class="record-type">Prescription</span></div>
+                      <div class="record-preview"><time class="record-date">02 May 2026</time><div><strong>Digestive discomfort</strong><small>OPD consultation · Dr. A. Mehta</small></div><span class="record-type">Visit</span></div>
+                      <div class="record-preview"><time class="record-date">18 Nov 2025</time><div><strong>HbA1c panel</strong><small>Result: 6.8%</small></div><span class="record-type">Lab</span></div>
+                    </div>
+                  </aside>
+
+                  <aside class="card">
+                    <div class="card-header"><div><div class="eyebrow">Source documents</div><h2>Patient files</h2></div></div>
+                    <div class="card-body document-list">
+                      <button class="document-row" type="button" data-toast="Document preview|Prescription dated 14 June 2026 is ready for review."><span><strong>Prescription · 14 Jun 2026</strong><small>Uploaded by patient</small></span><span class="document-format">PDF</span></button>
+                      <button class="document-row" type="button" data-toast="Document preview|HbA1c lab report dated 18 November 2025 is ready for review."><span><strong>HbA1c report · 18 Nov 2025</strong><small>Verified laboratory result</small></span><span class="document-format">PDF</span></button>
+                    </div>
+                  </aside>
+                </div>
               </div>
+
+              <section class="card records-assistant" aria-labelledby="recordAssistantTitle">
+                <header class="assistant-head"><div><span class="ai-spark">Record assistant</span><h2 id="recordAssistantTitle">Ask across this patient’s records</h2><p>Find details from prior consultations, prescriptions and uploaded documents with dated evidence.</p></div><span class="prototype-label">UI prototype</span></header>
+                <form class="assistant-form" id="doctorRecordAssistant"><input class="assistant-input" id="doctorRecordQuery" type="search" autocomplete="off" placeholder="Ask: What medicines appeared in previous prescriptions?" aria-label="Ask a question about patient records"><button class="primary-button" type="submit">Find in records</button></form>
+                <div class="assistant-suggestions" aria-label="Suggested questions"><button class="assistant-chip" type="button" data-record-question="Which medicines were previously prescribed?">Previous medicines</button><button class="assistant-chip" type="button" data-record-question="Has this complaint happened before?">Similar complaints</button><button class="assistant-chip" type="button" data-record-question="Show the latest lab result">Latest lab result</button><button class="assistant-chip" type="button" data-record-question="Are any allergies documented?">Known allergies</button></div>
+                <div class="assistant-answer" id="doctorAssistantAnswer" aria-live="polite"><strong>Try a suggested question.</strong> The prototype will return a concise answer and cite the source record date.</div>
+              </section>
             </div>
 
             <div class="doctor-panel" data-doctor-panel-content="history">
-              <div class="page-heading">
-                <div><div class="eyebrow">Patient records</div><h1>Patient history</h1><p class="heading-copy">Review previous consultations and follow-up records.</p></div>
+              <div class="page-heading clinical-heading"><div><div class="eyebrow">Longitudinal record</div><h1>Ananya Sharma’s medical history</h1><p class="heading-copy">All available encounters and documents, ordered by date.</p></div><button class="secondary-button" type="button" data-doctor-panel="current">← Current patient</button></div>
+              <section class="card history-patient-bar"><div><strong>Ananya Sharma · PT-001</strong><small>42 years · Female · 5 records available</small></div><div class="history-filters" aria-label="Filter medical history"><button class="history-filter" type="button" data-history-filter="all" aria-pressed="true">All</button><button class="history-filter" type="button" data-history-filter="visit" aria-pressed="false">Consultations</button><button class="history-filter" type="button" data-history-filter="prescription" aria-pressed="false">Prescriptions</button><button class="history-filter" type="button" data-history-filter="lab" aria-pressed="false">Labs</button></div></section>
+              <div class="history-toolbar"><input class="history-search" id="doctorHistorySearch" type="search" aria-label="Search this patient's history" placeholder="Search conditions, medicines, dates or documents"><button class="secondary-button" type="button" data-toast="History exported|A date-wise medical history export has been prepared.">Export history</button></div>
+              <div class="dated-history" id="datedPatientHistory">
+                <article class="card dated-record" data-record-kind="prescription" data-record-search="14 june 2026 prescription metformin 500 mg medicine diabetes uploaded patient"><header class="dated-record-head"><div><time datetime="2026-06-14">14 June 2026</time><h3>Prescription uploaded by patient</h3></div><span class="record-type">Prescription</span></header><p>Metformin 500 mg appears in the uploaded prescription. Current medication status has not yet been confirmed with the patient.</p><div class="record-source-links"><button type="button" data-toast="Document preview|Opening the source prescription from 14 June 2026.">View source prescription</button></div></article>
+                <article class="card dated-record" data-record-kind="visit" data-record-search="02 may 2026 consultation digestive discomfort abdominal heaviness appetite bloating dr aarav mehta"><header class="dated-record-head"><div><time datetime="2026-05-02">02 May 2026</time><h3>OPD consultation · Digestive discomfort</h3></div><span class="record-type">Consultation</span></header><p>Reported post-meal heaviness, bloating and reduced appetite. Advised lighter meals, hydration and review if symptoms persisted.</p><div class="record-source-links"><button type="button" data-toast="Visit record opened|The consultation note from 02 May 2026 is ready for review.">Consultation note</button><button type="button" data-toast="Care plan opened|The care plan from 02 May 2026 is ready for review.">Care plan</button></div></article>
+                <article class="card dated-record" data-record-kind="visit" data-record-search="12 february 2026 follow up metabolic health glucose diet exercise no adverse reaction"><header class="dated-record-head"><div><time datetime="2026-02-12">12 February 2026</time><h3>Follow-up · Metabolic health</h3></div><span class="record-type">Consultation</span></header><p>Diet and activity plan reviewed. No adverse medicine reaction was documented during this encounter.</p><div class="record-source-links"><button type="button" data-toast="Visit record opened|The follow-up note from 12 February 2026 is ready for review.">Follow-up note</button></div></article>
+                <article class="card dated-record" data-record-kind="lab" data-record-search="18 november 2025 lab hba1c 6.8 glucose pathology report"><header class="dated-record-head"><div><time datetime="2025-11-18">18 November 2025</time><h3>HbA1c laboratory panel</h3></div><span class="record-type">Lab result</span></header><p>HbA1c: <strong>6.8%</strong>. Result imported from a verified laboratory report uploaded to the patient record.</p><div class="record-source-links"><button type="button" data-toast="Lab report opened|The verified HbA1c report from 18 November 2025 is ready for review.">View lab report</button></div></article>
+                <article class="card dated-record" data-record-kind="visit" data-record-search="29 august 2025 annual wellness assessment no drug allergy baseline visit"><header class="dated-record-head"><div><time datetime="2025-08-29">29 August 2025</time><h3>Annual wellness assessment</h3></div><span class="record-type">Consultation</span></header><p>Baseline assessment completed. No known drug allergy was recorded and routine preventive follow-up was advised.</p><div class="record-source-links"><button type="button" data-toast="Assessment opened|The annual wellness assessment from 29 August 2025 is ready for review.">Assessment summary</button></div></article>
               </div>
-              <div class="history-toolbar">
-                <input class="history-search" type="search" aria-label="Search patient history" placeholder="Search by patient name or ID" />
-                <button class="secondary-button" type="button">Recent visits</button>
-              </div>
-              <div class="history-list">
-                <article class="card history-record"><div><strong>Ananya Sharma</strong><small>PT-001</small></div><div><span class="history-condition">Digestive discomfort</span><small>02 May 2026</small></div><div class="history-meta">Follow-up due</div><button class="secondary-button" type="button" data-toast="Record opened|Ananya Sharma’s previous consultation is ready for review.">Open record</button></article>
-                <article class="card history-record"><div><strong>Rohan Mehta</strong><small>PT-014</small></div><div><span class="history-condition">Joint stiffness</span><small>28 Apr 2026</small></div><div class="history-meta">Reviewed</div><button class="secondary-button" type="button" data-toast="Record opened|Rohan Mehta’s previous consultation is ready for review.">Open record</button></article>
-                <article class="card history-record"><div><strong>Meera Joshi</strong><small>PT-029</small></div><div><span class="history-condition">Sleep disturbance</span><small>21 Apr 2026</small></div><div class="history-meta">Reviewed</div><button class="secondary-button" type="button" data-toast="Record opened|Meera Joshi’s previous consultation is ready for review.">Open record</button></article>
-                <article class="card history-record"><div><strong>Kabir Singh</strong><small>PT-042</small></div><div><span class="history-condition">Seasonal allergy</span><small>16 Apr 2026</small></div><div class="history-meta">Closed</div><button class="secondary-button" type="button" data-toast="Record opened|Kabir Singh’s previous consultation is ready for review.">Open record</button></article>
-              </div>
+              <div class="card history-empty" id="doctorHistoryEmpty">No records match this search and filter.</div>
             </div>
           </div>
         </div>
@@ -1468,6 +1684,22 @@
     const loginRememberRow = document.getElementById('loginRememberRow');
     const loginStatus = document.getElementById('loginStatus');
     const loginPassword = document.getElementById('loginPassword');
+    const doctorHospitalGroup = document.getElementById('doctorHospitalGroup');
+    const doctorHospitalSelect = document.getElementById('doctorHospital');
+    const doctorHospitalHelp = document.getElementById('doctorHospitalHelp');
+    const doctorProfileFields = document.getElementById('doctorProfileFields');
+    const doctorProfileInputs = [...doctorProfileFields.querySelectorAll('input, select')];
+    const doctorFullName = document.getElementById('doctorFullName');
+    const doctorDegree = document.getElementById('doctorDegree');
+    const doctorSpecialty = document.getElementById('doctorSpecialty');
+    const doctorMedicalRegistration = document.getElementById('doctorMedicalRegistration');
+    const doctorExperience = document.getElementById('doctorExperience');
+    const doctorRoom = document.getElementById('doctorRoom');
+    const doctorPhone = document.getElementById('doctorPhone');
+    const doctorEmail = document.getElementById('doctorEmail');
+    const hospitalBackdropIdentity = document.getElementById('hospitalBackdropIdentity');
+    const hospitalBackdropName = document.getElementById('hospitalBackdropName');
+    const hospitalBackdropLocation = document.getElementById('hospitalBackdropLocation');
     const patientDetailsForm = document.getElementById('patientDetailsForm');
     const patientConditionsForm = document.getElementById('patientConditionsForm');
     const patientDocumentsForm = document.getElementById('patientDocumentsForm');
@@ -1502,6 +1734,7 @@
     let activePatient = null;
     let signupOtpProvider = null;
     let msg91WidgetReady = null;
+    let hospitalBranchesReady = null;
     let authorizedPatientDevice = false;
     let patientLoggedInThisSession = false;
     patientDateOfBirth.max = new Date().toISOString().slice(0, 10);
@@ -1511,6 +1744,52 @@
       doctor: { title: 'Clinician sign in', label: 'Practitioner ID', placeholder: 'Enter practitioner ID' },
       staff: { title: 'Staff sign in', label: 'Employee ID', placeholder: 'Enter employee ID' }
     };
+
+    async function loadHospitalBranches() {
+      if (hospitalBranchesReady) return hospitalBranchesReady;
+      hospitalBranchesReady = (async () => {
+        const response = await fetch('/api/hospital-branches', { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not load hospital branches');
+        doctorHospitalSelect.replaceChildren(new Option('Select your hospital branch', ''));
+        data.hospitals.forEach(hospital => {
+          const option = new Option(`${hospital.name} — ${hospital.location}`, hospital.id);
+          option.dataset.demoDoctorId = hospital.demoDoctorId;
+          option.dataset.backgroundImage = hospital.backgroundImage;
+          option.dataset.hospitalName = hospital.name;
+          option.dataset.hospitalLocation = hospital.location;
+          doctorHospitalSelect.add(option);
+        });
+        return data.hospitals;
+      })().catch(error => {
+        hospitalBranchesReady = null;
+        doctorHospitalHelp.textContent = error.message;
+        throw error;
+      });
+      return hospitalBranchesReady;
+    }
+
+    doctorHospitalSelect.addEventListener('change', () => {
+      const selected = doctorHospitalSelect.selectedOptions[0];
+      const demoDoctorId = selected?.dataset.demoDoctorId;
+      const backgroundImage = selected?.dataset.backgroundImage;
+      const hospitalName = selected?.dataset.hospitalName;
+      const hospitalLocation = selected?.dataset.hospitalLocation;
+      doctorHospitalHelp.textContent = demoDoctorId
+        ? `Prototype hospital-issued ID: ${demoDoctorId}`
+        : 'Choose the branch that issued your doctor ID.';
+      loginScreen.classList.toggle('doctor-hospital-background', Boolean(backgroundImage));
+      if (backgroundImage) loginScreen.style.setProperty('--doctor-hospital-background', `url("${backgroundImage}")`);
+      else loginScreen.style.removeProperty('--doctor-hospital-background');
+      hospitalBackdropIdentity.hidden = !backgroundImage;
+      if (backgroundImage) {
+        hospitalBackdropName.textContent = hospitalName || 'Civil Hospital';
+        hospitalBackdropLocation.textContent = hospitalLocation || '';
+      }
+      if (demoDoctorId && selectedLoginRole === 'doctor' && selectedAuthMode === 'register') {
+        loginIdentifier.placeholder = `e.g. ${demoDoctorId}`;
+      }
+    });
 
     function normalizedSignupPhone() {
       const digits = loginIdentifier.value.replace(/\D/g, '');
@@ -1662,14 +1941,25 @@
       if (mode === 'register') localized[0] = registrationTitles[role];
       document.getElementById('formTitle').textContent = localized[0];
       const isPatientRegistration = role === 'patient' && mode === 'register';
-      document.getElementById('identifierLabel').textContent = isPatientRegistration ? (currentLanguage === 'Hindi' ? 'मोबाइल नंबर' : 'Mobile number') : localized[1];
-      document.getElementById('loginIdentifier').placeholder = isPatientRegistration ? (currentLanguage === 'Hindi' ? 'मोबाइल नंबर दर्ज करें' : 'Enter mobile number') : localized[2];
+      const isDoctorRegistration = role === 'doctor' && mode === 'register';
+      const isAccountRegistration = mode === 'register';
+      if (!isDoctorRegistration) {
+        loginScreen.classList.remove('doctor-hospital-background');
+        loginScreen.style.removeProperty('--doctor-hospital-background');
+        hospitalBackdropIdentity.hidden = true;
+      }
+      document.getElementById('identifierLabel').textContent = isPatientRegistration
+        ? (currentLanguage === 'Hindi' ? 'मोबाइल नंबर' : 'Mobile number')
+        : isDoctorRegistration ? 'Hospital-issued doctor ID' : localized[1];
+      document.getElementById('loginIdentifier').placeholder = isPatientRegistration
+        ? (currentLanguage === 'Hindi' ? 'मोबाइल नंबर दर्ज करें' : 'Enter mobile number')
+        : isDoctorRegistration ? 'Enter the ID issued by your hospital' : localized[2];
       document.getElementById('loginIdentifier').setAttribute('inputmode', isPatientRegistration ? 'tel' : 'text');
       loginIdentifier.removeAttribute('pattern');
       loginIdentifier.removeAttribute('maxlength');
       loginIdentifier.setAttribute('autocomplete', isPatientRegistration ? 'tel' : 'username');
-      loginPassword.autocomplete = isPatientRegistration ? 'new-password' : 'current-password';
-      loginPassword.minLength = isPatientRegistration ? 6 : 0;
+      loginPassword.autocomplete = isAccountRegistration ? 'new-password' : 'current-password';
+      loginPassword.minLength = isDoctorRegistration ? 8 : isPatientRegistration ? 6 : 0;
       const submitLabel = document.querySelector('.login-submit-label');
       submitLabel.textContent = mode === 'register' ? (currentLanguage === 'Hindi' ? 'खाता बनाएँ' : 'Create account') : (currentLanguage === 'Hindi' ? 'सुरक्षित रूप से जारी रखें' : 'Continue securely');
       submitLabel.closest('button').setAttribute('aria-label', submitLabel.textContent);
@@ -1680,6 +1970,15 @@
       const isPatientLogin = role === 'patient' && mode === 'login';
       patientLoginMethods.hidden = !isPatientLogin;
       loginForm.hidden = isPatientRegistration || isPatientLogin;
+      doctorHospitalGroup.hidden = !isDoctorRegistration;
+      doctorHospitalSelect.required = isDoctorRegistration;
+      doctorProfileFields.hidden = !isDoctorRegistration;
+      doctorProfileInputs.forEach(field => { field.required = isDoctorRegistration; });
+      if (isDoctorRegistration) {
+        doctorHospitalSelect.value = '';
+        doctorHospitalHelp.textContent = 'Choose the branch that issued your doctor ID.';
+        void loadHospitalBranches().catch(() => {});
+      }
       patientDetailsForm.hidden = true;
       patientConditionsForm.hidden = true;
       patientDocumentsForm.hidden = true;
@@ -1691,7 +1990,7 @@
       patientRegistrationStatus.textContent = '';
       loginStatus.textContent = '';
       patientLoginDocuments.hidden = true;
-      loginRememberRow.hidden = isPatientRegistration;
+      loginRememberRow.hidden = isAccountRegistration;
       resetSignupOtp(true);
       loginSubmitButton.disabled = isPatientRegistration;
       patientIdentityGroup.hidden = true;
@@ -1704,6 +2003,7 @@
       loginFormShell.hidden = false;
       loginFormShell.classList.remove('patient-signup-details');
       loginFormShell.classList.remove('patient-login-details');
+      loginFormShell.classList.toggle('doctor-registration-details', isDoctorRegistration);
       loginScreen.classList.add('form-open');
       if (focus && !isPatientRegistration) document.getElementById('loginIdentifier').focus();
     }
@@ -2232,7 +2532,7 @@
       localeBindings.forEach(([selector, key, mode]) => document.querySelectorAll(selector).forEach(element => setBoundText(element, messages[key], mode)));
       if (messages['patient.chat.placeholder']) document.getElementById('voiceChatInput').placeholder = messages['patient.chat.placeholder'];
       if (messages['records.search']) document.getElementById('patientRecordSearch').placeholder = messages['records.search'];
-      if (messages['history.search']) document.querySelector('.history-search').placeholder = messages['history.search'];
+      if (messages['history.search']) document.getElementById('doctorHistorySearch').placeholder = messages['history.search'];
       if (messages['device.namePlaceholder']) document.getElementById('deviceName').placeholder = messages['device.namePlaceholder'];
       if (messages['device.codePlaceholder']) document.getElementById('deviceCode').placeholder = messages['device.codePlaceholder'];
     }
@@ -2276,7 +2576,7 @@
       document.querySelector('#voiceChatInput')?.setAttribute('placeholder', translations['Type a message…'] || 'Type a message…');
       document.getElementById('loginPassword').placeholder = language === 'Hindi' ? 'पासवर्ड दर्ज करें' : 'Enter password';
       document.getElementById('patientRecordSearch').placeholder = language === 'Hindi' ? 'विज़िट, डॉक्टर या समस्या खोजें' : 'Search visits, doctors or concerns';
-      document.querySelector('.history-search').placeholder = language === 'Hindi' ? 'रोगी के नाम या आईडी से खोजें' : 'Search by patient name or ID';
+      document.getElementById('doctorHistorySearch').placeholder = language === 'Hindi' ? 'समस्या, दवा, तारीख या दस्तावेज़ खोजें' : 'Search conditions, medicines, dates or documents';
       document.getElementById('deviceName').placeholder = language === 'Hindi' ? 'जैसे रिसेप्शन डेस्क टैबलेट' : 'e.g. Reception desk tablet';
       document.getElementById('deviceCode').placeholder = language === 'Hindi' ? '6 अंकों का कोड' : '6-digit code';
     }
@@ -2630,10 +2930,23 @@
       document.getElementById('voicePrompt').textContent = `Hello, ${firstName}`;
     }
 
+    function applyDoctorIdentity(doctor) {
+      if (!doctor?.id) return;
+      const displayName = doctor.fullName || `Doctor ${doctor.id}`;
+      document.getElementById('doctorSidebarName').textContent = displayName;
+      document.getElementById('doctorSidebarHospital').textContent = doctor.specialty
+        ? `${doctor.degree || 'Clinician'} · ${doctor.specialty}${doctor.roomNumber ? ` · Room ${doctor.roomNumber}` : ''}`
+        : `${doctor.hospitalName} · ${doctor.hospitalLocation}`;
+      document.getElementById('doctorSidebarHospital').title = `${doctor.hospitalName} · ${doctor.hospitalLocation}`;
+      document.querySelector('.doctor-profile-mark').textContent = displayName.replace(/^Dr\.?\s*/i, '').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || doctor.id.slice(0, 2);
+    }
+
     try {
       const storedPatientName = localStorage.getItem('arogPatientName');
       const storedPatientId = localStorage.getItem('arogPatientId');
       if (storedPatientName) applyPatientIdentity({ fullName: storedPatientName, id: storedPatientId });
+      const storedDoctor = JSON.parse(localStorage.getItem('arogDoctor') || 'null');
+      if (storedDoctor) applyDoctorIdentity(storedDoctor);
     } catch (_) {}
 
     let cancelLoginMotion = null;
@@ -2711,6 +3024,64 @@
 
     document.querySelectorAll('[data-doctor-panel]').forEach(button => button.addEventListener('click', () => navigateRoute(`doctor/${button.dataset.doctorPanel}`)));
     patientNavButtons.forEach(button => button.addEventListener('click', () => navigateRoute(`patient/${button.dataset.patientRoute}`, false, true)));
+
+    const doctorRecordAssistant = document.getElementById('doctorRecordAssistant');
+    const doctorRecordQuery = document.getElementById('doctorRecordQuery');
+    const doctorAssistantAnswer = document.getElementById('doctorAssistantAnswer');
+    const doctorHistorySearch = document.getElementById('doctorHistorySearch');
+    const doctorHistoryRecords = [...document.querySelectorAll('.dated-record')];
+    const doctorHistoryFilters = [...document.querySelectorAll('[data-history-filter]')];
+    const doctorHistoryEmpty = document.getElementById('doctorHistoryEmpty');
+    let activeDoctorHistoryFilter = 'all';
+
+    function answerDoctorRecordQuestion(question) {
+      const query = question.trim().toLowerCase();
+      let answer = '<strong>Relevant evidence found:</strong> ';
+      if (!query) {
+        doctorAssistantAnswer.innerHTML = '<strong>Enter a question first.</strong> Ask about medicines, allergies, earlier complaints or lab results.';
+        doctorRecordQuery.focus();
+        return;
+      }
+      if (/medicine|medication|prescri|metformin/.test(query)) {
+        answer += 'Metformin 500 mg appears in a patient-uploaded prescription. Its current use is not confirmed, so medication reconciliation is recommended. <strong>Source:</strong> Prescription · 14 Jun 2026.';
+      } else if (/complaint|happen|similar|digest|abdominal|bloat/.test(query)) {
+        answer += 'A similar episode of post-meal heaviness, bloating and reduced appetite was documented previously. <strong>Source:</strong> OPD consultation · 02 May 2026.';
+      } else if (/lab|hba1c|glucose|test|result/.test(query)) {
+        answer += 'The latest available laboratory document reports HbA1c at 6.8%. <strong>Source:</strong> Verified lab report · 18 Nov 2025.';
+      } else if (/allerg|reaction/.test(query)) {
+        answer += 'No known drug allergy was recorded in the available history. No adverse medicine reaction was documented at the February follow-up. <strong>Sources:</strong> Wellness assessment · 29 Aug 2025; Follow-up · 12 Feb 2026.';
+      } else {
+        answer += 'No direct match was found in the five prototype records. Try asking about previous medicines, similar digestive complaints, allergies or the latest lab result.';
+      }
+      doctorAssistantAnswer.innerHTML = answer;
+    }
+
+    doctorRecordAssistant?.addEventListener('submit', event => {
+      event.preventDefault();
+      answerDoctorRecordQuestion(doctorRecordQuery.value);
+    });
+    document.querySelectorAll('[data-record-question]').forEach(button => button.addEventListener('click', () => {
+      doctorRecordQuery.value = button.dataset.recordQuestion;
+      answerDoctorRecordQuestion(button.dataset.recordQuestion);
+    }));
+
+    function updateDoctorHistory() {
+      const search = (doctorHistorySearch?.value || '').trim().toLowerCase();
+      let visibleCount = 0;
+      doctorHistoryRecords.forEach(record => {
+        const matchesType = activeDoctorHistoryFilter === 'all' || record.dataset.recordKind === activeDoctorHistoryFilter;
+        const matchesSearch = !search || record.dataset.recordSearch.includes(search);
+        record.hidden = !(matchesType && matchesSearch);
+        if (!record.hidden) visibleCount += 1;
+      });
+      doctorHistoryEmpty?.classList.toggle('visible', visibleCount === 0);
+    }
+    doctorHistoryFilters.forEach(button => button.addEventListener('click', () => {
+      activeDoctorHistoryFilter = button.dataset.historyFilter;
+      doctorHistoryFilters.forEach(filter => filter.setAttribute('aria-pressed', String(filter === button)));
+      updateDoctorHistory();
+    }));
+    doctorHistorySearch?.addEventListener('input', updateDoctorHistory);
 
     const patientRecordData = {
       digestive: { meta: '02 May 2026 · Consultation', title: 'Digestive discomfort', doctor: 'Dr. Aarav Mehta · General Surgeon', summary: 'Abdominal heaviness and reduced appetite for 2–3 days, especially after meals.', plan: 'Light meals, regular hydration and a follow-up consultation if symptoms continue.', files: [['Visit summary', 'PDF'], ['Prescription', 'PDF']] },
@@ -2803,6 +3174,45 @@
           applyPatientIdentity(data.patient);
         } catch (error) {
           loginStatus.textContent = error.message || 'Could not sign in.';
+          return;
+        }
+      }
+      if (role === 'doctor') {
+        if (!loginForm.reportValidity()) return;
+        loginStatus.textContent = selectedAuthMode === 'register'
+          ? 'Verifying your doctor ID with the selected hospital…'
+          : 'Verifying your doctor account…';
+        button.disabled = true;
+        try {
+          const isRegistration = selectedAuthMode === 'register';
+          const response = await fetch(isRegistration ? '/api/doctor-registrations' : '/api/doctor-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              hospitalId: isRegistration ? doctorHospitalSelect.value : undefined,
+              doctorId: loginIdentifier.value,
+              password: loginPassword.value,
+              fullName: isRegistration ? doctorFullName.value : undefined,
+              degree: isRegistration ? doctorDegree.value : undefined,
+              specialty: isRegistration ? doctorSpecialty.value : undefined,
+              medicalRegistrationNumber: isRegistration ? doctorMedicalRegistration.value : undefined,
+              yearsExperience: isRegistration ? Number(doctorExperience.value) : undefined,
+              roomNumber: isRegistration ? doctorRoom.value : undefined,
+              phone: isRegistration ? doctorPhone.value : undefined,
+              email: isRegistration ? doctorEmail.value : undefined
+            })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Could not verify doctor account');
+          applyDoctorIdentity(data.doctor);
+          try {
+            const savedDoctor = Object.fromEntries(['id', 'fullName', 'degree', 'specialty', 'roomNumber', 'hospitalName', 'hospitalLocation'].map(key => [key, data.doctor[key]]));
+            localStorage.setItem('arogDoctor', JSON.stringify(savedDoctor));
+          } catch (_) {}
+          loginStatus.textContent = '';
+        } catch (error) {
+          loginStatus.textContent = error.message || 'Could not verify doctor account.';
+          button.disabled = false;
           return;
         }
       }

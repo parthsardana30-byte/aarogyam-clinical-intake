@@ -20,6 +20,13 @@ const signupOtpCooldownMs = 30 * 1000;
 const enrollments = new Map();
 const signupOtps = new Map();
 const signupOtpLastSent = new Map();
+const hospitalBranches = new Map([
+  ['civil-ahmedabad', { id: 'civil-ahmedabad', name: 'Civil Hospital', location: 'Ahmedabad, Gujarat', issuedDoctorIds: new Set(['CHA-DR-2187']) }],
+  ['civil-gurugram', { id: 'civil-gurugram', name: 'Civil Hospital', location: 'Gurugram, Haryana', issuedDoctorIds: new Set(['CHG-DR-3304']) }],
+  ['civil-ludhiana', { id: 'civil-ludhiana', name: 'Civil Hospital', location: 'Ludhiana, Punjab', issuedDoctorIds: new Set(['CHL-DR-4419']) }],
+  ['civil-nashik', { id: 'civil-nashik', name: 'Civil Hospital', location: 'Nashik, Maharashtra', issuedDoctorIds: new Set(['CHN-DR-5576']) }],
+  ['civil-rajkot', { id: 'civil-rajkot', name: 'Civil Hospital', location: 'Rajkot, Gujarat', issuedDoctorIds: new Set(['CHR-DR-6631']) }]
+]);
 let devices = [];
 let patients = [];
 let patientsDb;
@@ -67,6 +74,24 @@ async function loadPatients() {
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS patients_phone_idx ON patients(phone);
+    CREATE TABLE IF NOT EXISTS doctors (
+      doctor_id TEXT PRIMARY KEY,
+      hospital_id TEXT NOT NULL,
+      hospital_name TEXT NOT NULL,
+      hospital_location TEXT NOT NULL,
+      full_name TEXT NOT NULL,
+      degree TEXT NOT NULL,
+      specialty TEXT NOT NULL,
+      medical_registration_number TEXT NOT NULL UNIQUE,
+      years_experience INTEGER NOT NULL,
+      room_number TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      email TEXT NOT NULL,
+      password_salt TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS doctors_hospital_idx ON doctors(hospital_id);
     CREATE TABLE IF NOT EXISTS patient_document_sessions (
       id TEXT PRIMARY KEY,
       token_hash TEXT NOT NULL,
@@ -89,6 +114,16 @@ async function loadPatients() {
     CREATE INDEX IF NOT EXISTS patient_documents_session_idx ON patient_documents(upload_session_id);
     CREATE INDEX IF NOT EXISTS patient_documents_patient_idx ON patient_documents(patient_id);
   `);
+  const doctorColumns = new Set(patientsDb.prepare('PRAGMA table_info(doctors)').all().map(column => column.name));
+  const doctorMigrations = [
+    ['full_name', 'TEXT'], ['degree', 'TEXT'], ['specialty', 'TEXT'],
+    ['medical_registration_number', 'TEXT'], ['years_experience', 'INTEGER'],
+    ['room_number', 'TEXT'], ['phone', 'TEXT'], ['email', 'TEXT']
+  ];
+  for (const [column, type] of doctorMigrations) {
+    if (!doctorColumns.has(column)) patientsDb.exec(`ALTER TABLE doctors ADD COLUMN ${column} ${type}`);
+  }
+  patientsDb.exec('CREATE UNIQUE INDEX IF NOT EXISTS doctors_medical_registration_idx ON doctors(medical_registration_number)');
   const rows = patientsDb.prepare('SELECT * FROM patients').all();
   patients = rows.map(row => ({
     id: row.id,
@@ -490,6 +525,116 @@ async function loginPatient(request, response) {
   sendJson(response, 200, { patient: { id: patient.id, fullName: patient.profile.fullName } });
 }
 
+function normalizeDoctorId(value) {
+  return String(value || '').trim().toUpperCase().replace(/\s+/g, '');
+}
+
+const allowedDoctorSpecialties = new Set([
+  'General Medicine', 'Gynaecology', 'Orthopaedics', 'Paediatrics', 'General Surgery',
+  'Cardiology', 'Dermatology', 'ENT', 'Ophthalmology', 'Psychiatry', 'AYUSH Medicine', 'Other'
+]);
+
+function publicDoctor(row) {
+  return {
+    id: row.doctor_id,
+    fullName: row.full_name,
+    degree: row.degree,
+    specialty: row.specialty,
+    medicalRegistrationNumber: row.medical_registration_number,
+    yearsExperience: row.years_experience,
+    roomNumber: row.room_number,
+    phone: row.phone,
+    email: row.email,
+    hospitalId: row.hospital_id,
+    hospitalName: row.hospital_name,
+    hospitalLocation: row.hospital_location
+  };
+}
+
+function publicHospital(branch) {
+  return {
+    id: branch.id,
+    name: branch.name,
+    location: branch.location,
+    demoDoctorId: [...branch.issuedDoctorIds][0],
+    backgroundImage: `/assets/hospitals/${branch.id}.png`
+  };
+}
+
+function listHospitalBranches(_request, response) {
+  sendJson(response, 200, { hospitals: [...hospitalBranches.values()].map(publicHospital) });
+}
+
+async function createDoctorRegistration(request, response) {
+  const body = await readJson(request);
+  const hospital = hospitalBranches.get(String(body.hospitalId || ''));
+  const doctorId = normalizeDoctorId(body.doctorId);
+  const password = String(body.password || '');
+  const fullName = String(body.fullName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+  const degree = String(body.degree || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+  const specialty = String(body.specialty || '');
+  const medicalRegistrationNumber = String(body.medicalRegistrationNumber || '').trim().toUpperCase().replace(/\s+/g, '');
+  const yearsExperienceRaw = String(body.yearsExperience ?? '').trim();
+  const yearsExperience = yearsExperienceRaw ? Number(yearsExperienceRaw) : Number.NaN;
+  const roomNumber = String(body.roomNumber || '').trim().replace(/\s+/g, ' ').toUpperCase().slice(0, 20);
+  const phone = normalizeIndianPhone(body.phone);
+  const email = String(body.email || '').trim().toLowerCase().slice(0, 120);
+  if (!hospital) return sendJson(response, 400, { error: 'Select a valid hospital branch' });
+  if (!hospital.issuedDoctorIds.has(doctorId)) {
+    return sendJson(response, 403, { error: 'This doctor ID was not issued by the selected hospital branch' });
+  }
+  if (password.length < 8 || password.length > 128) {
+    return sendJson(response, 400, { error: 'Password must contain at least 8 characters' });
+  }
+  if (fullName.length < 2) return sendJson(response, 400, { error: 'Enter the doctor’s full name' });
+  if (degree.length < 2) return sendJson(response, 400, { error: 'Enter a valid medical degree or qualification' });
+  if (!allowedDoctorSpecialties.has(specialty)) return sendJson(response, 400, { error: 'Select a valid medical specialty' });
+  if (!/^[A-Z0-9/-]{4,30}$/.test(medicalRegistrationNumber)) {
+    return sendJson(response, 400, { error: 'Enter a valid medical council registration number' });
+  }
+  if (!Number.isInteger(yearsExperience) || yearsExperience < 0 || yearsExperience > 70) {
+    return sendJson(response, 400, { error: 'Years of experience must be between 0 and 70' });
+  }
+  if (!/^[A-Z0-9 -]{1,20}$/.test(roomNumber)) return sendJson(response, 400, { error: 'Enter a valid room or OPD number' });
+  if (!phone) return sendJson(response, 400, { error: 'Enter a valid 10-digit Indian mobile number' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return sendJson(response, 400, { error: 'Enter a valid professional email address' });
+  if (patientsDb.prepare('SELECT doctor_id FROM doctors WHERE doctor_id = ?').get(doctorId)) {
+    return sendJson(response, 409, { error: 'This hospital-issued doctor ID is already registered' });
+  }
+  if (patientsDb.prepare('SELECT doctor_id FROM doctors WHERE medical_registration_number = ?').get(medicalRegistrationNumber)) {
+    return sendJson(response, 409, { error: 'This medical registration number is already associated with an account' });
+  }
+  const passwordSalt = randomBytes(16).toString('hex');
+  const createdAt = new Date().toISOString();
+  patientsDb.prepare(`
+    INSERT INTO doctors (
+      doctor_id, hospital_id, hospital_name, hospital_location, full_name, degree, specialty,
+      medical_registration_number, years_experience, room_number, phone, email,
+      password_salt, password_hash, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    doctorId, hospital.id, hospital.name, hospital.location, fullName, degree, specialty,
+    medicalRegistrationNumber, yearsExperience, roomNumber, phone, email, passwordSalt,
+    scryptSync(password, passwordSalt, 64).toString('hex'), createdAt
+  );
+  const doctor = patientsDb.prepare('SELECT * FROM doctors WHERE doctor_id = ?').get(doctorId);
+  sendJson(response, 201, { doctor: publicDoctor(doctor) });
+}
+
+async function loginDoctor(request, response) {
+  const body = await readJson(request);
+  const doctorId = normalizeDoctorId(body.doctorId);
+  const password = String(body.password || '');
+  const row = patientsDb.prepare('SELECT * FROM doctors WHERE doctor_id = ?').get(doctorId);
+  if (!row || !password) return sendJson(response, 401, { error: 'Doctor ID or password is incorrect' });
+  const candidate = scryptSync(password, row.password_salt, 64);
+  const stored = Buffer.from(row.password_hash, 'hex');
+  if (stored.length !== candidate.length || !timingSafeEqual(stored, candidate)) {
+    return sendJson(response, 401, { error: 'Doctor ID or password is incorrect' });
+  }
+  sendJson(response, 200, { doctor: publicDoctor(row) });
+}
+
 async function createEnrollment(request, response) {
   purgeExpiredEnrollments();
   let code;
@@ -579,6 +724,9 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-registrations') return await createPatientRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-login') return await loginPatient(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/hospital-branches') return listHospitalBranches(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/doctor-registrations') return await createDoctorRegistration(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/doctor-login') return await loginDoctor(request, response);
     const statusMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/status$/i);
     if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1]);
     if (request.method === 'POST' && url.pathname === '/api/device-authorizations') return await authorizeDevice(request, response);

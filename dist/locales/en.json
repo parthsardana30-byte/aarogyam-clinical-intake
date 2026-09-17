@@ -16,7 +16,7 @@
   "records.clinician": "Clinician", "records.summary": "Visit summary", "records.plan": "Care plan",
   "doctor.nav.current": "Current patient", "doctor.nav.history": "Patient history", "doctor.chiefConcern": "Chief concern", "doctor.context": "Relevant context", "doctor.ayurvedic": "Ayurvedic intake", "doctor.flags": "Review flags",
   "doctor.approve": "Approve draft", "doctor.edit": "Edit case sheet", "doctor.evidence": "View all evidence", "doctor.timeline": "Longitudinal timeline", "doctor.completeHistory": "View complete history",
-  "history.title": "Patient history", "history.subtitle": "Review previous consultations and follow-up records.", "history.search": "Search by patient name or ID", "history.recent": "Recent visits", "history.open": "Open record",
+  "history.title": "Ananya Sharma’s medical history", "history.subtitle": "All available encounters and documents, ordered by date.", "history.search": "Search conditions, medicines, dates or documents", "history.recent": "Export history", "history.open": "Open record",
   "device.title": "Authorize a device", "device.subtitle": "Add a trusted reception device to this workspace.", "device.name": "Device name", "device.namePlaceholder": "e.g. Reception desk tablet", "device.code": "Authorization code", "device.codePlaceholder": "6-digit code",
   "device.scan": "Scan QR code", "device.manual": "Enter code manually", "device.scanHelp": "Point the camera at the device QR code.", "device.startScanner": "Start QR scanner",
   "device.setupHelp": "Open this link on the device you want to authorize.", "device.openSetup": "Open setup page ↗", "device.listTitle": "Authorized devices", "device.cancel": "Cancel", "device.authorize": "Authorize device"
