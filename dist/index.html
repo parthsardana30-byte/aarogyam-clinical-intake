@@ -334,9 +334,20 @@
     .app-shell.authorized-patient-device #patient .portal-main { grid-column: 1; width: 100%; }
     .voice-experience { position: relative; isolation: isolate; width: 100%; height: max(440px, calc(100dvh - 136px)); }
     .voice-stage { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: -1; }
-    .voice-orb { width: clamp(160px, 23vw, 260px); aspect-ratio: 1; border-radius: 50%; background: url('/assets/chat-orb.png') center / cover no-repeat; opacity: .13; filter: saturate(.8); transition: opacity .4s, filter .4s; }
+    .voice-orb {
+      position: relative; width: clamp(160px, 23vw, 260px); aspect-ratio: 1; border-radius: 50%;
+      background: url('/assets/chat-orb.png') center / cover no-repeat;
+      opacity: .72; filter: saturate(1.75) brightness(1.18) contrast(1.08) hue-rotate(12deg);
+      box-shadow: 0 0 34px rgba(44, 211, 255, .34), 0 0 72px rgba(112, 72, 255, .22), inset 0 0 22px rgba(255,255,255,.22);
+      transition: opacity .4s, filter .4s, box-shadow .4s;
+    }
+    .voice-orb::before {
+      content: ""; position: absolute; inset: -13%; z-index: -1; border-radius: 50%;
+      background: radial-gradient(circle, rgba(50,224,255,.3), rgba(107,77,255,.14) 48%, transparent 70%);
+      filter: blur(18px);
+    }
     .voice-orb svg { display: none; }
-    .voice-orb.listening { opacity: .27; filter: saturate(1.2); animation: voicePulse 2.4s ease-in-out infinite; }
+    .voice-orb.listening { opacity: .9; filter: saturate(2) brightness(1.28) contrast(1.1) hue-rotate(12deg); box-shadow: 0 0 46px rgba(36,225,255,.52), 0 0 92px rgba(117,73,255,.34), inset 0 0 26px rgba(255,255,255,.3); animation: voicePulse 2.4s ease-in-out infinite; }
     @keyframes voicePulse { 50% { transform: scale(1.06); } }
     .voice-chat { position: relative; height: 100%; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
     .voice-chat-head { position: absolute; top: 0; right: 0; z-index: 4; display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 0; border-bottom: 0; }
