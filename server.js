@@ -20,6 +20,7 @@ const signupOtpCooldownMs = 30 * 1000;
 const enrollments = new Map();
 const signupOtps = new Map();
 const signupOtpLastSent = new Map();
+const elevenLabsSignedUrlLastIssued = new Map();
 let devices = [];
 let patients = [];
 let patientsDb;
@@ -158,6 +159,42 @@ async function readJson(request, maxBytes = 20_000) {
 function requestOrigin(request) {
   const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
   return `${protocol}://${request.headers.host || `localhost:${port}`}`;
+}
+
+function requestIp(request) {
+  return String(request.headers['x-forwarded-for'] || request.socket.remoteAddress || 'unknown').split(',')[0].trim();
+}
+
+async function createElevenLabsSignedUrl(request, response) {
+  const apiKey = String(process.env.ELEVENLABS_API_KEY || '').trim();
+  const agentId = String(process.env.ELEVENLABS_AGENT_ID || '').trim();
+  if (!apiKey || !/^agent_[a-zA-Z0-9]+$/.test(agentId)) {
+    return sendJson(response, 503, { configured: false, error: 'ElevenLabs agent is not configured' });
+  }
+  const ip = requestIp(request);
+  const lastIssued = elevenLabsSignedUrlLastIssued.get(ip) || 0;
+  if (Date.now() - lastIssued < 5_000) return sendJson(response, 429, { error: 'Please wait before reconnecting' });
+  const endpoint = new URL('https://api.elevenlabs.io/v1/convai/conversation/get-signed-url');
+  endpoint.searchParams.set('agent_id', agentId);
+  const result = await fetch(endpoint, { headers: { 'xi-api-key': apiKey, Accept: 'application/json' } });
+  if (!result.ok) {
+    console.error(`ElevenLabs signed URL request failed (${result.status})`);
+    return sendJson(response, 502, { error: 'Voice agent is temporarily unavailable' });
+  }
+  const payload = await result.json();
+  if (!payload.signed_url) return sendJson(response, 502, { error: 'Voice agent returned an invalid session' });
+  elevenLabsSignedUrlLastIssued.set(ip, Date.now());
+  sendJson(response, 200, { configured: true, signedUrl: payload.signed_url, expiresIn: 900 });
+}
+
+async function serveElevenLabsClient(response) {
+  try {
+    const body = await readFile(resolve('node_modules/@elevenlabs/client/dist/lib.iife.js'));
+    response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=86400' });
+    response.end(body);
+  } catch {
+    sendJson(response, 404, { error: 'ElevenLabs client is unavailable' });
+  }
 }
 
 function documentSession(id, token) {
@@ -584,6 +621,8 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/device-authorizations') return await authorizeDevice(request, response);
     if (request.method === 'GET' && url.pathname === '/api/devices') return await listDevices(request, response);
     if (request.method === 'GET' && url.pathname === '/api/device-session') return await deviceSession(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/elevenlabs/signed-url') return await createElevenLabsSignedUrl(request, response);
+    if (request.method === 'GET' && url.pathname === '/vendor/elevenlabs-client.js') return await serveElevenLabsClient(response);
     if (request.method === 'GET' || request.method === 'HEAD') return await serveStatic(request, response);
     sendJson(response, 405, { error: 'Method not allowed' });
   } catch (error) {

@@ -333,13 +333,15 @@
     .app-shell.authorized-patient-device #patient .doctor-sidebar { display: none; }
     .app-shell.authorized-patient-device #patient .portal-main { grid-column: 1; width: 100%; }
     .voice-experience { position: relative; isolation: isolate; width: 100%; height: max(440px, calc(100dvh - 136px)); }
-    .voice-stage { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: -1; }
+    .voice-stage { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 0; }
     .voice-orb {
       position: relative; width: clamp(160px, 23vw, 260px); aspect-ratio: 1; border-radius: 50%;
       background: url('/assets/chat-orb.png') center / cover no-repeat;
       opacity: .72; filter: saturate(1.75) brightness(1.18) contrast(1.08) hue-rotate(12deg);
       box-shadow: 0 0 34px rgba(44, 211, 255, .34), 0 0 72px rgba(112, 72, 255, .22), inset 0 0 22px rgba(255,255,255,.22);
+      border: 0; padding: 0; cursor: pointer; pointer-events: auto;
       transition: opacity .4s, filter .4s, box-shadow .4s;
+      animation: orbFloat 5.2s ease-in-out infinite, orbShimmer 9s ease-in-out infinite alternate;
     }
     .voice-orb::before {
       content: ""; position: absolute; inset: -13%; z-index: -1; border-radius: 50%;
@@ -347,9 +349,18 @@
       filter: blur(18px);
     }
     .voice-orb svg { display: none; }
-    .voice-orb.listening { opacity: .9; filter: saturate(2) brightness(1.28) contrast(1.1) hue-rotate(12deg); box-shadow: 0 0 46px rgba(36,225,255,.52), 0 0 92px rgba(117,73,255,.34), inset 0 0 26px rgba(255,255,255,.3); animation: voicePulse 2.4s ease-in-out infinite; }
-    @keyframes voicePulse { 50% { transform: scale(1.06); } }
-    .voice-chat { position: relative; height: 100%; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+    .voice-orb:hover { filter: saturate(1.95) brightness(1.26) contrast(1.1) hue-rotate(18deg); }
+    .voice-orb:focus-visible { outline: 4px solid rgba(37, 190, 236, .38); outline-offset: 8px; }
+    .voice-orb.connecting { animation: orbConnect 1s ease-in-out infinite alternate, orbShimmer 3s linear infinite alternate; }
+    .voice-orb.listening { opacity: .9; filter: saturate(2) brightness(1.28) contrast(1.1) hue-rotate(12deg); box-shadow: 0 0 46px rgba(36,225,255,.52), 0 0 92px rgba(117,73,255,.34), inset 0 0 26px rgba(255,255,255,.3); animation: voicePulse 2.4s ease-in-out infinite, orbShimmer 6s ease-in-out infinite alternate; }
+    .voice-orb.speaking { opacity: 1; filter: saturate(2.2) brightness(1.35) contrast(1.12) hue-rotate(20deg); animation: orbSpeak .72s ease-in-out infinite alternate, orbShimmer 2.6s linear infinite alternate; }
+    @keyframes orbFloat { 0%, 100% { transform: translate3d(0,-5px,0) rotate(-1deg); } 50% { transform: translate3d(0,12px,0) rotate(2deg); } }
+    @keyframes orbShimmer { from { background-position: 42% 50%; } to { background-position: 58% 50%; } }
+    @keyframes orbConnect { from { transform: scale(.96) rotate(-2deg); } to { transform: scale(1.04) rotate(2deg); } }
+    @keyframes orbSpeak { from { transform: translateY(-4px) scale(1); } to { transform: translateY(5px) scale(1.085); } }
+    @keyframes voicePulse { 50% { transform: translateY(7px) scale(1.06); } }
+    .voice-chat { position: relative; z-index: 1; height: 100%; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; pointer-events: none; }
+    .voice-chat-head, .voice-chat-messages, .voice-chat-form { pointer-events: auto; }
     .voice-chat-head { position: absolute; top: 0; right: 0; z-index: 4; display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 0; border-bottom: 0; }
     .voice-chat-title, .voice-audio-toggle { display: none !important; }
     .voice-chat-title h1 { font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 650; letter-spacing: -.04em; margin: 0; line-height: 1.2; }
@@ -382,7 +393,7 @@
     .voice-talk[aria-pressed="true"] { background: #193f32; border-color: #193f32; color: #fff; }
     .voice-input-status { margin: 0; font-size: .76rem; color: #718378; line-height: 1.4; }
     .voice-input-status.error { color: #9a4329; }
-    @media (prefers-reduced-motion: reduce) { .voice-chat-message, .voice-orb.listening { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .voice-chat-message, .voice-orb, .voice-orb.listening, .voice-orb.speaking, .voice-orb.connecting { animation: none; } }
     .portal-main .intake-grid { grid-template-columns: minmax(210px, .72fr) minmax(410px, 1.55fr) minmax(250px, .88fr); }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
@@ -1276,9 +1287,9 @@
           <section class="voice-session" aria-labelledby="voicePrompt">
             <div class="voice-experience">
               <div class="voice-stage">
-                <div class="voice-orb" id="voiceOrb" aria-hidden="true">
+                <button class="voice-orb" id="voiceOrb" type="button" aria-label="Start voice conversation" aria-pressed="false">
                   <svg viewBox="0 0 32 32" fill="none"><path d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
+                </button>
               </div>
               <aside class="voice-chat" aria-label="Live check-up chat">
                 <div class="voice-chat-head">
@@ -1457,6 +1468,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"><strong id="toastTitle"></strong><small id="toastText"></small></div>
 
+  <script src="/vendor/elevenlabs-client.js"></script>
   <script>
     const loginScreen = document.getElementById('loginScreen');
     const rolePicker = document.getElementById('rolePicker');
@@ -2997,6 +3009,9 @@
     let voiceGeneration = 0;
     let replyPending = false;
     let readRepliesAloud = false;
+    let elevenConversation = null;
+    let elevenConnecting = false;
+    let elevenConsentGranted = false;
 
     function setVoiceHint(text, error = false) {
       voiceInputStatus.textContent = text;
@@ -3006,13 +3021,14 @@
     function syncVoiceControls() {
       voiceTalkButton.setAttribute('aria-pressed', String(!!recognition));
       voiceTalkLabel.textContent = recognition ? 'Stop' : 'Talk';
-      voiceOrb.classList.toggle('listening', !!recognition);
+      if (!elevenConversation && !elevenConnecting) voiceOrb.classList.toggle('listening', !!recognition);
       voiceSendButton.disabled = replyPending || !voiceChatInput.value.trim();
       voiceTalkButton.disabled = replyPending;
       voiceChatMessages.setAttribute('aria-busy', String(replyPending));
     }
 
     function stopMicrophone() {
+      void stopElevenLabsSession();
       voiceGeneration += 1;
       clearTimeout(voiceTimer);
       const previous = recognition;
@@ -3022,6 +3038,88 @@
       replyPending = false;
       syncVoiceControls();
       setVoiceHint('Speak or type, at your pace.');
+    }
+
+    function setAgentOrbState(state = 'idle') {
+      voiceOrb.classList.remove('connecting', 'listening', 'speaking');
+      if (state !== 'idle') voiceOrb.classList.add(state);
+      const active = state !== 'idle';
+      voiceOrb.setAttribute('aria-pressed', String(active));
+      voiceOrb.setAttribute('aria-label', active ? 'Stop voice conversation' : 'Start voice conversation');
+    }
+
+    async function stopElevenLabsSession() {
+      const session = elevenConversation;
+      elevenConversation = null;
+      elevenConnecting = false;
+      setAgentOrbState();
+      if (!session) return;
+      try { await session.endSession(); }
+      catch (_) { /* Session may already be closed. */ }
+    }
+
+    function handleElevenLabsMessage(payload) {
+      const text = String(payload?.message || '').trim();
+      if (!text) return;
+      const isAgent = payload.role === 'agent' || payload.source === 'ai';
+      appendChatMessage(text, isAgent ? 'ai' : 'user', isAgent ? 'Arogyam · ElevenLabs' : 'You · voice');
+      if (isAgent) {
+        voiceQuestion.textContent = text;
+        replyPending = false;
+      } else {
+        replyPending = true;
+      }
+      syncVoiceControls();
+    }
+
+    async function startElevenLabsSession() {
+      if (elevenConnecting || elevenConversation) return;
+      if (!elevenConsentGranted) {
+        elevenConsentGranted = window.confirm('To start voice chat, your microphone audio and conversation transcript will be processed by ElevenLabs. Continue?');
+        if (!elevenConsentGranted) return;
+      }
+      if (!window.ElevenLabsClient?.Conversation) {
+        showToast('Voice agent unavailable', 'The voice client could not be loaded. Please refresh and try again.');
+        return;
+      }
+      elevenConnecting = true;
+      setAgentOrbState('connecting');
+      setVoiceHint('Connecting to Arogyam voice…');
+      try {
+        const response = await fetch('/api/elevenlabs/signed-url', { cache: 'no-store' });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
+        const session = await window.ElevenLabsClient.Conversation.startSession({
+          signedUrl: payload.signedUrl,
+          connectionType: 'websocket',
+          dynamicVariables: { preferred_language: languageSelect.value },
+          onConnect: () => {
+            elevenConnecting = false;
+            setAgentOrbState('listening');
+            setVoiceHint('Connected — speak naturally. Tap the orb to stop.');
+          },
+          onModeChange: ({ mode }) => {
+            setAgentOrbState(mode === 'speaking' ? 'speaking' : 'listening');
+            setVoiceHint(mode === 'speaking' ? 'Arogyam is speaking…' : 'Listening…');
+          },
+          onMessage: handleElevenLabsMessage,
+          onError: message => setVoiceHint(String(message || 'Voice connection error.'), true),
+          onDisconnect: () => {
+            elevenConversation = null;
+            elevenConnecting = false;
+            replyPending = false;
+            setAgentOrbState();
+            syncVoiceControls();
+          }
+        });
+        elevenConversation = session;
+      } catch (error) {
+        elevenConnecting = false;
+        setAgentOrbState();
+        const message = error instanceof Error ? error.message : 'Could not connect to the voice agent.';
+        setVoiceHint(message, true);
+        showToast('Voice agent unavailable', message);
+      }
     }
 
     function speakAI(text, language) {
@@ -3068,6 +3166,14 @@
     async function sendPatientMessage(source = 'typed') {
       const message = voiceChatInput.value.trim();
       if (!message || replyPending) return;
+      if (elevenConversation?.isOpen()) {
+        elevenConversation.sendUserMessage(message);
+        voiceChatInput.value = '';
+        replyPending = true;
+        syncVoiceControls();
+        setVoiceHint('Arogyam is thinking…');
+        return;
+      }
       const generation = voiceGeneration;
       const previous = recognition;
       recognition = null;
@@ -3172,6 +3278,11 @@
         syncVoiceControls();
         setVoiceHint('Could not start voice input. Tap Talk to retry or type your reply.', true);
       }
+    });
+
+    voiceOrb.addEventListener('click', () => {
+      if (elevenConversation || elevenConnecting) void stopElevenLabsSession();
+      else void startElevenLabsSession();
     });
 
     voiceAudioToggle.addEventListener('click', () => {
