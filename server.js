@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { createCipheriv, createHash, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from 'node:crypto';
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -125,6 +125,12 @@ function encryptIdentityNumber(value) {
   const cipher = createCipheriv('aes-256-gcm', patientEncryptionKey(), iv);
   const ciphertext = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
   return { ciphertext: ciphertext.toString('base64'), iv: iv.toString('base64'), tag: cipher.getAuthTag().toString('base64') };
+}
+
+function decryptIdentityNumber(row) {
+  const decipher = createDecipheriv('aes-256-gcm', patientEncryptionKey(), Buffer.from(row.identity_iv, 'base64'));
+  decipher.setAuthTag(Buffer.from(row.identity_tag, 'base64'));
+  return Buffer.concat([decipher.update(Buffer.from(row.identity_ciphertext, 'base64')), decipher.final()]).toString('utf8');
 }
 
 function cookies(request) {
@@ -461,16 +467,25 @@ async function createPatientRegistration(request, response) {
 
 async function loginPatient(request, response) {
   const body = await readJson(request);
-  const identifier = String(body.identifier || '').trim().toUpperCase();
+  const identityMethod = body.identityMethod === 'abha' ? 'abha' : body.identityMethod === 'aadhaar' ? 'aadhaar' : null;
+  const identityNumber = String(body.identityNumber || body.identifier || '').replace(/\D/g, '');
   const password = String(body.password || '');
-  const patient = patients.find(item => item.id.toUpperCase() === identifier);
+  const identityValid = identityMethod === 'abha' ? /^\d{14}$/.test(identityNumber) : identityMethod === 'aadhaar' && /^\d{12}$/.test(identityNumber);
+  if (!identityMethod || !identityValid) return sendJson(response, 400, { error: 'Enter a valid ABHA ID or Aadhaar number' });
+  const candidates = patientsDb.prepare(`
+    SELECT * FROM patients WHERE identity_method = ? AND identity_last4 = ?
+  `).all(identityMethod, identityNumber.slice(-4));
+  const row = candidates.find(candidate => {
+    try { return decryptIdentityNumber(candidate) === identityNumber; } catch { return false; }
+  });
+  const patient = row ? patients.find(item => item.id === row.id) : null;
   if (!patient || !password || !patient.password?.salt || !patient.password?.hash) {
-    return sendJson(response, 401, { error: 'Patient ID or password is incorrect' });
+    return sendJson(response, 401, { error: 'Identity number or password is incorrect' });
   }
   const candidate = scryptSync(password, patient.password.salt, 64);
   const stored = Buffer.from(patient.password.hash, 'hex');
   if (stored.length !== candidate.length || !timingSafeEqual(stored, candidate)) {
-    return sendJson(response, 401, { error: 'Patient ID or password is incorrect' });
+    return sendJson(response, 401, { error: 'Identity number or password is incorrect' });
   }
   sendJson(response, 200, { patient: { id: patient.id, fullName: patient.profile.fullName } });
 }
