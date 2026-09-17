@@ -283,17 +283,30 @@
     .current-patient-name { color: #1769aa; }
     .patient-greeting-name { color: #1769aa; }
     .checkup-launch {
-      min-height: calc(100dvh - 194px); display: grid; place-items: center; padding: 28px;
+      min-height: calc(100dvh - 194px); display: grid; align-items: center; padding: 18px 0 36px;
     }
     .checkup-launch[hidden], .checkup-flow[hidden], .checkup-welcome[hidden], .language-step[hidden] { display: none; }
-    .checkup-welcome { display: grid; justify-items: center; gap: 54px; text-align: center; }
+    .checkup-welcome { width: min(100%, 1040px); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(260px, .65fr); gap: 18px; align-items: stretch; }
+    .patient-dashboard-hero {
+      position: relative; min-height: 410px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;
+      padding: clamp(28px, 5vw, 54px); border: 1px solid rgba(16,43,39,.1); border-radius: 30px;
+      background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(239,246,242,.9));
+      box-shadow: 0 26px 70px rgba(16,43,39,.1);
+    }
+    .patient-dashboard-hero::after {
+      content: ""; position: absolute; width: 310px; aspect-ratio: 1; top: -118px; right: -76px; border-radius: 50%;
+      background: radial-gradient(circle at 36% 34%, rgba(255,255,255,.95), rgba(67,191,163,.25) 38%, rgba(35,105,91,.12) 64%, transparent 66%);
+      box-shadow: 0 0 70px rgba(65,184,156,.18); pointer-events: none;
+    }
+    .patient-dashboard-kicker { margin: 0 0 14px; color: var(--teal); font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
     .checkup-welcome-title {
-      margin: 0; color: var(--ink); font-size: clamp(3rem, 7vw, 5.25rem); font-weight: 650;
-      letter-spacing: -.055em; line-height: .98; transform: translateY(-24px);
+      position: relative; z-index: 1; margin: 0; color: var(--ink); font-size: clamp(2.8rem, 5vw, 4.6rem); font-weight: 650;
+      letter-spacing: -.055em; line-height: .98;
     }
     .checkup-welcome-title span { color: #1769aa; }
+    .patient-dashboard-copy { position: relative; z-index: 1; max-width: 560px; margin: 20px 0 30px; color: #58716c; font-size: 1rem; line-height: 1.65; }
     .checkup-launch-button {
-      min-width: min(340px, 100%); min-height: 68px; display: inline-flex; align-items: center; justify-content: center; gap: 13px;
+      position: relative; z-index: 1; width: fit-content; min-width: min(300px, 100%); min-height: 62px; display: inline-flex; align-items: center; justify-content: center; gap: 13px;
       border: 0; border-radius: 20px; padding: 0 28px; background: var(--ink); color: #fff; font: inherit;
       font-size: 1.08rem; font-weight: 780; cursor: pointer; box-shadow: 0 18px 42px rgba(16,43,39,.22);
       transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
@@ -301,6 +314,13 @@
     .checkup-launch-button:hover { transform: translateY(-3px); background: #16483f; box-shadow: 0 24px 52px rgba(16,43,39,.28); }
     .checkup-launch-button:focus-visible { outline: 4px solid rgba(244,162,97,.42); outline-offset: 4px; }
     .checkup-launch-button svg { width: 22px; height: 22px; }
+    .patient-dashboard-side { display: grid; gap: 14px; }
+    .patient-dashboard-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 126px; padding: 22px; border: 1px solid rgba(16,43,39,.1); border-radius: 24px; background: rgba(255,255,255,.82); box-shadow: 0 18px 46px rgba(16,43,39,.07); }
+    .patient-dashboard-card span { color: #647a75; font-size: .78rem; font-weight: 760; letter-spacing: .04em; text-transform: uppercase; }
+    .patient-dashboard-card strong { color: var(--ink); font-size: 1.45rem; letter-spacing: -.03em; }
+    .patient-dashboard-card.action { border: 0; align-items: flex-start; color: #fff; background: linear-gradient(145deg, #176b5d, #0d4037); cursor: pointer; text-align: left; }
+    .patient-dashboard-card.action span, .patient-dashboard-card.action strong { color: inherit; }
+    .patient-dashboard-card.action:hover { transform: translateY(-2px); box-shadow: 0 22px 48px rgba(13,64,55,.18); }
     .language-step { width: min(930px, 100%); }
     .language-card {
       padding: clamp(24px, 4vw, 42px); border: 1px solid rgba(182, 200, 194, .72); border-radius: 30px;
@@ -326,19 +346,78 @@
     .language-back { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
     .language-continue { min-width: 180px; border: 0; background: var(--ink); color: #fff; }
     .language-continue:disabled { cursor: not-allowed; opacity: .42; }
+    .checkup-result { min-height: calc(100dvh - 24px); display: grid; place-items: center; padding: 24px; }
+    .checkup-result[hidden] { display: none; }
+    .checkup-result-card { width: min(880px, 100%); overflow: hidden; border: 1px solid rgba(16,43,39,.11); border-radius: 30px; background: rgba(255,255,255,.94); box-shadow: 0 28px 80px rgba(16,43,39,.13); }
+    .checkup-result-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; padding: clamp(28px, 5vw, 48px); background: linear-gradient(145deg, #153e35, #0c2924); color: #fff; }
+    .checkup-result-kicker { margin: 0 0 10px; color: #a9dfcb; font-size: .73rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    .checkup-result-head h1 { margin: 0; color: #fff; font-size: clamp(2rem, 5vw, 3.6rem); }
+    .opd-ticket { min-width: 210px; padding: 18px 20px; border: 1px solid rgba(255,255,255,.2); border-radius: 18px; background: rgba(255,255,255,.1); }
+    .opd-ticket span, .result-doctor span { display: block; color: #a9c7bd; font-size: .72rem; font-weight: 760; letter-spacing: .09em; text-transform: uppercase; }
+    .opd-ticket strong { display: block; margin-top: 6px; font-size: 1.18rem; letter-spacing: .02em; }
+    .checkup-result-body { padding: clamp(26px, 4vw, 42px); }
+    .result-doctor { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; margin-bottom: 26px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+    .result-doctor strong { display: block; margin-top: 5px; color: var(--ink); font-size: 1.35rem; }
+    .result-doctor-badge { padding: 8px 12px; border-radius: 999px; background: var(--mint); color: var(--teal-dark); font-size: .78rem; font-weight: 750; }
+    .result-summary h2 { margin: 0 0 10px; font-size: 1rem; }
+    .result-summary p { min-height: 88px; margin: 0; color: #4e6861; line-height: 1.7; white-space: pre-wrap; }
+    .result-summary-status { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; color: #688079; font-size: .8rem; }
+    .result-summary-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #f0a05c; box-shadow: 0 0 0 5px rgba(240,160,92,.14); }
+    .result-summary-status.ready::before { background: #3b9d78; box-shadow: 0 0 0 5px rgba(59,157,120,.14); }
+    .checkup-result-actions { display: flex; justify-content: flex-end; margin-top: 30px; }
+    .checkup-result-done { min-height: 52px; padding: 0 25px; border: 0; border-radius: 15px; background: var(--ink); color: #fff; font: inherit; font-weight: 760; cursor: pointer; }
     /* Patient conversation: a single viewport with a scrollable transcript. */
     .app-shell.patient-session.voice-mode .workspace { width: 100%; max-width: none; padding: 12px 0 0; }
+    @media (min-width: 761px) {
+      .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) .workspace {
+        width: calc(100% + 18px); max-width: none; margin-left: -18px; margin-right: 0;
+        padding-left: 0; padding-right: clamp(16px, 2vw, 32px);
+      }
+      .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) #patient .portal-workspace {
+        gap: clamp(18px, 2vw, 30px);
+      }
+      .app-shell.patient-session:not(.authorized-patient-device) #patient .doctor-sidebar {
+        position: sticky; top: 24px; left: 0; width: 100%; border-left: 0; border-radius: 0 26px 26px 0;
+      }
+    }
+    .app-shell.authorized-patient-device.patient-session .topbar,
+    .app-shell.authorized-patient-device.patient-session .rolebar { display: none; }
+    .app-shell.authorized-patient-device.patient-session { min-height: 100dvh; }
+    .app-shell.authorized-patient-device.patient-session .workspace { width: 100%; max-width: none; padding: 12px 16px; }
+    .app-shell.authorized-patient-device.patient-session .language-back { display: none; }
     .voice-session { display: grid; place-items: stretch; padding: 0 18px 18px; }
     .app-shell.authorized-patient-device #patient .portal-workspace { grid-template-columns: minmax(0, 1fr); }
     .app-shell.authorized-patient-device #patient .doctor-sidebar { display: none; }
     .app-shell.authorized-patient-device #patient .portal-main { grid-column: 1; width: 100%; }
     .voice-experience { position: relative; isolation: isolate; width: 100%; height: max(440px, calc(100dvh - 136px)); }
-    .voice-stage { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: -1; }
-    .voice-orb { width: clamp(160px, 23vw, 260px); aspect-ratio: 1; border-radius: 50%; background: url('/assets/chat-orb.png') center / cover no-repeat; opacity: .13; filter: saturate(.8); transition: opacity .4s, filter .4s; }
+    .voice-stage { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 0; }
+    .voice-orb {
+      position: relative; width: clamp(160px, 23vw, 260px); aspect-ratio: 1; border-radius: 50%;
+      background: url('/assets/chat-orb.png') center / cover no-repeat;
+      opacity: .72; filter: saturate(1.75) brightness(1.18) contrast(1.08) hue-rotate(12deg);
+      box-shadow: 0 0 34px rgba(44, 211, 255, .34), 0 0 72px rgba(112, 72, 255, .22), inset 0 0 22px rgba(255,255,255,.22);
+      border: 0; padding: 0; cursor: pointer; pointer-events: auto;
+      transition: opacity .4s, filter .4s, box-shadow .4s;
+      animation: orbFloat 5.2s ease-in-out infinite, orbShimmer 9s ease-in-out infinite alternate;
+    }
+    .voice-orb::before {
+      content: ""; position: absolute; inset: -13%; z-index: -1; border-radius: 50%;
+      background: radial-gradient(circle, rgba(50,224,255,.3), rgba(107,77,255,.14) 48%, transparent 70%);
+      filter: blur(18px);
+    }
     .voice-orb svg { display: none; }
-    .voice-orb.listening { opacity: .27; filter: saturate(1.2); animation: voicePulse 2.4s ease-in-out infinite; }
-    @keyframes voicePulse { 50% { transform: scale(1.06); } }
-    .voice-chat { position: relative; height: 100%; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+    .voice-orb:hover { filter: saturate(1.95) brightness(1.26) contrast(1.1) hue-rotate(18deg); }
+    .voice-orb:focus-visible { outline: 4px solid rgba(37, 190, 236, .38); outline-offset: 8px; }
+    .voice-orb.connecting { animation: orbConnect 1s ease-in-out infinite alternate, orbShimmer 3s linear infinite alternate; }
+    .voice-orb.listening { opacity: .9; filter: saturate(2) brightness(1.28) contrast(1.1) hue-rotate(12deg); box-shadow: 0 0 46px rgba(36,225,255,.52), 0 0 92px rgba(117,73,255,.34), inset 0 0 26px rgba(255,255,255,.3); animation: voicePulse 2.4s ease-in-out infinite, orbShimmer 6s ease-in-out infinite alternate; }
+    .voice-orb.speaking { opacity: 1; filter: saturate(2.2) brightness(1.35) contrast(1.12) hue-rotate(20deg); animation: orbSpeak .72s ease-in-out infinite alternate, orbShimmer 2.6s linear infinite alternate; }
+    @keyframes orbFloat { 0%, 100% { transform: translate3d(0,-5px,0) rotate(-1deg); } 50% { transform: translate3d(0,12px,0) rotate(2deg); } }
+    @keyframes orbShimmer { from { background-position: 42% 50%; } to { background-position: 58% 50%; } }
+    @keyframes orbConnect { from { transform: scale(.96) rotate(-2deg); } to { transform: scale(1.04) rotate(2deg); } }
+    @keyframes orbSpeak { from { transform: translateY(-4px) scale(1); } to { transform: translateY(5px) scale(1.085); } }
+    @keyframes voicePulse { 50% { transform: translateY(7px) scale(1.06); } }
+    .voice-chat { position: relative; z-index: 1; height: 100%; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; pointer-events: none; }
+    .voice-chat-head, .voice-chat-messages, .voice-chat-form { pointer-events: auto; }
     .voice-chat-head { position: absolute; top: 0; right: 0; z-index: 4; display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 0; border-bottom: 0; }
     .voice-chat-title, .voice-audio-toggle { display: none !important; }
     .voice-chat-title h1 { font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 650; letter-spacing: -.04em; margin: 0; line-height: 1.2; }
@@ -358,20 +437,20 @@
     .voice-chat-message p { margin: 0; }
     .voice-chat-message small { display: block; margin-top: 9px; font-size: .7rem; color: #b4cfc1; letter-spacing: .01em; }
     .voice-chat-message.user small { color: #557462; }
-    .voice-chat-form { width: min(780px, calc(100% - 16px)); margin: 0 auto 8px; padding: 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; border: 1px solid #cbd8cd; border-radius: 18px; background: rgba(255,255,255,.91); box-shadow: inset 0 1px 0 #fff, 0 12px 32px rgba(37,68,47,.08); backdrop-filter: blur(20px); }
+    .voice-chat-form { width: min(780px, calc(100% - 16px)); margin: 0 auto 8px; padding: 10px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; border: 1px solid #cbd8cd; border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: inset 0 1px 0 #fff, 0 12px 32px rgba(37,68,47,.08); backdrop-filter: blur(20px); }
     .voice-chat-form:focus-within { border-color: #7da58e; box-shadow: 0 0 0 3px rgba(101,146,118,.1), 0 12px 32px rgba(37,68,47,.08); }
     .voice-chat-input { min-width: 0; min-height: 48px; border: 0; padding: 9px 12px; border-radius: 8px; font: inherit; font-size: 1rem; background: transparent; color: var(--ink); }
     .voice-chat-input::placeholder { color: #849489; }
     .voice-chat-input:focus { outline: none; }
-    .voice-chat-send { position: relative; top: 6px; min-width: 48px; height: 48px; display: grid; place-items: center; border: 0; border-radius: 12px; background: #193f32; color: #f3fff6; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 3px 7px rgba(21,49,37,.12); transition: background .2s, transform .2s; }
+    .voice-chat-send { min-width: 48px; height: 48px; display: grid; place-items: center; border: 0; border-radius: 12px; background: #193f32; color: #f3fff6; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 3px 7px rgba(21,49,37,.12); transition: background .2s, transform .2s; }
     .voice-chat-send:hover { background: #2b604b; transform: translateY(-1px); }
     .voice-chat-send:disabled { opacity: .45; cursor: default; transform: none; }
-    .voice-composer-tools { display: none; }
-    .voice-talk { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 12px; border: 1px solid #cbdcd1; border-radius: 9px; background: #edf5ef; color: #265d46; font: inherit; font-size: .82rem; font-weight: 700; white-space: nowrap; }
-    .voice-talk[aria-pressed="true"] { background: #193f32; border-color: #193f32; color: #fff; }
-    .voice-input-status { margin: 0; font-size: .76rem; color: #718378; line-height: 1.4; }
+    .voice-talk { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 48px; padding: 9px 15px; border: 1px solid #b9d3c5; border-radius: 12px; background: linear-gradient(145deg, #eef8f2, #dcece4); color: #174c38; font: inherit; font-size: .86rem; font-weight: 750; white-space: nowrap; cursor: pointer; box-shadow: inset 0 1px 0 #fff, 0 4px 12px rgba(26,80,56,.08); }
+    .voice-talk:hover { border-color: #7eaf97; transform: translateY(-1px); }
+    .voice-talk[aria-pressed="true"] { background: #193f32; border-color: #193f32; color: #fff; box-shadow: 0 0 0 4px rgba(40,126,91,.12); }
+    .voice-input-status { grid-column: 1 / -1; margin: -2px 8px 1px; font-size: .76rem; color: #718378; line-height: 1.4; }
     .voice-input-status.error { color: #9a4329; }
-    @media (prefers-reduced-motion: reduce) { .voice-chat-message, .voice-orb.listening { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .voice-chat-message, .voice-orb, .voice-orb.listening, .voice-orb.speaking, .voice-orb.connecting { animation: none; } }
     .portal-main .intake-grid { grid-template-columns: minmax(210px, .72fr) minmax(410px, 1.55fr) minmax(250px, .88fr); }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
@@ -1136,10 +1215,17 @@
       .history-toolbar { flex-direction: column; align-items: stretch; }
       .history-record { grid-template-columns: 1fr; gap: 8px; }
       .checkup-launch { min-height: auto; padding: 34px 0; }
+      .checkup-welcome { grid-template-columns: 1fr; }
+      .patient-dashboard-hero { min-height: 360px; border-radius: 24px; }
+      .patient-dashboard-side { grid-template-columns: 1fr; }
       .language-card { border-radius: 22px; }
       .language-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .language-actions { align-items: stretch; flex-direction: column-reverse; }
       .language-back, .language-continue { width: 100%; }
+      .checkup-result { padding: 8px; }
+      .checkup-result-head { grid-template-columns: 1fr; }
+      .opd-ticket { min-width: 0; }
+      .result-doctor { grid-template-columns: 1fr; }
       .voice-session { padding: 0; }
       .voice-experience { height: max(440px, calc(100dvh - 145px)); }
       .voice-orb { width: 180px; }
@@ -1476,9 +1562,9 @@
               <small id="patientSidebarId">Patient account</small>
             </div>
             <nav class="doctor-nav">
-              <button class="doctor-nav-button" type="button" aria-selected="true" hidden>
+              <button class="doctor-nav-button" type="button" data-patient-route="start" aria-selected="true">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 5h14v14H5V5Z" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h5M8 17h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                <span class="nav-label">Start check-up</span>
+                <span class="nav-label">Dashboard</span>
               </button>
               <button class="doctor-nav-button" type="button" data-patient-route="records" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -1493,11 +1579,20 @@
           <div class="portal-main">
         <div class="checkup-launch" id="checkupLaunch">
           <div class="checkup-welcome" id="checkupWelcome">
-            <h1 class="checkup-welcome-title">Hello, <span id="patientWelcomeName">Patient</span></h1>
-            <button class="checkup-launch-button" id="startCheckupButton" type="button">
-              Initiate check-up
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
+            <section class="patient-dashboard-hero" aria-labelledby="patientDashboardTitle">
+              <p class="patient-dashboard-kicker">Your health workspace</p>
+              <h1 class="checkup-welcome-title" id="patientDashboardTitle">Hello, <span id="patientWelcomeName">Patient</span></h1>
+              <p class="patient-dashboard-copy">Start a private AI-assisted check-up in your preferred language. Your answers stay connected to your patient record for clinical review.</p>
+              <button class="checkup-launch-button" id="startCheckupButton" type="button">
+                Start AI check-up
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </section>
+            <aside class="patient-dashboard-side" aria-label="Patient dashboard summary">
+              <article class="patient-dashboard-card"><span>Recent consultations</span><strong>3 visits</strong></article>
+              <article class="patient-dashboard-card"><span>Documents on file</span><strong>4 records</strong></article>
+              <button class="patient-dashboard-card action" id="openPatientRecords" type="button"><span>Health history</span><strong>View my records →</strong></button>
+            </aside>
           </div>
           <div class="language-step" id="languageStep" hidden>
             <form class="language-card" id="languageForm">
@@ -1518,9 +1613,9 @@
           <section class="voice-session" aria-labelledby="voicePrompt">
             <div class="voice-experience">
               <div class="voice-stage">
-                <div class="voice-orb" id="voiceOrb" aria-hidden="true">
+                <button class="voice-orb" id="voiceOrb" type="button" aria-label="Start voice conversation" aria-pressed="false">
                   <svg viewBox="0 0 32 32" fill="none"><path d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
+                </button>
               </div>
               <aside class="voice-chat" aria-label="Live check-up chat">
                 <div class="voice-chat-head">
@@ -1536,17 +1631,35 @@
                 <p class="voice-question" id="voiceQuestion">What health concern would you like to discuss today?</p>
                 <div class="voice-chat-messages" id="voiceChatMessages" aria-live="polite"></div>
                 <form class="voice-chat-form" id="voiceChatForm">
+                  <button class="voice-talk" id="voiceTalkButton" type="button" aria-pressed="false" aria-describedby="voiceInputStatus"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-3 0h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span id="voiceTalkLabel">Talk</span></button>
                   <input class="voice-chat-input" id="voiceChatInput" type="text" autocomplete="off" aria-label="Type a message" placeholder="Type a message…">
                   <button class="voice-chat-send" type="submit" aria-label="Send message" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only voice-chat-send-label">Send</span></button>
-                  <div class="voice-composer-tools">
-                    <button class="voice-talk" id="voiceTalkButton" type="button" aria-pressed="false" aria-describedby="voiceInputStatus"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-3 0h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span id="voiceTalkLabel">Talk</span></button>
-                    <p class="voice-input-status" id="voiceInputStatus" role="status">Speak or type, at your pace.</p>
-                  </div>
+                  <p class="voice-input-status" id="voiceInputStatus" role="status">Tap Talk to start the live AI voice session.</p>
                 </form>
               </aside>
             </div>
           </section>
         </div>
+        <section class="checkup-result" id="checkupResult" aria-labelledby="checkupResultTitle" hidden>
+          <article class="checkup-result-card">
+            <header class="checkup-result-head">
+              <div><p class="checkup-result-kicker">Check-up completed</p><h1 id="checkupResultTitle" tabindex="-1">Your OPD visit is ready</h1></div>
+              <div class="opd-ticket"><span>OPD number</span><strong id="checkupOpdNumber">Generating…</strong></div>
+            </header>
+            <div class="checkup-result-body">
+              <div class="result-doctor">
+                <div><span>Assigned doctor</span><strong id="checkupDoctorName">Assigning doctor…</strong></div>
+                <div class="result-doctor-badge" id="checkupDoctorSpecialty">Outpatient care</div>
+              </div>
+              <div class="result-summary">
+                <h2>AI intake summary</h2>
+                <p id="checkupSummaryText">Arogyam is preparing a concise summary for your doctor.</p>
+                <span class="result-summary-status" id="checkupSummaryStatus">Generating securely…</span>
+              </div>
+              <div class="checkup-result-actions"><button class="checkup-result-done" id="finishCheckupResult" type="button">Done</button></div>
+            </div>
+          </article>
+        </section>
         <section class="patient-records" id="patientRecords" aria-labelledby="patientRecordsTitle" hidden>
           <div class="records-heading">
             <div><h1 id="patientRecordsTitle" tabindex="-1">My records</h1></div>
@@ -1713,6 +1826,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"><strong id="toastTitle"></strong><small id="toastText"></small></div>
 
+  <script src="/vendor/elevenlabs-client.js"></script>
   <script>
     const loginScreen = document.getElementById('loginScreen');
     const rolePicker = document.getElementById('rolePicker');
@@ -2345,7 +2459,7 @@
         patientDocumentPoll = null;
         patientLoggedInThisSession = true;
         resetCheckup();
-        navigateRoute('patient/start');
+        navigateRoute(authorizedPatientDevice ? 'patient/language' : 'patient/start');
       } catch (error) {
         patientRegistrationStatus.textContent = error.message || 'Could not create account.';
         submit.disabled = false;
@@ -2367,6 +2481,7 @@
     const patientView = document.getElementById('patient');
     const checkupLaunch = document.getElementById('checkupLaunch');
     const checkupFlow = document.getElementById('checkupFlow');
+    const checkupResult = document.getElementById('checkupResult');
     const patientRecords = document.getElementById('patientRecords');
     const checkupWelcome = document.getElementById('checkupWelcome');
     const languageStep = document.getElementById('languageStep');
@@ -2418,6 +2533,14 @@
       Kannada: 'kn', Kashmiri: 'ks', Konkani: 'gom', Maithili: 'mai', Malayalam: 'ml', Manipuri: 'mni',
       Marathi: 'mr', Nepali: 'ne', Odia: 'or', Punjabi: 'pa', Sanskrit: 'sa', Santali: 'sat', Sindhi: 'sd',
       Tamil: 'ta', Telugu: 'te', Urdu: 'ur'
+    };
+    // ElevenLabs needs an explicit conversation language override for accurate
+    // speech recognition and multilingual TTS. A prompt variable alone does not
+    // switch the audio pipeline away from the agent's default English language.
+    const elevenLanguageCodes = {
+      English: 'en', Assamese: 'as', Bengali: 'bn', Gujarati: 'gu', Hindi: 'hi', Kannada: 'kn',
+      Malayalam: 'ml', Marathi: 'mr', Nepali: 'ne', Punjabi: 'pa', Sindhi: 'sd', Tamil: 'ta',
+      Telugu: 'te', Urdu: 'ur'
     };
     const globalUiKeys = ['Settings', 'Language', 'Log out', 'Patient queue', 'Patient history', 'Documents', 'Start check-up', 'My records', 'Access & consent', 'Current patient', 'Initiate check-up', 'Choose your language', 'Back', 'Continue', 'Recent visits', 'Open record', 'End check-up', 'Live chat', 'Send'];
     const globalUiPacks = {
@@ -2680,6 +2803,7 @@
       const isVoice = stage === 'voice';
       checkupLaunch.hidden = isVoice;
       checkupFlow.hidden = !isVoice;
+      checkupResult.hidden = true;
       patientRecords.hidden = true;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'start')));
       checkupWelcome.hidden = !isStart;
@@ -2698,6 +2822,7 @@
       stopMicrophone();
       checkupLaunch.hidden = true;
       checkupFlow.hidden = true;
+      checkupResult.hidden = true;
       patientRecords.hidden = false;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'records')));
       if (focus) document.getElementById('patientRecordsTitle').focus({ preventScroll: true });
@@ -2707,10 +2832,20 @@
     function resetCheckup() {
       checkupLaunch.hidden = false;
       checkupFlow.hidden = true;
+      checkupResult.hidden = true;
       checkupWelcome.hidden = false;
       languageStep.hidden = true;
       languageForm.reset();
       confirmLanguage.disabled = false;
+    }
+
+    function showCheckupResult() {
+      checkupLaunch.hidden = true;
+      checkupFlow.hidden = true;
+      patientRecords.hidden = true;
+      checkupResult.hidden = false;
+      patientNavButtons.forEach(button => button.setAttribute('aria-selected', 'false'));
+      document.getElementById('checkupResultTitle').focus?.({ preventScroll: true });
     }
 
     startCheckupButton.addEventListener('click', () => navigateRoute('patient/language', false, true));
@@ -3009,6 +3144,9 @@
         if (blockedRoleRoute || protectedPatientRoute) {
           route = protectedPatientRoute ? 'login/patient' : 'roles';
           history.replaceState({ route }, '', `#/${route}`);
+        } else if (patientLoggedInThisSession && /^patient\/(?:start|records)$/.test(route)) {
+          route = 'patient/language';
+          history.replaceState({ route }, '', '#/patient/language');
         }
       }
       if (route === 'patient/intake') {
@@ -3037,15 +3175,17 @@
         return;
       }
 
-      const patientMatch = route.match(/^patient\/(start|language|voice|records)$/);
+      const patientMatch = route.match(/^patient\/(start|language|voice|summary|records)$/);
       if (patientMatch) {
         showSession('patient', 'patient');
         const isVoiceRoute = patientMatch[1] === 'voice';
-        const isCheckupActive = patientMatch[1] === 'language' || isVoiceRoute;
+        const isSummaryRoute = patientMatch[1] === 'summary';
+        const isCheckupActive = patientMatch[1] === 'language' || isVoiceRoute || isSummaryRoute;
         patientView.classList.toggle('voice-route', isVoiceRoute);
         appShell.classList.toggle('voice-mode', isVoiceRoute);
         appShell.classList.toggle('checkup-active', isCheckupActive);
         if (patientMatch[1] === 'records') showPatientRecords(focus);
+        else if (isSummaryRoute) showCheckupResult();
         else setCheckupStage(patientMatch[1], focus);
         return;
       }
@@ -3362,7 +3502,7 @@
           patientLoggedInThisSession = true;
           resetCheckup();
         }
-        navigateRoute(role === 'patient' ? 'patient/start' : role === 'doctor' ? 'doctor/current' : 'staff/queue');
+        navigateRoute(role === 'patient' ? (authorizedPatientDevice ? 'patient/language' : 'patient/start') : role === 'doctor' ? 'doctor/current' : 'staff/queue');
       } catch (error) {
         if (!cancelled) console.error('Login transition failed', error);
       } finally {
@@ -3406,6 +3546,7 @@
       resetCheckup();
       navigateRoute('patient/start');
     }));
+    document.getElementById('openPatientRecords').addEventListener('click', () => navigateRoute('patient/records', false, true));
     document.querySelectorAll('[data-toast]').forEach(button => button.addEventListener('click', () => {
       const [title, text] = button.dataset.toast.split('|'); showToast(title, text);
     }));
@@ -3429,13 +3570,6 @@
       Manipuri: 'mni-IN', Marathi: 'mr-IN', Nepali: 'ne-NP', Odia: 'or-IN', Punjabi: 'pa-IN', Sanskrit: 'sa-IN',
       Santali: 'sat-IN', Sindhi: 'sd-IN', Tamil: 'ta-IN', Telugu: 'te-IN', Urdu: 'ur-IN'
     };
-    const followUpQuestions = [
-      'Thank you. When did this concern begin?',
-      'Does anything make it feel better or worse?',
-      'Have you noticed any other symptoms with it?'
-    ];
-    let followUpIndex = 0;
-
     function appendChatMessage(text, type, note) {
       const message = document.createElement('div');
       message.className = `voice-chat-message ${type}`;
@@ -3453,11 +3587,24 @@
     const voiceInputStatus = document.getElementById('voiceInputStatus');
     const voiceAudioToggle = document.getElementById('voiceAudioToggle');
     const voiceSendButton = voiceChatForm.querySelector('[type="submit"]');
-    const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const endVoiceSessionButton = document.getElementById('endVoiceSession');
+    const checkupOpdNumber = document.getElementById('checkupOpdNumber');
+    const checkupDoctorName = document.getElementById('checkupDoctorName');
+    const checkupDoctorSpecialty = document.getElementById('checkupDoctorSpecialty');
+    const checkupSummaryText = document.getElementById('checkupSummaryText');
+    const checkupSummaryStatus = document.getElementById('checkupSummaryStatus');
     let recognition = null;
     let voiceGeneration = 0;
     let replyPending = false;
     let readRepliesAloud = false;
+    let elevenConversation = null;
+    let elevenConnecting = false;
+    let elevenConsentGranted = false;
+    let elevenStartPromise = null;
+    let currentConversationId = '';
+    let hasPatientResponse = false;
+    let currentCheckup = null;
+    let checkupSummaryPoll = null;
 
     function setVoiceHint(text, error = false) {
       voiceInputStatus.textContent = text;
@@ -3465,15 +3612,16 @@
     }
 
     function syncVoiceControls() {
-      voiceTalkButton.setAttribute('aria-pressed', String(!!recognition));
-      voiceTalkLabel.textContent = recognition ? 'Stop' : 'Talk';
-      voiceOrb.classList.toggle('listening', !!recognition);
+      const voiceActive = !!elevenConversation || elevenConnecting;
+      voiceTalkButton.setAttribute('aria-pressed', String(voiceActive));
+      voiceTalkLabel.textContent = elevenConnecting ? 'Connecting…' : voiceActive ? 'Stop' : 'Talk';
       voiceSendButton.disabled = replyPending || !voiceChatInput.value.trim();
-      voiceTalkButton.disabled = replyPending;
+      voiceTalkButton.disabled = false;
       voiceChatMessages.setAttribute('aria-busy', String(replyPending));
     }
 
     function stopMicrophone() {
+      void stopElevenLabsSession();
       voiceGeneration += 1;
       clearTimeout(voiceTimer);
       const previous = recognition;
@@ -3482,7 +3630,105 @@
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       replyPending = false;
       syncVoiceControls();
-      setVoiceHint('Speak or type, at your pace.');
+      setVoiceHint('Tap Talk to start the live AI voice session.');
+    }
+
+    function setAgentOrbState(state = 'idle') {
+      voiceOrb.classList.remove('connecting', 'listening', 'speaking');
+      if (state !== 'idle') voiceOrb.classList.add(state);
+      const active = state !== 'idle';
+      voiceOrb.setAttribute('aria-pressed', String(active));
+      voiceOrb.setAttribute('aria-label', active ? 'Stop voice conversation' : 'Start voice conversation');
+    }
+
+    async function stopElevenLabsSession() {
+      const session = elevenConversation;
+      elevenConversation = null;
+      elevenConnecting = false;
+      setAgentOrbState();
+      if (!session) return;
+      try { await session.endSession(); }
+      catch (_) { /* Session may already be closed. */ }
+    }
+
+    function handleElevenLabsMessage(payload) {
+      const text = String(payload?.message || '').trim();
+      if (!text) return;
+      const isAgent = payload.role === 'agent' || payload.source === 'ai';
+      appendChatMessage(text, isAgent ? 'ai' : 'user', isAgent ? 'Arogyam · ElevenLabs' : 'You · voice');
+      if (isAgent) {
+        voiceQuestion.textContent = text;
+        replyPending = false;
+      } else {
+        hasPatientResponse = true;
+        replyPending = true;
+      }
+      syncVoiceControls();
+    }
+
+    function startElevenLabsSession() {
+      if (elevenConversation?.isOpen()) return Promise.resolve(elevenConversation);
+      if (elevenStartPromise) return elevenStartPromise;
+      elevenStartPromise = connectElevenLabsSession().finally(() => { elevenStartPromise = null; });
+      return elevenStartPromise;
+    }
+
+    async function connectElevenLabsSession() {
+      if (!elevenConsentGranted) {
+        elevenConsentGranted = window.confirm('To start voice chat, your microphone audio and conversation transcript will be processed by ElevenLabs. Continue?');
+        if (!elevenConsentGranted) return null;
+      }
+      if (!window.ElevenLabsClient?.Conversation) {
+        showToast('Voice agent unavailable', 'The voice client could not be loaded. Please refresh and try again.');
+        return null;
+      }
+      elevenConnecting = true;
+      setAgentOrbState('connecting');
+      setVoiceHint('Connecting to Arogyam voice…');
+      syncVoiceControls();
+      try {
+        const response = await fetch('/api/elevenlabs/signed-url', { cache: 'no-store' });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
+        const preferredLanguage = languageSelect.value;
+        const elevenLanguage = elevenLanguageCodes[preferredLanguage] || 'en';
+        const session = await window.ElevenLabsClient.Conversation.startSession({
+          signedUrl: payload.signedUrl,
+          connectionType: 'websocket',
+          overrides: { agent: { language: elevenLanguage } },
+          dynamicVariables: { preferred_language: preferredLanguage },
+          onConnect: () => {
+            elevenConnecting = false;
+            setAgentOrbState('listening');
+            setVoiceHint('Connected — speak naturally. Tap the orb to stop.');
+          },
+          onModeChange: ({ mode }) => {
+            setAgentOrbState(mode === 'speaking' ? 'speaking' : 'listening');
+            setVoiceHint(mode === 'speaking' ? 'Arogyam is speaking…' : 'Listening…');
+          },
+          onMessage: handleElevenLabsMessage,
+          onError: message => setVoiceHint(String(message || 'Voice connection error.'), true),
+          onDisconnect: () => {
+            elevenConversation = null;
+            elevenConnecting = false;
+            replyPending = false;
+            setAgentOrbState();
+            syncVoiceControls();
+          }
+        });
+        elevenConversation = session;
+        currentConversationId = session.getId();
+        syncVoiceControls();
+        return session;
+      } catch (error) {
+        elevenConnecting = false;
+        setAgentOrbState();
+        const message = error instanceof Error ? error.message : 'Could not connect to the voice agent.';
+        setVoiceHint(message, true);
+        showToast('Voice agent unavailable', message);
+        syncVoiceControls();
+        return null;
+      }
     }
 
     function speakAI(text, language) {
@@ -3513,10 +3759,14 @@
       voiceLanguage.textContent = language;
       voiceStatus.textContent = 'Arogyam is ready';
       voiceQuestion.textContent = question;
-      followUpIndex = 0;
       voiceChatInput.value = '';
       voiceChatMessages.replaceChildren();
-      appendChatMessage(question, 'ai', 'Arogyam');
+      currentConversationId = '';
+      hasPatientResponse = false;
+      currentCheckup = null;
+      if (checkupSummaryPoll) clearTimeout(checkupSummaryPoll);
+      checkupSummaryPoll = null;
+      setVoiceHint('Tap Talk to start the live AI voice session.');
       syncVoiceControls();
     }
 
@@ -3529,110 +3779,90 @@
     async function sendPatientMessage(source = 'typed') {
       const message = voiceChatInput.value.trim();
       if (!message || replyPending) return;
-      const generation = voiceGeneration;
-      const previous = recognition;
-      recognition = null;
-      if (previous) previous.abort();
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      appendChatMessage(message, 'user', source === 'voice' ? 'You · voice' : 'You');
+      const session = elevenConversation?.isOpen() ? elevenConversation : await startElevenLabsSession();
+      if (!session?.isOpen()) {
+        setVoiceHint('Live AI is not connected. Tap Talk and try again.', true);
+        return;
+      }
+      session.sendUserMessage(message);
+      hasPatientResponse = true;
       voiceChatInput.value = '';
       replyPending = true;
       syncVoiceControls();
-      setVoiceHint('Preparing the next question…');
+      setVoiceHint('Arogyam is thinking…');
+    }
+
+    function renderCompletedCheckup(checkup) {
+      currentCheckup = checkup;
+      checkupOpdNumber.textContent = checkup.opdNumber || 'Pending';
+      checkupDoctorName.textContent = checkup.doctor?.name || 'Doctor assignment pending';
+      checkupDoctorSpecialty.textContent = checkup.doctor?.specialty || 'Outpatient care';
+      const ready = checkup.status === 'completed' && checkup.summary;
+      checkupSummaryText.textContent = ready
+        ? checkup.summary
+        : 'Arogyam is preparing a concise summary for your doctor. Your OPD number is already confirmed.';
+      checkupSummaryStatus.textContent = ready ? 'AI summary ready for clinical review' : 'Generating securely…';
+      checkupSummaryStatus.classList.toggle('ready', Boolean(ready));
+    }
+
+    async function pollCheckupSummary(checkupId, patientId, attempt = 0) {
+      if (!checkupId || attempt >= 30) {
+        checkupSummaryStatus.textContent = 'Summary is taking longer than expected. It will remain linked to this OPD visit.';
+        return;
+      }
       try {
-        const reply = await translateDynamicText(followUpQuestions[followUpIndex % followUpQuestions.length]);
-        if (generation !== voiceGeneration) return;
-        followUpIndex += 1;
-        voiceQuestion.textContent = reply;
-        appendChatMessage(reply, 'ai', 'Arogyam');
-        setVoiceHint('Your turn — tap Talk or type a reply.');
-        speakAI(reply, languageSelect.value);
-      } catch (_) {
-        if (generation === voiceGeneration) setVoiceHint('Could not load the next question. Please try again.', true);
+        const response = await fetch(`/api/patient-checkups/${encodeURIComponent(checkupId)}?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not load the summary');
+        renderCompletedCheckup(data.checkup);
+        if (data.checkup.status === 'completed') return;
+      } catch (error) {
+        if (attempt >= 29) checkupSummaryStatus.textContent = error.message || 'Summary could not be loaded.';
+      }
+      checkupSummaryPoll = setTimeout(() => void pollCheckupSummary(checkupId, patientId, attempt + 1), 1500);
+    }
+
+    async function completeCurrentCheckup() {
+      const patientId = activePatient?.id;
+      const conversationId = currentConversationId || elevenConversation?.getId?.() || '';
+      if (!patientId) {
+        showToast('Patient account required', 'Please sign in again before completing the check-up.');
+        return;
+      }
+      if (!conversationId || !hasPatientResponse) {
+        showToast('Check-up not started', 'Please use Talk or send at least one response before ending the check-up.');
+        return;
+      }
+      endVoiceSessionButton.disabled = true;
+      setVoiceHint('Finishing your check-up and creating the OPD visit…');
+      await stopElevenLabsSession();
+      try {
+        const response = await fetch('/api/patient-checkups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ patientId, conversationId, language: languageSelect.value })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.checkup) throw new Error(data.error || 'Could not complete the check-up');
+        renderCompletedCheckup(data.checkup);
+        navigateRoute('patient/summary');
+        if (data.checkup.status !== 'completed') void pollCheckupSummary(data.checkup.id, patientId);
+      } catch (error) {
+        setVoiceHint(error.message || 'Could not complete the check-up.', true);
+        showToast('Check-up not completed', error.message || 'Please try again.');
       } finally {
-        if (generation === voiceGeneration) {
-          replyPending = false;
-          syncVoiceControls();
-        }
+        endVoiceSessionButton.disabled = false;
       }
     }
 
     voiceTalkButton.addEventListener('click', () => {
-      if (recognition) {
-        const previous = recognition;
-        recognition = null;
-        previous.abort();
-        syncVoiceControls();
-        setVoiceHint('Microphone stopped. Review your text, then send.');
-        return;
-      }
-      if (!SpeechRecognitionApi) {
-        setVoiceHint('Voice input is unavailable here. Try Chrome or Edge, or type your reply.', true);
-        return;
-      }
-      if (!window.isSecureContext) {
-        setVoiceHint('Open the secure HTTPS site to use voice input.', true);
-        return;
-      }
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      const session = new SpeechRecognitionApi();
-      const generation = voiceGeneration;
-      const draft = voiceChatInput.value.trim();
-      let finalTranscript = '';
-      let failed = false;
-      session.lang = speechLanguageCodes[languageSelect.value] || 'en-IN';
-      session.continuous = false;
-      session.interimResults = true;
-      session.maxAlternatives = 1;
-      recognition = session;
-      readRepliesAloud = true;
-      voiceAudioToggle.setAttribute('aria-pressed', 'true');
-      setVoiceHint('Starting microphone…');
-      syncVoiceControls();
-      session.onstart = () => {
-        if (recognition === session) setVoiceHint('Listening — speak now. Tap Stop to pause.');
-      };
-      session.onresult = event => {
-        if (recognition !== session || generation !== voiceGeneration) return;
-        let finalText = '';
-        let interimText = '';
-        for (let i = 0; i < event.results.length; i++) {
-          if (event.results[i].isFinal) finalText += event.results[i][0].transcript + ' ';
-          else interimText += event.results[i][0].transcript + ' ';
-        }
-        finalTranscript = finalText.trim();
-        voiceChatInput.value = [draft, finalText.trim(), interimText.trim()].filter(Boolean).join(' ');
-        syncVoiceControls();
-      };
-      session.onerror = event => {
-        if (recognition !== session) return;
-        failed = true;
-        recognition = null;
-        session.abort();
-        const errors = {
-          'not-allowed': 'Microphone access is blocked. Allow it in your browser, then tap Talk.',
-          'service-not-allowed': 'Voice input is blocked by this browser. Try Chrome or Edge.',
-          'audio-capture': 'No microphone found. Connect one and try again.',
-          'network': 'Voice connection failed. Check your connection and try again.',
-          'no-speech': 'No speech detected. Tap Talk to try again.',
-          'language-not-supported': 'This voice language is unavailable. Change language or type your reply.'
-        };
-        setVoiceHint(errors[event.error] || 'Voice input stopped. Tap Talk to try again.', true);
-        syncVoiceControls();
-      };
-      session.onend = () => {
-        if (recognition !== session || generation !== voiceGeneration) return;
-        recognition = null;
-        syncVoiceControls();
-        if (!failed && finalTranscript) void sendPatientMessage('voice');
-        else if (!failed) setVoiceHint('No speech captured. Tap Talk to try again.');
-      };
-      try { session.start(); }
-      catch (_) {
-        recognition = null;
-        syncVoiceControls();
-        setVoiceHint('Could not start voice input. Tap Talk to retry or type your reply.', true);
-      }
+      if (elevenConversation || elevenConnecting) void stopElevenLabsSession();
+      else void startElevenLabsSession();
+    });
+
+    voiceOrb.addEventListener('click', () => {
+      if (elevenConversation || elevenConnecting) void stopElevenLabsSession();
+      else void startElevenLabsSession();
     });
 
     voiceAudioToggle.addEventListener('click', () => {
@@ -3657,11 +3887,13 @@
       void sendPatientMessage();
     });
 
-    document.getElementById('endVoiceSession').addEventListener('click', () => {
-      clearTimeout(voiceTimer);
-      stopMicrophone();
+    endVoiceSessionButton.addEventListener('click', () => void completeCurrentCheckup());
+
+    document.getElementById('finishCheckupResult').addEventListener('click', () => {
+      if (checkupSummaryPoll) clearTimeout(checkupSummaryPoll);
+      checkupSummaryPoll = null;
       resetCheckup();
-      navigateRoute('patient/start');
+      navigateRoute(authorizedPatientDevice ? 'patient/language' : 'patient/start');
     });
 
     languageSelect.addEventListener('change', event => {
