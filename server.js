@@ -11,7 +11,10 @@ const publicRoot = resolve('dist');
 const dataRoot = resolve(process.env.DATA_DIR || 'data');
 const devicesFile = join(dataRoot, 'authorized-devices.json');
 const patientsDbFile = join(dataRoot, 'patients.sqlite');
+const patientUploadsRoot = join(dataRoot, 'patient-uploads');
 const enrollmentTtlMs = 10 * 60 * 1000;
+const documentUploadTtlMs = 30 * 60 * 1000;
+const maxDocumentBytes = 8 * 1024 * 1024;
 const signupOtpTtlMs = 5 * 60 * 1000;
 const signupOtpCooldownMs = 30 * 1000;
 const enrollments = new Map();
@@ -64,6 +67,27 @@ async function loadPatients() {
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS patients_phone_idx ON patients(phone);
+    CREATE TABLE IF NOT EXISTS patient_document_sessions (
+      id TEXT PRIMARY KEY,
+      token_hash TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open',
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS patient_documents (
+      id TEXT PRIMARY KEY,
+      upload_session_id TEXT NOT NULL,
+      patient_id TEXT,
+      original_name TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      size_bytes INTEGER NOT NULL,
+      stored_name TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(upload_session_id) REFERENCES patient_document_sessions(id) ON DELETE CASCADE,
+      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS patient_documents_session_idx ON patient_documents(upload_session_id);
+    CREATE INDEX IF NOT EXISTS patient_documents_patient_idx ON patient_documents(patient_id);
   `);
   const rows = patientsDb.prepare('SELECT * FROM patients').all();
   patients = rows.map(row => ({
@@ -116,13 +140,102 @@ function sendJson(response, status, payload, headers = {}) {
   response.end(JSON.stringify(payload));
 }
 
-async function readJson(request) {
+async function readJson(request, maxBytes = 20_000) {
   let body = '';
   for await (const chunk of request) {
     body += chunk;
-    if (body.length > 20_000) throw new Error('Request too large');
+    if (body.length > maxBytes) throw new Error('Request too large');
   }
   return JSON.parse(body || '{}');
+}
+
+function requestOrigin(request) {
+  const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
+  return `${protocol}://${request.headers.host || `localhost:${port}`}`;
+}
+
+function documentSession(id, token) {
+  const session = patientsDb.prepare('SELECT * FROM patient_document_sessions WHERE id = ?').get(id);
+  if (!session || !token || hash(token) !== session.token_hash) return null;
+  if (session.status !== 'open' || new Date(session.expires_at).getTime() < Date.now()) return null;
+  return session;
+}
+
+function publicPatientDocument(row, id, token) {
+  return {
+    id: row.id,
+    name: row.original_name,
+    type: row.mime_type,
+    size: row.size_bytes,
+    createdAt: row.created_at,
+    previewUrl: `/api/document-upload-sessions/${encodeURIComponent(id)}/files/${encodeURIComponent(row.id)}?token=${encodeURIComponent(token)}`
+  };
+}
+
+async function createDocumentUploadSession(request, response) {
+  const id = randomUUID();
+  const token = randomBytes(32).toString('base64url');
+  const createdAt = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + documentUploadTtlMs).toISOString();
+  patientsDb.prepare(`INSERT INTO patient_document_sessions (id, token_hash, status, expires_at, created_at) VALUES (?, ?, 'open', ?, ?)`)
+    .run(id, hash(token), expiresAt, createdAt);
+  const uploadUrl = `${requestOrigin(request)}/mobile-upload.html#session=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`;
+  const qrDataUrl = await QRCode.toDataURL(uploadUrl, { width: 360, margin: 1, color: { dark: '#102b27', light: '#ffffff' } });
+  sendJson(response, 201, { id, token, expiresAt, uploadUrl, qrDataUrl });
+}
+
+function documentUploadStatus(request, response, id, url) {
+  const token = String(url.searchParams.get('token') || '');
+  const session = documentSession(id, token);
+  if (!session) return sendJson(response, 404, { error: 'This upload session is invalid or expired' });
+  const rows = patientsDb.prepare('SELECT * FROM patient_documents WHERE upload_session_id = ? ORDER BY created_at').all(id);
+  sendJson(response, 200, { id, expiresAt: session.expires_at, files: rows.map(row => publicPatientDocument(row, id, token)) });
+}
+
+const uploadTypes = new Map([
+  ['image/jpeg', '.jpg'], ['image/png', '.png'], ['image/webp', '.webp'], ['application/pdf', '.pdf']
+]);
+
+async function uploadPatientDocument(request, response, id) {
+  const body = await readJson(request, maxDocumentBytes * 2);
+  const token = String(body.token || '');
+  if (!documentSession(id, token)) return sendJson(response, 404, { error: 'This upload session is invalid or expired' });
+  const mimeType = String(body.type || '').toLowerCase();
+  const extension = uploadTypes.get(mimeType);
+  if (!extension) return sendJson(response, 400, { error: 'Upload a JPG, PNG, WebP or PDF file' });
+  const originalName = String(body.name || 'Health document').trim().replace(/[\u0000-\u001f]/g, '').slice(0, 120) || 'Health document';
+  const raw = String(body.data || '').replace(/^data:[^;]+;base64,/, '');
+  let file;
+  try { file = Buffer.from(raw, 'base64'); } catch { return sendJson(response, 400, { error: 'Document data is invalid' }); }
+  if (!file.length || file.length > maxDocumentBytes) return sendJson(response, 400, { error: 'Each document must be smaller than 8 MB' });
+  const documentId = randomUUID();
+  const storedName = `${id}-${documentId}${extension}`;
+  await mkdir(patientUploadsRoot, { recursive: true });
+  await writeFile(join(patientUploadsRoot, storedName), file, { flag: 'wx' });
+  const createdAt = new Date().toISOString();
+  patientsDb.prepare(`
+    INSERT INTO patient_documents (id, upload_session_id, patient_id, original_name, mime_type, size_bytes, stored_name, created_at)
+    VALUES (?, ?, NULL, ?, ?, ?, ?, ?)
+  `).run(documentId, id, originalName, mimeType, file.length, storedName, createdAt);
+  const row = patientsDb.prepare('SELECT * FROM patient_documents WHERE id = ?').get(documentId);
+  sendJson(response, 201, { file: publicPatientDocument(row, id, token) });
+}
+
+async function servePatientDocument(request, response, sessionId, documentId, url) {
+  const token = String(url.searchParams.get('token') || '');
+  if (!documentSession(sessionId, token)) return sendJson(response, 404, { error: 'This upload session is invalid or expired' });
+  const row = patientsDb.prepare('SELECT * FROM patient_documents WHERE id = ? AND upload_session_id = ?').get(documentId, sessionId);
+  if (!row) return sendJson(response, 404, { error: 'Document not found' });
+  try {
+    const body = await readFile(join(patientUploadsRoot, row.stored_name));
+    response.writeHead(200, {
+      'Content-Type': row.mime_type,
+      'Content-Length': body.length,
+      'Content-Disposition': `inline; filename="${row.original_name.replace(/["\\]/g, '')}"`,
+      'Cache-Control': 'private, no-store'
+    });
+    response.end(body);
+  } catch { sendJson(response, 404, { error: 'Document file is unavailable' }); }
 }
 
 function purgeExpiredEnrollments() {
@@ -272,6 +385,13 @@ async function createPatientRegistration(request, response) {
   }
   if (patients.some(patient => patient.phone === phone)) return sendJson(response, 409, { error: 'An account already exists for this phone number' });
 
+  const documentSessionId = String(body.documentSessionId || '');
+  const documentSessionToken = String(body.documentSessionToken || '');
+  const pendingDocumentSession = documentSessionId ? documentSession(documentSessionId, documentSessionToken) : null;
+  if (documentSessionId && !pendingDocumentSession) {
+    return sendJson(response, 400, { error: 'The document upload session expired. Return to the document step and try again.' });
+  }
+
   const identityMethod = body.identityMethod === 'abha' ? 'abha' : body.identityMethod === 'aadhaar' ? 'aadhaar' : null;
   const identityNumber = String(body.identityNumber || '').replace(/\D/g, '');
   const identityValid = identityMethod === 'abha' ? /^\d{14}$/.test(identityNumber) : identityMethod === 'aadhaar' && /^\d{12}$/.test(identityNumber);
@@ -327,9 +447,16 @@ async function createPatientRegistration(request, response) {
     patient.profile.weightKg, patient.profile.bloodGroup, JSON.stringify(patient.health.conditions),
     patient.health.allergies, patient.abhaLinkStatus, patient.createdAt
   );
+  if (pendingDocumentSession) {
+    patientsDb.prepare('UPDATE patient_documents SET patient_id = ? WHERE upload_session_id = ?').run(patient.id, documentSessionId);
+    patientsDb.prepare("UPDATE patient_document_sessions SET status = 'completed' WHERE id = ?").run(documentSessionId);
+  }
   patients.push(patient);
   otpEntry.consumed = true;
-  sendJson(response, 201, { patient: { id: patient.id, fullName: patient.profile.fullName } });
+  const documentCount = pendingDocumentSession
+    ? Number(patientsDb.prepare('SELECT COUNT(*) AS count FROM patient_documents WHERE patient_id = ?').get(patient.id).count)
+    : 0;
+  sendJson(response, 201, { patient: { id: patient.id, fullName: patient.profile.fullName, documentCount } });
 }
 
 async function loginPatient(request, response) {
@@ -425,6 +552,13 @@ const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
     if (request.method === 'POST' && url.pathname === '/api/device-enrollments') return await createEnrollment(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/document-upload-sessions') return await createDocumentUploadSession(request, response);
+    const documentStatusMatch = url.pathname.match(/^\/api\/document-upload-sessions\/([0-9a-f-]+)\/status$/i);
+    if (request.method === 'GET' && documentStatusMatch) return documentUploadStatus(request, response, documentStatusMatch[1], url);
+    const documentFileMatch = url.pathname.match(/^\/api\/document-upload-sessions\/([0-9a-f-]+)\/files\/([0-9a-f-]+)$/i);
+    if (request.method === 'GET' && documentFileMatch) return await servePatientDocument(request, response, documentFileMatch[1], documentFileMatch[2], url);
+    const documentUploadMatch = url.pathname.match(/^\/api\/document-upload-sessions\/([0-9a-f-]+)\/files$/i);
+    if (request.method === 'POST' && documentUploadMatch) return await uploadPatientDocument(request, response, documentUploadMatch[1]);
     if (request.method === 'GET' && url.pathname === '/api/signup-otp/config') return signupOtpConfig(request, response);
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/request') return await requestSignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);

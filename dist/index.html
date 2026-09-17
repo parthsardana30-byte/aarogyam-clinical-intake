@@ -741,6 +741,23 @@
     .condition-allergies { display: block; margin-top: 4px; font-size: .84rem; font-weight: 760; }
     .condition-allergies textarea { min-height: 74px; margin-top: 7px; resize: vertical; }
     .registration-status { min-height: 18px; margin: 10px 0 0; color: #a33c32; font-size: .78rem; }
+    .document-upload-intro { margin: -9px 0 17px; color: var(--ink-soft); font-size: .88rem; line-height: 1.45; }
+    .document-add-card { width: 100%; min-height: 118px; display: flex; align-items: center; justify-content: center; gap: 14px; border: 2px dashed #88b7aa; border-radius: 18px; background: #f3faf7; color: var(--teal-dark); font: inherit; font-weight: 800; }
+    .document-add-card .document-plus { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%; background: var(--teal); color: #fff; font-size: 2rem; line-height: 1; box-shadow: 0 10px 22px rgba(14,102,85,.22); }
+    .document-upload-chooser { margin-top: 14px; padding: 16px; border: 1px solid var(--line-strong); border-radius: 18px; background: #fff; }
+    .document-upload-chooser[hidden] { display: none; }
+    .document-device-upload { width: 100%; min-height: 48px; border: 0; border-radius: 13px; background: #126b59; color: #fff; font: inherit; font-weight: 780; }
+    .document-or { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; color: var(--ink-soft); font-size: .76rem; text-transform: uppercase; letter-spacing: .08em; }
+    .document-or::before, .document-or::after { content:""; flex:1; height:1px; background:var(--line); }
+    .document-qr-grid { display: grid; grid-template-columns: 138px 1fr; gap: 15px; align-items: center; }
+    .document-qr { width: 138px; height: 138px; border: 1px solid var(--line); border-radius: 13px; background: #fff; object-fit: contain; }
+    .document-qr-copy strong { display:block; margin-bottom:6px; }.document-qr-copy small { color:var(--ink-soft); line-height:1.45; }
+    .document-file-list { display: grid; gap: 9px; margin-top: 14px; }
+    .document-file-list:empty { display: none; }
+    .document-file-row { display:flex; align-items:center; gap:11px; min-width:0; padding:10px; border:1px solid var(--line); border-radius:13px; background:#f9fbfa; }
+    .document-file-preview { width:48px; height:48px; flex:0 0 48px; display:grid; place-items:center; overflow:hidden; border-radius:10px; background:#dff0ea; color:var(--teal); font-size:.7rem; font-weight:850; }
+    .document-file-preview img { width:100%; height:100%; object-fit:cover; }.document-file-copy { min-width:0; }.document-file-copy strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.82rem; }.document-file-copy small { color:var(--ink-soft); font-size:.72rem; }
+    .document-upload-status { min-height:18px; margin:10px 0 0; color:var(--teal); font-size:.78rem; font-weight:700; }.document-upload-status.is-error { color:#a33c32; }
     .login-row { display: flex; align-items: center; justify-content: flex-start; gap: 14px; margin: 4px 0 24px; font-size: .82rem; }
     .login-row[hidden] { display: none; }
     .remember-label { display: flex; align-items: center; gap: 8px; color: #596f69; }
@@ -998,7 +1015,7 @@
             </button>
           </form>
           <form class="patient-registration-step" id="patientDetailsForm" hidden>
-            <div class="registration-progress" aria-label="Registration step 2 of 3"><span class="is-complete"></span><span class="is-current"></span><span></span></div>
+            <div class="registration-progress" aria-label="Registration step 2 of 4"><span class="is-complete"></span><span class="is-current"></span><span></span><span></span></div>
             <div class="registration-grid">
               <div class="field-group is-wide"><label for="patientFullName">Full name</label><input id="patientFullName" required maxlength="80" autocomplete="name" placeholder="Enter your full name" /></div>
               <div class="field-group"><label for="patientDateOfBirth">Date of birth</label><input id="patientDateOfBirth" type="date" required autocomplete="bday" /></div>
@@ -1010,7 +1027,7 @@
             <div class="registration-actions"><button class="registration-back" id="backToVerification" type="button">Back</button><button class="registration-next" type="submit">Continue</button></div>
           </form>
           <form class="patient-registration-step" id="patientConditionsForm" hidden>
-            <div class="registration-progress" aria-label="Registration step 3 of 3"><span class="is-complete"></span><span class="is-complete"></span><span class="is-current"></span></div>
+            <div class="registration-progress" aria-label="Registration step 3 of 4"><span class="is-complete"></span><span class="is-complete"></span><span class="is-current"></span><span></span></div>
             <fieldset class="condition-options" aria-label="Existing health conditions">
               <label class="condition-option"><input type="checkbox" name="patientCondition" value="heart_disease" />Heart disease</label>
               <label class="condition-option"><input type="checkbox" name="patientCondition" value="hypertension" />High blood pressure</label>
@@ -1023,8 +1040,25 @@
               <label class="condition-option"><input type="checkbox" name="patientCondition" value="none" />None of these</label>
             </fieldset>
             <label class="condition-allergies" for="patientAllergies">Known allergies or important notes (optional)<textarea id="patientAllergies" maxlength="300" placeholder="Medicines, food or other allergies"></textarea></label>
+            <div class="registration-actions"><button class="registration-back" id="backToDetails" type="button">Back</button><button class="registration-next" type="submit">Continue</button></div>
+          </form>
+          <form class="patient-registration-step" id="patientDocumentsForm" hidden>
+            <div class="registration-progress" aria-label="Registration step 4 of 4"><span class="is-complete"></span><span class="is-complete"></span><span class="is-complete"></span><span class="is-current"></span></div>
+            <p class="document-upload-intro">Add prescriptions, reports or discharge summaries now. This step is optional.</p>
+            <button class="document-add-card" id="openDocumentUpload" type="button"><span class="document-plus">+</span><span>Add health documents</span></button>
+            <div class="document-upload-chooser" id="documentUploadChooser" hidden>
+              <button class="document-device-upload" id="continueDocumentOnDevice" type="button">Continue on this device</button>
+              <input id="patientDocumentInput" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple hidden />
+              <div class="document-or">or scan with your phone</div>
+              <div class="document-qr-grid">
+                <img class="document-qr" id="patientDocumentQr" alt="QR code to upload documents from your phone" />
+                <div class="document-qr-copy"><strong>Scan to upload from phone</strong><small>Uploaded files will appear here automatically. This link expires after 30 minutes.</small></div>
+              </div>
+            </div>
+            <div class="document-file-list" id="patientDocumentList" aria-live="polite"></div>
+            <p class="document-upload-status" id="patientDocumentStatus" role="status" aria-live="polite"></p>
             <p class="registration-status" id="patientRegistrationStatus" role="status" aria-live="polite"></p>
-            <div class="registration-actions"><button class="registration-back" id="backToDetails" type="button">Back</button><button class="registration-next" id="completePatientRegistration" type="submit">Create account</button></div>
+            <div class="registration-actions"><button class="registration-back" id="backToConditions" type="button">Back</button><button class="registration-next" id="completePatientRegistration" type="submit">Create account</button></div>
           </form>
         </div>
       </div>
@@ -1141,8 +1175,8 @@
           <aside class="card doctor-sidebar portal-sidebar" aria-label="Patient navigation">
             <div class="doctor-profile">
               <div class="doctor-profile-mark">AS</div>
-              <strong>Ananya Sharma</strong>
-              <small>Patient · PT-001</small>
+              <strong id="patientSidebarName">Patient</strong>
+              <small id="patientSidebarId">Patient account</small>
             </div>
             <nav class="doctor-nav">
               <button class="doctor-nav-button" type="button" aria-selected="true" hidden>
@@ -1162,7 +1196,7 @@
           <div class="portal-main">
         <div class="checkup-launch" id="checkupLaunch">
           <div class="checkup-welcome" id="checkupWelcome">
-            <h1 class="checkup-welcome-title">Hello, <span>Ananya</span></h1>
+            <h1 class="checkup-welcome-title">Hello, <span id="patientWelcomeName">Patient</span></h1>
             <button class="checkup-launch-button" id="startCheckupButton" type="button">
               Initiate check-up
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1192,7 +1226,7 @@
                   <svg viewBox="0 0 32 32" fill="none"><path d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
                 <div class="voice-status" id="voiceStatus" role="status" aria-live="polite">ArogSevak is ready</div>
-                <h1 id="voicePrompt">Hello, Ananya</h1>
+                <h1 id="voicePrompt">Hello, Patient</h1>
                 <p class="voice-question" id="voiceQuestion">What health concern would you like to discuss today?</p>
                 <div class="auto-mic" id="autoMicStatus"><span class="auto-mic-dot"></span><span id="autoMicText">Connecting microphone…</span></div>
                 <button class="voice-end" id="endVoiceSession" type="button">End check-up</button>
@@ -1383,6 +1417,7 @@
     const loginPassword = document.getElementById('loginPassword');
     const patientDetailsForm = document.getElementById('patientDetailsForm');
     const patientConditionsForm = document.getElementById('patientConditionsForm');
+    const patientDocumentsForm = document.getElementById('patientDocumentsForm');
     const patientFullName = document.getElementById('patientFullName');
     const patientDateOfBirth = document.getElementById('patientDateOfBirth');
     const patientGender = document.getElementById('patientGender');
@@ -1391,6 +1426,11 @@
     const patientBloodGroup = document.getElementById('patientBloodGroup');
     const patientAllergies = document.getElementById('patientAllergies');
     const patientRegistrationStatus = document.getElementById('patientRegistrationStatus');
+    const documentUploadChooser = document.getElementById('documentUploadChooser');
+    const patientDocumentInput = document.getElementById('patientDocumentInput');
+    const patientDocumentQr = document.getElementById('patientDocumentQr');
+    const patientDocumentList = document.getElementById('patientDocumentList');
+    const patientDocumentStatus = document.getElementById('patientDocumentStatus');
     const patientConditionInputs = [...document.querySelectorAll('input[name="patientCondition"]')];
     const changeSignupMethod = document.getElementById('changeSignupMethod');
     const appShell = document.getElementById('appShell');
@@ -1402,6 +1442,10 @@
     let signupOtpPhone = null;
     let signupOtpCountdown = null;
     let patientRegistrationPassword = '';
+    let patientDocumentSession = null;
+    let patientDocumentPoll = null;
+    let pendingPatientHealth = { conditions: [], allergies: '' };
+    let activePatient = null;
     let signupOtpProvider = null;
     let msg91WidgetReady = null;
     let authorizedPatientDevice = false;
@@ -1517,7 +1561,8 @@
       loginForm.hidden = !isVerification;
       patientDetailsForm.hidden = !isDetails;
       patientConditionsForm.hidden = step !== 'conditions';
-      document.getElementById('formTitle').textContent = isVerification ? 'Create patient account' : isDetails ? 'Tell us about you' : 'Health conditions';
+      patientDocumentsForm.hidden = step !== 'documents';
+      document.getElementById('formTitle').textContent = isVerification ? 'Create patient account' : isDetails ? 'Tell us about you' : step === 'conditions' ? 'Health conditions' : 'Health documents';
       loginFormShell.classList.add('patient-signup-details');
       if (isDetails) patientFullName.focus();
       if (step === 'conditions') patientRegistrationStatus.textContent = '';
@@ -1554,8 +1599,12 @@
       loginForm.hidden = isPatientRegistration;
       patientDetailsForm.hidden = true;
       patientConditionsForm.hidden = true;
+      patientDocumentsForm.hidden = true;
       patientDetailsForm.reset();
       patientConditionsForm.reset();
+      patientDocumentsForm.reset();
+      stopPatientDocumentSession();
+      pendingPatientHealth = { conditions: [], allergies: '' };
       patientRegistrationStatus.textContent = '';
       loginStatus.textContent = '';
       patientLoginDocuments.hidden = !(role === 'patient' && mode === 'login');
@@ -1711,11 +1760,99 @@
 
     patientConditionsForm.addEventListener('submit', async event => {
       event.preventDefault();
+      pendingPatientHealth = {
+        conditions: patientConditionInputs.filter(input => input.checked).map(input => input.value),
+        allergies: patientAllergies.value
+      };
+      showPatientRegistrationStep('documents');
+    });
+
+    function setPatientDocumentStatus(message = '', error = false) {
+      patientDocumentStatus.textContent = message;
+      patientDocumentStatus.className = `document-upload-status${error ? ' is-error' : ''}`;
+    }
+
+    function stopPatientDocumentSession() {
+      if (patientDocumentPoll) clearInterval(patientDocumentPoll);
+      patientDocumentPoll = null;
+      patientDocumentSession = null;
+      if (documentUploadChooser) documentUploadChooser.hidden = true;
+      if (patientDocumentList) patientDocumentList.innerHTML = '';
+      if (patientDocumentQr) patientDocumentQr.removeAttribute('src');
+      if (patientDocumentStatus) setPatientDocumentStatus();
+    }
+
+    function renderPatientDocuments(files = []) {
+      patientDocumentList.innerHTML = '';
+      files.forEach(file => {
+        const row = document.createElement('div'); row.className = 'document-file-row';
+        const preview = document.createElement('div'); preview.className = 'document-file-preview';
+        if (file.type.startsWith('image/')) { const image = document.createElement('img'); image.src = file.previewUrl; image.alt = ''; preview.append(image); }
+        else preview.textContent = 'PDF';
+        const copy = document.createElement('div'); copy.className = 'document-file-copy';
+        const name = document.createElement('strong'); name.textContent = file.name;
+        const size = document.createElement('small'); size.textContent = `${Math.max(1, Math.round(file.size / 1024))} KB · Uploaded`;
+        copy.append(name, size); row.append(preview, copy); patientDocumentList.append(row);
+      });
+      if (files.length) setPatientDocumentStatus(`${files.length} document${files.length === 1 ? '' : 's'} ready.`);
+    }
+
+    async function refreshPatientDocuments() {
+      if (!patientDocumentSession) return;
+      const response = await fetch(`/api/document-upload-sessions/${encodeURIComponent(patientDocumentSession.id)}/status?token=${encodeURIComponent(patientDocumentSession.token)}`, { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Document session expired');
+      renderPatientDocuments(data.files);
+    }
+
+    async function ensurePatientDocumentSession() {
+      if (patientDocumentSession) return patientDocumentSession;
+      setPatientDocumentStatus('Preparing secure upload…');
+      const response = await fetch('/api/document-upload-sessions', { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not prepare document upload');
+      patientDocumentSession = data;
+      patientDocumentQr.src = data.qrDataUrl;
+      documentUploadChooser.hidden = false;
+      setPatientDocumentStatus('Upload on this device or scan the QR code.');
+      patientDocumentPoll = setInterval(() => refreshPatientDocuments().catch(error => setPatientDocumentStatus(error.message, true)), 1800);
+      return data;
+    }
+
+    function fileAsDataUrl(file) {
+      return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+    }
+
+    async function uploadPatientFiles(files) {
+      const session = await ensurePatientDocumentSession();
+      patientDocumentInput.disabled = true;
+      try {
+        for (let index = 0; index < files.length; index += 1) {
+          const file = files[index];
+          if (file.size > 8 * 1024 * 1024) throw new Error(`${file.name} is larger than 8 MB`);
+          setPatientDocumentStatus(`Uploading ${index + 1} of ${files.length}…`);
+          const response = await fetch(`/api/document-upload-sessions/${encodeURIComponent(session.id)}/files`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: session.token, name: file.name, type: file.type, data: await fileAsDataUrl(file) })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Document upload failed');
+        }
+        await refreshPatientDocuments();
+      } finally { patientDocumentInput.disabled = false; patientDocumentInput.value = ''; }
+    }
+
+    document.getElementById('openDocumentUpload').addEventListener('click', () => ensurePatientDocumentSession().catch(error => setPatientDocumentStatus(error.message, true)));
+    document.getElementById('continueDocumentOnDevice').addEventListener('click', () => patientDocumentInput.click());
+    patientDocumentInput.addEventListener('change', () => uploadPatientFiles([...patientDocumentInput.files]).catch(error => setPatientDocumentStatus(error.message, true)));
+    document.getElementById('backToConditions').addEventListener('click', () => showPatientRegistrationStep('conditions'));
+
+    patientDocumentsForm.addEventListener('submit', async event => {
+      event.preventDefault();
       const submit = document.getElementById('completePatientRegistration');
       if (submit.disabled) return;
       submit.disabled = true;
       patientRegistrationStatus.textContent = 'Creating your account…';
-      const conditions = patientConditionInputs.filter(input => input.checked).map(input => input.value);
       try {
         const response = await fetch('/api/patient-registrations', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1732,14 +1869,20 @@
             heightCm: Number(patientHeight.value),
             weightKg: Number(patientWeight.value),
             bloodGroup: patientBloodGroup.value,
-            conditions,
-            allergies: patientAllergies.value
+            conditions: pendingPatientHealth.conditions,
+            allergies: pendingPatientHealth.allergies,
+            documentSessionId: patientDocumentSession?.id || '',
+            documentSessionToken: patientDocumentSession?.token || ''
           })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not create account');
-        try { localStorage.setItem('arogPatientId', data.patient.id); } catch (_) {}
+        try { localStorage.setItem('arogPatientId', data.patient.id); localStorage.setItem('arogPatientName', data.patient.fullName); } catch (_) {}
+        activePatient = data.patient;
+        applyPatientIdentity(data.patient);
         patientRegistrationPassword = '';
+        if (patientDocumentPoll) clearInterval(patientDocumentPoll);
+        patientDocumentPoll = null;
         patientLoggedInThisSession = true;
         resetCheckup();
         navigateRoute('patient/start');
@@ -2367,6 +2510,22 @@
       openView(view);
     }
 
+    function applyPatientIdentity(patient) {
+      if (!patient?.fullName) return;
+      activePatient = patient;
+      const firstName = patient.fullName.trim().split(/\s+/)[0] || patient.fullName;
+      document.getElementById('patientSidebarName').textContent = patient.fullName;
+      document.getElementById('patientSidebarId').textContent = patient.id ? `Patient · ${patient.id}` : 'Patient account';
+      document.getElementById('patientWelcomeName').textContent = firstName;
+      document.getElementById('voicePrompt').textContent = `Hello, ${firstName}`;
+    }
+
+    try {
+      const storedPatientName = localStorage.getItem('arogPatientName');
+      const storedPatientId = localStorage.getItem('arogPatientId');
+      if (storedPatientName) applyPatientIdentity({ fullName: storedPatientName, id: storedPatientId });
+    } catch (_) {}
+
     let cancelLoginMotion = null;
     function applyRoute(route, focus = false) {
       if (cancelLoginMotion) cancelLoginMotion();
@@ -2510,7 +2669,8 @@
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || 'Could not sign in');
-          try { localStorage.setItem('arogPatientId', data.patient.id); } catch (_) {}
+          try { localStorage.setItem('arogPatientId', data.patient.id); localStorage.setItem('arogPatientName', data.patient.fullName); } catch (_) {}
+          applyPatientIdentity(data.patient);
         } catch (error) {
           loginStatus.textContent = error.message || 'Could not sign in.';
           return;

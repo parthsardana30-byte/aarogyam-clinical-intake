@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0d3a35" />
+  <title>Upload health documents · ArogSevak</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#102b27;background:#eef3ef}
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh;background:linear-gradient(155deg,#edf3f0 0%,#fff7d8 100%);padding:18px}
+    main{width:min(100%,520px);margin:auto;background:rgba(255,255,255,.96);border:1px solid #d9e3de;border-radius:28px;padding:24px;box-shadow:0 24px 60px rgba(28,65,57,.16)}
+    .brand{display:flex;align-items:center;gap:11px;font-size:1.15rem;font-weight:850}.mark{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#0d3a35;color:#5eead4;font-size:1.4rem}
+    h1{font-size:clamp(1.8rem,8vw,2.55rem);line-height:1.05;margin:34px 0 8px}p{color:#647b76;line-height:1.55;margin:0 0 22px}
+    .upload{display:grid;place-items:center;min-height:190px;border:2px dashed #8bb7aa;border-radius:22px;background:#f4fbf8;cursor:pointer;text-align:center;padding:24px;transition:.2s}.upload:active{transform:scale(.985)}
+    .plus{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#137a68;color:white;font-size:2.2rem;box-shadow:0 13px 25px rgba(19,122,104,.25)}
+    .upload strong{margin-top:16px;font-size:1.05rem}.upload small{color:#728781;margin-top:5px}input{display:none}
+    .status{min-height:24px;margin:16px 0;color:#137a68;font-weight:750}.status.error{color:#b83b32}
+    .files{display:grid;gap:10px}.file{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #dce7e2;border-radius:15px;background:#fff}.thumb{width:48px;height:48px;border-radius:10px;background:#e4f2ed;display:grid;place-items:center;overflow:hidden;color:#137a68;font-weight:850}.thumb img{width:100%;height:100%;object-fit:cover}.copy{min-width:0}.copy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.copy small{color:#758984}
+    .done{display:none;margin-top:22px;padding:14px;border-radius:14px;background:#e5f5ef;color:#0c6858;text-align:center;font-weight:800}.done.show{display:block}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><span class="mark">A</span><span>ArogSevak</span></div>
+    <h1>Upload health documents</h1>
+    <p>Add prescriptions, reports or discharge summaries. They will appear instantly on the computer where signup is open.</p>
+    <label class="upload" for="files">
+      <span class="plus">+</span><strong>Choose documents</strong><small>JPG, PNG, WebP or PDF · up to 8 MB each</small>
+    </label>
+    <input id="files" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple />
+    <div class="status" id="status" role="status"></div>
+    <div class="files" id="fileList"></div>
+    <div class="done" id="done">Uploaded successfully. You can return to the computer.</div>
+  </main>
+  <script>
+    const params = new URLSearchParams(location.hash.slice(1));
+    const session = params.get('session');
+    const token = params.get('token');
+    const input = document.getElementById('files');
+    const status = document.getElementById('status');
+    const fileList = document.getElementById('fileList');
+    const done = document.getElementById('done');
+
+    const setStatus = (text, error = false) => { status.textContent = text; status.className = `status${error ? ' error' : ''}`; };
+    const fileData = file => new Promise((resolve, reject) => {
+      const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file);
+    });
+    const render = files => {
+      fileList.innerHTML = '';
+      files.forEach(file => {
+        const row = document.createElement('div'); row.className = 'file';
+        const thumb = document.createElement('div'); thumb.className = 'thumb';
+        if (file.type.startsWith('image/')) { const img = document.createElement('img'); img.src = file.previewUrl; img.alt = ''; thumb.append(img); }
+        else thumb.textContent = 'PDF';
+        const copy = document.createElement('div'); copy.className = 'copy';
+        const name = document.createElement('strong'); name.textContent = file.name;
+        const size = document.createElement('small'); size.textContent = `${Math.max(1, Math.round(file.size / 1024))} KB`;
+        copy.append(name, size); row.append(thumb, copy); fileList.append(row);
+      });
+      done.classList.toggle('show', files.length > 0);
+    };
+    async function refresh() {
+      if (!session || !token) return setStatus('This upload link is invalid.', true);
+      const response = await fetch(`/api/document-upload-sessions/${encodeURIComponent(session)}/status?token=${encodeURIComponent(token)}`, { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Upload session expired');
+      render(data.files);
+    }
+    input.addEventListener('change', async () => {
+      const files = [...input.files];
+      if (!files.length) return;
+      try {
+        input.disabled = true;
+        for (let index = 0; index < files.length; index += 1) {
+          const file = files[index];
+          if (file.size > 8 * 1024 * 1024) throw new Error(`${file.name} is larger than 8 MB`);
+          setStatus(`Uploading ${index + 1} of ${files.length}…`);
+          const response = await fetch(`/api/document-upload-sessions/${encodeURIComponent(session)}/files`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, name: file.name, type: file.type, data: await fileData(file) })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Upload failed');
+        }
+        await refresh();
+        setStatus('Documents uploaded successfully.');
+      } catch (error) { setStatus(error.message || 'Upload failed.', true); }
+      finally { input.disabled = false; input.value = ''; }
+    });
+    refresh().catch(error => setStatus(error.message, true));
+  </script>
+</body>
+</html>
