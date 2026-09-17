@@ -9,7 +9,7 @@
   "staff.actions.scan": "Scan previous document", "staff.actions.scanHelp": "Add a prescription or report", "staff.actions.consent": "Review consent requests", "staff.actions.consentHelp": "Check pending record access",
   "patient.nav.start": "Start check-up", "patient.nav.records": "My records", "patient.nav.consent": "Access & consent", "patient.greeting": "Hello,", "patient.start": "Initiate check-up", "patient.chooseLanguage": "Choose your language",
   "common.back": "Back", "common.continue": "Continue", "common.send": "Send",
-  "patient.voice.ready": "ArogSevak is ready", "patient.voice.question": "What health concern would you like to discuss today?", "patient.voice.connecting": "Connecting microphone…", "patient.voice.end": "End check-up",
+  "patient.voice.ready": "Arogyam is ready", "patient.voice.question": "What health concern would you like to discuss today?", "patient.voice.connecting": "Connecting microphone…", "patient.voice.end": "End check-up",
   "patient.chat.title": "Live chat", "patient.chat.subtitle": "Voice transcript appears here", "patient.chat.placeholder": "Type a message…",
   "records.title": "My records", "records.subtitle": "Your consultations, care notes and shared documents in one place.", "records.consultations": "Consultations", "records.documents": "Documents", "records.followup": "Next follow-up",
   "records.filter.all": "All records", "records.filter.visits": "Consultations", "records.filter.documents": "Documents", "records.search": "Search visits, doctors or concerns", "records.empty": "No matching records found.",

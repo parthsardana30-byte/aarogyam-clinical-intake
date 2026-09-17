@@ -9,7 +9,7 @@
   "staff.actions.scan": "पिछला दस्तावेज़ स्कैन करें", "staff.actions.scanHelp": "प्रिस्क्रिप्शन या रिपोर्ट जोड़ें", "staff.actions.consent": "सहमति अनुरोध देखें", "staff.actions.consentHelp": "लंबित रिकॉर्ड एक्सेस जाँचें",
   "patient.nav.start": "चेक-अप शुरू करें", "patient.nav.records": "मेरे रिकॉर्ड", "patient.nav.consent": "एक्सेस और सहमति", "patient.greeting": "नमस्ते,", "patient.start": "चेक-अप शुरू करें", "patient.chooseLanguage": "अपनी भाषा चुनें",
   "common.back": "वापस", "common.continue": "जारी रखें", "common.send": "भेजें",
-  "patient.voice.ready": "ArogSevak तैयार है", "patient.voice.question": "आज आप किस स्वास्थ्य समस्या पर बात करना चाहेंगी?", "patient.voice.connecting": "माइक्रोफ़ोन कनेक्ट हो रहा है…", "patient.voice.end": "चेक-अप समाप्त करें",
+  "patient.voice.ready": "Arogyam तैयार है", "patient.voice.question": "आज आप किस स्वास्थ्य समस्या पर बात करना चाहेंगी?", "patient.voice.connecting": "माइक्रोफ़ोन कनेक्ट हो रहा है…", "patient.voice.end": "चेक-अप समाप्त करें",
   "patient.chat.title": "लाइव चैट", "patient.chat.subtitle": "आवाज़ का लेख यहाँ दिखाई देगा", "patient.chat.placeholder": "संदेश लिखें…",
   "records.title": "मेरे रिकॉर्ड", "records.subtitle": "आपकी सलाह, देखभाल नोट्स और साझा दस्तावेज़ एक ही स्थान पर।", "records.consultations": "परामर्श", "records.documents": "दस्तावेज़", "records.followup": "अगला फॉलो-अप",
   "records.filter.all": "सभी रिकॉर्ड", "records.filter.visits": "परामर्श", "records.filter.documents": "दस्तावेज़", "records.search": "विज़िट, डॉक्टर या समस्या खोजें", "records.empty": "कोई मेल खाता रिकॉर्ड नहीं मिला।",

@@ -273,7 +273,7 @@ async function deliverSignupOtp(phone, otp) {
   const body = new URLSearchParams({
     To: `+91${phone}`,
     From: fromNumber,
-    Body: `Your ArogSevak verification code is ${otp}. It expires in 5 minutes.`
+    Body: `Your Arogyam verification code is ${otp}. It expires in 5 minutes.`
   });
   const result = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(accountSid)}/Messages.json`, {
     method: 'POST',
@@ -592,4 +592,4 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-server.listen(port, host, () => console.log(`ArogSevak running at http://${host}:${port}`));
+server.listen(port, host, () => console.log(`Arogyam running at http://${host}:${port}`));
