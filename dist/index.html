@@ -2089,6 +2089,14 @@
       Marathi: 'mr', Nepali: 'ne', Odia: 'or', Punjabi: 'pa', Sanskrit: 'sa', Santali: 'sat', Sindhi: 'sd',
       Tamil: 'ta', Telugu: 'te', Urdu: 'ur'
     };
+    // ElevenLabs needs an explicit conversation language override for accurate
+    // speech recognition and multilingual TTS. A prompt variable alone does not
+    // switch the audio pipeline away from the agent's default English language.
+    const elevenLanguageCodes = {
+      English: 'en', Assamese: 'as', Bengali: 'bn', Gujarati: 'gu', Hindi: 'hi', Kannada: 'kn',
+      Malayalam: 'ml', Marathi: 'mr', Nepali: 'ne', Punjabi: 'pa', Sindhi: 'sd', Tamil: 'ta',
+      Telugu: 'te', Urdu: 'ur'
+    };
     const globalUiKeys = ['Settings', 'Language', 'Log out', 'Patient queue', 'Patient history', 'Documents', 'Start check-up', 'My records', 'Access & consent', 'Current patient', 'Initiate check-up', 'Choose your language', 'Back', 'Continue', 'Recent visits', 'Open record', 'End check-up', 'Live chat', 'Send'];
     const globalUiPacks = {
       Assamese: ['ছেটিংছ', 'ভাষা', 'লগ আউট', 'ৰোগীৰ শাৰী', 'ৰোগীৰ ইতিহাস', 'নথিপত্ৰ', 'চেক-আপ আৰম্ভ কৰক', 'মোৰ ৰেকৰ্ড', 'প্ৰৱেশ আৰু সন্মতি', 'বৰ্তমান ৰোগী', 'চেক-আপ আৰম্ভ কৰক', 'আপোনাৰ ভাষা বাছনি কৰক', 'পিছলৈ', 'আগবাঢ়ক', 'শেহতীয়া ভিজিট', 'ৰেকৰ্ড খোলক', 'চেক-আপ শেষ কৰক', 'লাইভ চেট', 'পঠিয়াওক'],
@@ -3087,10 +3095,13 @@
         const response = await fetch('/api/elevenlabs/signed-url', { cache: 'no-store' });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
+        const preferredLanguage = languageSelect.value;
+        const elevenLanguage = elevenLanguageCodes[preferredLanguage] || 'en';
         const session = await window.ElevenLabsClient.Conversation.startSession({
           signedUrl: payload.signedUrl,
           connectionType: 'websocket',
-          dynamicVariables: { preferred_language: languageSelect.value },
+          overrides: { agent: { language: elevenLanguage } },
+          dynamicVariables: { preferred_language: preferredLanguage },
           onConnect: () => {
             elevenConnecting = false;
             setAgentOrbState('listening');
