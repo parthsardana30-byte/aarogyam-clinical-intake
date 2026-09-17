@@ -328,7 +328,8 @@
     .voice-orb.listening { opacity: .27; filter: saturate(1.2); animation: voicePulse 2.4s ease-in-out infinite; }
     @keyframes voicePulse { 50% { transform: scale(1.06); } }
     .voice-chat { height: 100%; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
-    .voice-chat-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 8px 22px; border-bottom: 1px solid rgba(31,76,64,.12); }
+    .voice-chat-head { display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 8px 8px 14px; border-bottom: 0; }
+    .voice-chat-title, .voice-audio-toggle { display: none !important; }
     .voice-chat-title h1 { font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 650; letter-spacing: -.04em; margin: 0; line-height: 1.2; }
     .voice-chat-title::before { content: "AROGYAM"; display: block; margin-bottom: 7px; font-size: .63rem; letter-spacing: .18em; font-weight: 750; color: #538375; }
     .voice-live-tools { display: flex; align-items: center; gap: 10px; }
@@ -354,7 +355,7 @@
     .voice-chat-send { min-width: 48px; height: 48px; display: grid; place-items: center; border: 0; border-radius: 12px; background: #193f32; color: #f3fff6; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 3px 7px rgba(21,49,37,.12); transition: background .2s, transform .2s; }
     .voice-chat-send:hover { background: #2b604b; transform: translateY(-1px); }
     .voice-chat-send:disabled { opacity: .45; cursor: default; transform: none; }
-    .voice-composer-tools { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 9px 4px 0; border-top: 1px solid #e6ece5; }
+    .voice-composer-tools { display: none; }
     .voice-talk { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 12px; border: 1px solid #cbdcd1; border-radius: 9px; background: #edf5ef; color: #265d46; font: inherit; font-size: .82rem; font-weight: 700; white-space: nowrap; }
     .voice-talk[aria-pressed="true"] { background: #193f32; border-color: #193f32; color: #fff; }
     .voice-input-status { margin: 0; font-size: .76rem; color: #718378; line-height: 1.4; }
