@@ -1,0 +1,16 @@
+name: aarogyam
+
+services:
+  site:
+    build: .
+    container_name: aarogyam-site
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
+    name: cashfree-subscription-bot_default
