@@ -10,7 +10,11 @@ const publicRoot = resolve('dist');
 const dataRoot = resolve(process.env.DATA_DIR || 'data');
 const devicesFile = join(dataRoot, 'authorized-devices.json');
 const enrollmentTtlMs = 10 * 60 * 1000;
+const signupOtpTtlMs = 5 * 60 * 1000;
+const signupOtpCooldownMs = 30 * 1000;
 const enrollments = new Map();
+const signupOtps = new Map();
+const signupOtpLastSent = new Map();
 let devices = [];
 
 const mimeTypes = {
@@ -59,6 +63,89 @@ async function readJson(request) {
 function purgeExpiredEnrollments() {
   const now = Date.now();
   for (const [id, enrollment] of enrollments) if (enrollment.expiresAt < now) enrollments.delete(id);
+}
+
+function normalizeIndianPhone(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  const national = digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
+  return /^[6-9]\d{9}$/.test(national) ? national : null;
+}
+
+function purgeExpiredSignupOtps() {
+  const now = Date.now();
+  for (const [id, entry] of signupOtps) if (entry.expiresAt < now || entry.consumed) signupOtps.delete(id);
+  for (const [phone, sentAt] of signupOtpLastSent) if (now - sentAt > signupOtpCooldownMs) signupOtpLastSent.delete(phone);
+}
+
+async function deliverSignupOtp(phone, otp) {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_FROM_NUMBER;
+  const demoMode = process.env.OTP_DEMO_MODE === '1' || process.env.NODE_ENV !== 'production';
+  if (!accountSid || !authToken || !fromNumber) {
+    if (demoMode) return { mode: 'demo' };
+    throw new Error('SMS provider is not configured');
+  }
+  const body = new URLSearchParams({
+    To: `+91${phone}`,
+    From: fromNumber,
+    Body: `Your ArogSevak verification code is ${otp}. It expires in 5 minutes.`
+  });
+  const result = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(accountSid)}/Messages.json`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+    },
+    body
+  });
+  if (!result.ok) throw new Error(`SMS provider rejected the request (${result.status})`);
+  return { mode: 'sms' };
+}
+
+async function requestSignupOtp(request, response) {
+  purgeExpiredSignupOtps();
+  const body = await readJson(request);
+  const phone = normalizeIndianPhone(body.phone);
+  if (!phone) return sendJson(response, 400, { error: 'Enter a valid 10-digit Indian mobile number' });
+  const lastSent = signupOtpLastSent.get(phone) || 0;
+  const retryAfter = Math.ceil((signupOtpCooldownMs - (Date.now() - lastSent)) / 1000);
+  if (retryAfter > 0) return sendJson(response, 429, { error: `Please wait ${retryAfter}s before requesting another OTP`, retryAfter });
+  const otp = String(randomInt(0, 1_000_000)).padStart(6, '0');
+  const id = randomUUID();
+  const expiresAt = Date.now() + signupOtpTtlMs;
+  const delivery = await deliverSignupOtp(phone, otp);
+  signupOtps.set(id, { id, phone, otpHash: hash(otp), expiresAt, attempts: 0, verifiedTokenHash: null, consumed: false });
+  signupOtpLastSent.set(phone, Date.now());
+  sendJson(response, 201, { id, expiresAt, delivery: delivery.mode, ...(delivery.mode === 'demo' ? { demoOtp: otp } : {}) });
+}
+
+async function verifySignupOtp(request, response) {
+  purgeExpiredSignupOtps();
+  const body = await readJson(request);
+  const phone = normalizeIndianPhone(body.phone);
+  const entry = signupOtps.get(String(body.id || ''));
+  const otp = String(body.otp || '').trim();
+  if (!entry || !phone || entry.phone !== phone) return sendJson(response, 404, { error: 'OTP request is invalid or expired' });
+  if (entry.attempts >= 5) return sendJson(response, 429, { error: 'Too many incorrect attempts. Request a new OTP.' });
+  entry.attempts += 1;
+  if (!/^\d{6}$/.test(otp) || hash(otp) !== entry.otpHash) return sendJson(response, 400, { error: 'Incorrect OTP' });
+  const verificationToken = randomBytes(32).toString('base64url');
+  entry.verifiedTokenHash = hash(verificationToken);
+  sendJson(response, 200, { verified: true, verificationToken });
+}
+
+async function confirmSignupOtp(request, response) {
+  purgeExpiredSignupOtps();
+  const body = await readJson(request);
+  const phone = normalizeIndianPhone(body.phone);
+  const entry = signupOtps.get(String(body.id || ''));
+  const token = String(body.verificationToken || '');
+  if (!entry || !phone || entry.phone !== phone || !entry.verifiedTokenHash || hash(token) !== entry.verifiedTokenHash) {
+    return sendJson(response, 401, { error: 'Phone verification is required' });
+  }
+  entry.consumed = true;
+  sendJson(response, 200, { verified: true });
 }
 
 async function createEnrollment(request, response) {
@@ -138,6 +225,9 @@ const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
     if (request.method === 'POST' && url.pathname === '/api/device-enrollments') return await createEnrollment(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/signup-otp/request') return await requestSignupOtp(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/signup-otp/confirm') return await confirmSignupOtp(request, response);
     const statusMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/status$/i);
     if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1]);
     if (request.method === 'POST' && url.pathname === '/api/device-authorizations') return await authorizeDevice(request, response);

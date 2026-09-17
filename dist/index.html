@@ -641,6 +641,13 @@
       border-radius: 30px;
       box-shadow: 0 28px 90px rgba(16, 43, 39, .17);
     }
+    .login-form-shell.patient-signup-details { height: min(720px, calc(100dvh - 40px)); }
+    .login-form-shell.patient-signup-details .login-form-area {
+      justify-content: flex-start;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
     .login-form-shell[hidden] { display: none; }
     .login-form-area { height: 100%; min-height: 0; padding: 40px 62px 38px; display: flex; flex-direction: column; justify-content: center; }
     .login-form-header { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; gap: 16px; margin-bottom: 30px; }
@@ -668,6 +675,17 @@
     .patient-signup-option:nth-child(2) .patient-document-visual::after { animation-delay: -.9s; }
     .patient-signup-option:is(:hover, :focus-visible) .patient-document-visual { transform: perspective(700px) rotateX(0) rotateY(0) translateY(-4px) scale(1.035); box-shadow: 0 20px 34px rgba(18,57,71,.2); }
     .patient-signup-option strong { display: block; font-size: 1.03rem; line-height: 1.25; }
+    .patient-login-documents { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: -8px 0 18px; }
+    .patient-login-documents[hidden] { display: none; }
+    .patient-login-document {
+      min-width: 0; padding: 9px; border: 1px solid rgba(14,102,85,.14); border-radius: 15px;
+      background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(237,247,244,.76));
+      box-shadow: 0 10px 24px rgba(17,72,61,.07);
+    }
+    .patient-login-document:nth-child(2) { background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(240,244,252,.82)); border-color: rgba(49,93,112,.16); }
+    .patient-login-document .patient-document-visual { height: 76px; border-radius: 10px; box-shadow: 0 8px 18px rgba(18,57,71,.12); }
+    .patient-login-document:nth-child(2) .patient-document-visual { animation-delay: -.9s; transform: perspective(700px) rotateX(2deg) rotateY(3deg); }
+    .patient-login-document span:last-child { display: block; margin-top: 7px; color: var(--ink-soft); font-size: .75rem; font-weight: 760; text-align: center; }
     @keyframes document-float { 0%,100% { translate: 0 0; } 50% { translate: 0 -5px; } }
     @keyframes document-shine { 0%,58% { transform:translateX(-55%) rotate(4deg); opacity:0; } 68% { opacity:.9; } 82%,100% { transform:translateX(55%) rotate(4deg); opacity:0; } }
     .signup-method-back { margin: -9px 0 15px; padding: 0; border: 0; background: transparent; color: var(--teal); font-weight: 760; font-size: .82rem; text-align: left; }
@@ -685,7 +703,23 @@
       font: inherit;
     }
     .field-group input:focus { outline: 3px solid rgba(14, 102, 85, .14); border-color: var(--teal); }
+    .signup-otp-panel { margin: -4px 0 16px; }
+    .signup-otp-panel[hidden], .signup-otp-verify[hidden] { display: none; }
+    .signup-otp-send, .signup-otp-verify button {
+      min-height: 44px; border: 1px solid rgba(14,102,85,.22); border-radius: 12px; background: #edf7f4;
+      color: var(--teal-dark); padding: 10px 14px; font: inherit; font-size: .82rem; font-weight: 780; cursor: pointer;
+    }
+    .signup-otp-send { width: 100%; }
+    .signup-otp-send:disabled, .signup-otp-verify button:disabled { cursor: not-allowed; opacity: .62; }
+    .signup-otp-verify { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 9px; margin-top: 10px; }
+    .signup-otp-verify input { min-width: 0; min-height: 44px; border: 1px solid var(--line-strong); border-radius: 12px; padding: 10px 13px; font: inherit; letter-spacing: .18em; }
+    .signup-otp-verify input:focus { outline: 3px solid rgba(14,102,85,.14); border-color: var(--teal); }
+    .signup-otp-status { min-height: 18px; margin: 8px 2px 0; color: var(--ink-soft); font-size: .75rem; }
+    .signup-otp-status.is-error { color: #a33c32; }
+    .signup-otp-status.is-success { color: #08745f; font-weight: 720; }
+    .login-submit:disabled { cursor: not-allowed; opacity: .56; box-shadow: none; }
     .login-row { display: flex; align-items: center; justify-content: flex-start; gap: 14px; margin: 4px 0 24px; font-size: .82rem; }
+    .login-row[hidden] { display: none; }
     .remember-label { display: flex; align-items: center; gap: 8px; color: #596f69; }
     .login-submit {
       width: 100%; height: 56px; position: relative; display: block;
@@ -900,21 +934,39 @@
           <section class="patient-signup-methods" id="patientSignupMethods" aria-label="Patient signup method" hidden>
             <div class="patient-signup-grid">
               <button class="patient-signup-option" type="button" data-patient-signup="abha">
-                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/abha-card-sample.png" alt="" /></span>
+                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/abha-card-4k.png" alt="" /></span>
                 <span><strong>Sign up using ABHA ID</strong></span>
               </button>
               <button class="patient-signup-option" type="button" data-patient-signup="aadhaar">
-                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/aadhaar-card-sample.png" alt="" /></span>
+                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/aadhaar-card-4k.png" alt="" /></span>
                 <span><strong>Sign up using Aadhaar card</strong></span>
               </button>
             </div>
           </section>
           <form id="loginForm">
             <button class="signup-method-back" id="changeSignupMethod" type="button" hidden>← Change verification method</button>
+            <div class="patient-login-documents" id="patientLoginDocuments" aria-label="Supported patient identity cards" hidden>
+              <div class="patient-login-document">
+                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/abha-card-4k.png" alt="" /></span>
+                <span>ABHA card</span>
+              </div>
+              <div class="patient-login-document">
+                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/aadhaar-card-4k.png" alt="" /></span>
+                <span>Aadhaar card</span>
+              </div>
+            </div>
             <div class="field-group" id="patientIdentityGroup" hidden><label for="patientIdentityNumber" id="patientIdentityLabel">ABHA ID</label><input id="patientIdentityNumber" inputmode="numeric" placeholder="Enter your ABHA ID" /></div>
             <div class="field-group"><label for="loginIdentifier" id="identifierLabel">Patient ID</label><input id="loginIdentifier" autocomplete="username" required placeholder="Enter patient ID" /></div>
+            <div class="signup-otp-panel" id="signupOtpPanel" hidden>
+              <button class="signup-otp-send" id="sendSignupOtp" type="button">Send OTP</button>
+              <div class="signup-otp-verify" id="signupOtpVerify" hidden>
+                <input id="signupOtpCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" aria-label="6-digit OTP" placeholder="6-digit OTP" />
+                <button id="verifySignupOtp" type="button">Verify OTP</button>
+              </div>
+              <p class="signup-otp-status" id="signupOtpStatus" role="status" aria-live="polite"></p>
+            </div>
             <div class="field-group"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter password" /></div>
-            <div class="login-row"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label></div>
+            <div class="login-row" id="loginRememberRow"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label></div>
             <button class="primary-button login-submit" type="submit" aria-label="Continue securely">
               <span class="login-submit-label">Continue securely</span>
             </button>
@@ -1262,11 +1314,25 @@
     const patientIdentityGroup = document.getElementById('patientIdentityGroup');
     const patientIdentityNumber = document.getElementById('patientIdentityNumber');
     const patientIdentityLabel = document.getElementById('patientIdentityLabel');
+    const patientLoginDocuments = document.getElementById('patientLoginDocuments');
+    const loginIdentifier = document.getElementById('loginIdentifier');
+    const signupOtpPanel = document.getElementById('signupOtpPanel');
+    const sendSignupOtp = document.getElementById('sendSignupOtp');
+    const signupOtpVerify = document.getElementById('signupOtpVerify');
+    const signupOtpCode = document.getElementById('signupOtpCode');
+    const verifySignupOtp = document.getElementById('verifySignupOtp');
+    const signupOtpStatus = document.getElementById('signupOtpStatus');
+    const loginSubmitButton = document.querySelector('.login-submit');
+    const loginRememberRow = document.getElementById('loginRememberRow');
     const changeSignupMethod = document.getElementById('changeSignupMethod');
     const appShell = document.getElementById('appShell');
     let selectedLoginRole = 'patient';
     let selectedAuthMode = 'login';
     let selectedPatientSignupMethod = null;
+    let signupOtpRequestId = null;
+    let signupOtpVerificationToken = null;
+    let signupOtpPhone = null;
+    let signupOtpCountdown = null;
     let authorizedPatientDevice = false;
     let patientLoggedInThisSession = false;
 
@@ -1294,6 +1360,49 @@
       }
     };
 
+    function normalizedSignupPhone() {
+      const digits = loginIdentifier.value.replace(/\D/g, '');
+      return digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
+    }
+
+    function setSignupOtpStatus(message = '', state = '') {
+      signupOtpStatus.textContent = message;
+      signupOtpStatus.className = `signup-otp-status${state ? ` is-${state}` : ''}`;
+    }
+
+    function resetSignupOtp(hide = true) {
+      if (signupOtpCountdown) clearInterval(signupOtpCountdown);
+      signupOtpCountdown = null;
+      signupOtpRequestId = null;
+      signupOtpVerificationToken = null;
+      signupOtpPhone = null;
+      signupOtpCode.value = '';
+      signupOtpCode.disabled = false;
+      loginIdentifier.readOnly = false;
+      signupOtpVerify.hidden = true;
+      signupOtpPanel.hidden = hide;
+      sendSignupOtp.disabled = false;
+      sendSignupOtp.textContent = 'Send OTP';
+      verifySignupOtp.disabled = false;
+      setSignupOtpStatus();
+      if (selectedLoginRole === 'patient' && selectedAuthMode === 'register') loginSubmitButton.disabled = true;
+    }
+
+    function startSignupOtpCooldown(seconds = 30) {
+      let remaining = seconds;
+      sendSignupOtp.disabled = true;
+      sendSignupOtp.textContent = `Resend OTP in ${remaining}s`;
+      signupOtpCountdown = setInterval(() => {
+        remaining -= 1;
+        if (remaining <= 0) {
+          clearInterval(signupOtpCountdown);
+          signupOtpCountdown = null;
+          sendSignupOtp.disabled = false;
+          sendSignupOtp.textContent = 'Resend OTP';
+        } else sendSignupOtp.textContent = `Resend OTP in ${remaining}s`;
+      }, 1000);
+    }
+
     function selectLoginRole(role, focus = true, mode = 'login') {
       selectedLoginRole = role;
       selectedAuthMode = mode;
@@ -1320,6 +1429,10 @@
       selectedPatientSignupMethod = null;
       patientSignupMethods.hidden = !isPatientRegistration;
       loginForm.hidden = isPatientRegistration;
+      patientLoginDocuments.hidden = !(role === 'patient' && mode === 'login');
+      loginRememberRow.hidden = isPatientRegistration;
+      resetSignupOtp(true);
+      loginSubmitButton.disabled = isPatientRegistration;
       patientIdentityGroup.hidden = true;
       changeSignupMethod.hidden = true;
       patientIdentityNumber.required = false;
@@ -1328,6 +1441,7 @@
       loginScreen.hidden = false;
       rolePicker.hidden = true;
       loginFormShell.hidden = false;
+      loginFormShell.classList.remove('patient-signup-details');
       loginScreen.classList.add('form-open');
       if (focus && !isPatientRegistration) document.getElementById('loginIdentifier').focus();
     }
@@ -1345,10 +1459,74 @@
       patientIdentityNumber.value = '';
       patientSignupMethods.hidden = true;
       loginForm.hidden = false;
+      loginFormShell.classList.add('patient-signup-details');
+      resetSignupOtp(false);
       patientIdentityGroup.hidden = false;
       changeSignupMethod.hidden = false;
       if (focus) patientIdentityNumber.focus();
     }
+
+    sendSignupOtp.addEventListener('click', async () => {
+      const phone = normalizedSignupPhone();
+      if (!/^[6-9]\d{9}$/.test(phone)) {
+        setSignupOtpStatus('Enter a valid 10-digit Indian mobile number.', 'error');
+        loginIdentifier.focus();
+        return;
+      }
+      sendSignupOtp.disabled = true;
+      setSignupOtpStatus('Sending OTP…');
+      try {
+        const response = await fetch('/api/signup-otp/request', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not send OTP');
+        signupOtpRequestId = data.id;
+        signupOtpPhone = phone;
+        signupOtpVerificationToken = null;
+        signupOtpCode.value = '';
+        signupOtpVerify.hidden = false;
+        loginSubmitButton.disabled = true;
+        setSignupOtpStatus(data.delivery === 'demo' ? `Local demo OTP: ${data.demoOtp}` : 'OTP sent to your mobile number.', data.delivery === 'demo' ? '' : 'success');
+        startSignupOtpCooldown(30);
+        signupOtpCode.focus();
+      } catch (error) {
+        sendSignupOtp.disabled = false;
+        setSignupOtpStatus(error.message || 'Could not send OTP.', 'error');
+      }
+    });
+
+    verifySignupOtp.addEventListener('click', async () => {
+      const otp = signupOtpCode.value.trim();
+      if (!signupOtpRequestId || !/^\d{6}$/.test(otp)) {
+        setSignupOtpStatus('Enter the 6-digit OTP.', 'error');
+        signupOtpCode.focus();
+        return;
+      }
+      verifySignupOtp.disabled = true;
+      setSignupOtpStatus('Verifying OTP…');
+      try {
+        const response = await fetch('/api/signup-otp/verify', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: signupOtpRequestId, phone: signupOtpPhone, otp })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'OTP verification failed');
+        signupOtpVerificationToken = data.verificationToken;
+        signupOtpCode.disabled = true;
+        loginIdentifier.readOnly = true;
+        loginSubmitButton.disabled = false;
+        setSignupOtpStatus('Phone number verified.', 'success');
+      } catch (error) {
+        verifySignupOtp.disabled = false;
+        setSignupOtpStatus(error.message || 'OTP verification failed.', 'error');
+      }
+    });
+
+    loginIdentifier.addEventListener('input', () => {
+      if (selectedLoginRole !== 'patient' || selectedAuthMode !== 'register' || !signupOtpPhone) return;
+      if (normalizedSignupPhone() !== signupOtpPhone) resetSignupOtp(false);
+    });
 
     document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => navigateRoute(`login/${card.dataset.loginRole}`, false, true)));
     document.querySelectorAll('[data-register-role]').forEach(button => button.addEventListener('click', () => navigateRoute(`register/${button.dataset.registerRole}`, false, true)));
@@ -2091,6 +2269,24 @@
       const button = loginForm.querySelector('[type="submit"]');
       if (button.disabled) return;
       const role = selectedLoginRole;
+      if (role === 'patient' && selectedAuthMode === 'register') {
+        if (!signupOtpRequestId || !signupOtpVerificationToken) {
+          setSignupOtpStatus('Verify your phone number before creating the account.', 'error');
+          return;
+        }
+        try {
+          const response = await fetch('/api/signup-otp/confirm', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: signupOtpRequestId, phone: signupOtpPhone, verificationToken: signupOtpVerificationToken })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Phone verification expired');
+        } catch (error) {
+          resetSignupOtp(false);
+          setSignupOtpStatus(error.message || 'Phone verification expired. Request a new OTP.', 'error');
+          return;
+        }
+      }
       const rect = button.getBoundingClientRect();
       const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2;
       const layer = document.createElement('div');
