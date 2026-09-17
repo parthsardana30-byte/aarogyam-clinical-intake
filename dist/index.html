@@ -391,6 +391,9 @@
     /* Unified voice + chat surface: the AI sphere sits behind floating conversation layers. */
     .voice-session { padding: 28px; border: 0; background: transparent; box-shadow: none; overflow: visible; }
     .voice-session::before, .voice-session::after { content: none; }
+    #patient.voice-route .portal-workspace { grid-template-columns: minmax(0, 1fr); }
+    #patient.voice-route .doctor-sidebar { display: none; }
+    #patient.voice-route .portal-main { grid-column: 1; width: 100%; }
     .voice-experience {
       width: min(980px, 100%); min-height: 560px; display: block; position: relative; isolation: isolate; overflow: hidden;
       border: 1px solid rgba(73,103,92,.16); border-radius: 38px;
@@ -2065,6 +2068,7 @@
     const doctorNavButtons = [...document.querySelectorAll('#doctor .doctor-nav-button')];
     const doctorPanels = [...document.querySelectorAll('[data-doctor-panel-content]')];
     const patientNavButtons = [...document.querySelectorAll('#patient [data-patient-route]')];
+    const patientView = document.getElementById('patient');
     const checkupLaunch = document.getElementById('checkupLaunch');
     const checkupFlow = document.getElementById('checkupFlow');
     const patientRecords = document.getElementById('patientRecords');
@@ -2728,6 +2732,7 @@
       const patientMatch = route.match(/^patient\/(start|language|voice|records)$/);
       if (patientMatch) {
         showSession('patient', 'patient');
+        patientView.classList.toggle('voice-route', patientMatch[1] === 'voice');
         if (patientMatch[1] === 'records') showPatientRecords(focus);
         else setCheckupStage(patientMatch[1], focus);
         return;
