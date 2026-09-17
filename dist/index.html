@@ -368,8 +368,18 @@
     .checkup-result-done { min-height: 52px; padding: 0 25px; border: 0; border-radius: 15px; background: var(--ink); color: #fff; font: inherit; font-weight: 760; cursor: pointer; }
     /* Patient conversation: a single viewport with a scrollable transcript. */
     .app-shell.patient-session.voice-mode .workspace { width: 100%; max-width: none; padding: 12px 0 0; }
-    .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) .workspace { width: min(1280px, 100%); }
-    .app-shell.patient-session:not(.authorized-patient-device) #patient .doctor-sidebar { position: sticky; top: 24px; left: auto; width: 100%; }
+    @media (min-width: 761px) {
+      .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) .workspace {
+        width: calc(100% + 18px); max-width: none; margin-left: -18px; margin-right: 0;
+        padding-left: 0; padding-right: clamp(16px, 2vw, 32px);
+      }
+      .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) #patient .portal-workspace {
+        gap: clamp(18px, 2vw, 30px);
+      }
+      .app-shell.patient-session:not(.authorized-patient-device) #patient .doctor-sidebar {
+        position: sticky; top: 24px; left: 0; width: 100%; border-left: 0; border-radius: 0 26px 26px 0;
+      }
+    }
     .app-shell.authorized-patient-device.patient-session .topbar,
     .app-shell.authorized-patient-device.patient-session .rolebar { display: none; }
     .app-shell.authorized-patient-device.patient-session { min-height: 100dvh; }
