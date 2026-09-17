@@ -400,18 +400,18 @@
     .app-shell.authorized-patient-device #patient .portal-main { grid-column: 1; width: 100%; }
     .voice-experience {
       width: min(980px, 100%); min-height: 560px; display: block; position: relative; isolation: isolate; overflow: hidden;
-      border: 1px solid rgba(73,103,92,.16); border-radius: 38px;
-      background: linear-gradient(145deg, rgba(255,255,255,.94), rgba(250,246,230,.9) 58%, rgba(239,246,239,.92));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 30px 82px rgba(71,66,42,.16); perspective: 1500px;
+      border: 0; border-radius: 0;
+      background: transparent;
+      box-shadow: none; perspective: none;
     }
     .voice-experience::before {
-      content: ""; position: absolute; width: min(390px, 48vw); aspect-ratio: 1; left: 50%; top: 52%; z-index: -2;
-      border-radius: 50%; background: url('/assets/chat-orb.png') center / cover no-repeat; opacity: .27;
+      content: ""; position: absolute; width: min(270px, 38vw); aspect-ratio: 1; left: 50%; top: 48%; z-index: -2;
+      border-radius: 50%; background: url('/assets/chat-orb.png') center / cover no-repeat; opacity: .12;
       filter: saturate(.95) contrast(.94); transform: translate(-50%, -50%); animation: unifiedOrbFloat 11s ease-in-out infinite alternate; pointer-events: none;
     }
     .voice-experience::after {
       content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-      background: radial-gradient(circle at 50% 52%, rgba(255,255,255,0) 0 22%, rgba(255,250,229,.12) 48%, rgba(244,238,211,.64) 100%), linear-gradient(125deg, rgba(255,255,255,.28), rgba(255,249,225,.04) 50%, rgba(226,239,229,.3));
+      background: transparent;
     }
     @keyframes unifiedOrbFloat { from { transform: translate(-52%, -51%) scale(.96) rotate(-2deg); } to { transform: translate(-48%, -49%) scale(1.05) rotate(2deg); } }
     .voice-stage { position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; padding: 0; border: 0; border-radius: inherit; background: transparent; box-shadow: none; backdrop-filter: none; transform: none; pointer-events: none; }
@@ -419,7 +419,7 @@
     .voice-orb svg { display: none; }
     .voice-orb::before, .voice-orb::after { border-color: rgba(136,197,255,.2); }
     .voice-chat { min-height: 560px; width: 100%; display: grid; grid-template-rows: auto 1fr auto; position: relative; z-index: 2; overflow: hidden; border: 0; border-radius: inherit; background: transparent; box-shadow: none; backdrop-filter: none; transform: none; color: var(--ink); }
-    .voice-chat-head { min-height: 86px; align-items: center; padding: 20px 26px; border-bottom: 1px solid rgba(73,103,92,.13); background: linear-gradient(180deg, rgba(255,255,255,.74), rgba(255,255,255,.2)); backdrop-filter: blur(8px); }
+    .voice-chat-head { min-height: 76px; align-items: center; padding: 16px 8px; border-bottom: 1px solid rgba(73,103,92,.13); background: transparent; backdrop-filter: none; }
     .voice-chat-title { display: grid; gap: 4px; }
     .voice-chat-title .voice-language { margin: 0; font-size: .7rem; }
     .voice-chat-title h1 { margin: 0; color: var(--ink); font-size: clamp(1.65rem, 3vw, 2.4rem); line-height: 1; letter-spacing: -.04em; }
@@ -430,16 +430,16 @@
     .auto-mic { margin: 0; font-size: .76rem; white-space: nowrap; }
     .voice-end { min-height: 40px; margin: 0; padding: 0 15px; border: 1px solid rgba(16,43,39,.18); border-radius: 13px; background: rgba(255,255,255,.68); color: var(--ink); pointer-events: auto; box-shadow: 0 9px 22px rgba(64,74,54,.1); }
     .voice-question { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
-    .voice-chat-messages { padding: 30px 36px; gap: 21px; perspective: 1200px; }
-    .voice-chat-message { max-width: 68%; padding: 15px 18px; background-clip: padding-box; }
-    .voice-chat-message.ai { --float-x: -9px; --float-z: 62px; border-color: rgba(67,99,87,.18); background: linear-gradient(145deg, rgba(255,255,255,.88), rgba(235,244,235,.68)); color: var(--ink); box-shadow: inset 0 1px 0 #fff, 0 20px 40px rgba(67,80,61,.14), 0 5px 18px rgba(68,120,101,.09); }
+    .voice-chat-messages { width: min(780px, 100%); margin: 0 auto; padding: 36px 16px; gap: 28px; perspective: none; }
+    .voice-chat-message { max-width: 86%; padding: 18px 22px; border-radius: 12px; background-clip: padding-box; animation: none; transform: none; backdrop-filter: none; line-height: 1.65; }
+    .voice-chat-message.ai { border: 0; border-left: 3px solid #459482; border-radius: 0; background: rgba(255,255,255,.3); color: var(--ink); box-shadow: none; }
     .voice-chat-message.ai small { color: #667d75; }
-    .voice-chat-message.user { --float-x: 9px; --float-z: 88px; background: linear-gradient(145deg, #1d806d, #0d5148); box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 24px 45px rgba(22,91,75,.25), 0 0 28px rgba(94,160,129,.12); }
-    .voice-chat-form { margin: 0 22px 22px; padding: 10px; border: 1px solid rgba(73,103,92,.16); border-radius: 20px; background: rgba(255,255,255,.7); box-shadow: 0 18px 42px rgba(72,70,49,.13), inset 0 1px 0 #fff; backdrop-filter: blur(22px); }
-    .voice-chat-input { border-color: rgba(73,103,92,.18); background: rgba(255,255,255,.72); color: var(--ink); }
+    .voice-chat-message.user { border: 0; border-radius: 12px 12px 4px 12px; background: #176b5c; box-shadow: 0 4px 12px rgba(22,91,75,.08); }
+    .voice-chat-form { width: min(780px, calc(100% - 32px)); margin: 0 auto 16px; padding: 8px; border: 1px solid rgba(73,103,92,.2); border-radius: 14px; background: rgba(255,255,255,.92); box-shadow: 0 6px 24px rgba(72,70,49,.07); backdrop-filter: blur(12px); }
+    .voice-chat-input { border: 0; border-radius: 8px; background: transparent; color: var(--ink); box-shadow: none; }
     .voice-chat-input::placeholder { color: #71827d; }
     .voice-chat-input:focus { outline-color: rgba(14,102,85,.44); background: #fff; }
-    .voice-chat-send { border-color: rgba(14,102,85,.18); background: linear-gradient(145deg, #16816d, #0b5147); box-shadow: 0 13px 27px rgba(17,98,81,.23), inset 0 1px 0 rgba(255,255,255,.2); }
+    .voice-chat-send { border: 0; border-radius: 9px; background: #176b5c; box-shadow: none; }
     .portal-main .intake-grid { grid-template-columns: minmax(210px, .72fr) minmax(410px, 1.55fr) minmax(250px, .88fr); }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
@@ -979,8 +979,8 @@
       .language-back, .language-continue { width: 100%; }
       .voice-session { min-height: auto; padding: 20px 12px; border-radius: 24px; }
       .voice-session::before { inset: -5%; background-position: 50% 34%; background-size: 860px auto; opacity: .84; }
-      .voice-experience { min-height: 560px; border-radius: 26px; }
-      .voice-experience::before { width: min(310px, 70vw); opacity: .24; }
+      .voice-experience { min-height: 560px; border-radius: 0; }
+      .voice-experience::before { width: min(220px, 58vw); opacity: .12; }
       .voice-stage { padding: 0; }
       .voice-orb { width: 470px; }
       .voice-chat { min-height: 560px; }
@@ -989,8 +989,8 @@
       .voice-live-copy { display: none; }
       .voice-chat-messages { padding: 24px 20px; }
       .voice-chat-message { max-width: 86%; }
-      .voice-chat-form { margin: 0 14px 14px; }
-      .voice-chat-form { grid-template-columns: 1fr; }
+      .voice-chat-form { margin: 0 auto 14px; }
+      .voice-chat-form { grid-template-columns: minmax(0, 1fr) auto; }
       .voice-chat-send { min-height: 48px; }
       .records-heading { align-items: flex-start; flex-direction: column; }
       .records-summary, .records-toolbar { grid-template-columns: 1fr; }
