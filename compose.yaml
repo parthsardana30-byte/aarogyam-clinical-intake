@@ -8,6 +8,9 @@ services:
     environment:
       NODE_ENV: production
       PATIENT_DATA_KEY: ${PATIENT_DATA_KEY}
+      MSG91_WIDGET_ID: ${MSG91_WIDGET_ID}
+      MSG91_WIDGET_TOKEN: ${MSG91_WIDGET_TOKEN}
+      MSG91_AUTH_KEY: ${MSG91_AUTH_KEY}
     volumes:
       - ./data:/app/data
     networks:

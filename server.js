@@ -168,6 +168,41 @@ async function deliverSignupOtp(phone, otp) {
   return { mode: 'sms' };
 }
 
+function msg91Config() {
+  const widgetId = String(process.env.MSG91_WIDGET_ID || '').trim();
+  const tokenAuth = String(process.env.MSG91_WIDGET_TOKEN || '').trim();
+  const authKey = String(process.env.MSG91_AUTH_KEY || '').trim();
+  return { widgetId, tokenAuth, authKey, configured: Boolean(widgetId && tokenAuth && authKey) };
+}
+
+function signupOtpConfig(_request, response) {
+  const config = msg91Config();
+  if (config.configured) {
+    return sendJson(response, 200, { provider: 'msg91', widgetId: config.widgetId, tokenAuth: config.tokenAuth });
+  }
+  sendJson(response, 200, { provider: 'server' });
+}
+
+async function verifyMsg91AccessToken(accessToken) {
+  const { authKey, configured } = msg91Config();
+  if (!configured) throw new Error('MSG91 is not configured');
+  const result = await fetch('https://control.msg91.com/api/v5/widget/verifyAccessToken', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ authkey: authKey, 'access-token': accessToken })
+  });
+  let payload = {};
+  try { payload = await result.json(); } catch { /* MSG91 returned no JSON body. */ }
+  const type = String(payload.type || payload.status || '').toLowerCase();
+  const message = String(payload.message || '').toLowerCase();
+  const verified = result.ok && (
+    type === 'success' || payload.success === true || payload.verified === true ||
+    message.includes('verified') || message.includes('valid')
+  );
+  if (!verified) throw new Error('MSG91 could not verify this OTP session');
+  return payload;
+}
+
 async function requestSignupOtp(request, response) {
   purgeExpiredSignupOtps();
   const body = await readJson(request);
@@ -189,6 +224,24 @@ async function verifySignupOtp(request, response) {
   purgeExpiredSignupOtps();
   const body = await readJson(request);
   const phone = normalizeIndianPhone(body.phone);
+  const accessToken = String(body.accessToken || '').trim();
+  if (accessToken) {
+    if (!phone) return sendJson(response, 400, { error: 'Enter a valid 10-digit Indian mobile number' });
+    if (accessToken.length > 4096) return sendJson(response, 400, { error: 'Invalid OTP access token' });
+    try {
+      await verifyMsg91AccessToken(accessToken);
+    } catch (error) {
+      console.error('MSG91 verification failed:', error.message);
+      return sendJson(response, 401, { error: 'OTP verification failed. Please request a new code.' });
+    }
+    const id = randomUUID();
+    const verificationToken = randomBytes(32).toString('base64url');
+    signupOtps.set(id, {
+      id, phone, otpHash: null, expiresAt: Date.now() + 30 * 60 * 1000,
+      attempts: 0, verifiedTokenHash: hash(verificationToken), consumed: false
+    });
+    return sendJson(response, 200, { verified: true, id, verificationToken });
+  }
   const entry = signupOtps.get(String(body.id || ''));
   const otp = String(body.otp || '').trim();
   if (!entry || !phone || entry.phone !== phone) return sendJson(response, 404, { error: 'OTP request is invalid or expired' });
@@ -372,6 +425,7 @@ const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
     if (request.method === 'POST' && url.pathname === '/api/device-enrollments') return await createEnrollment(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/signup-otp/config') return signupOtpConfig(request, response);
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/request') return await requestSignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-registrations') return await createPatientRegistration(request, response);

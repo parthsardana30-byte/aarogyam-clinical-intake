@@ -983,8 +983,9 @@
             <div class="field-group"><label for="loginIdentifier" id="identifierLabel">Patient ID</label><input id="loginIdentifier" autocomplete="username" required placeholder="Enter patient ID" /></div>
             <div class="signup-otp-panel" id="signupOtpPanel" hidden>
               <button class="signup-otp-send" id="sendSignupOtp" type="button">Send OTP</button>
+              <div id="msg91Captcha" class="signup-otp-captcha"></div>
               <div class="signup-otp-verify" id="signupOtpVerify" hidden>
-                <input id="signupOtpCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" aria-label="6-digit OTP" placeholder="6-digit OTP" />
+                <input id="signupOtpCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]{4,8}" aria-label="OTP code" placeholder="Enter OTP" />
                 <button id="verifySignupOtp" type="button">Verify OTP</button>
               </div>
               <p class="signup-otp-status" id="signupOtpStatus" role="status" aria-live="polite"></p>
@@ -1401,6 +1402,8 @@
     let signupOtpPhone = null;
     let signupOtpCountdown = null;
     let patientRegistrationPassword = '';
+    let signupOtpProvider = null;
+    let msg91WidgetReady = null;
     let authorizedPatientDevice = false;
     let patientLoggedInThisSession = false;
     patientDateOfBirth.max = new Date().toISOString().slice(0, 10);
@@ -1452,6 +1455,60 @@
           sendSignupOtp.textContent = 'Resend OTP';
         } else sendSignupOtp.textContent = `Resend OTP in ${remaining}s`;
       }, 1000);
+    }
+
+    function loadExternalScript(src) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+          if (typeof window.initSendOTP === 'function') resolve();
+          else existing.addEventListener('load', resolve, { once: true });
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('Could not load MSG91 verification service'));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function ensureSignupOtpProvider() {
+      if (signupOtpProvider) return signupOtpProvider;
+      const response = await fetch('/api/signup-otp/config');
+      const config = await response.json();
+      if (!response.ok) throw new Error(config.error || 'Could not load OTP configuration');
+      signupOtpProvider = config;
+      if (config.provider !== 'msg91') return config;
+      if (!msg91WidgetReady) msg91WidgetReady = (async () => {
+        await loadExternalScript('https://verify.msg91.com/otp-provider.js');
+        if (typeof window.initSendOTP !== 'function') throw new Error('MSG91 verification service is unavailable');
+        window.initSendOTP({
+          widgetId: config.widgetId,
+          tokenAuth: config.tokenAuth,
+          exposeMethods: true,
+          captchaRenderId: 'msg91Captcha',
+          success: () => {},
+          failure: () => {}
+        });
+      })();
+      await msg91WidgetReady;
+      return config;
+    }
+
+    function msg91Error(error, fallback) {
+      return error?.message || error?.error || error?.data?.message || fallback;
+    }
+
+    function extractMsg91AccessToken(value) {
+      if (typeof value === 'string') return value.length > 20 ? value : '';
+      if (!value || typeof value !== 'object') return '';
+      for (const key of ['accessToken', 'access-token', 'token', 'message', 'data']) {
+        const token = extractMsg91AccessToken(value[key]);
+        if (token) return token;
+      }
+      return '';
     }
 
     function showPatientRegistrationStep(step) {
@@ -1548,6 +1605,21 @@
       sendSignupOtp.disabled = true;
       setSignupOtpStatus('Sending OTP…');
       try {
+        const provider = await ensureSignupOtpProvider();
+        if (provider.provider === 'msg91') {
+          if (typeof window.sendOtp !== 'function') throw new Error('MSG91 is still loading. Please try again.');
+          await new Promise((resolve, reject) => window.sendOtp(`91${phone}`, resolve, error => reject(new Error(msg91Error(error, 'Could not send OTP')))));
+          signupOtpRequestId = 'msg91-pending';
+          signupOtpPhone = phone;
+          signupOtpVerificationToken = null;
+          signupOtpCode.value = '';
+          signupOtpVerify.hidden = false;
+          loginSubmitButton.disabled = true;
+          setSignupOtpStatus('OTP sent to your mobile number.', 'success');
+          startSignupOtpCooldown(30);
+          signupOtpCode.focus();
+          return;
+        }
         const response = await fetch('/api/signup-otp/request', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone })
         });
@@ -1570,14 +1642,34 @@
 
     verifySignupOtp.addEventListener('click', async () => {
       const otp = signupOtpCode.value.trim();
-      if (!signupOtpRequestId || !/^\d{6}$/.test(otp)) {
-        setSignupOtpStatus('Enter the 6-digit OTP.', 'error');
+      if (!signupOtpRequestId || !/^\d{4,8}$/.test(otp)) {
+        setSignupOtpStatus('Enter the OTP sent to your phone.', 'error');
         signupOtpCode.focus();
         return;
       }
       verifySignupOtp.disabled = true;
       setSignupOtpStatus('Verifying OTP…');
       try {
+        const provider = await ensureSignupOtpProvider();
+        if (provider.provider === 'msg91') {
+          if (typeof window.verifyOtp !== 'function') throw new Error('MSG91 verification service is unavailable');
+          const result = await new Promise((resolve, reject) => window.verifyOtp(Number(otp), resolve, error => reject(new Error(msg91Error(error, 'Incorrect OTP')))));
+          const accessToken = extractMsg91AccessToken(result);
+          if (!accessToken) throw new Error('MSG91 did not return a verification token');
+          const response = await fetch('/api/signup-otp/verify', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: signupOtpPhone, accessToken })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'OTP verification failed');
+          signupOtpRequestId = data.id;
+          signupOtpVerificationToken = data.verificationToken;
+          signupOtpCode.disabled = true;
+          loginIdentifier.readOnly = true;
+          loginSubmitButton.disabled = false;
+          setSignupOtpStatus('Phone number verified.', 'success');
+          return;
+        }
         const response = await fetch('/api/signup-otp/verify', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: signupOtpRequestId, phone: signupOtpPhone, otp })
