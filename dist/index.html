@@ -389,6 +389,7 @@
     .app-shell.sidebar-collapsed .doctor-profile-mark { width: 46px; height: 46px; margin: 0 auto; }
     .app-shell.sidebar-collapsed .doctor-profile strong,
     .app-shell.sidebar-collapsed .doctor-profile small,
+    .app-shell.sidebar-collapsed .doctor-status-control,
     .app-shell.sidebar-collapsed .nav-label { display: none; }
     .app-shell.sidebar-collapsed .doctor-nav-button { justify-content: center; gap: 0; padding: 13px 8px; }
     .app-shell.sidebar-collapsed .doctor-sidebar:hover,
@@ -401,9 +402,11 @@
     .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-profile-mark { width: 48px; height: 48px; margin: 0 0 14px; }
     .app-shell.sidebar-collapsed .doctor-sidebar:hover .doctor-profile strong,
     .app-shell.sidebar-collapsed .doctor-sidebar:hover .doctor-profile small,
+    .app-shell.sidebar-collapsed .doctor-sidebar:hover .doctor-status-control,
     .app-shell.sidebar-collapsed .doctor-sidebar:hover .nav-label,
     .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-profile strong,
     .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-profile small,
+    .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-status-control,
     .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .nav-label { display: block; }
     .app-shell.sidebar-collapsed .doctor-sidebar:hover .doctor-nav-button,
     .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-nav-button { justify-content: flex-start; gap: 9px; padding: 12px 10px; }
@@ -504,6 +507,75 @@
     .assistant-chip { border: 1px solid var(--line-strong); border-radius: 999px; padding: 7px 10px; background: #f8faf9; color: var(--ink-soft); font-size: .76rem; cursor: pointer; }
     .assistant-answer { margin: 0 22px 21px; padding: 14px 15px; border-left: 4px solid var(--teal); border-radius: 10px; background: var(--mint-2); color: var(--ink-soft); font-size: .84rem; line-height: 1.55; }
     .assistant-answer strong { color: var(--ink); }
+    .doctor-status-control { margin-top: 14px; }
+    .doctor-status-control > span { display: block; margin-bottom: 7px; color: #718681; font-size: .68rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+    .doctor-status-options { display: grid; gap: 5px; }
+    .doctor-status-button { display: flex; align-items: center; gap: 8px; min-height: 32px; border: 1px solid transparent; border-radius: 10px; padding: 6px 8px; background: transparent; color: #607671; font: inherit; font-size: .74rem; font-weight: 740; text-align: left; cursor: pointer; transition: background .18s ease, border-color .18s ease, color .18s ease; }
+    .doctor-status-button::before { content: ""; width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: #a7b3af; }
+    .doctor-status-button[data-status="active"]::before { background: #1e9b68; }
+    .doctor-status-button[data-status="break"]::before { background: #dd9b32; }
+    .doctor-status-button[data-status="leave"]::before { background: #89928f; }
+    .doctor-status-button[aria-pressed="true"] { border-color: #c9dbd4; background: #f1f7f4; color: var(--ink); }
+    .doctor-status-button[data-status="active"][aria-pressed="true"]::before { animation: statusPulse 2.4s ease-in-out infinite; }
+    .doctor-status-inline { flex: 0 0 auto; min-width: 292px; padding: 8px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.72); }
+    .doctor-status-inline > span { display: block; margin: 0 4px 6px; color: #718681; font-size: .66rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+    .doctor-status-inline .doctor-status-options { grid-template-columns: repeat(3,1fr); gap: 4px; }
+    .doctor-status-inline .doctor-status-button { justify-content: center; padding-inline: 7px; white-space: nowrap; }
+    .doctor-focus { overflow: hidden; animation: doctorRise .34s .06s ease-out both; }
+    .focus-header { display: grid; grid-template-columns: minmax(260px,1fr) auto auto; align-items: center; gap: 18px; padding: 18px 20px; border-bottom: 1px solid var(--line); background: linear-gradient(135deg, #f5fbf8, #fff); }
+    .focus-patient { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .focus-patient .patient-avatar { width: 44px; height: 44px; border-radius: 14px; }
+    .focus-patient strong, .focus-patient small { display: block; }
+    .focus-patient small { margin-top: 3px; color: #6b807b; }
+    .vitals-inline { display: flex; align-items: center; gap: 0; }
+    .vital-inline { min-width: 76px; padding: 2px 12px; border-left: 1px solid var(--line); }
+    .vital-inline small, .vital-inline strong { display: block; }
+    .vital-inline small { color: #718681; font-size: .67rem; }
+    .vital-inline strong { margin-top: 2px; font-size: .88rem; }
+    .focus-grid { display: grid; grid-template-columns: minmax(0,1.55fr) minmax(300px,.78fr); }
+    .focus-summary { min-width: 0; border-right: 1px solid var(--line); }
+    .focus-summary-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; padding: 19px 21px 9px; }
+    .focus-summary-head h2 { margin: 3px 0 4px; font-size: 1.22rem; }
+    .focus-summary-head p { margin: 0; color: var(--ink-soft); font-size: .82rem; }
+    .focus-summary .summary-block { padding: 15px 21px; }
+    .focus-summary .summary-facts { grid-template-columns: repeat(4,minmax(0,1fr)); }
+    .focus-summary .summary-fact { padding: 10px; }
+    .focus-rail { display: grid; align-content: start; }
+    .focus-rail-section { padding: 17px 18px; border-bottom: 1px solid var(--line); }
+    .focus-rail-section:last-child { border-bottom: 0; }
+    .focus-rail-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .focus-rail-title h3 { margin: 0; font-size: .91rem; }
+    .focus-rail-title button { border: 0; background: transparent; color: var(--teal); font: inherit; font-size: .75rem; font-weight: 800; cursor: pointer; }
+    .compact-alert { display: flex; gap: 9px; border-radius: 12px; padding: 11px 12px; background: #fff4e8; color: #74451e; font-size: .78rem; line-height: 1.45; }
+    .compact-alert::before { content: "!"; width: 20px; height: 20px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: #edc28f; font-weight: 850; }
+    .compact-records { display: grid; }
+    .compact-record { display: grid; grid-template-columns: 68px minmax(0,1fr); gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .compact-record:last-child { border-bottom: 0; }
+    .compact-record time { color: #658078; font-size: .68rem; font-weight: 800; }
+    .compact-record strong, .compact-record small { display: block; }
+    .compact-record strong { font-size: .8rem; }
+    .compact-record small { margin-top: 2px; color: #718681; font-size: .72rem; }
+    .record-assist-panel { border: 0; }
+    .record-assist-panel > summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; list-style: none; cursor: pointer; font-size: .86rem; font-weight: 800; }
+    .record-assist-panel > summary::-webkit-details-marker { display: none; }
+    .record-assist-panel > summary::after { content: "+"; width: 25px; height: 25px; display: grid; place-items: center; border-radius: 8px; background: var(--mint); color: var(--teal); font-size: 1rem; transition: transform .18s ease; }
+    .record-assist-panel[open] > summary::after { transform: rotate(45deg); }
+    .record-assist-copy { margin: 5px 0 12px; color: #718681; font-size: .73rem; line-height: 1.45; }
+    .compact-assistant-form { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 7px; }
+    .compact-assistant-form .assistant-input { min-height: 42px; font-size: .8rem; }
+    .compact-assistant-form .primary-button { padding: 9px 12px; }
+    .compact-suggestions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .compact-suggestions .assistant-chip { padding: 5px 8px; font-size: .68rem; }
+    .compact-assistant-answer { margin-top: 9px; padding: 10px 11px; border-left: 3px solid var(--teal); border-radius: 8px; background: var(--mint-2); color: var(--ink-soft); font-size: .75rem; line-height: 1.45; }
+    .compact-assistant-answer strong { color: var(--ink); }
+    .focus-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 20px; border-top: 1px solid var(--line); background: #fbfcfb; color: #6d7f7a; font-size: .74rem; }
+    .focus-footer span:first-child { display: flex; align-items: center; gap: 7px; }
+    .doctor-panel.active .queue-overview { animation: doctorRise .3s ease-out both; }
+    .queue-person, .queue-action { transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+    .queue-person:hover, .queue-action:hover { transform: translateY(-2px); border-color: #c1d7cf; box-shadow: 0 8px 24px rgba(16,43,39,.06); }
+    @keyframes doctorRise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes statusPulse { 50% { box-shadow: 0 0 0 5px rgba(30,155,104,0); } 0%, 100% { box-shadow: 0 0 0 2px rgba(30,155,104,.16); } }
+    @media (prefers-reduced-motion: reduce) { .doctor-focus, .doctor-panel.active .queue-overview, .doctor-status-button[data-status="active"][aria-pressed="true"]::before { animation: none; } .queue-person, .queue-action, .record-assist-panel > summary::after { transition: none; } }
     .history-patient-bar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 16px; padding: 17px 19px; }
     .history-patient-bar strong, .history-patient-bar small { display: block; }
     .history-patient-bar small { margin-top: 3px; color: #6b807b; }
@@ -526,20 +598,30 @@
     @media (max-width: 1180px) {
       .queue-overview { grid-template-columns: 1fr 1fr; }
       .queue-action { grid-column: 1 / -1; display: flex; justify-content: space-between; }
-      .clinical-grid { grid-template-columns: 1fr; }
-      .clinical-stack { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .focus-header { grid-template-columns: 1fr auto; }
+      .vitals-inline { grid-column: 1 / -1; grid-row: 2; }
+      .vital-inline:first-child { border-left: 0; padding-left: 0; }
+      .focus-grid { grid-template-columns: 1fr; }
+      .focus-summary { border-right: 0; border-bottom: 1px solid var(--line); }
     }
     @media (max-width: 760px) {
       .clinical-heading { align-items: flex-start; flex-direction: column; }
-      .queue-overview, .clinical-stack { grid-template-columns: 1fr; }
-      .queue-action { grid-column: auto; }
+      .doctor-status-inline { width: 100%; min-width: 0; }
       .summary-facts { grid-template-columns: 1fr; }
-      .patient-identity { grid-template-columns: auto 1fr; }
-      .patient-identity-meta { grid-column: 1 / -1; text-align: left; }
-      .record-preview { grid-template-columns: 70px 1fr; }
-      .record-type { grid-column: 2; justify-self: start; }
-      .assistant-form { grid-template-columns: 1fr; }
+      .focus-header { grid-template-columns: 1fr; }
+      .focus-header > .primary-button { width: 100%; }
+      .vitals-inline { grid-column: auto; grid-row: auto; display: grid; grid-template-columns: repeat(2,1fr); }
+      .vital-inline { border: 0; padding: 7px 0; }
+      .focus-summary .summary-facts { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .compact-assistant-form { grid-template-columns: 1fr; }
+      .focus-footer { align-items: flex-start; flex-direction: column; }
       .history-patient-bar, .dated-record-head { align-items: flex-start; flex-direction: column; }
+    }
+    @media (max-width: 560px) {
+      .queue-overview { grid-template-columns: 1fr; }
+      .queue-action { grid-column: auto; }
+      .doctor-status-inline .doctor-status-options { grid-template-columns: 1fr; }
+      .doctor-status-inline .doctor-status-button { justify-content: flex-start; }
     }
 
     .toast { position: fixed; z-index: 10; right: 24px; bottom: 24px; width: min(360px, calc(100% - 48px)); background: var(--ink); color: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 20px 60px rgba(0,0,0,.22); transform: translateY(120%); opacity: 0; transition: .25s ease; }
@@ -1541,7 +1623,7 @@
             <div class="doctor-panel active" data-doctor-panel-content="current">
               <div class="page-heading clinical-heading">
                 <div><div class="eyebrow">Doctor dashboard</div><h1 id="doctorTitle">Clinical workspace</h1><p class="heading-copy">Review the active patient, their AI-assisted intake and supporting longitudinal evidence.</p></div>
-                <span class="prototype-label">Demo patient data</span>
+                <div class="doctor-status-inline" aria-labelledby="doctorStatusLabel"><span id="doctorStatusLabel">My availability</span><div class="doctor-status-options"><button class="doctor-status-button" type="button" data-status="active" aria-pressed="true">Active</button><button class="doctor-status-button" type="button" data-status="break" aria-pressed="false">Lunch break</button><button class="doctor-status-button" type="button" data-status="leave" aria-pressed="false">On leave</button></div></div>
               </div>
 
               <section class="queue-overview" aria-label="Patient queue">
@@ -1556,57 +1638,26 @@
                 <div class="queue-action"><strong>3 more patients waiting</strong><button class="secondary-button" type="button" data-toast="Patient notified|Rohan Mehta has been notified to be ready next.">Notify next patient</button></div>
               </section>
 
-              <div class="clinical-grid">
-                <article class="card ai-summary-card">
-                  <header class="ai-summary-head">
-                    <div><span class="ai-spark">AI intake summary</span><h2>Patient-reported consultation brief</h2><p>Generated from the patient’s guided pre-consultation assessment.</p></div>
-                    <span class="review-badge">Clinician review required</span>
-                  </header>
-                  <div class="patient-identity">
-                    <div class="patient-avatar">AS</div>
-                    <div><strong>Ananya Sharma</strong><small>42 years · Female · PT-001</small></div>
-                    <div class="patient-identity-meta">Hindi intake<br>Completed 10:42 AM</div>
-                  </div>
-                  <section class="summary-block"><h3>Presenting concern</h3><p><strong>Abdominal heaviness and reduced appetite for 2–3 days.</strong> Symptoms are more noticeable after meals and are accompanied by bloating. Patient reports no vomiting or fever.</p></section>
-                  <section class="summary-block"><h3>Patient-reported context</h3><div class="summary-facts"><div class="summary-fact"><small>Bowel movement</small><strong>Daily, feels incomplete</strong></div><div class="summary-fact"><small>Pain score</small><strong>3/10 · intermittent</strong></div><div class="summary-fact"><small>Sleep</small><strong>No recent change</strong></div><div class="summary-fact"><small>Similar episode</small><strong>May 2026</strong></div></div></section>
-                  <section class="summary-block"><h3>Medication and safety context</h3><p>Patient reported no regular medicines during intake. A previous uploaded prescription dated 14 June lists <strong>metformin 500 mg</strong>; confirm current usage. No known drug allergy is recorded.</p><div class="clinical-alert"><strong>Needs confirmation:</strong> medication history conflicts with a previous prescription.</div></section>
-                  <div class="summary-disclaimer"><span aria-hidden="true">ⓘ</span><span>This AI-generated draft supports review and does not replace the clinician’s assessment or diagnosis.</span></div>
-                </article>
-
-                <div class="clinical-stack">
-                  <aside class="card patient-snapshot">
-                    <div class="card-header"><div><div class="eyebrow">At a glance</div><h2>Current patient</h2></div><span class="status-pill">In consultation</span></div>
-                    <div class="card-body">
-                      <div class="vital-grid"><div class="vital"><small>Blood pressure</small><strong>128/82</strong></div><div class="vital"><small>Pulse</small><strong>78 bpm</strong></div><div class="vital"><small>Temperature</small><strong>98.4°F</strong></div><div class="vital"><small>SpO₂</small><strong>98%</strong></div></div>
-                      <div class="clinical-alert"><strong>Clinical flag:</strong> confirm whether metformin is currently being taken.</div>
-                      <button class="primary-button" type="button" data-toast="Encounter started|Ananya Sharma’s consultation workspace is now active.">Start encounter notes</button>
-                    </div>
-                  </aside>
-
-                  <aside class="card">
-                    <div class="card-header"><div><div class="eyebrow">Recent evidence</div><h2>Past medical records</h2></div><button class="secondary-button" type="button" data-doctor-panel="history">View all</button></div>
-                    <div class="card-body record-preview-list">
-                      <div class="record-preview"><time class="record-date">14 Jun 2026</time><div><strong>Prescription review</strong><small>Metformin listed; status unconfirmed</small></div><span class="record-type">Prescription</span></div>
-                      <div class="record-preview"><time class="record-date">02 May 2026</time><div><strong>Digestive discomfort</strong><small>OPD consultation · Dr. A. Mehta</small></div><span class="record-type">Visit</span></div>
-                      <div class="record-preview"><time class="record-date">18 Nov 2025</time><div><strong>HbA1c panel</strong><small>Result: 6.8%</small></div><span class="record-type">Lab</span></div>
-                    </div>
-                  </aside>
-
-                  <aside class="card">
-                    <div class="card-header"><div><div class="eyebrow">Source documents</div><h2>Patient files</h2></div></div>
-                    <div class="card-body document-list">
-                      <button class="document-row" type="button" data-toast="Document preview|Prescription dated 14 June 2026 is ready for review."><span><strong>Prescription · 14 Jun 2026</strong><small>Uploaded by patient</small></span><span class="document-format">PDF</span></button>
-                      <button class="document-row" type="button" data-toast="Document preview|HbA1c lab report dated 18 November 2025 is ready for review."><span><strong>HbA1c report · 18 Nov 2025</strong><small>Verified laboratory result</small></span><span class="document-format">PDF</span></button>
-                    </div>
+              <section class="card doctor-focus" aria-label="Current patient workspace">
+                <header class="focus-header">
+                  <div class="focus-patient"><div class="patient-avatar">AS</div><div><strong>Ananya Sharma</strong><small>42 years · Female · PT-001 · Hindi intake</small></div></div>
+                  <div class="vitals-inline" aria-label="Latest vital signs"><div class="vital-inline"><small>BP</small><strong>128/82</strong></div><div class="vital-inline"><small>Pulse</small><strong>78 bpm</strong></div><div class="vital-inline"><small>SpO₂</small><strong>98%</strong></div></div>
+                  <button class="primary-button" type="button" data-toast="Encounter started|Ananya Sharma’s consultation workspace is now active.">Start notes</button>
+                </header>
+                <div class="focus-grid">
+                  <article class="focus-summary">
+                    <header class="focus-summary-head"><div><span class="ai-spark">AI intake summary</span><h2>Consultation brief</h2><p>Patient-reported assessment · completed 10:42 AM</p></div><span class="review-badge">Review required</span></header>
+                    <section class="summary-block"><h3>Presenting concern</h3><p><strong>Abdominal heaviness and reduced appetite for 2–3 days.</strong> More noticeable after meals with bloating. No vomiting or fever reported.</p></section>
+                    <section class="summary-block"><h3>Patient-reported context</h3><div class="summary-facts"><div class="summary-fact"><small>Bowel movement</small><strong>Daily, incomplete</strong></div><div class="summary-fact"><small>Pain</small><strong>3/10</strong></div><div class="summary-fact"><small>Sleep</small><strong>Unchanged</strong></div><div class="summary-fact"><small>Similar episode</small><strong>May 2026</strong></div></div></section>
+                    <section class="summary-block"><h3>Medication context</h3><p>Patient reported no regular medicines. A prescription from 14 June lists <strong>metformin 500 mg</strong>; confirm whether it is still being taken.</p></section>
+                  </article>
+                  <aside class="focus-rail">
+                    <section class="focus-rail-section"><div class="compact-alert"><span><strong>Confirm medication:</strong> today’s intake conflicts with the previous prescription.</span></div></section>
+                    <section class="focus-rail-section"><div class="focus-rail-title"><h3>Recent records</h3><button type="button" data-doctor-panel="history">View all →</button></div><div class="compact-records"><div class="compact-record"><time>14 Jun 26</time><div><strong>Prescription</strong><small>Metformin 500 mg listed</small></div></div><div class="compact-record"><time>02 May 26</time><div><strong>Digestive discomfort</strong><small>Previous OPD consultation</small></div></div><div class="compact-record"><time>18 Nov 25</time><div><strong>HbA1c panel</strong><small>Result: 6.8%</small></div></div></div></section>
+                    <section class="focus-rail-section"><details class="record-assist-panel"><summary>Ask AI about records</summary><p class="record-assist-copy">Search prior consultations, prescriptions and documents with dated evidence.</p><form class="compact-assistant-form" id="doctorRecordAssistant"><input class="assistant-input" id="doctorRecordQuery" type="search" autocomplete="off" placeholder="Ask about medicines, labs…" aria-label="Ask a question about patient records"><button class="primary-button" type="submit">Ask</button></form><div class="compact-suggestions" aria-label="Suggested questions"><button class="assistant-chip" type="button" data-record-question="Which medicines were previously prescribed?">Medicines</button><button class="assistant-chip" type="button" data-record-question="Has this complaint happened before?">Similar complaints</button><button class="assistant-chip" type="button" data-record-question="Show the latest lab result">Latest lab</button></div><div class="compact-assistant-answer" id="doctorAssistantAnswer" aria-live="polite"><strong>Ask a question</strong> to find dated evidence in this patient’s records.</div></details></section>
                   </aside>
                 </div>
-              </div>
-
-              <section class="card records-assistant" aria-labelledby="recordAssistantTitle">
-                <header class="assistant-head"><div><span class="ai-spark">Record assistant</span><h2 id="recordAssistantTitle">Ask across this patient’s records</h2><p>Find details from prior consultations, prescriptions and uploaded documents with dated evidence.</p></div><span class="prototype-label">UI prototype</span></header>
-                <form class="assistant-form" id="doctorRecordAssistant"><input class="assistant-input" id="doctorRecordQuery" type="search" autocomplete="off" placeholder="Ask: What medicines appeared in previous prescriptions?" aria-label="Ask a question about patient records"><button class="primary-button" type="submit">Find in records</button></form>
-                <div class="assistant-suggestions" aria-label="Suggested questions"><button class="assistant-chip" type="button" data-record-question="Which medicines were previously prescribed?">Previous medicines</button><button class="assistant-chip" type="button" data-record-question="Has this complaint happened before?">Similar complaints</button><button class="assistant-chip" type="button" data-record-question="Show the latest lab result">Latest lab result</button><button class="assistant-chip" type="button" data-record-question="Are any allergies documented?">Known allergies</button></div>
-                <div class="assistant-answer" id="doctorAssistantAnswer" aria-live="polite"><strong>Try a suggested question.</strong> The prototype will return a concise answer and cite the source record date.</div>
+                <footer class="focus-footer"><span><span aria-hidden="true">ⓘ</span> AI-generated content supports review and does not replace clinical assessment.</span><span class="prototype-label">Demo patient data</span></footer>
               </section>
             </div>
 
@@ -3028,11 +3079,22 @@
     const doctorRecordAssistant = document.getElementById('doctorRecordAssistant');
     const doctorRecordQuery = document.getElementById('doctorRecordQuery');
     const doctorAssistantAnswer = document.getElementById('doctorAssistantAnswer');
+    const doctorStatusButtons = [...document.querySelectorAll('.doctor-status-button')];
     const doctorHistorySearch = document.getElementById('doctorHistorySearch');
     const doctorHistoryRecords = [...document.querySelectorAll('.dated-record')];
     const doctorHistoryFilters = [...document.querySelectorAll('[data-history-filter]')];
     const doctorHistoryEmpty = document.getElementById('doctorHistoryEmpty');
     let activeDoctorHistoryFilter = 'all';
+
+    const doctorStatusLabels = { active: 'Active', break: 'Lunch break', leave: 'On leave' };
+    function setDoctorStatus(status, announce = false) {
+      const nextStatus = doctorStatusLabels[status] ? status : 'active';
+      doctorStatusButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.status === nextStatus)));
+      localStorage.setItem('aarogyamDoctorStatus', nextStatus);
+      if (announce) showToast('Availability updated', `Your status is now ${doctorStatusLabels[nextStatus].toLowerCase()}.`);
+    }
+    setDoctorStatus(localStorage.getItem('aarogyamDoctorStatus') || 'active');
+    doctorStatusButtons.forEach(button => button.addEventListener('click', () => setDoctorStatus(button.dataset.status, true)));
 
     function answerDoctorRecordQuestion(question) {
       const query = question.trim().toLowerCase();
