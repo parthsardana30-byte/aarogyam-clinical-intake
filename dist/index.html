@@ -368,18 +368,8 @@
     .checkup-result-done { min-height: 52px; padding: 0 25px; border: 0; border-radius: 15px; background: var(--ink); color: #fff; font: inherit; font-weight: 760; cursor: pointer; }
     /* Patient conversation: a single viewport with a scrollable transcript. */
     .app-shell.patient-session.voice-mode .workspace { width: 100%; max-width: none; padding: 12px 0 0; }
-    @media (min-width: 761px) {
-      .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) .workspace {
-        width: calc(100% + 18px); max-width: none; margin-left: -18px; margin-right: 0;
-        padding-left: 0; padding-right: clamp(16px, 2vw, 32px);
-      }
-      .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) #patient .portal-workspace {
-        gap: clamp(18px, 2vw, 30px);
-      }
-      .app-shell.patient-session:not(.authorized-patient-device) #patient .doctor-sidebar {
-        position: sticky; top: 24px; left: 0; width: 100%; border-left: 0; border-radius: 0 26px 26px 0;
-      }
-    }
+    .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) .workspace { width: min(1280px, 100%); }
+    .app-shell.patient-session:not(.authorized-patient-device) #patient .doctor-sidebar { position: sticky; top: 24px; left: auto; width: 100%; }
     .app-shell.authorized-patient-device.patient-session .topbar,
     .app-shell.authorized-patient-device.patient-session .rolebar { display: none; }
     .app-shell.authorized-patient-device.patient-session { min-height: 100dvh; }
@@ -1580,11 +1570,11 @@
         <div class="checkup-launch" id="checkupLaunch">
           <div class="checkup-welcome" id="checkupWelcome">
             <section class="patient-dashboard-hero" aria-labelledby="patientDashboardTitle">
-              <p class="patient-dashboard-kicker">Your health workspace</p>
+              <p class="patient-dashboard-kicker">Your patient account</p>
               <h1 class="checkup-welcome-title" id="patientDashboardTitle">Hello, <span id="patientWelcomeName">Patient</span></h1>
-              <p class="patient-dashboard-copy">Start a private AI-assisted check-up in your preferred language. Your answers stay connected to your patient record for clinical review.</p>
-              <button class="checkup-launch-button" id="startCheckupButton" type="button">
-                Start AI check-up
+              <p class="patient-dashboard-copy">Review your consultation history, uploaded documents and health records from one secure place.</p>
+              <button class="checkup-launch-button" id="viewPatientRecordsHero" type="button">
+                Open my records
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
             </section>
@@ -2490,7 +2480,7 @@
     const confirmLanguage = document.getElementById('confirmLanguage');
     const languageSelect = document.getElementById('languageSelect');
     const roleLanguageSelect = document.getElementById('roleLanguageSelect');
-    const startCheckupButton = document.getElementById('startCheckupButton');
+    const viewPatientRecordsHero = document.getElementById('viewPatientRecordsHero');
     const toast = document.getElementById('toast');
     const deviceDialog = document.getElementById('deviceDialog');
     const deviceForm = document.getElementById('deviceForm');
@@ -2676,7 +2666,7 @@
       ['#reception .dashboard-grid aside .card-header h2', 'staff.actions.title'], ['#reception .action-button:nth-child(1) strong', 'staff.actions.begin'], ['#reception .action-button:nth-child(1) small', 'staff.actions.beginHelp'],
       ['#reception .action-button:nth-child(2) strong', 'staff.actions.scan'], ['#reception .action-button:nth-child(2) small', 'staff.actions.scanHelp'], ['#reception .action-button:nth-child(3) strong', 'staff.actions.consent'], ['#reception .action-button:nth-child(3) small', 'staff.actions.consentHelp'],
       ['#patient .doctor-nav-button:nth-child(1) .nav-label', 'patient.nav.start'], ['#patient .doctor-nav-button:nth-child(2) .nav-label', 'patient.nav.records'], ['#patient .doctor-nav-button:nth-child(3) .nav-label', 'patient.nav.consent'],
-      ['#startCheckupButton', 'patient.start', 'direct'], ['#languageForm h1', 'patient.chooseLanguage'], ['#backToCheckupWelcome', 'common.back'], ['#confirmLanguage', 'common.continue'],
+      ['#languageForm h1', 'patient.chooseLanguage'], ['#backToCheckupWelcome', 'common.back'], ['#confirmLanguage', 'common.continue'],
       ['#voiceStatus', 'patient.voice.ready'], ['#voiceQuestion', 'patient.voice.question'], ['#autoMicText', 'patient.voice.connecting'], ['#endVoiceSession', 'patient.voice.end'],
       ['.voice-chat-send-label', 'common.send'],
       ['#patientRecordsTitle', 'records.title'], ['#patientRecords .records-heading p', 'records.subtitle'], ['#patientRecords .records-summary-card:nth-child(1) span', 'records.consultations'], ['#patientRecords .records-summary-card:nth-child(2) span', 'records.documents'], ['#patientRecords .records-summary-card:nth-child(3) span', 'records.followup'],
@@ -2813,7 +2803,7 @@
         stopMicrophone();
       }
       if (isVoice) startVoiceSession(languageSelect.value);
-      if (focus && isStart) startCheckupButton.focus();
+      if (focus && isStart) viewPatientRecordsHero.focus();
       if (focus && isLanguage) languageOptions.querySelector('input').focus();
     }
 
@@ -2848,7 +2838,7 @@
       document.getElementById('checkupResultTitle').focus?.({ preventScroll: true });
     }
 
-    startCheckupButton.addEventListener('click', () => navigateRoute('patient/language', false, true));
+    viewPatientRecordsHero.addEventListener('click', () => navigateRoute('patient/records', false, true));
 
     languageOptions.addEventListener('change', () => {
       confirmLanguage.disabled = !languageForm.elements.checkupLanguage.value;
@@ -3148,6 +3138,10 @@
           route = 'patient/language';
           history.replaceState({ route }, '', '#/patient/language');
         }
+      }
+      if (!authorizedPatientDevice && /^patient\/(?:language|voice|summary)$/.test(route)) {
+        route = 'patient/start';
+        history.replaceState({ route }, '', '#/patient/start');
       }
       if (route === 'patient/intake') {
         route = 'patient/voice';
