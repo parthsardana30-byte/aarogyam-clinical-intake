@@ -27,6 +27,8 @@ const hospitalBranches = new Map([
   ['civil-nashik', { id: 'civil-nashik', name: 'Civil Hospital', location: 'Nashik, Maharashtra', issuedDoctorIds: new Set(['CHN-DR-5576']) }],
   ['civil-rajkot', { id: 'civil-rajkot', name: 'Civil Hospital', location: 'Rajkot, Gujarat', issuedDoctorIds: new Set(['CHR-DR-6631']) }]
 ]);
+const elevenLabsSignedUrlLastIssued = new Map();
+const activeCheckupHydrations = new Set();
 let devices = [];
 let patients = [];
 let patientsDb;
@@ -155,6 +157,21 @@ async function loadPatients() {
     );
     CREATE INDEX IF NOT EXISTS patient_documents_session_idx ON patient_documents(upload_session_id);
     CREATE INDEX IF NOT EXISTS patient_documents_patient_idx ON patient_documents(patient_id);
+    CREATE TABLE IF NOT EXISTS patient_checkups (
+      id TEXT PRIMARY KEY,
+      opd_number TEXT NOT NULL UNIQUE,
+      patient_id TEXT NOT NULL,
+      conversation_id TEXT NOT NULL UNIQUE,
+      language TEXT NOT NULL,
+      doctor_name TEXT NOT NULL,
+      doctor_specialty TEXT NOT NULL,
+      summary TEXT,
+      status TEXT NOT NULL DEFAULT 'processing',
+      created_at TEXT NOT NULL,
+      completed_at TEXT,
+      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS patient_checkups_patient_idx ON patient_checkups(patient_id, created_at DESC);
   `);
   const patientDocumentColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_documents)').all().map(column => column.name));
   const patientDocumentMigrations = [
@@ -242,6 +259,155 @@ async function readJson(request, maxBytes = 20_000) {
 function requestOrigin(request) {
   const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
   return `${protocol}://${request.headers.host || `localhost:${port}`}`;
+}
+
+function requestIp(request) {
+  return String(request.headers['x-forwarded-for'] || request.socket.remoteAddress || 'unknown').split(',')[0].trim();
+}
+
+async function createElevenLabsSignedUrl(request, response) {
+  const apiKey = String(process.env.ELEVENLABS_API_KEY || '').trim();
+  const agentId = String(process.env.ELEVENLABS_AGENT_ID || '').trim();
+  if (!apiKey || !/^agent_[a-zA-Z0-9]+$/.test(agentId)) {
+    return sendJson(response, 503, { configured: false, error: 'ElevenLabs agent is not configured' });
+  }
+  const ip = requestIp(request);
+  const lastIssued = elevenLabsSignedUrlLastIssued.get(ip) || 0;
+  if (Date.now() - lastIssued < 5_000) return sendJson(response, 429, { error: 'Please wait before reconnecting' });
+  const endpoint = new URL('https://api.elevenlabs.io/v1/convai/conversation/get-signed-url');
+  endpoint.searchParams.set('agent_id', agentId);
+  const result = await fetch(endpoint, { headers: { 'xi-api-key': apiKey, Accept: 'application/json' } });
+  if (!result.ok) {
+    console.error(`ElevenLabs signed URL request failed (${result.status})`);
+    return sendJson(response, 502, { error: 'Voice agent is temporarily unavailable' });
+  }
+  const payload = await result.json();
+  if (!payload.signed_url) return sendJson(response, 502, { error: 'Voice agent returned an invalid session' });
+  elevenLabsSignedUrlLastIssued.set(ip, Date.now());
+  sendJson(response, 200, { configured: true, signedUrl: payload.signed_url, expiresIn: 900 });
+}
+
+async function serveElevenLabsClient(response) {
+  try {
+    const body = await readFile(resolve('node_modules/@elevenlabs/client/dist/lib.iife.js'));
+    response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=86400' });
+    response.end(body);
+  } catch {
+    sendJson(response, 404, { error: 'ElevenLabs client is unavailable' });
+  }
+}
+
+const wait = milliseconds => new Promise(resolveWait => setTimeout(resolveWait, milliseconds));
+
+function publicCheckup(row) {
+  return {
+    id: row.id,
+    opdNumber: row.opd_number,
+    patientId: row.patient_id,
+    conversationId: row.conversation_id,
+    language: row.language,
+    doctor: { name: row.doctor_name, specialty: row.doctor_specialty },
+    summary: row.summary,
+    status: row.status,
+    createdAt: row.created_at,
+    completedAt: row.completed_at
+  };
+}
+
+function assignDoctor(summary = '') {
+  const text = String(summary).toLowerCase();
+  if (/joint|knee|arthritis|stiff|जोड़|घुटन|गठिया/.test(text)) {
+    return { name: 'Dr. Nisha Rao', specialty: 'AYUSH Medicine' };
+  }
+  return { name: 'Dr. Aarav Mehta', specialty: 'General Medicine' };
+}
+
+function createOpdNumber() {
+  const date = new Date().toISOString().slice(0, 10).replaceAll('-', '');
+  let opdNumber;
+  do { opdNumber = `OPD-${date}-${randomInt(1000, 10000)}`; }
+  while (patientsDb.prepare('SELECT 1 FROM patient_checkups WHERE opd_number = ?').get(opdNumber));
+  return opdNumber;
+}
+
+async function hydrateCheckupSummary(checkupId) {
+  if (activeCheckupHydrations.has(checkupId)) return;
+  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ?').get(checkupId);
+  if (!row || row.status === 'completed') return;
+  activeCheckupHydrations.add(checkupId);
+  try {
+    const apiKey = String(process.env.ELEVENLABS_API_KEY || '').trim();
+    const agentId = String(process.env.ELEVENLABS_AGENT_ID || '').trim();
+    if (!apiKey || !agentId) throw new Error('ElevenLabs is not configured');
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      if (attempt) await wait(1500);
+      const endpoint = `https://api.elevenlabs.io/v1/convai/conversations/${encodeURIComponent(row.conversation_id)}/summary?max_messages=80`;
+      const result = await fetch(endpoint, { headers: { 'xi-api-key': apiKey, Accept: 'application/json' } });
+      if (result.status === 404 || result.status === 409 || result.status === 425) continue;
+      if (!result.ok) throw new Error(`ElevenLabs summary request failed (${result.status})`);
+      const payload = await result.json();
+      if (payload.agent_id && payload.agent_id !== agentId) throw new Error('Conversation does not belong to the configured agent');
+      const summary = String(payload.transcript_summary || '').trim();
+      if (!summary || payload.status === 'processing') continue;
+      const doctor = assignDoctor(summary);
+      patientsDb.prepare(`
+        UPDATE patient_checkups
+        SET summary = ?, doctor_name = ?, doctor_specialty = ?, status = 'completed', completed_at = ?
+        WHERE id = ?
+      `).run(summary.slice(0, 6000), doctor.name, doctor.specialty, new Date().toISOString(), checkupId);
+      return;
+    }
+    throw new Error('ElevenLabs summary is still processing');
+  } catch (error) {
+    console.error(`Check-up summary ${checkupId} failed:`, error.message);
+    patientsDb.prepare("UPDATE patient_checkups SET status = 'pending' WHERE id = ?").run(checkupId);
+  } finally {
+    activeCheckupHydrations.delete(checkupId);
+  }
+}
+
+async function completePatientCheckup(request, response) {
+  const body = await readJson(request);
+  const patientId = String(body.patientId || '').trim();
+  const conversationId = String(body.conversationId || '').trim();
+  const language = String(body.language || 'English').trim().slice(0, 40) || 'English';
+  if (!/^AS-\d{6}$/.test(patientId) || !patientsDb.prepare('SELECT 1 FROM patients WHERE id = ?').get(patientId)) {
+    return sendJson(response, 404, { error: 'Patient account was not found' });
+  }
+  if (!/^conv_[a-zA-Z0-9]+$/.test(conversationId)) return sendJson(response, 400, { error: 'A completed AI conversation is required' });
+
+  const existing = patientsDb.prepare('SELECT * FROM patient_checkups WHERE conversation_id = ?').get(conversationId);
+  if (existing) {
+    if (existing.patient_id !== patientId) return sendJson(response, 409, { error: 'This conversation is already linked to another patient' });
+    if (existing.status !== 'completed') void hydrateCheckupSummary(existing.id);
+    return sendJson(response, existing.status === 'completed' ? 200 : 202, { checkup: publicCheckup(existing) });
+  }
+
+  const doctor = assignDoctor();
+  const checkup = {
+    id: randomUUID(), opdNumber: createOpdNumber(), patientId, conversationId, language,
+    doctor, createdAt: new Date().toISOString()
+  };
+  patientsDb.prepare(`
+    INSERT INTO patient_checkups (
+      id, opd_number, patient_id, conversation_id, language, doctor_name, doctor_specialty,
+      summary, status, created_at, completed_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 'processing', ?, NULL)
+  `).run(
+    checkup.id, checkup.opdNumber, checkup.patientId, checkup.conversationId, checkup.language,
+    doctor.name, doctor.specialty, checkup.createdAt
+  );
+  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ?').get(checkup.id);
+  void hydrateCheckupSummary(checkup.id);
+  sendJson(response, 202, { checkup: publicCheckup(row) });
+}
+
+function getPatientCheckup(_request, response, checkupId, url) {
+  const patientId = String(url.searchParams.get('patientId') || '');
+  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ? AND patient_id = ?').get(checkupId, patientId);
+  if (!row) return sendJson(response, 404, { error: 'Check-up was not found' });
+  if (row.status !== 'completed') void hydrateCheckupSummary(row.id);
+  sendJson(response, 200, { checkup: publicCheckup(row) });
 }
 
 function documentSession(id, token) {
@@ -997,6 +1163,9 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/staff-login') return await loginStaff(request, response);
     if (request.method === 'GET' && url.pathname === '/api/staff-patient-queue') return listStaffPatientQueue(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/staff-profile') return getStaffProfile(request, response, url);
+    if (request.method === 'POST' && url.pathname === '/api/patient-checkups') return await completePatientCheckup(request, response);
+    const patientCheckupMatch = url.pathname.match(/^\/api\/patient-checkups\/([0-9a-f-]+)$/i);
+    if (request.method === 'GET' && patientCheckupMatch) return getPatientCheckup(request, response, patientCheckupMatch[1], url);
     const statusMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/status$/i);
     if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1], url);
     const requestMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/request$/i);
@@ -1011,6 +1180,8 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'DELETE' && deviceMatch) return await revokeDevice(request, response, deviceMatch[1]);
     if (request.method === 'GET' && url.pathname === '/api/device-session') return await deviceSession(request, response);
     if (request.method === 'POST' && url.pathname === '/api/device-session/logout') return exitDeviceSession(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/elevenlabs/signed-url') return await createElevenLabsSignedUrl(request, response);
+    if (request.method === 'GET' && url.pathname === '/vendor/elevenlabs-client.js') return await serveElevenLabsClient(response);
     if (request.method === 'GET' || request.method === 'HEAD') return await serveStatic(request, response);
     sendJson(response, 405, { error: 'Method not allowed' });
   } catch (error) {

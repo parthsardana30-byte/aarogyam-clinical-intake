@@ -11,6 +11,8 @@ services:
       MSG91_WIDGET_ID: ${MSG91_WIDGET_ID}
       MSG91_WIDGET_TOKEN: ${MSG91_WIDGET_TOKEN}
       MSG91_AUTH_KEY: ${MSG91_AUTH_KEY}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      ELEVENLABS_AGENT_ID: ${ELEVENLABS_AGENT_ID:-}
     volumes:
       - ./data:/app/data
     networks:
