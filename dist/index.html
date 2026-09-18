@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -75,6 +75,9 @@
     }
 
     .brand { display: flex; align-items: center; gap: 13px; min-width: max-content; }
+    .brand-home-link { color: inherit; text-decoration: none; cursor: pointer; border-radius: 14px; transition: opacity .18s ease, transform .18s ease; }
+    .brand-home-link:hover { opacity: .82; transform: translateY(-1px); }
+    .brand-home-link:focus-visible { outline: 3px solid rgba(14,102,85,.2); outline-offset: 5px; }
     .brand-mark {
       width: 42px; height: 42px; border-radius: 13px;
       display: grid; place-items: center;
@@ -129,6 +132,14 @@
     }
     .language-select:focus { outline: 3px solid rgba(14,102,85,.13); border-color: var(--teal); }
     .language-select option { color: var(--ink); background: #fff; }
+    .settings-profile {
+      width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 0 12px;
+      border: 1px solid rgba(14,102,85,.15); border-radius: 12px; background: #f3faf7; color: var(--teal-dark);
+      font: inherit; font-weight: 750; cursor: pointer; transition: background .18s ease, border-color .18s ease;
+    }
+    .settings-profile[hidden] { display: none; }
+    .settings-profile:hover { background: var(--mint); border-color: rgba(14,102,85,.3); }
+    .settings-profile svg { width: 19px; height: 19px; }
     .settings-logout {
       width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px;
       border: 1px solid rgba(181,78,38,.16); border-radius: 12px; background: #fff7f0; color: #9a451f;
@@ -243,6 +254,51 @@
     .queue-table th, .queue-table td { padding: 13px 14px; text-align: left; border-bottom: 1px solid var(--line); }
     .queue-table th { color: #687d78; font-size: .77rem; text-transform: uppercase; letter-spacing: .06em; }
     .queue-table tbody tr:last-child td { border-bottom: 0; }
+    .staff-queue-card { width: 100%; }
+    .staff-action-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 30px; }
+    .staff-action-card {
+      --action-accent: 15, 136, 127;
+      position: relative; isolation: isolate; min-height: 240px; display: grid; grid-template-columns: 86px 1fr auto; gap: 22px; align-items: center;
+      overflow: hidden; padding: 28px; border: 1px solid rgba(28,73,94,.13); border-radius: 24px; background: rgba(255,255,255,.9); color: var(--ink);
+      text-align: left; font: inherit; cursor: pointer; box-shadow: 0 22px 60px rgba(19,55,73,.09);
+      transition: transform .52s cubic-bezier(.2,.75,.25,1), box-shadow .52s ease, border-color .35s ease;
+    }
+    .staff-action-card:nth-child(2) { --action-accent: 22, 117, 142; }
+    .staff-action-card::before { content: ""; position: absolute; left: 22px; top: 50%; width: 130px; aspect-ratio: 1; border-radius: 50%; z-index: -1; background: radial-gradient(circle, rgba(var(--action-accent),.2) 0 28%, rgba(var(--action-accent),.1) 53%, transparent 72%); filter: blur(2px); opacity: 0; transform: translateY(-50%) scale(.5); transition: transform .72s cubic-bezier(.16,1,.3,1), opacity .32s ease; }
+    .staff-action-card:is(:hover, :focus-visible) { transform: translateY(-8px) scale(1.008); border-color: rgba(var(--action-accent),.42); box-shadow: 0 30px 76px rgba(var(--action-accent),.18); outline: none; }
+    .staff-action-card:is(:hover, :focus-visible)::before { opacity: 1; transform: translateY(-50%) scale(4.8); }
+    .staff-action-icon { width: 86px; height: 86px; display: grid; place-items: center; border-radius: 27px; color: #fff; background: linear-gradient(145deg, #19a99b, #0c6e68); border: 1px solid rgba(255,255,255,.5); box-shadow: inset 0 2px 0 rgba(255,255,255,.26), 0 14px 28px rgba(var(--action-accent),.24); transition: transform .58s cubic-bezier(.16,1,.3,1), box-shadow .48s ease; }
+    .staff-action-card:nth-child(2) .staff-action-icon { background: linear-gradient(145deg, #28a4bd, #105d78); }
+    .staff-action-icon svg { width: 48px; height: 48px; overflow: visible; }
+    .staff-action-icon svg [stroke] { stroke-dasharray: 1; stroke-dashoffset: 0; }
+    .staff-action-copy span { display: block; margin-bottom: 8px; color: rgb(var(--action-accent)); font-size: .72rem; font-weight: 850; letter-spacing: .11em; text-transform: uppercase; }
+    .staff-action-copy h2 { margin: 0 0 8px; font-size: clamp(1.45rem, 2vw, 1.9rem); letter-spacing: -.035em; }
+    .staff-action-copy p { margin: 0; max-width: 36ch; color: var(--ink-soft); font-size: .88rem; line-height: 1.5; }
+    .staff-action-arrow { color: rgb(var(--action-accent)); font-size: 2rem; opacity: .35; transform: translateX(-8px); transition: opacity .25s ease, transform .48s cubic-bezier(.16,1,.3,1); }
+    .staff-action-card:is(:hover, :focus-visible) .staff-action-icon { transform: translateY(-5px) scale(1.055) rotate(-4deg); box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 18px 38px rgba(var(--action-accent),.35), 0 0 0 9px rgba(var(--action-accent),.09); }
+    .staff-action-card:is(:hover, :focus-visible) .staff-action-icon svg [stroke] { animation: icon-line-draw .72s cubic-bezier(.65,0,.25,1) both; }
+    .staff-action-card:is(:hover, :focus-visible) .staff-action-arrow { opacity: 1; transform: translateX(0); }
+    .staff-queue-heading { margin-bottom: 16px; }
+    @media (max-width: 900px) { .staff-action-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) {
+      .staff-action-card { min-height: 190px; grid-template-columns: 66px 1fr; padding: 22px; }
+      .staff-action-icon { width: 66px; height: 66px; border-radius: 21px; }
+      .staff-action-icon svg { width: 39px; height: 39px; }
+      .staff-action-arrow { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .staff-action-card, .staff-action-card::before, .staff-action-icon, .staff-action-arrow { transition: none; }
+      .staff-action-card:is(:hover, :focus-visible), .staff-action-card:is(:hover, :focus-visible) .staff-action-icon { transform: none; }
+      .staff-action-icon svg [stroke] { animation: none !important; stroke-dashoffset: 0 !important; }
+    }
+    #reception .queue-table th:nth-child(1), #reception .queue-table td:nth-child(1) { width: 29%; }
+    #reception .queue-table th:nth-child(2), #reception .queue-table td:nth-child(2) { width: 16%; }
+    #reception .queue-table th:nth-child(3), #reception .queue-table td:nth-child(3) { width: 31%; }
+    #reception .queue-table th:nth-child(4), #reception .queue-table td:nth-child(4) { width: 24%; }
+    .requested-specialist { color: var(--teal-dark); font-weight: 750; }
+    .queue-document-action { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 11px; background: #f5faf8; color: var(--teal-dark); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+    .queue-document-action svg { width: 17px; height: 17px; flex: 0 0 17px; }
+    .queue-document-action:is(:hover, :focus-visible) { border-color: var(--teal); background: var(--mint); outline: none; transform: translateY(-1px); }
     .status-pill { display: inline-flex; padding: 5px 9px; border-radius: 999px; background: var(--mint); color: var(--teal-dark); font-size: .76rem; font-weight: 750; }
     .status-pill.waiting { background: #f0eee7; color: #625d4e; }
     .status-pill.review { background: var(--orange-soft); color: #8b4b15; }
@@ -283,30 +339,17 @@
     .current-patient-name { color: #1769aa; }
     .patient-greeting-name { color: #1769aa; }
     .checkup-launch {
-      min-height: calc(100dvh - 194px); display: grid; align-items: center; padding: 18px 0 36px;
+      min-height: calc(100dvh - 194px); display: grid; place-items: center; padding: 28px;
     }
     .checkup-launch[hidden], .checkup-flow[hidden], .checkup-welcome[hidden], .language-step[hidden] { display: none; }
-    .checkup-welcome { width: min(100%, 1040px); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(260px, .65fr); gap: 18px; align-items: stretch; }
-    .patient-dashboard-hero {
-      position: relative; min-height: 410px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;
-      padding: clamp(28px, 5vw, 54px); border: 1px solid rgba(16,43,39,.1); border-radius: 30px;
-      background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(239,246,242,.9));
-      box-shadow: 0 26px 70px rgba(16,43,39,.1);
-    }
-    .patient-dashboard-hero::after {
-      content: ""; position: absolute; width: 310px; aspect-ratio: 1; top: -118px; right: -76px; border-radius: 50%;
-      background: radial-gradient(circle at 36% 34%, rgba(255,255,255,.95), rgba(67,191,163,.25) 38%, rgba(35,105,91,.12) 64%, transparent 66%);
-      box-shadow: 0 0 70px rgba(65,184,156,.18); pointer-events: none;
-    }
-    .patient-dashboard-kicker { margin: 0 0 14px; color: var(--teal); font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .checkup-welcome { display: grid; justify-items: center; gap: 54px; text-align: center; }
     .checkup-welcome-title {
-      position: relative; z-index: 1; margin: 0; color: var(--ink); font-size: clamp(2.8rem, 5vw, 4.6rem); font-weight: 650;
-      letter-spacing: -.055em; line-height: .98;
+      margin: 0; color: var(--ink); font-size: clamp(3rem, 7vw, 5.25rem); font-weight: 650;
+      letter-spacing: -.055em; line-height: .98; transform: translateY(-24px);
     }
     .checkup-welcome-title span { color: #1769aa; }
-    .patient-dashboard-copy { position: relative; z-index: 1; max-width: 560px; margin: 20px 0 30px; color: #58716c; font-size: 1rem; line-height: 1.65; }
     .checkup-launch-button {
-      position: relative; z-index: 1; width: fit-content; min-width: min(300px, 100%); min-height: 62px; display: inline-flex; align-items: center; justify-content: center; gap: 13px;
+      min-width: min(340px, 100%); min-height: 68px; display: inline-flex; align-items: center; justify-content: center; gap: 13px;
       border: 0; border-radius: 20px; padding: 0 28px; background: var(--ink); color: #fff; font: inherit;
       font-size: 1.08rem; font-weight: 780; cursor: pointer; box-shadow: 0 18px 42px rgba(16,43,39,.22);
       transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
@@ -314,13 +357,6 @@
     .checkup-launch-button:hover { transform: translateY(-3px); background: #16483f; box-shadow: 0 24px 52px rgba(16,43,39,.28); }
     .checkup-launch-button:focus-visible { outline: 4px solid rgba(244,162,97,.42); outline-offset: 4px; }
     .checkup-launch-button svg { width: 22px; height: 22px; }
-    .patient-dashboard-side { display: grid; gap: 14px; }
-    .patient-dashboard-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 126px; padding: 22px; border: 1px solid rgba(16,43,39,.1); border-radius: 24px; background: rgba(255,255,255,.82); box-shadow: 0 18px 46px rgba(16,43,39,.07); }
-    .patient-dashboard-card span { color: #647a75; font-size: .78rem; font-weight: 760; letter-spacing: .04em; text-transform: uppercase; }
-    .patient-dashboard-card strong { color: var(--ink); font-size: 1.45rem; letter-spacing: -.03em; }
-    .patient-dashboard-card.action { border: 0; align-items: flex-start; color: #fff; background: linear-gradient(145deg, #176b5d, #0d4037); cursor: pointer; text-align: left; }
-    .patient-dashboard-card.action span, .patient-dashboard-card.action strong { color: inherit; }
-    .patient-dashboard-card.action:hover { transform: translateY(-2px); box-shadow: 0 22px 48px rgba(13,64,55,.18); }
     .language-step { width: min(930px, 100%); }
     .language-card {
       padding: clamp(24px, 4vw, 42px); border: 1px solid rgba(182, 200, 194, .72); border-radius: 30px;
@@ -346,68 +382,19 @@
     .language-back { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
     .language-continue { min-width: 180px; border: 0; background: var(--ink); color: #fff; }
     .language-continue:disabled { cursor: not-allowed; opacity: .42; }
-    .checkup-result { min-height: calc(100dvh - 24px); display: grid; place-items: center; padding: 24px; }
-    .checkup-result[hidden] { display: none; }
-    .checkup-result-card { width: min(880px, 100%); overflow: hidden; border: 1px solid rgba(16,43,39,.11); border-radius: 30px; background: rgba(255,255,255,.94); box-shadow: 0 28px 80px rgba(16,43,39,.13); }
-    .checkup-result-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; padding: clamp(28px, 5vw, 48px); background: linear-gradient(145deg, #153e35, #0c2924); color: #fff; }
-    .checkup-result-kicker { margin: 0 0 10px; color: #a9dfcb; font-size: .73rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
-    .checkup-result-head h1 { margin: 0; color: #fff; font-size: clamp(2rem, 5vw, 3.6rem); }
-    .opd-ticket { min-width: 210px; padding: 18px 20px; border: 1px solid rgba(255,255,255,.2); border-radius: 18px; background: rgba(255,255,255,.1); }
-    .opd-ticket span, .result-doctor span { display: block; color: #a9c7bd; font-size: .72rem; font-weight: 760; letter-spacing: .09em; text-transform: uppercase; }
-    .opd-ticket strong { display: block; margin-top: 6px; font-size: 1.18rem; letter-spacing: .02em; }
-    .checkup-result-body { padding: clamp(26px, 4vw, 42px); }
-    .result-doctor { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; margin-bottom: 26px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
-    .result-doctor strong { display: block; margin-top: 5px; color: var(--ink); font-size: 1.35rem; }
-    .result-doctor-badge { padding: 8px 12px; border-radius: 999px; background: var(--mint); color: var(--teal-dark); font-size: .78rem; font-weight: 750; }
-    .result-summary h2 { margin: 0 0 10px; font-size: 1rem; }
-    .result-summary p { min-height: 88px; margin: 0; color: #4e6861; line-height: 1.7; white-space: pre-wrap; }
-    .result-summary-status { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; color: #688079; font-size: .8rem; }
-    .result-summary-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #f0a05c; box-shadow: 0 0 0 5px rgba(240,160,92,.14); }
-    .result-summary-status.ready::before { background: #3b9d78; box-shadow: 0 0 0 5px rgba(59,157,120,.14); }
-    .checkup-result-actions { display: flex; justify-content: flex-end; margin-top: 30px; }
-    .checkup-result-done { min-height: 52px; padding: 0 25px; border: 0; border-radius: 15px; background: var(--ink); color: #fff; font: inherit; font-weight: 760; cursor: pointer; }
     /* Patient conversation: a single viewport with a scrollable transcript. */
     .app-shell.patient-session.voice-mode .workspace { width: 100%; max-width: none; padding: 12px 0 0; }
-    .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) .workspace { width: min(1280px, 100%); }
-    .app-shell.patient-session:not(.authorized-patient-device) #patient .doctor-sidebar { position: sticky; top: 24px; left: auto; width: 100%; }
-    .app-shell.authorized-patient-device.patient-session .topbar,
-    .app-shell.authorized-patient-device.patient-session .rolebar { display: none; }
-    .app-shell.authorized-patient-device.patient-session { min-height: 100dvh; }
-    .app-shell.authorized-patient-device.patient-session .workspace { width: 100%; max-width: none; padding: 12px 16px; }
-    .app-shell.authorized-patient-device.patient-session .language-back { display: none; }
     .voice-session { display: grid; place-items: stretch; padding: 0 18px 18px; }
     .app-shell.authorized-patient-device #patient .portal-workspace { grid-template-columns: minmax(0, 1fr); }
     .app-shell.authorized-patient-device #patient .doctor-sidebar { display: none; }
     .app-shell.authorized-patient-device #patient .portal-main { grid-column: 1; width: 100%; }
     .voice-experience { position: relative; isolation: isolate; width: 100%; height: max(440px, calc(100dvh - 136px)); }
-    .voice-stage { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 0; }
-    .voice-orb {
-      position: relative; width: clamp(160px, 23vw, 260px); aspect-ratio: 1; border-radius: 50%;
-      background: url('/assets/chat-orb.png') center / cover no-repeat;
-      opacity: .72; filter: saturate(1.75) brightness(1.18) contrast(1.08) hue-rotate(12deg);
-      box-shadow: 0 0 34px rgba(44, 211, 255, .34), 0 0 72px rgba(112, 72, 255, .22), inset 0 0 22px rgba(255,255,255,.22);
-      border: 0; padding: 0; cursor: pointer; pointer-events: auto;
-      transition: opacity .4s, filter .4s, box-shadow .4s;
-      animation: orbFloat 5.2s ease-in-out infinite, orbShimmer 9s ease-in-out infinite alternate;
-    }
-    .voice-orb::before {
-      content: ""; position: absolute; inset: -13%; z-index: -1; border-radius: 50%;
-      background: radial-gradient(circle, rgba(50,224,255,.3), rgba(107,77,255,.14) 48%, transparent 70%);
-      filter: blur(18px);
-    }
+    .voice-stage { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: -1; }
+    .voice-orb { width: clamp(160px, 23vw, 260px); aspect-ratio: 1; border-radius: 50%; background: url('/assets/chat-orb.png') center / cover no-repeat; opacity: .13; filter: saturate(.8); transition: opacity .4s, filter .4s; }
     .voice-orb svg { display: none; }
-    .voice-orb:hover { filter: saturate(1.95) brightness(1.26) contrast(1.1) hue-rotate(18deg); }
-    .voice-orb:focus-visible { outline: 4px solid rgba(37, 190, 236, .38); outline-offset: 8px; }
-    .voice-orb.connecting { animation: orbConnect 1s ease-in-out infinite alternate, orbShimmer 3s linear infinite alternate; }
-    .voice-orb.listening { opacity: .9; filter: saturate(2) brightness(1.28) contrast(1.1) hue-rotate(12deg); box-shadow: 0 0 46px rgba(36,225,255,.52), 0 0 92px rgba(117,73,255,.34), inset 0 0 26px rgba(255,255,255,.3); animation: voicePulse 2.4s ease-in-out infinite, orbShimmer 6s ease-in-out infinite alternate; }
-    .voice-orb.speaking { opacity: 1; filter: saturate(2.2) brightness(1.35) contrast(1.12) hue-rotate(20deg); animation: orbSpeak .72s ease-in-out infinite alternate, orbShimmer 2.6s linear infinite alternate; }
-    @keyframes orbFloat { 0%, 100% { transform: translate3d(0,-5px,0) rotate(-1deg); } 50% { transform: translate3d(0,12px,0) rotate(2deg); } }
-    @keyframes orbShimmer { from { background-position: 42% 50%; } to { background-position: 58% 50%; } }
-    @keyframes orbConnect { from { transform: scale(.96) rotate(-2deg); } to { transform: scale(1.04) rotate(2deg); } }
-    @keyframes orbSpeak { from { transform: translateY(-4px) scale(1); } to { transform: translateY(5px) scale(1.085); } }
-    @keyframes voicePulse { 50% { transform: translateY(7px) scale(1.06); } }
-    .voice-chat { position: relative; z-index: 1; height: 100%; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; pointer-events: none; }
-    .voice-chat-head, .voice-chat-messages, .voice-chat-form { pointer-events: auto; }
+    .voice-orb.listening { opacity: .27; filter: saturate(1.2); animation: voicePulse 2.4s ease-in-out infinite; }
+    @keyframes voicePulse { 50% { transform: scale(1.06); } }
+    .voice-chat { position: relative; height: 100%; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
     .voice-chat-head { position: absolute; top: 0; right: 0; z-index: 4; display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 0; border-bottom: 0; }
     .voice-chat-title, .voice-audio-toggle { display: none !important; }
     .voice-chat-title h1 { font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 650; letter-spacing: -.04em; margin: 0; line-height: 1.2; }
@@ -427,20 +414,20 @@
     .voice-chat-message p { margin: 0; }
     .voice-chat-message small { display: block; margin-top: 9px; font-size: .7rem; color: #b4cfc1; letter-spacing: .01em; }
     .voice-chat-message.user small { color: #557462; }
-    .voice-chat-form { width: min(780px, calc(100% - 16px)); margin: 0 auto 8px; padding: 10px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; border: 1px solid #cbd8cd; border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: inset 0 1px 0 #fff, 0 12px 32px rgba(37,68,47,.08); backdrop-filter: blur(20px); }
+    .voice-chat-form { width: min(780px, calc(100% - 16px)); margin: 0 auto 8px; padding: 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; border: 1px solid #cbd8cd; border-radius: 18px; background: rgba(255,255,255,.91); box-shadow: inset 0 1px 0 #fff, 0 12px 32px rgba(37,68,47,.08); backdrop-filter: blur(20px); }
     .voice-chat-form:focus-within { border-color: #7da58e; box-shadow: 0 0 0 3px rgba(101,146,118,.1), 0 12px 32px rgba(37,68,47,.08); }
     .voice-chat-input { min-width: 0; min-height: 48px; border: 0; padding: 9px 12px; border-radius: 8px; font: inherit; font-size: 1rem; background: transparent; color: var(--ink); }
     .voice-chat-input::placeholder { color: #849489; }
     .voice-chat-input:focus { outline: none; }
-    .voice-chat-send { min-width: 48px; height: 48px; display: grid; place-items: center; border: 0; border-radius: 12px; background: #193f32; color: #f3fff6; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 3px 7px rgba(21,49,37,.12); transition: background .2s, transform .2s; }
+    .voice-chat-send { position: relative; top: 6px; min-width: 48px; height: 48px; display: grid; place-items: center; border: 0; border-radius: 12px; background: #193f32; color: #f3fff6; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 3px 7px rgba(21,49,37,.12); transition: background .2s, transform .2s; }
     .voice-chat-send:hover { background: #2b604b; transform: translateY(-1px); }
     .voice-chat-send:disabled { opacity: .45; cursor: default; transform: none; }
-    .voice-talk { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 48px; padding: 9px 15px; border: 1px solid #b9d3c5; border-radius: 12px; background: linear-gradient(145deg, #eef8f2, #dcece4); color: #174c38; font: inherit; font-size: .86rem; font-weight: 750; white-space: nowrap; cursor: pointer; box-shadow: inset 0 1px 0 #fff, 0 4px 12px rgba(26,80,56,.08); }
-    .voice-talk:hover { border-color: #7eaf97; transform: translateY(-1px); }
-    .voice-talk[aria-pressed="true"] { background: #193f32; border-color: #193f32; color: #fff; box-shadow: 0 0 0 4px rgba(40,126,91,.12); }
-    .voice-input-status { grid-column: 1 / -1; margin: -2px 8px 1px; font-size: .76rem; color: #718378; line-height: 1.4; }
+    .voice-composer-tools { display: none; }
+    .voice-talk { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 12px; border: 1px solid #cbdcd1; border-radius: 9px; background: #edf5ef; color: #265d46; font: inherit; font-size: .82rem; font-weight: 700; white-space: nowrap; }
+    .voice-talk[aria-pressed="true"] { background: #193f32; border-color: #193f32; color: #fff; }
+    .voice-input-status { margin: 0; font-size: .76rem; color: #718378; line-height: 1.4; }
     .voice-input-status.error { color: #9a4329; }
-    @media (prefers-reduced-motion: reduce) { .voice-chat-message, .voice-orb, .voice-orb.listening, .voice-orb.speaking, .voice-orb.connecting { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .voice-chat-message, .voice-orb.listening { animation: none; } }
     .portal-main .intake-grid { grid-template-columns: minmax(210px, .72fr) minmax(410px, 1.55fr) minmax(250px, .88fr); }
     .doctor-profile { padding: 4px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
     .doctor-profile-mark { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 15px; background: var(--mint); color: var(--teal); font-weight: 800; }
@@ -479,6 +466,62 @@
     .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .nav-label { display: block; }
     .app-shell.sidebar-collapsed .doctor-sidebar:hover .doctor-nav-button,
     .app-shell.sidebar-collapsed .doctor-sidebar:focus-within .doctor-nav-button { justify-content: flex-start; gap: 9px; padding: 12px 10px; }
+    .app-shell.staff-session .doctor-sidebar {
+      will-change: width, padding;
+      transition: width .36s cubic-bezier(.22,1,.36,1), padding .36s cubic-bezier(.22,1,.36,1), box-shadow .3s ease;
+    }
+    .app-shell.staff-session .doctor-profile {
+      display: grid; grid-template-columns: 48px minmax(0,1fr); align-items: center; column-gap: 12px;
+      padding: 4px 4px 20px;
+      transition: grid-template-columns .36s cubic-bezier(.22,1,.36,1), column-gap .36s cubic-bezier(.22,1,.36,1), padding .36s cubic-bezier(.22,1,.36,1);
+    }
+    .app-shell.staff-session .doctor-profile-mark { margin: 0; flex: 0 0 auto; }
+    .app-shell.staff-session .doctor-profile-mark svg { width: 25px; height: 25px; }
+    .app-shell.staff-session .doctor-profile-copy {
+      min-width: 0; max-width: 168px; overflow: hidden; opacity: 1; transform: translateX(0);
+      transition: max-width .36s cubic-bezier(.22,1,.36,1), opacity .2s ease .08s, transform .36s cubic-bezier(.22,1,.36,1);
+    }
+    .app-shell.staff-session .doctor-profile-copy strong,
+    .app-shell.staff-session .doctor-profile-copy small { display: block; }
+    .app-shell.staff-session .doctor-profile-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .app-shell.staff-session .doctor-profile-copy small { overflow: visible; white-space: normal; line-height: 1.25; }
+    .app-shell.staff-session .doctor-nav-button { transition: padding .36s cubic-bezier(.22,1,.36,1), gap .36s cubic-bezier(.22,1,.36,1), background .2s ease, color .2s ease, box-shadow .2s ease; }
+    .app-shell.staff-session .nav-label {
+      display: block; width: auto; max-width: 172px; overflow: hidden; opacity: 1; transform: translateX(0);
+      transition: max-width .36s cubic-bezier(.22,1,.36,1), opacity .18s ease .08s, transform .36s cubic-bezier(.22,1,.36,1);
+    }
+    .app-shell.staff-session.sidebar-collapsed .doctor-profile {
+      grid-template-columns: 46px minmax(0,0fr); column-gap: 0; padding: 2px 0 18px;
+    }
+    .app-shell.staff-session.sidebar-collapsed .doctor-profile-mark { width: 46px; height: 46px; margin: 0; }
+    .app-shell.staff-session.sidebar-collapsed .doctor-profile-copy {
+      display: block; max-width: 0; opacity: 0; transform: translateX(-8px); pointer-events: none;
+      transition-delay: 0s;
+    }
+    .app-shell.staff-session.sidebar-collapsed .nav-label {
+      display: block; max-width: 0; opacity: 0; transform: translateX(-7px); pointer-events: none;
+      transition-delay: 0s;
+    }
+    .app-shell.staff-session.sidebar-collapsed .doctor-sidebar:hover .doctor-profile,
+    .app-shell.staff-session.sidebar-collapsed .doctor-sidebar:focus-within .doctor-profile {
+      grid-template-columns: 48px minmax(0,1fr); column-gap: 12px; padding: 4px 4px 20px;
+    }
+    .app-shell.staff-session.sidebar-collapsed .doctor-sidebar:hover .doctor-profile-mark,
+    .app-shell.staff-session.sidebar-collapsed .doctor-sidebar:focus-within .doctor-profile-mark { width: 48px; height: 48px; margin: 0; }
+    .app-shell.staff-session.sidebar-collapsed .doctor-sidebar:hover .doctor-profile-copy,
+    .app-shell.staff-session.sidebar-collapsed .doctor-sidebar:focus-within .doctor-profile-copy,
+    .app-shell.staff-session.sidebar-collapsed .doctor-sidebar:hover .nav-label,
+    .app-shell.staff-session.sidebar-collapsed .doctor-sidebar:focus-within .nav-label {
+      display: block; max-width: 172px; opacity: 1; transform: translateX(0); pointer-events: auto;
+      transition-delay: .07s;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .app-shell.staff-session .doctor-sidebar,
+      .app-shell.staff-session .doctor-profile,
+      .app-shell.staff-session .doctor-profile-copy,
+      .app-shell.staff-session .doctor-nav-button,
+      .app-shell.staff-session .nav-label { transition: none; }
+    }
     .doctor-panel { display: none; }
     .doctor-panel.active { display: block; animation: appear .22s ease-out; }
     .history-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
@@ -698,7 +741,7 @@
     .toast strong { display: block; margin-bottom: 2px; }
     .toast small { color: #c9d8d4; }
     .device-dialog {
-      width: min(470px, calc(100vw - 32px)); padding: 0; border: 1px solid rgba(16,43,39,.12);
+      width: min(720px, calc(100vw - 32px)); padding: 0; border: 1px solid rgba(16,43,39,.12);
       border-radius: 24px; background: #fff; color: var(--ink); box-shadow: 0 30px 90px rgba(16,43,39,.28);
     }
     .device-dialog::backdrop { background: rgba(8,28,25,.48); backdrop-filter: blur(7px); }
@@ -729,13 +772,74 @@
     .device-cancel { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
     .device-authorize { border: 0; background: var(--ink); color: #fff; }
     .device-authorize:disabled { cursor: not-allowed; opacity: .42; }
+    .device-dialog-form { max-height: min(880px, calc(100dvh - 32px)); overflow-y:auto; }
+    .device-invite { display:grid; grid-template-columns:210px 1fr; gap:22px; align-items:center; padding:18px; border:1px solid var(--line); border-radius:19px; background:#f7faf8; }
+    .device-invite-qr { width:210px; aspect-ratio:1; display:grid; place-items:center; overflow:hidden; border:1px solid var(--line); border-radius:16px; background:#fff; color:var(--soft); font-size:.82rem; text-align:center; }
+    .device-invite-qr img { width:100%; height:100%; display:block; }
+    .device-invite-copy h3 { margin:0 0 22px; font-size:1.42rem; line-height:1.15; letter-spacing:-.025em; }
+    .device-invite-code { margin-bottom:10px; color:var(--ink); font-size:1.8rem; font-weight:850; letter-spacing:.18em; font-variant-numeric:tabular-nums; }
+    .device-invite-expiry { color:var(--teal); font-size:.78rem; font-weight:780; }
+    .device-invite-refresh { min-height:40px; margin-top:14px; padding:0 13px; border:1px solid var(--line-strong); border-radius:11px; background:#fff; color:var(--ink); font:inherit; font-size:.8rem; font-weight:780; cursor:pointer; }
+    .device-management-section { margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+    .device-management-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .device-management-title h3 { margin:0; font-size:.95rem; }
+    .device-pending-item { padding:14px; border:1px solid #efc98f; border-radius:14px; background:#fffaf0; }
+    .device-pending-item strong, .device-pending-item small { display:block; }
+    .device-pending-item small { margin-top:4px; color:var(--soft); font-size:.72rem; overflow-wrap:anywhere; }
+    .device-network-meta { display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:7px; color:var(--ink-soft); font-size:.72rem; }
+    .device-network-meta span { display:inline-flex; align-items:center; gap:5px; overflow-wrap:anywhere; }
+    .device-network-meta span::before { width:6px; height:6px; flex:0 0 auto; border-radius:50%; background:var(--teal); content:""; opacity:.7; }
+    .device-pending-actions { display:flex; gap:8px; margin-top:12px; }
+    .device-pending-actions button { min-height:39px; padding:0 13px; border-radius:10px; font:inherit; font-size:.8rem; font-weight:800; cursor:pointer; }
+    .device-approve { border:0; background:var(--teal); color:#fff; }
+    .device-reject { border:1px solid var(--line-strong); background:#fff; color:#8d3d33; }
+    @media (max-width:600px) { .device-invite { grid-template-columns:1fr; } .device-invite-qr { width:min(240px,100%); margin:auto; } }
+    .staff-document-dialog { width: min(690px, calc(100vw - 32px)); }
+    .staff-document-dialog .device-dialog-form { max-height: min(820px, calc(100dvh - 32px)); overflow-y: auto; }
+    .staff-document-dialog .document-upload-chooser { margin-top: 0; }
+    .staff-document-patient { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: -6px 0 18px; padding: 12px 14px; border-radius: 14px; background: var(--mint); }
+    .staff-document-patient strong, .staff-document-patient small { display: block; }
+    .staff-document-patient small { margin-top: 2px; color: var(--ink-soft); }
+    .staff-document-patient span:last-child { color: var(--teal-dark); font-size: .76rem; font-weight: 800; }
+    .staff-profile-page { max-width: 1040px; margin: 0 auto; }
+    .staff-profile-back { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 13px; background: rgba(255,255,255,.78); color: var(--ink); font: inherit; font-weight: 760; cursor: pointer; }
+    .staff-profile-back svg { width: 18px; height: 18px; }
+    .staff-profile-card { overflow: hidden; }
+    .staff-profile-identity { display: grid; grid-template-columns: 74px 1fr auto; gap: 18px; align-items: center; padding: 26px; background: linear-gradient(135deg, #0f3b34, #126b59); color: #fff; }
+    .staff-profile-avatar { width: 74px; height: 74px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.24); border-radius: 22px; background: rgba(255,255,255,.12); }
+    .staff-profile-avatar svg { width: 36px; height: 36px; }
+    .staff-profile-identity h2 { margin: 0 0 5px; font-size: 1.55rem; }
+    .staff-profile-identity p { margin: 0; color: rgba(255,255,255,.76); }
+    .staff-profile-verified { padding: 8px 11px; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; background: rgba(255,255,255,.12); font-size: .74rem; font-weight: 820; letter-spacing: .06em; text-transform: uppercase; }
+    .staff-profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 8px 26px 26px; }
+    .staff-profile-field { min-width: 0; padding: 20px 0; border-bottom: 1px solid var(--line); }
+    .staff-profile-field:nth-child(odd) { padding-right: 26px; }
+    .staff-profile-field:nth-child(even) { padding-left: 26px; border-left: 1px solid var(--line); }
+    .staff-profile-field:nth-last-child(-n+2) { border-bottom: 0; }
+    .staff-profile-field span, .staff-profile-field strong { display: block; }
+    .staff-profile-field span { margin-bottom: 6px; color: var(--ink-soft); font-size: .74rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+    .staff-profile-field strong { overflow-wrap: anywhere; font-size: 1rem; }
+    .staff-profile-status { min-height: 20px; margin: 14px 2px 0; color: var(--ink-soft); font-size: .82rem; }
+    @media (max-width: 680px) {
+      .staff-profile-identity { grid-template-columns: 60px 1fr; padding: 20px; }
+      .staff-profile-avatar { width: 60px; height: 60px; border-radius: 18px; }
+      .staff-profile-verified { grid-column: 1 / -1; justify-self: start; }
+      .staff-profile-grid { grid-template-columns: 1fr; padding: 4px 20px 20px; }
+      .staff-profile-field:nth-child(n) { padding: 17px 0; border-left: 0; border-bottom: 1px solid var(--line); }
+      .staff-profile-field:last-child { border-bottom: 0; }
+    }
     .authorized-devices { margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
     .authorized-devices h3 { margin:0 0 10px; font-size:.95rem; }
     .authorized-device-list { display:grid; gap:8px; }
     .authorized-device-item { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 12px; border-radius:12px; background:#f4f8f6; }
     .authorized-device-item strong, .authorized-device-item small { display:block; }
     .authorized-device-item small { margin-top:2px; color:var(--soft); font-size:.72rem; }
+    .authorized-device-item .device-network-meta { margin-top:6px; }
     .authorized-device-state { color:var(--teal); font-size:.75rem; font-weight:780; }
+    .authorized-device-actions { display:flex; align-items:center; gap:10px; }
+    .authorized-device-revoke { min-height:34px; padding:0 10px; border:1px solid #e0b5ae; border-radius:9px; background:#fff; color:#9a4035; font:inherit; font-size:.72rem; font-weight:800; cursor:pointer; transition:.18s ease; }
+    .authorized-device-revoke:hover,.authorized-device-revoke:focus-visible { outline:none; border-color:#b95042; background:#fff0ed; }
+    .authorized-device-revoke.is-confirming { border-color:#a64437; background:#a64437; color:#fff; }
     .authorized-device-empty { margin:0; color:var(--soft); font-size:.82rem; }
 
     .login-screen {
@@ -795,9 +899,14 @@
     .login-brand .brand-mark { width: 38px; height: 38px; border-radius: 12px; box-shadow: none; }
     .login-brand .brand-name { color: #0b2634; font-family: inherit; font-size: 1.35rem; font-weight: 680; letter-spacing: -.035em; }
     .login-brand .brand-context { color: #66716e; font-size: .76rem; }
+    .role-header-actions { position:absolute; top:2px; right:0; z-index:8; display:flex; align-items:center; gap:10px; }
+    .role-authorize-device { height:46px; display:inline-flex; align-items:center; gap:8px; padding:0 15px; border:1px solid rgba(28,73,94,.16); border-radius:15px; background:rgba(255,255,255,.82); color:#0f6f67; font:inherit; font-size:.82rem; font-weight:780; cursor:pointer; box-shadow:0 10px 28px rgba(19,55,73,.08); backdrop-filter:blur(14px); transition:.2s ease; }
+    .role-authorize-device svg { width:18px; height:18px; }
+    .role-authorize-device:hover { transform:translateY(-1px); border-color:rgba(15,136,127,.42); box-shadow:0 14px 32px rgba(19,55,73,.12); }
+    .role-authorize-device:focus-visible { outline:3px solid rgba(15,136,127,.14); outline-offset:2px; }
     .role-language-control {
-      position: absolute; top: 2px; right: 0; z-index: 8; min-width: 178px; height: 46px;
-      display: flex; align-items: center; gap: 9px; padding: 0 13px;
+      position: relative; min-width: 178px; height: 46px;
+      display: flex; align-items: center;
       border: 1px solid rgba(28,73,94,.16); border-radius: 15px;
       background: rgba(255,255,255,.82); color: #153746;
       box-shadow: 0 10px 28px rgba(19,55,73,.08); backdrop-filter: blur(14px);
@@ -805,15 +914,24 @@
     }
     .role-language-control:hover { transform: translateY(-1px); border-color: rgba(15,136,127,.38); box-shadow: 0 14px 32px rgba(19,55,73,.12); }
     .role-language-control:focus-within { outline: 3px solid rgba(15,136,127,.14); border-color: #0f887f; }
-    .role-language-control svg { width: 20px; height: 20px; flex: 0 0 auto; color: #0f887f; pointer-events: none; }
-    .role-language-select {
-      min-width: 0; width: 100%; height: 100%; padding: 0 24px 0 0; border: 0; outline: 0;
-      appearance: none; background: transparent; color: inherit; font: inherit; font-size: .88rem; font-weight: 720; cursor: pointer;
-    }
-    .role-language-chevron { position: absolute; right: 12px; width: 15px !important; height: 15px !important; color: #59726c !important; }
-    .login-screen.form-open .role-language-control { display: none; }
+    .role-language-select { display:none; }
+    .role-language-trigger { width:100%; height:100%; display:flex; align-items:center; gap:9px; padding:0 13px; border:0; background:transparent; color:inherit; font:inherit; font-size:.88rem; font-weight:720; cursor:pointer; }
+    .role-language-trigger svg { width:20px; height:20px; flex:0 0 auto; color:#0f887f; }
+    .role-language-trigger span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; text-align:left; white-space:nowrap; }
+    .role-language-trigger .role-language-chevron { width:15px; height:15px; color:#59726c; transition:transform .2s ease; }
+    .role-language-control.is-open .role-language-chevron { transform:rotate(180deg); }
+    .role-language-menu { position:absolute; top:54px; right:0; z-index:20; width:286px; max-height:min(430px,calc(100vh - 120px)); overflow-y:auto; padding:8px; border:1px solid rgba(28,73,94,.14); border-radius:17px; background:rgba(255,255,255,.98); box-shadow:0 24px 60px rgba(19,55,73,.2); backdrop-filter:blur(18px); scrollbar-width:thin; scrollbar-color:#9db5ae transparent; }
+    .role-language-menu[hidden] { display:none; }
+    .role-language-option { width:100%; min-height:42px; display:flex; align-items:center; gap:10px; padding:8px 11px; border:0; border-radius:11px; background:transparent; color:#173b47; font:inherit; font-size:.86rem; cursor:pointer; text-align:left; }
+    .role-language-option:hover,.role-language-option:focus-visible { outline:none; background:#edf7f3; color:#0f6f67; }
+    .role-language-option[aria-selected="true"] { background:var(--mint); color:#0b6153; font-weight:780; }
+    .role-language-option[aria-selected="true"]::after { content:"✓"; margin-left:auto; color:#0f887f; font-weight:900; }
+    .login-screen.form-open .role-header-actions { display: none; }
     .login-intro { text-align: center; margin: 0 auto 42px; max-width: 700px; }
     .login-intro h1 { margin: 0; color: #0b2634; font-family: inherit; font-weight: 590; letter-spacing: -.05em; font-size: clamp(2.35rem, 4.6vw, 3.8rem); }
+    .exit-device-mode { margin-top:16px; padding:9px 15px; border:1px solid rgba(15,136,127,.3); border-radius:999px; background:rgba(255,255,255,.7); color:#0f6f67; font:inherit; font-size:.82rem; font-weight:780; cursor:pointer; transition:.2s ease; }
+    .exit-device-mode:hover { background:#0f887f; color:#fff; transform:translateY(-1px); }
+    .exit-device-mode:focus-visible { outline:3px solid rgba(15,136,127,.18); outline-offset:3px; }
     .login-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .login-screen.device-patient-only .login-cards { grid-template-columns: minmax(260px, 390px); justify-content: center; }
     .login-screen.device-patient-only .login-card:not([data-portal-role="patient"]) { display: none; }
@@ -947,7 +1065,12 @@
     .login-form-shell.patient-login-details .login-form-area { justify-content:flex-start; overflow-y:auto; padding-top:30px; padding-bottom:28px; scrollbar-gutter:stable; }
     .login-form-shell.patient-signup-details { height: min(720px, calc(100dvh - 40px)); }
     .login-form-shell.doctor-registration-details { height: min(850px, calc(100dvh - 40px)); }
-    .login-form-shell.doctor-registration-details .login-form-area { justify-content:flex-start; overflow-y:auto; padding-top:30px; padding-bottom:30px; scrollbar-gutter:stable; }
+    .login-form-shell.staff-registration-details { height: min(920px, calc(100dvh - 24px)); }
+    .login-form-shell.doctor-registration-details .login-form-area,
+    .login-form-shell.staff-registration-details .login-form-area { justify-content:flex-start; overflow-y:auto; padding-top:30px; padding-bottom:30px; scrollbar-gutter:stable; }
+    @media (min-width: 761px) {
+      .login-form-shell.staff-registration-details .login-form-area { overflow-y:hidden; scrollbar-gutter:auto; }
+    }
     .login-form-shell.patient-signup-details .login-form-area {
       justify-content: flex-start;
       overflow-y: auto;
@@ -1158,10 +1281,14 @@
       .login-screen::before { inset: 8px; border-radius: 24px; }
       .login-brand { justify-content: flex-start; margin-bottom: 28px; }
       .login-brand .brand-context { display: block; }
-      .role-language-control { top: -2px; min-width: 52px; width: 52px; padding: 0 14px; }
-      .role-language-control > svg:first-child { width: 22px; height: 22px; }
-      .role-language-select { position: absolute; inset: 0; width: 100%; opacity: 0; }
-      .role-language-chevron { display: none; }
+      .role-header-actions { top:-2px; gap:7px; }
+      .role-authorize-device { width:46px; padding:0; justify-content:center; }
+      .role-authorize-device span { display:none; }
+      .role-language-control { min-width: 52px; width: 52px; }
+      .role-language-trigger { padding:0; justify-content:center; }
+      .role-language-trigger span,.role-language-trigger .role-language-chevron { display:none; }
+      .role-language-trigger svg:first-child { width:22px; height:22px; }
+      .role-language-menu { position:fixed; top:78px; right:14px; left:14px; width:auto; }
       .login-cards { grid-template-columns: 1fr; }
       .login-card { min-height: auto; padding: 23px; }
       .login-screen.form-open { padding: 12px; }
@@ -1191,7 +1318,6 @@
       .primary-button { grid-column: 1 / -1; }
       .message { max-width: 92%; }
       .metric-grid { grid-template-columns: 1fr; }
-      .queue-table th:nth-child(3), .queue-table td:nth-child(3) { display: none; }
       .doctor-workspace, .portal-workspace { grid-template-columns: 1fr; }
       .doctor-sidebar { position: static; width: auto; height: auto; min-height: 0; padding: 14px; }
       .doctor-main, .portal-main { grid-column: auto; }
@@ -1201,21 +1327,16 @@
       .app-shell.sidebar-collapsed .portal-workspace { grid-template-columns: 1fr; }
       .app-shell.sidebar-collapsed .doctor-sidebar { width: auto; padding: 14px; }
       .app-shell.sidebar-collapsed .nav-label { display: inline; }
+      .app-shell.staff-session .doctor-profile { display: none; }
+      .app-shell.staff-session.sidebar-collapsed .nav-label { display: inline; max-width: none; opacity: 1; transform: none; pointer-events: auto; }
       .app-shell.sidebar-collapsed .doctor-nav-button { justify-content: flex-start; gap: 9px; padding: 12px 10px; }
       .history-toolbar { flex-direction: column; align-items: stretch; }
       .history-record { grid-template-columns: 1fr; gap: 8px; }
       .checkup-launch { min-height: auto; padding: 34px 0; }
-      .checkup-welcome { grid-template-columns: 1fr; }
-      .patient-dashboard-hero { min-height: 360px; border-radius: 24px; }
-      .patient-dashboard-side { grid-template-columns: 1fr; }
       .language-card { border-radius: 22px; }
       .language-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .language-actions { align-items: stretch; flex-direction: column-reverse; }
       .language-back, .language-continue { width: 100%; }
-      .checkup-result { padding: 8px; }
-      .checkup-result-head { grid-template-columns: 1fr; }
-      .opd-ticket { min-width: 0; }
-      .result-doctor { grid-template-columns: 1fr; }
       .voice-session { padding: 0; }
       .voice-experience { height: max(440px, calc(100dvh - 145px)); }
       .voice-orb { width: 180px; }
@@ -1249,6 +1370,30 @@
       .field-group { margin-bottom: 11px; }
       .login-row { margin-bottom: 15px; }
     }
+
+    @media (min-width: 761px) and (max-height: 820px) {
+      .login-screen.form-open:has(.staff-registration-details) { padding: 8px; }
+      .login-form-shell.staff-registration-details { height: calc(100dvh - 16px); max-height: none; }
+      .login-form-shell.staff-registration-details .login-form-area { padding: 14px 46px 12px; }
+      .staff-registration-details .login-form-header { grid-template-columns: 40px 1fr 40px; gap: 12px; margin-bottom: 8px; }
+      .staff-registration-details .back-button { width: 40px; height: 40px; border-radius: 12px; }
+      .staff-registration-details .login-form-brand .brand-mark { width: 40px; height: 40px; border-radius: 12px; }
+      .staff-registration-details .login-form-brand .brand-mark svg { width: 28px; height: 28px; }
+      .staff-registration-details .login-form-brand .brand-name { font-size: 1.35rem; }
+      .staff-registration-details .login-form-area h2 { margin-bottom: 12px; font-size: 1.8rem; }
+      .staff-registration-details .field-group { margin-bottom: 8px; }
+      .staff-registration-details .field-group label { margin-bottom: 4px; font-size: .76rem; }
+      .staff-registration-details .field-group input,
+      .staff-registration-details .field-group select { min-height: 42px; padding-top: 8px; padding-bottom: 8px; }
+      .staff-registration-details .field-help { margin-top: 4px; font-size: .66rem; }
+      .staff-registration-details .doctor-profile-heading { margin: 1px 0 7px; padding-top: 8px; }
+      .staff-registration-details .doctor-profile-heading strong { font-size: .82rem; }
+      .staff-registration-details .doctor-profile-heading small { margin-top: 2px; font-size: .67rem; line-height: 1.25; }
+      .staff-registration-details #staffProfileFields { gap: 0 10px; }
+      .staff-registration-details #staffProfileFields .is-wide { grid-column: auto; }
+      .staff-registration-details .login-status { min-height: 12px; margin: -4px 2px 5px; font-size: .7rem; }
+      .staff-registration-details .login-submit { height: 46px; }
+    }
   </style>
 </head>
 <body>
@@ -1258,22 +1403,30 @@
       <span class="hospital-backdrop-copy"><small>Verified branch</small><strong id="hospitalBackdropName">Civil Hospital</strong><span id="hospitalBackdropLocation"></span></span>
     </div>
     <div class="login-container">
-      <div class="login-brand">
+      <a class="login-brand brand-home-link" href="#/roles" aria-label="Go to the main dashboard">
         <div class="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 32 32" fill="none"><path class="brand-a" d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path class="brand-pulse" pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div><div class="brand-name">Arogyam</div></div>
-      </div>
+      </a>
 
-      <label class="role-language-control" for="roleLanguageSelect" aria-label="Change language">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3c2.3 2.45 3.45 5.45 3.45 9S14.3 18.55 12 21c-2.3-2.45-3.45-5.45-3.45-9S9.7 5.45 12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <select class="role-language-select" id="roleLanguageSelect" aria-label="Website language"></select>
-        <svg class="role-language-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </label>
+      <div class="role-header-actions">
+        <button class="role-authorize-device" type="button" data-enroll-device aria-label="Authorize this device"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="3" width="10" height="18" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 17.5h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m16.5 10.5 1.6 1.6 3.1-3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18.5" cy="10.5" r="4" stroke="currentColor" stroke-width="1.5"/></svg><span>Authorize this device</span></button>
+        <div class="role-language-control" id="roleLanguageControl">
+          <select class="role-language-select" id="roleLanguageSelect" aria-hidden="true" tabindex="-1"></select>
+          <button class="role-language-trigger" id="roleLanguageTrigger" type="button" aria-label="Change language" aria-haspopup="listbox" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3c2.3 2.45 3.45 5.45 3.45 9S14.3 18.55 12 21c-2.3-2.45-3.45-5.45-3.45-9S9.7 5.45 12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span id="roleLanguageValue">English</span>
+            <svg class="role-language-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="role-language-menu" id="roleLanguageMenu" role="listbox" aria-label="Website language" hidden></div>
+        </div>
+      </div>
 
       <div id="rolePicker">
         <div class="login-intro">
           <h1 id="loginTitle">Choose your care portal</h1>
+          <button class="exit-device-mode" id="exitDeviceMode" type="button" hidden>Show normal dashboard</button>
         </div>
         <div class="login-cards">
           <article class="login-card" data-portal-role="patient">
@@ -1306,12 +1459,12 @@
             <button class="back-button" id="backToRoles" type="button" aria-label="Choose another portal">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14.5 6-6 6 6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
-            <div class="login-form-brand" aria-label="Arogyam">
+            <a class="login-form-brand brand-home-link" href="#/roles" aria-label="Go to the main dashboard">
               <div class="brand-mark" aria-hidden="true">
                 <svg viewBox="0 0 32 32" fill="none"><path class="brand-a" d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path class="brand-pulse" pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </div>
               <div class="brand-name">Arogyam</div>
-            </div>
+            </a>
             <span aria-hidden="true"></span>
           </div>
           <h2 id="formTitle">Welcome back</h2>
@@ -1351,7 +1504,7 @@
                 <span>Aadhaar card</span>
               </div>
             </div>
-            <div class="field-group" id="patientIdentityGroup" hidden><label for="patientIdentityNumber" id="patientIdentityLabel">ABHA ID</label><input id="patientIdentityNumber" inputmode="numeric" placeholder="Enter your ABHA ID" /></div>
+            <div class="field-group" id="patientIdentityGroup" hidden><label for="patientIdentityNumber" id="patientIdentityLabel">ABHA ID</label><input id="patientIdentityNumber" inputmode="numeric" maxlength="14" placeholder="Enter your ABHA ID" /></div>
             <div class="field-group" id="doctorHospitalGroup" hidden>
               <label for="doctorHospital">Hospital branch</label>
               <select id="doctorHospital">
@@ -1359,7 +1512,14 @@
               </select>
               <small class="field-help" id="doctorHospitalHelp">Choose the branch that issued your doctor ID.</small>
             </div>
-            <div class="field-group"><label for="loginIdentifier" id="identifierLabel">Patient ID</label><input id="loginIdentifier" autocomplete="username" required placeholder="Enter patient ID" /></div>
+            <div class="field-group" id="staffHospitalGroup" hidden>
+              <label for="staffHospital">Hospital branch</label>
+              <select id="staffHospital">
+                <option value="">Select your hospital branch</option>
+              </select>
+              <small class="field-help" id="staffHospitalHelp">Any non-empty employee ID is accepted.</small>
+            </div>
+            <div class="field-group" id="loginIdentifierGroup"><label for="loginIdentifier" id="identifierLabel">Patient ID</label><input id="loginIdentifier" autocomplete="username" maxlength="30" required placeholder="Enter patient ID" /></div>
             <div class="doctor-profile-fields" id="doctorProfileFields" hidden>
               <div class="doctor-profile-heading"><strong>Professional details</strong><small>These details identify the clinician in hospital records and patient-facing workflows.</small></div>
               <div class="field-group is-wide"><label for="doctorFullName">Full name</label><input id="doctorFullName" autocomplete="name" maxlength="80" placeholder="Dr. full name" /></div>
@@ -1368,8 +1528,15 @@
               <div class="field-group"><label for="doctorMedicalRegistration">Medical registration no.</label><input id="doctorMedicalRegistration" maxlength="30" autocomplete="off" placeholder="e.g. G-48219" /></div>
               <div class="field-group"><label for="doctorExperience">Years of experience</label><input id="doctorExperience" type="number" min="0" max="70" step="1" placeholder="e.g. 8" /></div>
               <div class="field-group"><label for="doctorRoom">Room / OPD no.</label><input id="doctorRoom" maxlength="20" placeholder="e.g. OPD-204" /></div>
-              <div class="field-group"><label for="doctorPhone">Mobile number</label><input id="doctorPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="13" placeholder="10-digit mobile number" /></div>
+              <div class="field-group"><label for="doctorPhone">Mobile number</label><input id="doctorPhone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="10-digit mobile number" /></div>
               <div class="field-group is-wide"><label for="doctorEmail">Professional email</label><input id="doctorEmail" type="email" autocomplete="email" maxlength="120" placeholder="doctor@hospital.in" /></div>
+            </div>
+            <div class="doctor-profile-fields" id="staffProfileFields" hidden>
+              <div class="doctor-profile-heading"><strong>Staff details</strong><small>These details identify the staff member in hospital records and operational workflows.</small></div>
+              <div class="field-group is-wide"><label for="staffFullName">Full name</label><input id="staffFullName" autocomplete="name" maxlength="80" placeholder="Full name" /></div>
+              <div class="field-group is-wide"><label for="staffEmployeeId">Employee ID</label><input id="staffEmployeeId" autocomplete="username" maxlength="30" placeholder="Enter employee ID" /></div>
+              <div class="field-group"><label for="staffPhone">Mobile number</label><input id="staffPhone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="10-digit mobile number" /></div>
+              <div class="field-group"><label for="staffEmail">Professional email</label><input id="staffEmail" type="email" autocomplete="email" maxlength="120" placeholder="staff@hospital.in" /></div>
             </div>
             <div class="signup-otp-panel" id="signupOtpPanel" hidden>
               <button class="signup-otp-send" id="sendSignupOtp" type="button">Send OTP</button>
@@ -1380,7 +1547,7 @@
               </div>
               <p class="signup-otp-status" id="signupOtpStatus" role="status" aria-live="polite"></p>
             </div>
-            <div class="field-group"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter password" /></div>
+            <div class="field-group"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" maxlength="128" required placeholder="Enter password" /></div>
             <div class="login-row" id="loginRememberRow"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label></div>
             <p class="login-status" id="loginStatus" role="status" aria-live="polite"></p>
             <button class="primary-button login-submit" type="submit" aria-label="Continue securely">
@@ -1440,12 +1607,12 @@
 
   <div class="app-shell sidebar-collapsed" id="appShell" hidden>
     <header class="topbar">
-      <div class="brand" aria-label="Arogyam home">
+      <a class="brand brand-home-link" href="#/roles" aria-label="Go to the main dashboard">
         <div class="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 32 32" fill="none"><path class="brand-a" d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path class="brand-pulse" pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div class="brand-name">Arogyam</div>
-      </div>
+      </a>
       <div class="top-actions">
         <div class="settings-wrap">
           <button class="settings-button" id="settingsButton" type="button" aria-label="Open settings" aria-expanded="false" aria-controls="settingsMenu">
@@ -1453,6 +1620,10 @@
           </button>
           <div class="settings-menu" id="settingsMenu" hidden>
             <div class="settings-menu-head"><strong>Settings</strong><small>Workspace preferences</small></div>
+            <button class="settings-profile" id="staffProfileButton" type="button" hidden>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c.5-4 3-6 7-6s6.5 2 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span>View staff profile</span>
+            </button>
             <label class="settings-field" for="languageSelect">
               <span>Language</span>
               <select class="language-select" id="languageSelect" aria-label="Conversation language">
@@ -1482,64 +1653,79 @@
         <div class="portal-workspace">
           <aside class="card doctor-sidebar portal-sidebar" aria-label="Hospital staff navigation">
             <div class="doctor-profile">
-              <div class="doctor-profile-mark">SK</div>
-              <strong>Simran Kaur</strong>
-              <small>OPD Coordinator</small>
+              <div class="doctor-profile-mark" id="staffSidebarMark" role="img" aria-label="Staff account">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 20c.7-4 2.9-6 6.5-6s5.8 2 6.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </div>
+              <div class="doctor-profile-copy">
+                <strong id="staffSidebarName">Simran Kaur</strong>
+                <small id="staffSidebarHospital">OPD Coordinator</small>
+              </div>
             </div>
             <nav class="doctor-nav">
               <button class="doctor-nav-button" type="button" data-patient-route="start" aria-selected="true">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="20" cy="18" r="2" fill="currentColor"/></svg>
                 <span class="nav-label">Patient queue</span>
               </button>
-              <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="Patient history|Previous registrations and visits will appear here.">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                <span class="nav-label">Patient history</span>
-              </button>
-              <button class="doctor-nav-button" type="button" aria-selected="false" data-toast="Documents|Document scanning and uploads are ready.">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M10 13h5M10 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                <span class="nav-label">Documents</span>
-              </button>
-              <button class="doctor-nav-button" id="addAuthorizedDevice" type="button" aria-selected="false">
+              <button class="doctor-nav-button" id="addAuthorizedDevice" type="button" aria-selected="false" data-authorize-device>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M9 7h6M12 11v6M9 14h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 <span class="nav-label">Add authorized device</span>
               </button>
             </nav>
           </aside>
           <div class="portal-main">
-        <div class="page-heading">
+        <section class="staff-action-grid" aria-label="Reception actions">
+          <button class="staff-action-card" type="button" data-start-intake>
+            <span class="staff-action-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="27" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.2)"/><path pathLength="1" d="M19 18h26v32H19V18Z" stroke="currentColor" stroke-width="2.7" stroke-linejoin="round"/><path pathLength="1" d="M26 18v-5h12v5M32 27v14M25 34h14" stroke="#c8fff3" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="staff-action-copy"><span>Patient support</span><h2>Start new intake</h2><p>Begin an assisted registration and intake conversation for a patient.</p></span>
+            <span class="staff-action-arrow" aria-hidden="true">→</span>
+          </button>
+          <button class="staff-action-card" type="button" data-authorize-device>
+            <span class="staff-action-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="27" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.2)"/><rect pathLength="1" x="19" y="10" width="26" height="44" rx="6" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" d="M27 18h10M32 28v14M25 35h14" stroke="#d7f8ff" stroke-width="2.7" stroke-linecap="round"/></svg></span>
+            <span class="staff-action-copy"><span>Workspace access</span><h2>Authorize a device</h2><p>Connect a trusted reception device for secure patient assistance.</p></span>
+            <span class="staff-action-arrow" aria-hidden="true">→</span>
+          </button>
+        </section>
+        <div class="page-heading staff-queue-heading">
           <div><h1 id="receptionTitle">Today’s intake queue</h1></div>
-          <button class="primary-button" data-start-intake>+ Start new intake</button>
         </div>
-        <div class="metric-grid">
-          <article class="card metric"><div class="metric-value">18</div><div class="metric-label">Patients registered today</div></article>
-          <article class="card metric"><div class="metric-value">11 min</div><div class="metric-label">Average intake time</div></article>
-          <article class="card metric"><div class="metric-value">6</div><div class="metric-label">Cases ready for doctors</div></article>
+        <article class="card staff-queue-card">
+          <div class="card-header"><h2>Patient queue</h2></div>
+          <div style="overflow-x:auto">
+            <table class="queue-table">
+              <thead><tr><th>Patient</th><th>Language</th><th>Requested specialist</th><th>Documents</th></tr></thead>
+              <tbody id="staffPatientQueueBody">
+                <tr><td colspan="4"><small>Loading registered patients…</small></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+          </div>
         </div>
-        <div class="dashboard-grid">
-          <article class="card">
-            <div class="card-header"><h2>Patient queue</h2></div>
-            <div style="overflow-x:auto">
-              <table class="queue-table">
-                <thead><tr><th>Patient</th><th>Status</th><th>Language</th><th>Wait</th></tr></thead>
-                <tbody>
-                  <tr><td><strong>Demo Patient A</strong><br><small>DEMO-001</small></td><td><span class="status-pill review">Doctor review</span></td><td>Hindi</td><td>18 min</td></tr>
-                  <tr><td><strong>Demo Patient B</strong><br><small>DEMO-002</small></td><td><span class="status-pill">Intake active</span></td><td>Hindi</td><td>12 min</td></tr>
-                  <tr><td><strong>Demo Patient C</strong><br><small>DEMO-003</small></td><td><span class="status-pill waiting">Waiting</span></td><td>Punjabi</td><td>7 min</td></tr>
-                  <tr><td><strong>Demo Patient D</strong><br><small>DEMO-004</small></td><td><span class="status-pill waiting">Waiting</span></td><td>Marathi</td><td>3 min</td></tr>
-                </tbody>
-              </table>
+      </section>
+
+      <section class="view" id="staffProfile" aria-labelledby="staffProfileTitle">
+        <div class="staff-profile-page">
+          <div class="page-heading">
+            <div><span class="eyebrow">Hospital staff account</span><h1 id="staffProfileTitle">Staff profile</h1><p class="heading-copy">Your verified employment and contact information.</p></div>
+            <button class="staff-profile-back" id="backToStaffQueue" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to queue</button>
+          </div>
+          <article class="card staff-profile-card">
+            <header class="staff-profile-identity">
+              <div class="staff-profile-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M5.5 20c.6-3.8 2.9-5.8 6.5-5.8s5.9 2 6.5 5.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
+              <div><h2 id="staffProfileName">Hospital staff</h2><p id="staffProfileHospital">Civil Hospital</p></div>
+              <span class="staff-profile-verified">Verified staff</span>
+            </header>
+            <div class="staff-profile-grid">
+              <div class="staff-profile-field"><span>Full name</span><strong id="staffProfileFullName">—</strong></div>
+              <div class="staff-profile-field"><span>Employee ID</span><strong id="staffProfileEmployeeId">—</strong></div>
+              <div class="staff-profile-field"><span>Mobile number</span><strong id="staffProfilePhone">—</strong></div>
+              <div class="staff-profile-field"><span>Professional email</span><strong id="staffProfileEmail">—</strong></div>
+              <div class="staff-profile-field"><span>Hospital branch</span><strong id="staffProfileBranch">—</strong></div>
+              <div class="staff-profile-field"><span>Location</span><strong id="staffProfileLocation">—</strong></div>
+              <div class="staff-profile-field"><span>Account created</span><strong id="staffProfileCreated">—</strong></div>
             </div>
           </article>
-          <aside class="card">
-            <div class="card-header"><h2>Reception actions</h2></div>
-            <div class="card-body action-list">
-              <button class="action-button" data-start-intake><strong>Begin assisted intake</strong><small>Open the patient conversation</small></button>
-              <button class="action-button" data-toast="Scanner ready|Demo document scanner has been opened."><strong>Scan previous document</strong><small>Add a prescription or report</small></button>
-              <button class="action-button" data-toast="Consent queue|No consent requests are waiting right now."><strong>Review consent requests</strong><small>Check pending record access</small></button>
-            </div>
-          </aside>
-        </div>
-          </div>
+          <p class="staff-profile-status" id="staffProfileStatus" role="status" aria-live="polite"></p>
         </div>
       </section>
 
@@ -1552,9 +1738,9 @@
               <small id="patientSidebarId">Patient account</small>
             </div>
             <nav class="doctor-nav">
-              <button class="doctor-nav-button" type="button" data-patient-route="start" aria-selected="true">
+              <button class="doctor-nav-button" type="button" aria-selected="true" hidden>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 5h14v14H5V5Z" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h5M8 17h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                <span class="nav-label">Dashboard</span>
+                <span class="nav-label">Start check-up</span>
               </button>
               <button class="doctor-nav-button" type="button" data-patient-route="records" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5v-10Z" stroke="currentColor" stroke-width="1.8"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20M9 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -1569,20 +1755,11 @@
           <div class="portal-main">
         <div class="checkup-launch" id="checkupLaunch">
           <div class="checkup-welcome" id="checkupWelcome">
-            <section class="patient-dashboard-hero" aria-labelledby="patientDashboardTitle">
-              <p class="patient-dashboard-kicker">Your patient account</p>
-              <h1 class="checkup-welcome-title" id="patientDashboardTitle">Hello, <span id="patientWelcomeName">Patient</span></h1>
-              <p class="patient-dashboard-copy">Review your consultation history, uploaded documents and health records from one secure place.</p>
-              <button class="checkup-launch-button" id="viewPatientRecordsHero" type="button">
-                Open my records
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-            </section>
-            <aside class="patient-dashboard-side" aria-label="Patient dashboard summary">
-              <article class="patient-dashboard-card"><span>Recent consultations</span><strong>3 visits</strong></article>
-              <article class="patient-dashboard-card"><span>Documents on file</span><strong>4 records</strong></article>
-              <button class="patient-dashboard-card action" id="openPatientRecords" type="button"><span>Health history</span><strong>View my records →</strong></button>
-            </aside>
+            <h1 class="checkup-welcome-title">Hello, <span id="patientWelcomeName">Patient</span></h1>
+            <button class="checkup-launch-button" id="startCheckupButton" type="button">
+              Initiate check-up
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </div>
           <div class="language-step" id="languageStep" hidden>
             <form class="language-card" id="languageForm">
@@ -1603,9 +1780,9 @@
           <section class="voice-session" aria-labelledby="voicePrompt">
             <div class="voice-experience">
               <div class="voice-stage">
-                <button class="voice-orb" id="voiceOrb" type="button" aria-label="Start voice conversation" aria-pressed="false">
+                <div class="voice-orb" id="voiceOrb" aria-hidden="true">
                   <svg viewBox="0 0 32 32" fill="none"><path d="M6.5 25.5 14.3 7.8c.6-1.35 2.5-1.35 3.1 0l8.1 17.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path pathLength="1" d="M9.5 19h5l2-5 2.7 8 2.1-4h5.2" stroke="#2dd4bf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
+                </div>
               </div>
               <aside class="voice-chat" aria-label="Live check-up chat">
                 <div class="voice-chat-head">
@@ -1621,35 +1798,17 @@
                 <p class="voice-question" id="voiceQuestion">What health concern would you like to discuss today?</p>
                 <div class="voice-chat-messages" id="voiceChatMessages" aria-live="polite"></div>
                 <form class="voice-chat-form" id="voiceChatForm">
-                  <button class="voice-talk" id="voiceTalkButton" type="button" aria-pressed="false" aria-describedby="voiceInputStatus"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-3 0h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span id="voiceTalkLabel">Talk</span></button>
-                  <input class="voice-chat-input" id="voiceChatInput" type="text" autocomplete="off" aria-label="Type a message" placeholder="Type a message…">
+                  <input class="voice-chat-input" id="voiceChatInput" type="text" autocomplete="off" maxlength="1000" aria-label="Type a message" placeholder="Type a message…">
                   <button class="voice-chat-send" type="submit" aria-label="Send message" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only voice-chat-send-label">Send</span></button>
-                  <p class="voice-input-status" id="voiceInputStatus" role="status">Tap Talk to start the live AI voice session.</p>
+                  <div class="voice-composer-tools">
+                    <button class="voice-talk" id="voiceTalkButton" type="button" aria-pressed="false" aria-describedby="voiceInputStatus"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-3 0h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span id="voiceTalkLabel">Talk</span></button>
+                    <p class="voice-input-status" id="voiceInputStatus" role="status">Speak or type, at your pace.</p>
+                  </div>
                 </form>
               </aside>
             </div>
           </section>
         </div>
-        <section class="checkup-result" id="checkupResult" aria-labelledby="checkupResultTitle" hidden>
-          <article class="checkup-result-card">
-            <header class="checkup-result-head">
-              <div><p class="checkup-result-kicker">Check-up completed</p><h1 id="checkupResultTitle" tabindex="-1">Your OPD visit is ready</h1></div>
-              <div class="opd-ticket"><span>OPD number</span><strong id="checkupOpdNumber">Generating…</strong></div>
-            </header>
-            <div class="checkup-result-body">
-              <div class="result-doctor">
-                <div><span>Assigned doctor</span><strong id="checkupDoctorName">Assigning doctor…</strong></div>
-                <div class="result-doctor-badge" id="checkupDoctorSpecialty">Outpatient care</div>
-              </div>
-              <div class="result-summary">
-                <h2>AI intake summary</h2>
-                <p id="checkupSummaryText">Arogyam is preparing a concise summary for your doctor.</p>
-                <span class="result-summary-status" id="checkupSummaryStatus">Generating securely…</span>
-              </div>
-              <div class="checkup-result-actions"><button class="checkup-result-done" id="finishCheckupResult" type="button">Done</button></div>
-            </div>
-          </article>
-        </section>
         <section class="patient-records" id="patientRecords" aria-labelledby="patientRecordsTitle" hidden>
           <div class="records-heading">
             <div><h1 id="patientRecordsTitle" tabindex="-1">My records</h1></div>
@@ -1660,7 +1819,7 @@
             <article class="records-summary-card"><span>Next follow-up</span><strong>21 Sep</strong></article>
           </div>
           <div class="records-toolbar">
-            <input class="records-search" id="patientRecordSearch" type="search" placeholder="Search visits, doctors or concerns" aria-label="Search patient records">
+            <input class="records-search" id="patientRecordSearch" type="search" maxlength="120" placeholder="Search visits, doctors or concerns" aria-label="Search patient records">
             <select class="records-filter" id="patientRecordFilter" aria-label="Filter patient records">
               <option value="all">All records</option>
               <option value="visit">Consultations</option>
@@ -1757,7 +1916,7 @@
                   <aside class="focus-rail">
                     <section class="focus-rail-section"><div class="compact-alert"><span><strong>Confirm medication:</strong> today’s intake conflicts with the previous prescription.</span></div></section>
                     <section class="focus-rail-section"><div class="focus-rail-title"><h3>Recent records</h3><button type="button" data-doctor-panel="history">View all →</button></div><div class="compact-records"><div class="compact-record"><time>14 Jun 26</time><div><strong>Prescription</strong><small>Metformin 500 mg listed</small></div></div><div class="compact-record"><time>02 May 26</time><div><strong>Digestive discomfort</strong><small>Previous OPD consultation</small></div></div><div class="compact-record"><time>18 Nov 25</time><div><strong>HbA1c panel</strong><small>Result: 6.8%</small></div></div></div></section>
-                    <section class="focus-rail-section"><details class="record-assist-panel"><summary>Ask AI about records</summary><p class="record-assist-copy">Search prior consultations, prescriptions and documents with dated evidence.</p><form class="compact-assistant-form" id="doctorRecordAssistant"><input class="assistant-input" id="doctorRecordQuery" type="search" autocomplete="off" placeholder="Ask about medicines, labs…" aria-label="Ask a question about patient records"><button class="primary-button" type="submit">Ask</button></form><div class="compact-suggestions" aria-label="Suggested questions"><button class="assistant-chip" type="button" data-record-question="Which medicines were previously prescribed?">Medicines</button><button class="assistant-chip" type="button" data-record-question="Has this complaint happened before?">Similar complaints</button><button class="assistant-chip" type="button" data-record-question="Show the latest lab result">Latest lab</button></div><div class="compact-assistant-answer" id="doctorAssistantAnswer" aria-live="polite"><strong>Ask a question</strong> to find dated evidence in this patient’s records.</div></details></section>
+                    <section class="focus-rail-section"><details class="record-assist-panel"><summary>Ask AI about records</summary><p class="record-assist-copy">Search prior consultations, prescriptions and documents with dated evidence.</p><form class="compact-assistant-form" id="doctorRecordAssistant"><input class="assistant-input" id="doctorRecordQuery" type="search" autocomplete="off" maxlength="500" placeholder="Ask about medicines, labs…" aria-label="Ask a question about patient records"><button class="primary-button" type="submit">Ask</button></form><div class="compact-suggestions" aria-label="Suggested questions"><button class="assistant-chip" type="button" data-record-question="Which medicines were previously prescribed?">Medicines</button><button class="assistant-chip" type="button" data-record-question="Has this complaint happened before?">Similar complaints</button><button class="assistant-chip" type="button" data-record-question="Show the latest lab result">Latest lab</button></div><div class="compact-assistant-answer" id="doctorAssistantAnswer" aria-live="polite"><strong>Ask a question</strong> to find dated evidence in this patient’s records.</div></details></section>
                   </aside>
                 </div>
                 <footer class="focus-footer"><span><span aria-hidden="true">ⓘ</span> AI-generated content supports review and does not replace clinical assessment.</span><span class="prototype-label">Demo patient data</span></footer>
@@ -1767,7 +1926,7 @@
             <div class="doctor-panel" data-doctor-panel-content="history">
               <div class="page-heading clinical-heading"><div><div class="eyebrow">Longitudinal record</div><h1>Ananya Sharma’s medical history</h1><p class="heading-copy">All available encounters and documents, ordered by date.</p></div><button class="secondary-button" type="button" data-doctor-panel="current">← Current patient</button></div>
               <section class="card history-patient-bar"><div><strong>Ananya Sharma · PT-001</strong><small>42 years · Female · 5 records available</small></div><div class="history-filters" aria-label="Filter medical history"><button class="history-filter" type="button" data-history-filter="all" aria-pressed="true">All</button><button class="history-filter" type="button" data-history-filter="visit" aria-pressed="false">Consultations</button><button class="history-filter" type="button" data-history-filter="prescription" aria-pressed="false">Prescriptions</button><button class="history-filter" type="button" data-history-filter="lab" aria-pressed="false">Labs</button></div></section>
-              <div class="history-toolbar"><input class="history-search" id="doctorHistorySearch" type="search" aria-label="Search this patient's history" placeholder="Search conditions, medicines, dates or documents"><button class="secondary-button" type="button" data-toast="History exported|A date-wise medical history export has been prepared.">Export history</button></div>
+              <div class="history-toolbar"><input class="history-search" id="doctorHistorySearch" type="search" maxlength="120" aria-label="Search this patient's history" placeholder="Search conditions, medicines, dates or documents"><button class="secondary-button" type="button" data-toast="History exported|A date-wise medical history export has been prepared.">Export history</button></div>
               <div class="dated-history" id="datedPatientHistory">
                 <article class="card dated-record" data-record-kind="prescription" data-record-search="14 june 2026 prescription metformin 500 mg medicine diabetes uploaded patient"><header class="dated-record-head"><div><time datetime="2026-06-14">14 June 2026</time><h3>Prescription uploaded by patient</h3></div><span class="record-type">Prescription</span></header><p>Metformin 500 mg appears in the uploaded prescription. Current medication status has not yet been confirmed with the patient.</p><div class="record-source-links"><button type="button" data-toast="Document preview|Opening the source prescription from 14 June 2026.">View source prescription</button></div></article>
                 <article class="card dated-record" data-record-kind="visit" data-record-search="02 may 2026 consultation digestive discomfort abdominal heaviness appetite bloating dr aarav mehta"><header class="dated-record-head"><div><time datetime="2026-05-02">02 May 2026</time><h3>OPD consultation · Digestive discomfort</h3></div><span class="record-type">Consultation</span></header><p>Reported post-meal heaviness, bloating and reduced appetite. Advised lighter meals, hydration and review if symptoms persisted.</p><div class="record-source-links"><button type="button" data-toast="Visit record opened|The consultation note from 02 May 2026 is ready for review.">Consultation note</button><button type="button" data-toast="Care plan opened|The care plan from 02 May 2026 is ready for review.">Care plan</button></div></article>
@@ -1784,39 +1943,58 @@
   </div>
 
   <dialog class="device-dialog" id="deviceDialog" aria-labelledby="deviceDialogTitle">
-    <form class="device-dialog-form" id="deviceForm">
+    <div class="device-dialog-form" id="deviceForm">
       <div class="device-dialog-head">
-        <div><h2 id="deviceDialogTitle">Authorize a device</h2><p>Add a trusted reception device to this workspace.</p></div>
+        <div><h2 id="deviceDialogTitle">Add authorized device</h2><p>Show this one-time QR code on the trusted staff screen.</p></div>
         <button class="device-dialog-close" id="closeDeviceDialog" type="button" aria-label="Close">×</button>
       </div>
-      <label class="device-field" id="deviceNameField">Device name<input id="deviceName" required maxlength="60" placeholder="e.g. Reception desk tablet" /></label>
-      <div class="device-enrollment-link"><span id="deviceSetupHelp">Open this link on the device you want to authorize.</span><a id="deviceSetupLink" href="/device-enroll.html" target="_blank" rel="noopener">Open setup page ↗</a></div>
-      <div class="device-methods" role="tablist" aria-label="Authorization method">
-        <button class="device-method" id="deviceMethodScan" type="button" role="tab" aria-selected="true" aria-controls="deviceScanPanel">Scan QR code</button>
-        <button class="device-method" id="deviceMethodManual" type="button" role="tab" aria-selected="false" aria-controls="deviceManualPanel">Enter code manually</button>
-      </div>
-      <section class="device-method-panel" id="deviceScanPanel" role="tabpanel" aria-labelledby="deviceMethodScan">
-        <div class="device-scanner"><video id="deviceQrVideo" playsinline muted></video><div class="device-scan-frame" aria-hidden="true"></div></div>
-        <p class="device-scan-status" id="deviceScanStatus" aria-live="polite">Point the camera at the device QR code.</p>
-        <button class="device-start-scan" id="startDeviceQrScan" type="button">Start QR scanner</button>
+      <section class="device-invite" aria-label="Device invitation">
+        <div class="device-invite-qr" id="deviceInviteQr">Generating secure QR code…</div>
+        <div class="device-invite-copy">
+          <h3>Scan on the new device</h3>
+          <div class="device-invite-code" id="deviceInviteCode">------</div>
+          <div class="device-invite-expiry" id="deviceInviteExpiry">Creating invitation…</div>
+          <button class="device-invite-refresh" id="refreshDeviceInvite" type="button">Generate a new QR code</button>
+        </div>
       </section>
-      <section class="device-method-panel" id="deviceManualPanel" role="tabpanel" aria-labelledby="deviceMethodManual" hidden>
-        <label class="device-field" id="deviceCodeField">Authorization code<input id="deviceCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code" /></label>
+      <section class="device-management-section" aria-labelledby="pendingDevicesTitle">
+        <div class="device-management-title"><h3 id="pendingDevicesTitle">Pending requests</h3></div>
+        <div id="pendingDeviceList"><p class="authorized-device-empty">No device is waiting for approval.</p></div>
       </section>
-      <div class="device-dialog-actions">
-        <button class="device-cancel" id="cancelDeviceDialog" type="button">Cancel</button>
-        <button class="device-authorize" id="authorizeDeviceButton" type="submit" disabled>Authorize device</button>
-      </div>
       <section class="authorized-devices" aria-labelledby="authorizedDevicesTitle">
         <h3 id="authorizedDevicesTitle">Authorized devices</h3>
         <div class="authorized-device-list" id="authorizedDeviceList"><p class="authorized-device-empty">No authorized devices yet.</p></div>
       </section>
+    </div>
+  </dialog>
+
+  <dialog class="device-dialog staff-document-dialog" id="staffDocumentDialog" aria-labelledby="staffDocumentDialogTitle">
+    <form class="device-dialog-form" id="staffDocumentForm">
+      <div class="device-dialog-head">
+        <div><h2 id="staffDocumentDialogTitle">Add patient documents</h2><p>Upload prescriptions, reports or previous medical documents.</p></div>
+        <button class="device-dialog-close" id="closeStaffDocumentDialog" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="staff-document-patient"><div><strong id="staffDocumentPatientName">Patient</strong><small id="staffDocumentPatientId">Patient ID</small></div><span>Staff-assisted upload</span></div>
+      <div class="document-upload-chooser">
+        <button class="document-device-upload" id="continueStaffDocumentOnDevice" type="button">Continue on this device</button>
+        <input id="staffDocumentInput" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple hidden />
+        <div class="document-or">or scan with the patient’s phone</div>
+        <div class="document-qr-grid">
+          <img class="document-qr" id="staffDocumentQr" alt="QR code to upload patient documents from a phone" />
+          <div class="document-qr-copy"><strong>Scan to upload from phone</strong><small>Uploaded files will appear here automatically. This link expires after 30 minutes.</small></div>
+        </div>
+      </div>
+      <div class="document-file-list" id="staffDocumentList" aria-live="polite"></div>
+      <p class="document-upload-status" id="staffDocumentStatus" role="status" aria-live="polite"></p>
+      <div class="device-dialog-actions">
+        <button class="device-cancel" id="cancelStaffDocumentDialog" type="button">Cancel</button>
+        <button class="device-authorize" id="saveStaffDocuments" type="submit" disabled>Save to patient record</button>
+      </div>
     </form>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"><strong id="toastTitle"></strong><small id="toastText"></small></div>
 
-  <script src="/vendor/elevenlabs-client.js"></script>
   <script>
     const loginScreen = document.getElementById('loginScreen');
     const rolePicker = document.getElementById('rolePicker');
@@ -1828,6 +2006,7 @@
     const patientIdentityNumber = document.getElementById('patientIdentityNumber');
     const patientIdentityLabel = document.getElementById('patientIdentityLabel');
     const patientLoginDocuments = document.getElementById('patientLoginDocuments');
+    const loginIdentifierGroup = document.getElementById('loginIdentifierGroup');
     const loginIdentifier = document.getElementById('loginIdentifier');
     const signupOtpPanel = document.getElementById('signupOtpPanel');
     const sendSignupOtp = document.getElementById('sendSignupOtp');
@@ -1852,6 +2031,15 @@
     const doctorRoom = document.getElementById('doctorRoom');
     const doctorPhone = document.getElementById('doctorPhone');
     const doctorEmail = document.getElementById('doctorEmail');
+    const staffHospitalGroup = document.getElementById('staffHospitalGroup');
+    const staffHospitalSelect = document.getElementById('staffHospital');
+    const staffHospitalHelp = document.getElementById('staffHospitalHelp');
+    const staffProfileFields = document.getElementById('staffProfileFields');
+    const staffProfileInputs = [...staffProfileFields.querySelectorAll('input')];
+    const staffFullName = document.getElementById('staffFullName');
+    const staffEmployeeId = document.getElementById('staffEmployeeId');
+    const staffPhone = document.getElementById('staffPhone');
+    const staffEmail = document.getElementById('staffEmail');
     const hospitalBackdropIdentity = document.getElementById('hospitalBackdropIdentity');
     const hospitalBackdropName = document.getElementById('hospitalBackdropName');
     const hospitalBackdropLocation = document.getElementById('hospitalBackdropLocation');
@@ -1871,9 +2059,21 @@
     const patientDocumentQr = document.getElementById('patientDocumentQr');
     const patientDocumentList = document.getElementById('patientDocumentList');
     const patientDocumentStatus = document.getElementById('patientDocumentStatus');
+    const staffDocumentDialog = document.getElementById('staffDocumentDialog');
+    const staffDocumentForm = document.getElementById('staffDocumentForm');
+    const staffDocumentPatientName = document.getElementById('staffDocumentPatientName');
+    const staffDocumentPatientId = document.getElementById('staffDocumentPatientId');
+    const staffDocumentInput = document.getElementById('staffDocumentInput');
+    const staffDocumentQr = document.getElementById('staffDocumentQr');
+    const staffDocumentList = document.getElementById('staffDocumentList');
+    const staffDocumentStatus = document.getElementById('staffDocumentStatus');
+    const saveStaffDocuments = document.getElementById('saveStaffDocuments');
+    const staffPatientQueueBody = document.getElementById('staffPatientQueueBody');
     const patientConditionInputs = [...document.querySelectorAll('input[name="patientCondition"]')];
     const changeSignupMethod = document.getElementById('changeSignupMethod');
     const appShell = document.getElementById('appShell');
+    const staffProfileButton = document.getElementById('staffProfileButton');
+    const staffProfileStatus = document.getElementById('staffProfileStatus');
     let selectedLoginRole = 'patient';
     let selectedAuthMode = 'login';
     let selectedPatientSignupMethod = null;
@@ -1885,6 +2085,9 @@
     let patientRegistrationPassword = '';
     let patientDocumentSession = null;
     let patientDocumentPoll = null;
+    let staffDocumentSession = null;
+    let staffDocumentPoll = null;
+    let staffDocumentPatient = null;
     let pendingPatientHealth = { conditions: [], allergies: '' };
     let activePatient = null;
     let signupOtpProvider = null;
@@ -1893,6 +2096,32 @@
     let authorizedPatientDevice = false;
     let patientLoggedInThisSession = false;
     patientDateOfBirth.max = new Date().toISOString().slice(0, 10);
+
+    function keepDigits(input, maximumLength) {
+      input.addEventListener('input', () => {
+        const limited = input.value.replace(/\D/g, '').slice(0, maximumLength);
+        if (input.value !== limited) input.value = limited;
+      });
+    }
+
+    function capWholeNumber(input, maximum) {
+      input.addEventListener('input', () => {
+        const digits = input.value.replace(/\D/g, '').slice(0, String(maximum).length);
+        input.value = digits && Number(digits) > maximum ? String(maximum) : digits;
+      });
+    }
+
+    keepDigits(doctorPhone, 10);
+    keepDigits(staffPhone, 10);
+    keepDigits(signupOtpCode, 8);
+    capWholeNumber(doctorExperience, 70);
+    capWholeNumber(patientHeight, 250);
+    patientWeight.addEventListener('input', () => {
+      const match = patientWeight.value.replace(/[^\d.]/g, '').match(/^\d{0,3}(?:\.\d?)?/);
+      let value = match ? match[0] : '';
+      if (value && Number(value) > 350) value = '350';
+      if (patientWeight.value !== value) patientWeight.value = value;
+    });
 
     const loginRoles = {
       patient: { title: 'Welcome back', label: 'Patient ID', placeholder: 'Enter patient ID' },
@@ -1907,18 +2136,25 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not load hospital branches');
         doctorHospitalSelect.replaceChildren(new Option('Select your hospital branch', ''));
+        staffHospitalSelect.replaceChildren(new Option('Select your hospital branch', ''));
         data.hospitals.forEach(hospital => {
-          const option = new Option(`${hospital.name} — ${hospital.location}`, hospital.id);
-          option.dataset.demoDoctorId = hospital.demoDoctorId;
-          option.dataset.backgroundImage = hospital.backgroundImage;
-          option.dataset.hospitalName = hospital.name;
-          option.dataset.hospitalLocation = hospital.location;
-          doctorHospitalSelect.add(option);
+          const doctorOption = new Option(`${hospital.name} — ${hospital.location}`, hospital.id);
+          doctorOption.dataset.demoDoctorId = hospital.demoDoctorId;
+          doctorOption.dataset.backgroundImage = hospital.backgroundImage;
+          doctorOption.dataset.hospitalName = hospital.name;
+          doctorOption.dataset.hospitalLocation = hospital.location;
+          doctorHospitalSelect.add(doctorOption);
+          const staffOption = new Option(`${hospital.name} — ${hospital.location}`, hospital.id);
+          staffOption.dataset.backgroundImage = hospital.backgroundImage;
+          staffOption.dataset.hospitalName = hospital.name;
+          staffOption.dataset.hospitalLocation = hospital.location;
+          staffHospitalSelect.add(staffOption);
         });
         return data.hospitals;
       })().catch(error => {
         hospitalBranchesReady = null;
         doctorHospitalHelp.textContent = error.message;
+        staffHospitalHelp.textContent = error.message;
         throw error;
       });
       return hospitalBranchesReady;
@@ -1944,6 +2180,23 @@
       if (demoDoctorId && selectedLoginRole === 'doctor' && selectedAuthMode === 'register') {
         loginIdentifier.placeholder = `e.g. ${demoDoctorId}`;
       }
+    });
+
+    staffHospitalSelect.addEventListener('change', () => {
+      const selected = staffHospitalSelect.selectedOptions[0];
+      const backgroundImage = selected?.dataset.backgroundImage;
+      const hospitalName = selected?.dataset.hospitalName;
+      const hospitalLocation = selected?.dataset.hospitalLocation;
+      staffHospitalHelp.textContent = 'Any non-empty employee ID is accepted.';
+      loginScreen.classList.toggle('doctor-hospital-background', Boolean(backgroundImage));
+      if (backgroundImage) loginScreen.style.setProperty('--doctor-hospital-background', `url("${backgroundImage}")`);
+      else loginScreen.style.removeProperty('--doctor-hospital-background');
+      hospitalBackdropIdentity.hidden = !backgroundImage;
+      if (backgroundImage) {
+        hospitalBackdropName.textContent = hospitalName || 'Civil Hospital';
+        hospitalBackdropLocation.textContent = hospitalLocation || '';
+      }
+      if (selectedLoginRole === 'staff' && selectedAuthMode === 'register') staffEmployeeId.placeholder = 'Enter any employee ID';
     });
 
     function normalizedSignupPhone() {
@@ -2097,6 +2350,7 @@
       document.getElementById('formTitle').textContent = localized[0];
       const isPatientRegistration = role === 'patient' && mode === 'register';
       const isDoctorRegistration = role === 'doctor' && mode === 'register';
+      const isStaffRegistration = role === 'staff' && mode === 'register';
       const isAccountRegistration = mode === 'register';
       if (!isDoctorRegistration) {
         loginScreen.classList.remove('doctor-hospital-background');
@@ -2109,12 +2363,15 @@
       document.getElementById('loginIdentifier').placeholder = isPatientRegistration
         ? (currentLanguage === 'Hindi' ? 'मोबाइल नंबर दर्ज करें' : 'Enter mobile number')
         : isDoctorRegistration ? 'Enter the ID issued by your hospital' : localized[2];
-      document.getElementById('loginIdentifier').setAttribute('inputmode', isPatientRegistration ? 'tel' : 'text');
+      document.getElementById('loginIdentifier').setAttribute('inputmode', isPatientRegistration ? 'numeric' : 'text');
       loginIdentifier.removeAttribute('pattern');
-      loginIdentifier.removeAttribute('maxlength');
+      loginIdentifier.maxLength = isPatientRegistration ? 10 : 30;
+      if (isPatientRegistration) loginIdentifier.pattern = '[6-9][0-9]{9}';
       loginIdentifier.setAttribute('autocomplete', isPatientRegistration ? 'tel' : 'username');
+      loginIdentifierGroup.hidden = isStaffRegistration;
+      loginIdentifier.required = !isStaffRegistration;
       loginPassword.autocomplete = isAccountRegistration ? 'new-password' : 'current-password';
-      loginPassword.minLength = isDoctorRegistration ? 8 : isPatientRegistration ? 6 : 0;
+      loginPassword.minLength = isDoctorRegistration || isStaffRegistration ? 8 : isPatientRegistration ? 6 : 0;
       const submitLabel = document.querySelector('.login-submit-label');
       submitLabel.textContent = mode === 'register' ? (currentLanguage === 'Hindi' ? 'खाता बनाएँ' : 'Create account') : (currentLanguage === 'Hindi' ? 'सुरक्षित रूप से जारी रखें' : 'Continue securely');
       submitLabel.closest('button').setAttribute('aria-label', submitLabel.textContent);
@@ -2129,9 +2386,20 @@
       doctorHospitalSelect.required = isDoctorRegistration;
       doctorProfileFields.hidden = !isDoctorRegistration;
       doctorProfileInputs.forEach(field => { field.required = isDoctorRegistration; });
+      staffHospitalGroup.hidden = !isStaffRegistration;
+      staffHospitalSelect.required = isStaffRegistration;
+      staffProfileFields.hidden = !isStaffRegistration;
+      staffProfileInputs.forEach(field => { field.required = isStaffRegistration; });
       if (isDoctorRegistration) {
         doctorHospitalSelect.value = '';
         doctorHospitalHelp.textContent = 'Choose the branch that issued your doctor ID.';
+        void loadHospitalBranches().catch(() => {});
+      }
+      if (isStaffRegistration) {
+        staffHospitalSelect.value = '';
+        staffEmployeeId.value = '';
+        staffEmployeeId.placeholder = 'Enter employee ID';
+        staffHospitalHelp.textContent = 'Any non-empty employee ID is accepted.';
         void loadHospitalBranches().catch(() => {});
       }
       patientDetailsForm.hidden = true;
@@ -2159,6 +2427,7 @@
       loginFormShell.classList.remove('patient-signup-details');
       loginFormShell.classList.remove('patient-login-details');
       loginFormShell.classList.toggle('doctor-registration-details', isDoctorRegistration);
+      loginFormShell.classList.toggle('staff-registration-details', isStaffRegistration);
       loginScreen.classList.add('form-open');
       if (focus && !isPatientRegistration) document.getElementById('loginIdentifier').focus();
     }
@@ -2169,8 +2438,8 @@
       const isAbha = method === 'abha';
       patientIdentityLabel.textContent = isAbha ? 'ABHA ID' : (isHindi ? 'आधार नंबर' : 'Aadhaar number');
       patientIdentityNumber.placeholder = isAbha ? (isHindi ? '14 अंकों की ABHA ID दर्ज करें' : 'Enter 14-digit ABHA ID') : (isHindi ? '12 अंकों का आधार नंबर दर्ज करें' : 'Enter 12-digit Aadhaar number');
-      patientIdentityNumber.pattern = isAbha ? '[0-9]{2}-?[0-9]{4}-?[0-9]{4}-?[0-9]{4}' : '[0-9]{12}';
-      patientIdentityNumber.maxLength = isAbha ? 17 : 12;
+      patientIdentityNumber.pattern = isAbha ? '[0-9]{14}' : '[0-9]{12}';
+      patientIdentityNumber.maxLength = isAbha ? 14 : 12;
       patientIdentityNumber.setAttribute('autocomplete', 'off');
       patientIdentityNumber.required = true;
       patientIdentityNumber.value = '';
@@ -2196,8 +2465,8 @@
       loginIdentifier.value = '';
       loginIdentifier.setAttribute('inputmode', 'numeric');
       loginIdentifier.setAttribute('autocomplete', 'off');
-      loginIdentifier.pattern = isAbha ? '[0-9]{2}-?[0-9]{4}-?[0-9]{4}-?[0-9]{4}' : '[0-9]{12}';
-      loginIdentifier.maxLength = isAbha ? 17 : 12;
+      loginIdentifier.pattern = isAbha ? '[0-9]{14}' : '[0-9]{12}';
+      loginIdentifier.maxLength = isAbha ? 14 : 12;
       document.getElementById('identifierLabel').textContent = isAbha ? 'ABHA ID' : 'Aadhaar number';
       loginIdentifier.placeholder = isAbha ? 'Enter 14-digit ABHA ID' : 'Enter 12-digit Aadhaar number';
       loginFormShell.classList.add('patient-login-details');
@@ -2212,8 +2481,16 @@
         return;
       }
       sendSignupOtp.disabled = true;
-      setSignupOtpStatus('Sending OTP…');
+      setSignupOtpStatus('Checking mobile number…');
       try {
+        const availabilityResponse = await fetch('/api/patient-registration-availability', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone })
+        });
+        const availability = await availabilityResponse.json();
+        if (!availabilityResponse.ok || !availability.available) {
+          throw new Error(availability.error || 'This mobile number cannot be used for a new account');
+        }
+        setSignupOtpStatus('Sending OTP…');
         const provider = await ensureSignupOtpProvider();
         if (provider.provider === 'msg91') {
           if (typeof window.sendOtp !== 'function') throw new Error('MSG91 is still loading. Please try again.');
@@ -2297,12 +2574,20 @@
     });
 
     loginIdentifier.addEventListener('input', () => {
+      if (selectedLoginRole === 'patient' && (selectedAuthMode === 'register' || selectedPatientLoginMethod)) {
+        const limit = selectedAuthMode === 'register' ? 10 : selectedPatientLoginMethod === 'abha' ? 14 : 12;
+        loginIdentifier.value = loginIdentifier.value.replace(/\D/g, '').slice(0, limit);
+      }
       if (selectedLoginRole !== 'patient' || selectedAuthMode !== 'register') return;
       if (signupOtpPhone && normalizedSignupPhone() !== signupOtpPhone) resetSignupOtp(false);
       updatePatientSignupContinueState();
     });
 
-    patientIdentityNumber.addEventListener('input', updatePatientSignupContinueState);
+    patientIdentityNumber.addEventListener('input', () => {
+      const limit = selectedPatientSignupMethod === 'abha' ? 14 : 12;
+      patientIdentityNumber.value = patientIdentityNumber.value.replace(/\D/g, '').slice(0, limit);
+      updatePatientSignupContinueState();
+    });
     loginPassword.addEventListener('input', updatePatientSignupContinueState);
 
     patientDetailsForm.addEventListener('submit', event => {
@@ -2411,6 +2696,172 @@
     patientDocumentInput.addEventListener('change', () => uploadPatientFiles([...patientDocumentInput.files]).catch(error => setPatientDocumentStatus(error.message, true)));
     document.getElementById('backToConditions').addEventListener('click', () => showPatientRegistrationStep('conditions'));
 
+    function setStaffDocumentStatus(message = '', error = false) {
+      staffDocumentStatus.textContent = message;
+      staffDocumentStatus.className = `document-upload-status${error ? ' is-error' : ''}`;
+    }
+
+    function stopStaffDocumentSession() {
+      if (staffDocumentPoll) clearInterval(staffDocumentPoll);
+      staffDocumentPoll = null;
+      staffDocumentSession = null;
+      staffDocumentInput.value = '';
+      staffDocumentInput.disabled = false;
+      staffDocumentList.innerHTML = '';
+      staffDocumentQr.removeAttribute('src');
+      saveStaffDocuments.disabled = true;
+      setStaffDocumentStatus();
+    }
+
+    function renderStaffDocuments(files = []) {
+      staffDocumentList.innerHTML = '';
+      files.forEach(file => {
+        const row = document.createElement('div'); row.className = 'document-file-row';
+        const preview = document.createElement('div'); preview.className = 'document-file-preview';
+        if (file.type.startsWith('image/')) { const image = document.createElement('img'); image.src = file.previewUrl; image.alt = ''; preview.append(image); }
+        else preview.textContent = 'PDF';
+        const copy = document.createElement('div'); copy.className = 'document-file-copy';
+        const name = document.createElement('strong'); name.textContent = file.name;
+        const size = document.createElement('small'); size.textContent = `${Math.max(1, Math.round(file.size / 1024))} KB · Uploaded`;
+        copy.append(name, size); row.append(preview, copy); staffDocumentList.append(row);
+      });
+      saveStaffDocuments.disabled = files.length === 0;
+      if (files.length) setStaffDocumentStatus(`${files.length} document${files.length === 1 ? '' : 's'} ready to save.`);
+    }
+
+    async function refreshStaffDocuments() {
+      if (!staffDocumentSession) return;
+      const response = await fetch(`/api/document-upload-sessions/${encodeURIComponent(staffDocumentSession.id)}/status?token=${encodeURIComponent(staffDocumentSession.token)}`, { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Document session expired');
+      renderStaffDocuments(data.files);
+    }
+
+    async function ensureStaffDocumentSession() {
+      if (staffDocumentSession) return staffDocumentSession;
+      setStaffDocumentStatus('Preparing secure upload…');
+      const response = await fetch('/api/document-upload-sessions', { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not prepare document upload');
+      staffDocumentSession = data;
+      staffDocumentQr.src = data.qrDataUrl;
+      setStaffDocumentStatus('Upload on this device or scan the QR code.');
+      staffDocumentPoll = setInterval(() => refreshStaffDocuments().catch(error => setStaffDocumentStatus(error.message, true)), 1800);
+      return data;
+    }
+
+    async function uploadStaffPatientFiles(files) {
+      const session = await ensureStaffDocumentSession();
+      staffDocumentInput.disabled = true;
+      try {
+        for (let index = 0; index < files.length; index += 1) {
+          const file = files[index];
+          if (file.size > 8 * 1024 * 1024) throw new Error(`${file.name} is larger than 8 MB`);
+          setStaffDocumentStatus(`Uploading ${index + 1} of ${files.length}…`);
+          const response = await fetch(`/api/document-upload-sessions/${encodeURIComponent(session.id)}/files`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: session.token, name: file.name, type: file.type, data: await fileAsDataUrl(file) })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Document upload failed');
+        }
+        await refreshStaffDocuments();
+      } finally { staffDocumentInput.disabled = false; staffDocumentInput.value = ''; }
+    }
+
+    function closeStaffDocumentUpload() {
+      stopStaffDocumentSession();
+      staffDocumentPatient = null;
+      if (staffDocumentDialog.open) staffDocumentDialog.close();
+    }
+
+    function renderStaffPatientQueue(queue = [], message = '') {
+      staffPatientQueueBody.innerHTML = '';
+      if (!queue.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 4;
+        const copy = document.createElement('small');
+        copy.textContent = message || 'No registered patients are available yet.';
+        cell.append(copy); row.append(cell); staffPatientQueueBody.append(row);
+        return;
+      }
+      queue.forEach(patient => {
+        const row = document.createElement('tr');
+        const identity = document.createElement('td');
+        const name = document.createElement('strong'); name.textContent = patient.fullName;
+        const id = document.createElement('small'); id.textContent = patient.id;
+        identity.append(name, document.createElement('br'), id);
+        const language = document.createElement('td'); language.textContent = 'Not recorded';
+        const specialist = document.createElement('td'); specialist.className = 'requested-specialist'; specialist.textContent = 'Not assigned';
+        const documents = document.createElement('td');
+        const button = document.createElement('button');
+        button.className = 'queue-document-action'; button.type = 'button';
+        button.dataset.patientDocument = patient.id; button.dataset.patientName = patient.fullName;
+        button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Upload documents';
+        documents.append(button); row.append(identity, language, specialist, documents); staffPatientQueueBody.append(row);
+      });
+    }
+
+    async function loadStaffPatientQueue() {
+      let storedStaff = null;
+      try { storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null'); } catch (_) {}
+      if (!storedStaff?.id) return renderStaffPatientQueue([], 'Sign in as hospital staff to view registered patients.');
+      try {
+        const response = await fetch(`/api/staff-patient-queue?staffId=${encodeURIComponent(storedStaff.id)}`, { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not load registered patients');
+        renderStaffPatientQueue(data.patients);
+      } catch (error) {
+        renderStaffPatientQueue([], error.message || 'Could not load registered patients.');
+      }
+    }
+
+    staffPatientQueueBody.addEventListener('click', event => {
+      const button = event.target.closest('[data-patient-document]');
+      if (!button) return;
+      stopStaffDocumentSession();
+      staffDocumentPatient = { id: button.dataset.patientDocument, name: button.dataset.patientName };
+      staffDocumentPatientName.textContent = staffDocumentPatient.name;
+      staffDocumentPatientId.textContent = staffDocumentPatient.id;
+      staffDocumentDialog.showModal();
+      void ensureStaffDocumentSession().catch(error => setStaffDocumentStatus(error.message, true));
+    });
+    void loadStaffPatientQueue();
+    document.getElementById('continueStaffDocumentOnDevice').addEventListener('click', () => staffDocumentInput.click());
+    staffDocumentInput.addEventListener('change', () => uploadStaffPatientFiles([...staffDocumentInput.files]).catch(error => setStaffDocumentStatus(error.message, true)));
+    document.getElementById('closeStaffDocumentDialog').addEventListener('click', closeStaffDocumentUpload);
+    document.getElementById('cancelStaffDocumentDialog').addEventListener('click', closeStaffDocumentUpload);
+    staffDocumentDialog.addEventListener('cancel', event => { event.preventDefault(); closeStaffDocumentUpload(); });
+    staffDocumentDialog.addEventListener('click', event => { if (event.target === staffDocumentDialog) closeStaffDocumentUpload(); });
+    staffDocumentForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!staffDocumentSession || !staffDocumentPatient || saveStaffDocuments.disabled) return;
+      saveStaffDocuments.disabled = true;
+      setStaffDocumentStatus('Saving documents to the patient record…');
+      try {
+        const storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null');
+        const response = await fetch('/api/staff-patient-documents', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            staffId: storedStaff?.id || '',
+            patientId: staffDocumentPatient.id,
+            patientName: staffDocumentPatient.name,
+            documentSessionId: staffDocumentSession.id,
+            documentSessionToken: staffDocumentSession.token
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not save patient documents');
+        const patientName = staffDocumentPatient.name;
+        closeStaffDocumentUpload();
+        showToast('Documents saved', `${data.documentCount} document${data.documentCount === 1 ? '' : 's'} added for ${patientName}.`);
+      } catch (error) {
+        setStaffDocumentStatus(error.message || 'Could not save patient documents.', true);
+        saveStaffDocuments.disabled = false;
+      }
+    });
+
     patientDocumentsForm.addEventListener('submit', async event => {
       event.preventDefault();
       const submit = document.getElementById('completePatientRegistration');
@@ -2449,7 +2900,7 @@
         patientDocumentPoll = null;
         patientLoggedInThisSession = true;
         resetCheckup();
-        navigateRoute(authorizedPatientDevice ? 'patient/language' : 'patient/start');
+        navigateRoute('patient/start');
       } catch (error) {
         patientRegistrationStatus.textContent = error.message || 'Could not create account.';
         submit.disabled = false;
@@ -2457,6 +2908,7 @@
     });
 
     document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => navigateRoute(`login/${card.dataset.loginRole}`, false, true)));
+    document.querySelectorAll('[data-enroll-device]').forEach(button => button.addEventListener('click', () => { location.href = '/device-enroll.html'; }));
     document.querySelectorAll('[data-register-role]').forEach(button => button.addEventListener('click', () => navigateRoute(`register/${button.dataset.registerRole}`, false, true)));
     document.querySelectorAll('[data-patient-signup]').forEach(button => button.addEventListener('click', () => choosePatientSignupMethod(button.dataset.patientSignup)));
     document.querySelectorAll('[data-patient-login]').forEach(button => button.addEventListener('click', () => choosePatientLoginMethod(button.dataset.patientLogin)));
@@ -2471,7 +2923,6 @@
     const patientView = document.getElementById('patient');
     const checkupLaunch = document.getElementById('checkupLaunch');
     const checkupFlow = document.getElementById('checkupFlow');
-    const checkupResult = document.getElementById('checkupResult');
     const patientRecords = document.getElementById('patientRecords');
     const checkupWelcome = document.getElementById('checkupWelcome');
     const languageStep = document.getElementById('languageStep');
@@ -2480,7 +2931,11 @@
     const confirmLanguage = document.getElementById('confirmLanguage');
     const languageSelect = document.getElementById('languageSelect');
     const roleLanguageSelect = document.getElementById('roleLanguageSelect');
-    const viewPatientRecordsHero = document.getElementById('viewPatientRecordsHero');
+    const roleLanguageControl = document.getElementById('roleLanguageControl');
+    const roleLanguageTrigger = document.getElementById('roleLanguageTrigger');
+    const roleLanguageValue = document.getElementById('roleLanguageValue');
+    const roleLanguageMenu = document.getElementById('roleLanguageMenu');
+    const startCheckupButton = document.getElementById('startCheckupButton');
     const toast = document.getElementById('toast');
     const deviceDialog = document.getElementById('deviceDialog');
     const deviceForm = document.getElementById('deviceForm');
@@ -2523,14 +2978,6 @@
       Kannada: 'kn', Kashmiri: 'ks', Konkani: 'gom', Maithili: 'mai', Malayalam: 'ml', Manipuri: 'mni',
       Marathi: 'mr', Nepali: 'ne', Odia: 'or', Punjabi: 'pa', Sanskrit: 'sa', Santali: 'sat', Sindhi: 'sd',
       Tamil: 'ta', Telugu: 'te', Urdu: 'ur'
-    };
-    // ElevenLabs needs an explicit conversation language override for accurate
-    // speech recognition and multilingual TTS. A prompt variable alone does not
-    // switch the audio pipeline away from the agent's default English language.
-    const elevenLanguageCodes = {
-      English: 'en', Assamese: 'as', Bengali: 'bn', Gujarati: 'gu', Hindi: 'hi', Kannada: 'kn',
-      Malayalam: 'ml', Marathi: 'mr', Nepali: 'ne', Punjabi: 'pa', Sindhi: 'sd', Tamil: 'ta',
-      Telugu: 'te', Urdu: 'ur'
     };
     const globalUiKeys = ['Settings', 'Language', 'Log out', 'Patient queue', 'Patient history', 'Documents', 'Start check-up', 'My records', 'Access & consent', 'Current patient', 'Initiate check-up', 'Choose your language', 'Back', 'Continue', 'Recent visits', 'Open record', 'End check-up', 'Live chat', 'Send'];
     const globalUiPacks = {
@@ -2658,15 +3105,11 @@
     let localeRequest = 0;
     const localeBindings = [
       ['.settings-menu-head strong', 'settings.title'], ['.settings-menu-head small', 'settings.subtitle'], ['.settings-field > span', 'settings.language'], ['#logoutButton span', 'settings.logout'],
-      ['#reception .doctor-nav-button:nth-child(1) .nav-label', 'staff.nav.queue'], ['#reception .doctor-nav-button:nth-child(2) .nav-label', 'staff.nav.history'], ['#reception .doctor-nav-button:nth-child(3) .nav-label', 'staff.nav.documents'], ['#addAuthorizedDevice .nav-label', 'staff.nav.authorizeDevice'],
-      ['#receptionTitle', 'staff.title'], ['#reception .page-heading [data-start-intake]', 'staff.startIntake', 'direct'],
-      ['#reception .metric:nth-child(1) .metric-label', 'staff.metrics.registered'], ['#reception .metric:nth-child(2) .metric-label', 'staff.metrics.average'], ['#reception .metric:nth-child(3) .metric-label', 'staff.metrics.ready'],
-      ['#reception th:nth-child(1)', 'staff.table.patient'], ['#reception th:nth-child(2)', 'staff.table.status'], ['#reception th:nth-child(3)', 'staff.table.language'], ['#reception th:nth-child(4)', 'staff.table.wait'],
-      ['#reception .status-pill.review', 'staff.status.review'], ['#reception .status-pill:not(.review):not(.waiting)', 'staff.status.active'], ['#reception .status-pill.waiting', 'staff.status.waiting'],
-      ['#reception .dashboard-grid aside .card-header h2', 'staff.actions.title'], ['#reception .action-button:nth-child(1) strong', 'staff.actions.begin'], ['#reception .action-button:nth-child(1) small', 'staff.actions.beginHelp'],
-      ['#reception .action-button:nth-child(2) strong', 'staff.actions.scan'], ['#reception .action-button:nth-child(2) small', 'staff.actions.scanHelp'], ['#reception .action-button:nth-child(3) strong', 'staff.actions.consent'], ['#reception .action-button:nth-child(3) small', 'staff.actions.consentHelp'],
+      ['#reception .doctor-nav-button:nth-child(1) .nav-label', 'staff.nav.queue'], ['#addAuthorizedDevice .nav-label', 'staff.nav.authorizeDevice'],
+      ['#receptionTitle', 'staff.title'],
+      ['#reception th:nth-child(1)', 'staff.table.patient'], ['#reception th:nth-child(2)', 'staff.table.language'],
       ['#patient .doctor-nav-button:nth-child(1) .nav-label', 'patient.nav.start'], ['#patient .doctor-nav-button:nth-child(2) .nav-label', 'patient.nav.records'], ['#patient .doctor-nav-button:nth-child(3) .nav-label', 'patient.nav.consent'],
-      ['#languageForm h1', 'patient.chooseLanguage'], ['#backToCheckupWelcome', 'common.back'], ['#confirmLanguage', 'common.continue'],
+      ['#startCheckupButton', 'patient.start', 'direct'], ['#languageForm h1', 'patient.chooseLanguage'], ['#backToCheckupWelcome', 'common.back'], ['#confirmLanguage', 'common.continue'],
       ['#voiceStatus', 'patient.voice.ready'], ['#voiceQuestion', 'patient.voice.question'], ['#autoMicText', 'patient.voice.connecting'], ['#endVoiceSession', 'patient.voice.end'],
       ['.voice-chat-send-label', 'common.send'],
       ['#patientRecordsTitle', 'records.title'], ['#patientRecords .records-heading p', 'records.subtitle'], ['#patientRecords .records-summary-card:nth-child(1) span', 'records.consultations'], ['#patientRecords .records-summary-card:nth-child(2) span', 'records.documents'], ['#patientRecords .records-summary-card:nth-child(3) span', 'records.followup'],
@@ -2697,8 +3140,8 @@
       if (messages['patient.chat.placeholder']) document.getElementById('voiceChatInput').placeholder = messages['patient.chat.placeholder'];
       if (messages['records.search']) document.getElementById('patientRecordSearch').placeholder = messages['records.search'];
       if (messages['history.search']) document.getElementById('doctorHistorySearch').placeholder = messages['history.search'];
-      if (messages['device.namePlaceholder']) document.getElementById('deviceName').placeholder = messages['device.namePlaceholder'];
-      if (messages['device.codePlaceholder']) document.getElementById('deviceCode').placeholder = messages['device.codePlaceholder'];
+      if (messages['device.namePlaceholder']) document.getElementById('deviceName')?.setAttribute('placeholder', messages['device.namePlaceholder']);
+      if (messages['device.codePlaceholder']) document.getElementById('deviceCode')?.setAttribute('placeholder', messages['device.codePlaceholder']);
     }
 
     async function loadStructuredLocale(language) {
@@ -2741,8 +3184,8 @@
       document.getElementById('loginPassword').placeholder = language === 'Hindi' ? 'पासवर्ड दर्ज करें' : 'Enter password';
       document.getElementById('patientRecordSearch').placeholder = language === 'Hindi' ? 'विज़िट, डॉक्टर या समस्या खोजें' : 'Search visits, doctors or concerns';
       document.getElementById('doctorHistorySearch').placeholder = language === 'Hindi' ? 'समस्या, दवा, तारीख या दस्तावेज़ खोजें' : 'Search conditions, medicines, dates or documents';
-      document.getElementById('deviceName').placeholder = language === 'Hindi' ? 'जैसे रिसेप्शन डेस्क टैबलेट' : 'e.g. Reception desk tablet';
-      document.getElementById('deviceCode').placeholder = language === 'Hindi' ? '6 अंकों का कोड' : '6-digit code';
+      document.getElementById('deviceName')?.setAttribute('placeholder', language === 'Hindi' ? 'जैसे रिसेप्शन डेस्क टैबलेट' : 'e.g. Reception desk tablet');
+      document.getElementById('deviceCode')?.setAttribute('placeholder', language === 'Hindi' ? '6 अंकों का कोड' : '6-digit code');
     }
     let toastTimer;
     let voiceTimer;
@@ -2754,11 +3197,14 @@
       </label>`).join('');
     languageSelect.innerHTML = indianLanguages.map(([english, native]) => `<option value="${english}">${english === 'English' ? 'English' : native + ' · ' + english}</option>`).join('');
     roleLanguageSelect.innerHTML = indianLanguages.map(([english, native]) => `<option value="${english}">${english === 'English' ? 'English' : native + ' · ' + english}</option>`).join('');
+    roleLanguageMenu.innerHTML = indianLanguages.map(([english, native]) => `<button class="role-language-option" type="button" role="option" data-role-language="${english}" aria-selected="false">${english === 'English' ? 'English' : native + ' · ' + english}</button>`).join('');
     let savedLanguage = 'English';
     try { savedLanguage = localStorage.getItem('arogSevakLanguage') || 'English'; } catch (_) {}
     if (!indianLanguages.some(([english]) => english === savedLanguage)) savedLanguage = 'English';
     languageSelect.value = savedLanguage;
     roleLanguageSelect.value = savedLanguage;
+    roleLanguageValue.textContent = savedLanguage;
+    roleLanguageMenu.querySelector(`[data-role-language="${savedLanguage}"]`)?.setAttribute('aria-selected', 'true');
     const savedLanguageRadio = languageOptions.querySelector(`input[value="${savedLanguage}"]`);
     if (savedLanguageRadio) savedLanguageRadio.checked = true;
     function translateRolePicker(language) {
@@ -2779,6 +3225,8 @@
     function setPreferredLanguage(language) {
       languageSelect.value = language;
       roleLanguageSelect.value = language;
+      roleLanguageValue.textContent = language;
+      roleLanguageMenu.querySelectorAll('.role-language-option').forEach(option => option.setAttribute('aria-selected', String(option.dataset.roleLanguage === language)));
       const radio = languageOptions.querySelector(`input[value="${language}"]`);
       if (radio) radio.checked = true;
       translateRolePicker(language);
@@ -2786,6 +3234,24 @@
     }
 
     roleLanguageSelect.addEventListener('change', event => setPreferredLanguage(event.target.value));
+    function setRoleLanguageMenu(open) {
+      roleLanguageMenu.hidden = !open;
+      roleLanguageControl.classList.toggle('is-open', open);
+      roleLanguageTrigger.setAttribute('aria-expanded', String(open));
+      if (open) requestAnimationFrame(() => roleLanguageMenu.querySelector('[aria-selected="true"]')?.focus());
+    }
+    roleLanguageTrigger.addEventListener('click', () => setRoleLanguageMenu(roleLanguageMenu.hidden));
+    roleLanguageMenu.addEventListener('click', event => {
+      const option = event.target.closest('[data-role-language]');
+      if (!option) return;
+      setPreferredLanguage(option.dataset.roleLanguage);
+      setRoleLanguageMenu(false);
+      roleLanguageTrigger.focus();
+    });
+    document.addEventListener('click', event => { if (!roleLanguageControl.contains(event.target)) setRoleLanguageMenu(false); });
+    roleLanguageControl.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { setRoleLanguageMenu(false); roleLanguageTrigger.focus(); }
+    });
 
     function setCheckupStage(stage, focus = false) {
       const isStart = stage === 'start';
@@ -2793,7 +3259,6 @@
       const isVoice = stage === 'voice';
       checkupLaunch.hidden = isVoice;
       checkupFlow.hidden = !isVoice;
-      checkupResult.hidden = true;
       patientRecords.hidden = true;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'start')));
       checkupWelcome.hidden = !isStart;
@@ -2803,7 +3268,7 @@
         stopMicrophone();
       }
       if (isVoice) startVoiceSession(languageSelect.value);
-      if (focus && isStart) viewPatientRecordsHero.focus();
+      if (focus && isStart) startCheckupButton.focus();
       if (focus && isLanguage) languageOptions.querySelector('input').focus();
     }
 
@@ -2812,7 +3277,6 @@
       stopMicrophone();
       checkupLaunch.hidden = true;
       checkupFlow.hidden = true;
-      checkupResult.hidden = true;
       patientRecords.hidden = false;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'records')));
       if (focus) document.getElementById('patientRecordsTitle').focus({ preventScroll: true });
@@ -2822,23 +3286,13 @@
     function resetCheckup() {
       checkupLaunch.hidden = false;
       checkupFlow.hidden = true;
-      checkupResult.hidden = true;
       checkupWelcome.hidden = false;
       languageStep.hidden = true;
       languageForm.reset();
       confirmLanguage.disabled = false;
     }
 
-    function showCheckupResult() {
-      checkupLaunch.hidden = true;
-      checkupFlow.hidden = true;
-      patientRecords.hidden = true;
-      checkupResult.hidden = false;
-      patientNavButtons.forEach(button => button.setAttribute('aria-selected', 'false'));
-      document.getElementById('checkupResultTitle').focus?.({ preventScroll: true });
-    }
-
-    viewPatientRecordsHero.addEventListener('click', () => navigateRoute('patient/records', false, true));
+    startCheckupButton.addEventListener('click', () => navigateRoute('patient/language', false, true));
 
     languageOptions.addEventListener('change', () => {
       confirmLanguage.disabled = !languageForm.elements.checkupLanguage.value;
@@ -2867,23 +3321,14 @@
       toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
     }
 
-    const deviceNameInput = document.getElementById('deviceName');
-    const deviceCodeInput = document.getElementById('deviceCode');
-    const authorizeDeviceButton = document.getElementById('authorizeDeviceButton');
-    const deviceMethodScan = document.getElementById('deviceMethodScan');
-    const deviceMethodManual = document.getElementById('deviceMethodManual');
-    const deviceScanPanel = document.getElementById('deviceScanPanel');
-    const deviceManualPanel = document.getElementById('deviceManualPanel');
-    const deviceScanStatus = document.getElementById('deviceScanStatus');
-    const deviceQrVideo = document.getElementById('deviceQrVideo');
+    const deviceInviteQr = document.getElementById('deviceInviteQr');
+    const deviceInviteCode = document.getElementById('deviceInviteCode');
+    const deviceInviteExpiry = document.getElementById('deviceInviteExpiry');
+    const pendingDeviceList = document.getElementById('pendingDeviceList');
     const authorizedDeviceList = document.getElementById('authorizedDeviceList');
-    let deviceAuthorizationMethod = 'qr';
-    let deviceQrStream = null;
-    let deviceQrFrame = 0;
-
-    function updateDeviceAuthorizeState() {
-      authorizeDeviceButton.disabled = !deviceNameInput.value.trim() || !/^\d{6}$/.test(deviceCodeInput.value);
-    }
+    let activeDeviceInvitation = null;
+    let deviceInvitationPoll = 0;
+    let deviceInvitationClock = 0;
 
     function renderAuthorizedDevices(devices) {
       authorizedDeviceList.replaceChildren();
@@ -2900,13 +3345,51 @@
         const copy = document.createElement('div');
         const name = document.createElement('strong');
         const meta = document.createElement('small');
+        const network = document.createElement('div');
+        const ip = document.createElement('span');
+        const location = document.createElement('span');
         const state = document.createElement('span');
+        const actions = document.createElement('div');
+        const revoke = document.createElement('button');
         name.textContent = device.name;
         meta.textContent = `Authorized ${new Date(device.authorizedAt).toLocaleDateString()}`;
+        network.className = 'device-network-meta';
+        ip.textContent = `IP: ${device.ipAddress || 'Not recorded'}`;
+        location.textContent = device.location || 'Location not recorded';
+        network.append(ip, location);
         state.className = 'authorized-device-state';
         state.textContent = 'Active';
-        copy.append(name, meta);
-        item.append(copy, state);
+        actions.className = 'authorized-device-actions';
+        revoke.className = 'authorized-device-revoke';
+        revoke.type = 'button';
+        revoke.textContent = 'Revoke';
+        let revokeResetTimer = 0;
+        revoke.addEventListener('click', async () => {
+          if (!revoke.classList.contains('is-confirming')) {
+            revoke.classList.add('is-confirming');
+            revoke.textContent = 'Confirm revoke';
+            clearTimeout(revokeResetTimer);
+            revokeResetTimer = setTimeout(() => { revoke.classList.remove('is-confirming'); revoke.textContent = 'Revoke'; }, 3500);
+            return;
+          }
+          clearTimeout(revokeResetTimer);
+          revoke.disabled = true;
+          try {
+            const response = await fetch(`/api/devices/${encodeURIComponent(device.id)}`, { method:'DELETE' });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.error || 'Could not revoke device access');
+            await loadAuthorizedDevices();
+            showToast('Device access revoked', `${device.name} can no longer use the patient device flow.`);
+          } catch (error) {
+            revoke.disabled = false;
+            revoke.classList.remove('is-confirming');
+            revoke.textContent = 'Revoke';
+            showToast('Revocation failed', error.message);
+          }
+        });
+        copy.append(name, meta, network);
+        actions.append(state, revoke);
+        item.append(copy, actions);
         authorizedDeviceList.appendChild(item);
       });
     }
@@ -2922,142 +3405,133 @@
       }
     }
 
-    function stopDeviceQrScanner() {
-      cancelAnimationFrame(deviceQrFrame);
-      deviceQrFrame = 0;
-      deviceQrStream?.getTracks().forEach(track => track.stop());
-      deviceQrStream = null;
-      deviceQrVideo.srcObject = null;
+    function stopDeviceInvitationUpdates() {
+      clearTimeout(deviceInvitationPoll);
+      clearInterval(deviceInvitationClock);
+      deviceInvitationPoll = 0;
+      deviceInvitationClock = 0;
     }
 
-    function setDeviceAuthorizationMethod(method) {
-      deviceAuthorizationMethod = method;
-      const scanSelected = method === 'qr';
-      deviceMethodScan.setAttribute('aria-selected', String(scanSelected));
-      deviceMethodManual.setAttribute('aria-selected', String(!scanSelected));
-      deviceScanPanel.hidden = !scanSelected;
-      deviceManualPanel.hidden = scanSelected;
-      if (!scanSelected) {
-        stopDeviceQrScanner();
-        requestAnimationFrame(() => deviceCodeInput.focus());
+    function updateDeviceInvitationCountdown() {
+      if (!activeDeviceInvitation) return;
+      const remaining = Math.max(0, activeDeviceInvitation.expiresAt - Date.now());
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+      deviceInviteExpiry.textContent = remaining ? `Expires in ${minutes}:${seconds}` : 'Invitation expired';
+      if (!remaining) stopDeviceInvitationUpdates();
+    }
+
+    function renderPendingDevice(request) {
+      pendingDeviceList.replaceChildren();
+      if (!request) {
+        pendingDeviceList.innerHTML = '<p class="authorized-device-empty">No device is waiting for approval.</p>';
+        return;
       }
-      updateDeviceAuthorizeState();
+      const item = document.createElement('div');
+      item.className = 'device-pending-item';
+      const name = document.createElement('strong');
+      const platform = document.createElement('small');
+      const time = document.createElement('small');
+      const network = document.createElement('div');
+      const ip = document.createElement('span');
+      const location = document.createElement('span');
+      const actions = document.createElement('div');
+      const approve = document.createElement('button');
+      const reject = document.createElement('button');
+      name.textContent = request.name;
+      platform.textContent = request.platform;
+      time.textContent = `Requested ${new Date(request.requestedAt).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}`;
+      network.className = 'device-network-meta';
+      ip.textContent = `IP: ${request.ipAddress || 'Unknown'}`;
+      location.textContent = request.location || 'Location unavailable';
+      network.append(ip, location);
+      actions.className = 'device-pending-actions';
+      approve.className = 'device-approve'; approve.type = 'button'; approve.textContent = 'Approve device';
+      reject.className = 'device-reject'; reject.type = 'button'; reject.textContent = 'Reject';
+      approve.addEventListener('click', () => decideDeviceRequest('approve', request.name));
+      reject.addEventListener('click', () => decideDeviceRequest('reject', request.name));
+      actions.append(approve, reject);
+      item.append(name, platform, time, network, actions);
+      pendingDeviceList.appendChild(item);
     }
 
-    function authorizationCodeFromQr(value) {
-      const raw = String(value || '');
+    async function pollDeviceInvitation() {
+      if (!activeDeviceInvitation || !deviceDialog.open) return;
       try {
-        const candidate = new URL(raw);
-        const queryCode = candidate.searchParams.get('code') || candidate.searchParams.get('authorizationCode');
-        if (/^\d{6}$/.test(queryCode || '')) return queryCode;
+        const { id, creatorToken } = activeDeviceInvitation;
+        const response = await fetch(`/api/device-enrollments/${id}/manage?creatorToken=${encodeURIComponent(creatorToken)}`, { cache:'no-store' });
+        const payload = await response.json();
+        if (!response.ok || payload.status === 'expired') {
+          deviceInviteExpiry.textContent = 'Invitation expired';
+          renderPendingDevice(null);
+          return;
+        }
+        renderPendingDevice(payload.status === 'requested' ? payload.request : null);
       } catch (_) {}
-      return raw.match(/(?:^|\D)(\d{6})(?:\D|$)/)?.[1] || '';
+      deviceInvitationPoll = setTimeout(pollDeviceInvitation, 1800);
     }
 
-    async function startDeviceQrScanner() {
-      stopDeviceQrScanner();
-      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-        deviceScanStatus.textContent = 'Camera scanning requires HTTPS. Enter the code manually.';
-        return;
-      }
-      if (!('BarcodeDetector' in window)) {
-        deviceScanStatus.textContent = 'QR scanning is not supported in this browser. Enter the code manually.';
-        return;
-      }
-      deviceScanStatus.textContent = 'Starting camera…';
+    async function createDeviceInvitation() {
+      stopDeviceInvitationUpdates();
+      renderPendingDevice(null);
+      deviceInviteQr.textContent = 'Generating secure QR code…';
+      deviceInviteCode.textContent = '------';
+      deviceInviteExpiry.textContent = 'Creating invitation…';
       try {
-        deviceQrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
-        deviceQrVideo.srcObject = deviceQrStream;
-        await deviceQrVideo.play();
-        deviceScanStatus.textContent = 'Scanning for a QR code…';
-        const detector = new BarcodeDetector({ formats: ['qr_code'] });
-        const scanFrame = async () => {
-          if (!deviceQrStream || deviceDialog.open === false) return;
-          try {
-            const codes = await detector.detect(deviceQrVideo);
-            const authorizationCode = authorizationCodeFromQr(codes[0]?.rawValue);
-            if (authorizationCode) {
-              deviceCodeInput.value = authorizationCode;
-              deviceScanStatus.textContent = 'QR code scanned successfully.';
-              stopDeviceQrScanner();
-              updateDeviceAuthorizeState();
-              return;
-            }
-            if (codes.length) deviceScanStatus.textContent = 'This QR code does not contain a valid 6-digit authorization code.';
-          } catch (_) {}
-          deviceQrFrame = requestAnimationFrame(scanFrame);
-        };
-        deviceQrFrame = requestAnimationFrame(scanFrame);
+        const storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null');
+        const response = await fetch('/api/device-enrollments', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ staffId:storedStaff?.id || '' })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Could not create device invitation');
+        activeDeviceInvitation = payload;
+        const image = document.createElement('img');
+        image.src = payload.qrDataUrl;
+        image.alt = 'QR code for a new device to request authorization';
+        deviceInviteQr.replaceChildren(image);
+        deviceInviteCode.textContent = payload.code;
+        updateDeviceInvitationCountdown();
+        deviceInvitationClock = setInterval(updateDeviceInvitationCountdown, 1000);
+        pollDeviceInvitation();
       } catch (error) {
-        stopDeviceQrScanner();
-        deviceScanStatus.textContent = error.name === 'NotAllowedError'
-          ? 'Camera permission was not granted. Enter the code manually.'
-          : 'Camera could not be opened. Enter the code manually.';
+        deviceInviteQr.textContent = 'QR code unavailable';
+        deviceInviteExpiry.textContent = error.message;
       }
+    }
+
+    async function decideDeviceRequest(decision, deviceName) {
+      if (!activeDeviceInvitation) return;
+      try {
+        const response = await fetch(`/api/device-enrollments/${activeDeviceInvitation.id}/decision`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ creatorToken:activeDeviceInvitation.creatorToken, decision })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Could not update this request');
+        renderPendingDevice(null);
+        if (decision === 'approve') {
+          await loadAuthorizedDevices();
+          showToast('Device authorized', `${deviceName} now has access to the patient flow.`);
+        } else {
+          showToast('Request rejected', `${deviceName} was not authorized.`);
+        }
+      } catch (error) { showToast('Authorization failed', error.message); }
     }
 
     function closeDeviceDialog() {
-      stopDeviceQrScanner();
+      stopDeviceInvitationUpdates();
       deviceDialog.close();
-      deviceForm.reset();
-      deviceCodeInput.value = '';
-      deviceScanStatus.textContent = structuredMessages['device.scanHelp'] || 'Point the camera at the device QR code.';
-      setDeviceAuthorizationMethod('qr');
-      updateDeviceAuthorizeState();
     }
 
-    document.getElementById('addAuthorizedDevice').addEventListener('click', () => {
-      deviceForm.reset();
-      deviceCodeInput.value = '';
-      deviceScanStatus.textContent = structuredMessages['device.scanHelp'] || 'Point the camera at the device QR code.';
-      setDeviceAuthorizationMethod('qr');
-      updateDeviceAuthorizeState();
+    function openAuthorizedDeviceDialog() {
       deviceDialog.showModal();
       void loadAuthorizedDevices();
-      requestAnimationFrame(() => deviceNameInput.focus());
-    });
-    deviceMethodScan.addEventListener('click', () => setDeviceAuthorizationMethod('qr'));
-    deviceMethodManual.addEventListener('click', () => setDeviceAuthorizationMethod('manual'));
-    document.getElementById('startDeviceQrScan').addEventListener('click', startDeviceQrScanner);
-    deviceNameInput.addEventListener('input', updateDeviceAuthorizeState);
-    deviceCodeInput.addEventListener('input', () => {
-      deviceCodeInput.value = deviceCodeInput.value.replace(/\D/g, '').slice(0, 6);
-      updateDeviceAuthorizeState();
-    });
+      void createDeviceInvitation();
+    }
+    document.querySelectorAll('[data-authorize-device]').forEach(button => button.addEventListener('click', openAuthorizedDeviceDialog));
+    document.getElementById('refreshDeviceInvite').addEventListener('click', createDeviceInvitation);
     document.getElementById('closeDeviceDialog').addEventListener('click', closeDeviceDialog);
-    document.getElementById('cancelDeviceDialog').addEventListener('click', closeDeviceDialog);
     deviceDialog.addEventListener('click', event => { if (event.target === deviceDialog) closeDeviceDialog(); });
-    deviceForm.addEventListener('submit', async event => {
-      event.preventDefault();
-      if (!deviceForm.reportValidity() || !/^\d{6}$/.test(deviceCodeInput.value)) {
-        if (!/^\d{6}$/.test(deviceCodeInput.value)) {
-          setDeviceAuthorizationMethod('manual');
-          deviceCodeInput.setCustomValidity('Enter a valid 6-digit authorization code.');
-          deviceCodeInput.reportValidity();
-          deviceCodeInput.setCustomValidity('');
-        }
-        return;
-      }
-      try {
-        authorizeDeviceButton.disabled = true;
-        const deviceName = deviceNameInput.value.trim();
-        const response = await fetch('/api/device-authorizations', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: deviceName, code: deviceCodeInput.value })
-        });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || 'Device authorization failed');
-        deviceForm.reset();
-        deviceCodeInput.value = '';
-        setDeviceAuthorizationMethod('qr');
-        updateDeviceAuthorizeState();
-        await loadAuthorizedDevices();
-        showToast('Device authorized', `${deviceName} is now trusted and limited to the patient flow.`);
-      } catch (error) {
-        showToast('Authorization failed', error.message);
-        updateDeviceAuthorizeState();
-      }
-    });
 
     function openView(id) {
       tabs.forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.view === id)));
@@ -3093,6 +3567,7 @@
       appShell.hidden = false;
       appShell.classList.remove('doctor-session', 'patient-session', 'staff-session', 'checkup-active', 'voice-mode');
       appShell.classList.add(`${role}-session`);
+      staffProfileButton.hidden = role !== 'staff';
       openView(view);
     }
 
@@ -3117,12 +3592,57 @@
       document.querySelector('.doctor-profile-mark').textContent = displayName.replace(/^Dr\.?\s*/i, '').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || doctor.id.slice(0, 2);
     }
 
+    function applyStaffIdentity(staff) {
+      if (!staff?.id) return;
+      const displayName = staff.fullName || `Staff ${staff.id}`;
+      document.getElementById('staffSidebarName').textContent = displayName;
+      document.getElementById('staffSidebarHospital').textContent = `${staff.hospitalName} · ${staff.hospitalLocation}`;
+      document.getElementById('staffSidebarHospital').title = `${staff.hospitalName} · ${staff.hospitalLocation}`;
+      document.getElementById('staffSidebarMark').setAttribute('aria-label', `${displayName} account`);
+    }
+
+    function renderStaffProfile(staff) {
+      document.getElementById('staffProfileName').textContent = staff.fullName;
+      document.getElementById('staffProfileHospital').textContent = `${staff.hospitalName} · ${staff.hospitalLocation}`;
+      document.getElementById('staffProfileFullName').textContent = staff.fullName;
+      document.getElementById('staffProfileEmployeeId').textContent = staff.id;
+      document.getElementById('staffProfilePhone').textContent = staff.phone ? `+91 ${staff.phone}` : 'Not available';
+      document.getElementById('staffProfileEmail').textContent = staff.email || 'Not available';
+      document.getElementById('staffProfileBranch').textContent = staff.hospitalName;
+      document.getElementById('staffProfileLocation').textContent = staff.hospitalLocation;
+      document.getElementById('staffProfileCreated').textContent = staff.createdAt
+        ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date(staff.createdAt))
+        : 'Not available';
+      staffProfileStatus.textContent = '';
+    }
+
+    async function loadStaffProfile() {
+      staffProfileStatus.textContent = 'Loading staff profile…';
+      let storedStaff = null;
+      try { storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null'); } catch (_) {}
+      if (!storedStaff?.id) {
+        staffProfileStatus.textContent = 'Sign in as hospital staff to view this profile.';
+        return;
+      }
+      try {
+        const response = await fetch(`/api/staff-profile?staffId=${encodeURIComponent(storedStaff.id)}`, { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not load staff profile');
+        renderStaffProfile(data.staff);
+        applyStaffIdentity(data.staff);
+      } catch (error) {
+        staffProfileStatus.textContent = error.message || 'Could not load staff profile.';
+      }
+    }
+
     try {
       const storedPatientName = localStorage.getItem('arogPatientName');
       const storedPatientId = localStorage.getItem('arogPatientId');
       if (storedPatientName) applyPatientIdentity({ fullName: storedPatientName, id: storedPatientId });
       const storedDoctor = JSON.parse(localStorage.getItem('arogDoctor') || 'null');
       if (storedDoctor) applyDoctorIdentity(storedDoctor);
+      const storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null');
+      if (storedStaff) applyStaffIdentity(storedStaff);
     } catch (_) {}
 
     let cancelLoginMotion = null;
@@ -3134,14 +3654,7 @@
         if (blockedRoleRoute || protectedPatientRoute) {
           route = protectedPatientRoute ? 'login/patient' : 'roles';
           history.replaceState({ route }, '', `#/${route}`);
-        } else if (patientLoggedInThisSession && /^patient\/(?:start|records)$/.test(route)) {
-          route = 'patient/language';
-          history.replaceState({ route }, '', '#/patient/language');
         }
-      }
-      if (!authorizedPatientDevice && /^patient\/(?:language|voice|summary)$/.test(route)) {
-        route = 'patient/start';
-        history.replaceState({ route }, '', '#/patient/start');
       }
       if (route === 'patient/intake') {
         route = 'patient/voice';
@@ -3169,17 +3682,15 @@
         return;
       }
 
-      const patientMatch = route.match(/^patient\/(start|language|voice|summary|records)$/);
+      const patientMatch = route.match(/^patient\/(start|language|voice|records)$/);
       if (patientMatch) {
         showSession('patient', 'patient');
         const isVoiceRoute = patientMatch[1] === 'voice';
-        const isSummaryRoute = patientMatch[1] === 'summary';
-        const isCheckupActive = patientMatch[1] === 'language' || isVoiceRoute || isSummaryRoute;
+        const isCheckupActive = patientMatch[1] === 'language' || isVoiceRoute;
         patientView.classList.toggle('voice-route', isVoiceRoute);
         appShell.classList.toggle('voice-mode', isVoiceRoute);
         appShell.classList.toggle('checkup-active', isCheckupActive);
         if (patientMatch[1] === 'records') showPatientRecords(focus);
-        else if (isSummaryRoute) showCheckupResult();
         else setCheckupStage(patientMatch[1], focus);
         return;
       }
@@ -3193,6 +3704,12 @@
 
       if (route === 'staff/queue') {
         showSession('staff', 'reception');
+        return;
+      }
+
+      if (route === 'staff/profile') {
+        showSession('staff', 'staffProfile');
+        void loadStaffProfile();
         return;
       }
 
@@ -3412,6 +3929,41 @@
           return;
         }
       }
+      if (role === 'staff') {
+        if (!loginForm.reportValidity()) return;
+        loginStatus.textContent = selectedAuthMode === 'register'
+          ? 'Verifying your employee ID with the selected hospital…'
+          : 'Verifying your staff account…';
+        button.disabled = true;
+        try {
+          const isRegistration = selectedAuthMode === 'register';
+          const response = await fetch(isRegistration ? '/api/staff-registrations' : '/api/staff-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              hospitalId: isRegistration ? staffHospitalSelect.value : undefined,
+              employeeId: isRegistration ? staffEmployeeId.value : loginIdentifier.value,
+              password: loginPassword.value,
+              fullName: isRegistration ? staffFullName.value : undefined,
+              phone: isRegistration ? staffPhone.value : undefined,
+              email: isRegistration ? staffEmail.value : undefined
+            })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Could not verify staff account');
+          applyStaffIdentity(data.staff);
+          try {
+            const savedStaff = Object.fromEntries(['id', 'fullName', 'hospitalName', 'hospitalLocation'].map(key => [key, data.staff[key]]));
+            localStorage.setItem('arogStaff', JSON.stringify(savedStaff));
+          } catch (_) {}
+          void loadStaffPatientQueue();
+          loginStatus.textContent = '';
+        } catch (error) {
+          loginStatus.textContent = error.message || 'Could not verify staff account.';
+          button.disabled = false;
+          return;
+        }
+      }
       const rect = button.getBoundingClientRect();
       const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2;
       const layer = document.createElement('div');
@@ -3496,7 +4048,7 @@
           patientLoggedInThisSession = true;
           resetCheckup();
         }
-        navigateRoute(role === 'patient' ? (authorizedPatientDevice ? 'patient/language' : 'patient/start') : role === 'doctor' ? 'doctor/current' : 'staff/queue');
+        navigateRoute(role === 'patient' ? 'patient/start' : role === 'doctor' ? 'doctor/current' : 'staff/queue');
       } catch (error) {
         if (!cancelled) console.error('Login transition failed', error);
       } finally {
@@ -3526,6 +4078,12 @@
       }
     });
 
+    staffProfileButton.addEventListener('click', () => {
+      setSettingsOpen(false);
+      navigateRoute('staff/profile', false, true);
+    });
+    document.getElementById('backToStaffQueue').addEventListener('click', () => navigateRoute('staff/queue', false, true));
+
     document.getElementById('logoutButton').addEventListener('click', () => {
       setSettingsOpen(false);
       patientLoggedInThisSession = false;
@@ -3540,7 +4098,6 @@
       resetCheckup();
       navigateRoute('patient/start');
     }));
-    document.getElementById('openPatientRecords').addEventListener('click', () => navigateRoute('patient/records', false, true));
     document.querySelectorAll('[data-toast]').forEach(button => button.addEventListener('click', () => {
       const [title, text] = button.dataset.toast.split('|'); showToast(title, text);
     }));
@@ -3564,6 +4121,13 @@
       Manipuri: 'mni-IN', Marathi: 'mr-IN', Nepali: 'ne-NP', Odia: 'or-IN', Punjabi: 'pa-IN', Sanskrit: 'sa-IN',
       Santali: 'sat-IN', Sindhi: 'sd-IN', Tamil: 'ta-IN', Telugu: 'te-IN', Urdu: 'ur-IN'
     };
+    const followUpQuestions = [
+      'Thank you. When did this concern begin?',
+      'Does anything make it feel better or worse?',
+      'Have you noticed any other symptoms with it?'
+    ];
+    let followUpIndex = 0;
+
     function appendChatMessage(text, type, note) {
       const message = document.createElement('div');
       message.className = `voice-chat-message ${type}`;
@@ -3581,24 +4145,11 @@
     const voiceInputStatus = document.getElementById('voiceInputStatus');
     const voiceAudioToggle = document.getElementById('voiceAudioToggle');
     const voiceSendButton = voiceChatForm.querySelector('[type="submit"]');
-    const endVoiceSessionButton = document.getElementById('endVoiceSession');
-    const checkupOpdNumber = document.getElementById('checkupOpdNumber');
-    const checkupDoctorName = document.getElementById('checkupDoctorName');
-    const checkupDoctorSpecialty = document.getElementById('checkupDoctorSpecialty');
-    const checkupSummaryText = document.getElementById('checkupSummaryText');
-    const checkupSummaryStatus = document.getElementById('checkupSummaryStatus');
+    const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
     let voiceGeneration = 0;
     let replyPending = false;
     let readRepliesAloud = false;
-    let elevenConversation = null;
-    let elevenConnecting = false;
-    let elevenConsentGranted = false;
-    let elevenStartPromise = null;
-    let currentConversationId = '';
-    let hasPatientResponse = false;
-    let currentCheckup = null;
-    let checkupSummaryPoll = null;
 
     function setVoiceHint(text, error = false) {
       voiceInputStatus.textContent = text;
@@ -3606,16 +4157,15 @@
     }
 
     function syncVoiceControls() {
-      const voiceActive = !!elevenConversation || elevenConnecting;
-      voiceTalkButton.setAttribute('aria-pressed', String(voiceActive));
-      voiceTalkLabel.textContent = elevenConnecting ? 'Connecting…' : voiceActive ? 'Stop' : 'Talk';
+      voiceTalkButton.setAttribute('aria-pressed', String(!!recognition));
+      voiceTalkLabel.textContent = recognition ? 'Stop' : 'Talk';
+      voiceOrb.classList.toggle('listening', !!recognition);
       voiceSendButton.disabled = replyPending || !voiceChatInput.value.trim();
-      voiceTalkButton.disabled = false;
+      voiceTalkButton.disabled = replyPending;
       voiceChatMessages.setAttribute('aria-busy', String(replyPending));
     }
 
     function stopMicrophone() {
-      void stopElevenLabsSession();
       voiceGeneration += 1;
       clearTimeout(voiceTimer);
       const previous = recognition;
@@ -3624,105 +4174,7 @@
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       replyPending = false;
       syncVoiceControls();
-      setVoiceHint('Tap Talk to start the live AI voice session.');
-    }
-
-    function setAgentOrbState(state = 'idle') {
-      voiceOrb.classList.remove('connecting', 'listening', 'speaking');
-      if (state !== 'idle') voiceOrb.classList.add(state);
-      const active = state !== 'idle';
-      voiceOrb.setAttribute('aria-pressed', String(active));
-      voiceOrb.setAttribute('aria-label', active ? 'Stop voice conversation' : 'Start voice conversation');
-    }
-
-    async function stopElevenLabsSession() {
-      const session = elevenConversation;
-      elevenConversation = null;
-      elevenConnecting = false;
-      setAgentOrbState();
-      if (!session) return;
-      try { await session.endSession(); }
-      catch (_) { /* Session may already be closed. */ }
-    }
-
-    function handleElevenLabsMessage(payload) {
-      const text = String(payload?.message || '').trim();
-      if (!text) return;
-      const isAgent = payload.role === 'agent' || payload.source === 'ai';
-      appendChatMessage(text, isAgent ? 'ai' : 'user', isAgent ? 'Arogyam · ElevenLabs' : 'You · voice');
-      if (isAgent) {
-        voiceQuestion.textContent = text;
-        replyPending = false;
-      } else {
-        hasPatientResponse = true;
-        replyPending = true;
-      }
-      syncVoiceControls();
-    }
-
-    function startElevenLabsSession() {
-      if (elevenConversation?.isOpen()) return Promise.resolve(elevenConversation);
-      if (elevenStartPromise) return elevenStartPromise;
-      elevenStartPromise = connectElevenLabsSession().finally(() => { elevenStartPromise = null; });
-      return elevenStartPromise;
-    }
-
-    async function connectElevenLabsSession() {
-      if (!elevenConsentGranted) {
-        elevenConsentGranted = window.confirm('To start voice chat, your microphone audio and conversation transcript will be processed by ElevenLabs. Continue?');
-        if (!elevenConsentGranted) return null;
-      }
-      if (!window.ElevenLabsClient?.Conversation) {
-        showToast('Voice agent unavailable', 'The voice client could not be loaded. Please refresh and try again.');
-        return null;
-      }
-      elevenConnecting = true;
-      setAgentOrbState('connecting');
-      setVoiceHint('Connecting to Arogyam voice…');
-      syncVoiceControls();
-      try {
-        const response = await fetch('/api/elevenlabs/signed-url', { cache: 'no-store' });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
-        const preferredLanguage = languageSelect.value;
-        const elevenLanguage = elevenLanguageCodes[preferredLanguage] || 'en';
-        const session = await window.ElevenLabsClient.Conversation.startSession({
-          signedUrl: payload.signedUrl,
-          connectionType: 'websocket',
-          overrides: { agent: { language: elevenLanguage } },
-          dynamicVariables: { preferred_language: preferredLanguage },
-          onConnect: () => {
-            elevenConnecting = false;
-            setAgentOrbState('listening');
-            setVoiceHint('Connected — speak naturally. Tap the orb to stop.');
-          },
-          onModeChange: ({ mode }) => {
-            setAgentOrbState(mode === 'speaking' ? 'speaking' : 'listening');
-            setVoiceHint(mode === 'speaking' ? 'Arogyam is speaking…' : 'Listening…');
-          },
-          onMessage: handleElevenLabsMessage,
-          onError: message => setVoiceHint(String(message || 'Voice connection error.'), true),
-          onDisconnect: () => {
-            elevenConversation = null;
-            elevenConnecting = false;
-            replyPending = false;
-            setAgentOrbState();
-            syncVoiceControls();
-          }
-        });
-        elevenConversation = session;
-        currentConversationId = session.getId();
-        syncVoiceControls();
-        return session;
-      } catch (error) {
-        elevenConnecting = false;
-        setAgentOrbState();
-        const message = error instanceof Error ? error.message : 'Could not connect to the voice agent.';
-        setVoiceHint(message, true);
-        showToast('Voice agent unavailable', message);
-        syncVoiceControls();
-        return null;
-      }
+      setVoiceHint('Speak or type, at your pace.');
     }
 
     function speakAI(text, language) {
@@ -3753,14 +4205,10 @@
       voiceLanguage.textContent = language;
       voiceStatus.textContent = 'Arogyam is ready';
       voiceQuestion.textContent = question;
+      followUpIndex = 0;
       voiceChatInput.value = '';
       voiceChatMessages.replaceChildren();
-      currentConversationId = '';
-      hasPatientResponse = false;
-      currentCheckup = null;
-      if (checkupSummaryPoll) clearTimeout(checkupSummaryPoll);
-      checkupSummaryPoll = null;
-      setVoiceHint('Tap Talk to start the live AI voice session.');
+      appendChatMessage(question, 'ai', 'Arogyam');
       syncVoiceControls();
     }
 
@@ -3773,90 +4221,110 @@
     async function sendPatientMessage(source = 'typed') {
       const message = voiceChatInput.value.trim();
       if (!message || replyPending) return;
-      const session = elevenConversation?.isOpen() ? elevenConversation : await startElevenLabsSession();
-      if (!session?.isOpen()) {
-        setVoiceHint('Live AI is not connected. Tap Talk and try again.', true);
-        return;
-      }
-      session.sendUserMessage(message);
-      hasPatientResponse = true;
+      const generation = voiceGeneration;
+      const previous = recognition;
+      recognition = null;
+      if (previous) previous.abort();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      appendChatMessage(message, 'user', source === 'voice' ? 'You · voice' : 'You');
       voiceChatInput.value = '';
       replyPending = true;
       syncVoiceControls();
-      setVoiceHint('Arogyam is thinking…');
-    }
-
-    function renderCompletedCheckup(checkup) {
-      currentCheckup = checkup;
-      checkupOpdNumber.textContent = checkup.opdNumber || 'Pending';
-      checkupDoctorName.textContent = checkup.doctor?.name || 'Doctor assignment pending';
-      checkupDoctorSpecialty.textContent = checkup.doctor?.specialty || 'Outpatient care';
-      const ready = checkup.status === 'completed' && checkup.summary;
-      checkupSummaryText.textContent = ready
-        ? checkup.summary
-        : 'Arogyam is preparing a concise summary for your doctor. Your OPD number is already confirmed.';
-      checkupSummaryStatus.textContent = ready ? 'AI summary ready for clinical review' : 'Generating securely…';
-      checkupSummaryStatus.classList.toggle('ready', Boolean(ready));
-    }
-
-    async function pollCheckupSummary(checkupId, patientId, attempt = 0) {
-      if (!checkupId || attempt >= 30) {
-        checkupSummaryStatus.textContent = 'Summary is taking longer than expected. It will remain linked to this OPD visit.';
-        return;
-      }
+      setVoiceHint('Preparing the next question…');
       try {
-        const response = await fetch(`/api/patient-checkups/${encodeURIComponent(checkupId)}?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Could not load the summary');
-        renderCompletedCheckup(data.checkup);
-        if (data.checkup.status === 'completed') return;
-      } catch (error) {
-        if (attempt >= 29) checkupSummaryStatus.textContent = error.message || 'Summary could not be loaded.';
-      }
-      checkupSummaryPoll = setTimeout(() => void pollCheckupSummary(checkupId, patientId, attempt + 1), 1500);
-    }
-
-    async function completeCurrentCheckup() {
-      const patientId = activePatient?.id;
-      const conversationId = currentConversationId || elevenConversation?.getId?.() || '';
-      if (!patientId) {
-        showToast('Patient account required', 'Please sign in again before completing the check-up.');
-        return;
-      }
-      if (!conversationId || !hasPatientResponse) {
-        showToast('Check-up not started', 'Please use Talk or send at least one response before ending the check-up.');
-        return;
-      }
-      endVoiceSessionButton.disabled = true;
-      setVoiceHint('Finishing your check-up and creating the OPD visit…');
-      await stopElevenLabsSession();
-      try {
-        const response = await fetch('/api/patient-checkups', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ patientId, conversationId, language: languageSelect.value })
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.checkup) throw new Error(data.error || 'Could not complete the check-up');
-        renderCompletedCheckup(data.checkup);
-        navigateRoute('patient/summary');
-        if (data.checkup.status !== 'completed') void pollCheckupSummary(data.checkup.id, patientId);
-      } catch (error) {
-        setVoiceHint(error.message || 'Could not complete the check-up.', true);
-        showToast('Check-up not completed', error.message || 'Please try again.');
+        const reply = await translateDynamicText(followUpQuestions[followUpIndex % followUpQuestions.length]);
+        if (generation !== voiceGeneration) return;
+        followUpIndex += 1;
+        voiceQuestion.textContent = reply;
+        appendChatMessage(reply, 'ai', 'Arogyam');
+        setVoiceHint('Your turn — tap Talk or type a reply.');
+        speakAI(reply, languageSelect.value);
+      } catch (_) {
+        if (generation === voiceGeneration) setVoiceHint('Could not load the next question. Please try again.', true);
       } finally {
-        endVoiceSessionButton.disabled = false;
+        if (generation === voiceGeneration) {
+          replyPending = false;
+          syncVoiceControls();
+        }
       }
     }
 
     voiceTalkButton.addEventListener('click', () => {
-      if (elevenConversation || elevenConnecting) void stopElevenLabsSession();
-      else void startElevenLabsSession();
-    });
-
-    voiceOrb.addEventListener('click', () => {
-      if (elevenConversation || elevenConnecting) void stopElevenLabsSession();
-      else void startElevenLabsSession();
+      if (recognition) {
+        const previous = recognition;
+        recognition = null;
+        previous.abort();
+        syncVoiceControls();
+        setVoiceHint('Microphone stopped. Review your text, then send.');
+        return;
+      }
+      if (!SpeechRecognitionApi) {
+        setVoiceHint('Voice input is unavailable here. Try Chrome or Edge, or type your reply.', true);
+        return;
+      }
+      if (!window.isSecureContext) {
+        setVoiceHint('Open the secure HTTPS site to use voice input.', true);
+        return;
+      }
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      const session = new SpeechRecognitionApi();
+      const generation = voiceGeneration;
+      const draft = voiceChatInput.value.trim();
+      let finalTranscript = '';
+      let failed = false;
+      session.lang = speechLanguageCodes[languageSelect.value] || 'en-IN';
+      session.continuous = false;
+      session.interimResults = true;
+      session.maxAlternatives = 1;
+      recognition = session;
+      readRepliesAloud = true;
+      voiceAudioToggle.setAttribute('aria-pressed', 'true');
+      setVoiceHint('Starting microphone…');
+      syncVoiceControls();
+      session.onstart = () => {
+        if (recognition === session) setVoiceHint('Listening — speak now. Tap Stop to pause.');
+      };
+      session.onresult = event => {
+        if (recognition !== session || generation !== voiceGeneration) return;
+        let finalText = '';
+        let interimText = '';
+        for (let i = 0; i < event.results.length; i++) {
+          if (event.results[i].isFinal) finalText += event.results[i][0].transcript + ' ';
+          else interimText += event.results[i][0].transcript + ' ';
+        }
+        finalTranscript = finalText.trim();
+        voiceChatInput.value = [draft, finalText.trim(), interimText.trim()].filter(Boolean).join(' ');
+        syncVoiceControls();
+      };
+      session.onerror = event => {
+        if (recognition !== session) return;
+        failed = true;
+        recognition = null;
+        session.abort();
+        const errors = {
+          'not-allowed': 'Microphone access is blocked. Allow it in your browser, then tap Talk.',
+          'service-not-allowed': 'Voice input is blocked by this browser. Try Chrome or Edge.',
+          'audio-capture': 'No microphone found. Connect one and try again.',
+          'network': 'Voice connection failed. Check your connection and try again.',
+          'no-speech': 'No speech detected. Tap Talk to try again.',
+          'language-not-supported': 'This voice language is unavailable. Change language or type your reply.'
+        };
+        setVoiceHint(errors[event.error] || 'Voice input stopped. Tap Talk to try again.', true);
+        syncVoiceControls();
+      };
+      session.onend = () => {
+        if (recognition !== session || generation !== voiceGeneration) return;
+        recognition = null;
+        syncVoiceControls();
+        if (!failed && finalTranscript) void sendPatientMessage('voice');
+        else if (!failed) setVoiceHint('No speech captured. Tap Talk to try again.');
+      };
+      try { session.start(); }
+      catch (_) {
+        recognition = null;
+        syncVoiceControls();
+        setVoiceHint('Could not start voice input. Tap Talk to retry or type your reply.', true);
+      }
     });
 
     voiceAudioToggle.addEventListener('click', () => {
@@ -3881,13 +4349,11 @@
       void sendPatientMessage();
     });
 
-    endVoiceSessionButton.addEventListener('click', () => void completeCurrentCheckup());
-
-    document.getElementById('finishCheckupResult').addEventListener('click', () => {
-      if (checkupSummaryPoll) clearTimeout(checkupSummaryPoll);
-      checkupSummaryPoll = null;
+    document.getElementById('endVoiceSession').addEventListener('click', () => {
+      clearTimeout(voiceTimer);
+      stopMicrophone();
       resetCheckup();
-      navigateRoute(authorizedPatientDevice ? 'patient/language' : 'patient/start');
+      navigateRoute('patient/start');
     });
 
     languageSelect.addEventListener('change', event => {
@@ -3909,10 +4375,20 @@
       }
       loginScreen.classList.toggle('device-patient-only', authorizedPatientDevice);
       appShell.classList.toggle('authorized-patient-device', authorizedPatientDevice);
+      document.getElementById('exitDeviceMode').hidden = !authorizedPatientDevice;
       const initialRoute = routeFromLocation();
       history.replaceState({ route: initialRoute }, '', `#/${initialRoute}`);
       applyRoute(initialRoute);
     }
+
+    document.getElementById('exitDeviceMode').addEventListener('click', async () => {
+      try { await fetch('/api/device-session/logout', { method: 'POST' }); } catch (_) {}
+      authorizedPatientDevice = false;
+      loginScreen.classList.remove('device-patient-only');
+      appShell.classList.remove('authorized-patient-device');
+      document.getElementById('exitDeviceMode').hidden = true;
+      navigateRoute('roles', true, true);
+    });
 
     void initializeDevicePolicy();
   </script>

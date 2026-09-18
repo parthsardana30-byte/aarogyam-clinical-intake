@@ -1,4 +1,4 @@
-import http from 'node:http';
+﻿import http from 'node:http';
 import { createCipheriv, createDecipheriv, createHash, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from 'node:crypto';
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
@@ -27,8 +27,6 @@ const hospitalBranches = new Map([
   ['civil-nashik', { id: 'civil-nashik', name: 'Civil Hospital', location: 'Nashik, Maharashtra', issuedDoctorIds: new Set(['CHN-DR-5576']) }],
   ['civil-rajkot', { id: 'civil-rajkot', name: 'Civil Hospital', location: 'Rajkot, Gujarat', issuedDoctorIds: new Set(['CHR-DR-6631']) }]
 ]);
-const elevenLabsSignedUrlLastIssued = new Map();
-const activeCheckupHydrations = new Set();
 let devices = [];
 let patients = [];
 let patientsDb;
@@ -40,7 +38,33 @@ const mimeTypes = {
 };
 
 const hash = value => createHash('sha256').update(value).digest('hex');
-const publicDevice = device => ({ id: device.id, name: device.name, authorizedAt: device.authorizedAt, lastSeenAt: device.lastSeenAt || null });
+const publicDevice = device => ({
+  id: device.id,
+  name: device.name,
+  authorizedAt: device.authorizedAt,
+  lastSeenAt: device.lastSeenAt || null,
+  ipAddress: device.ipAddress || null,
+  location: device.location || null
+});
+
+function deviceNetworkDetails(request) {
+  const decodeHeader = value => {
+    try { return decodeURIComponent(String(value || '').replace(/\+/g, ' ')); }
+    catch { return String(value || ''); }
+  };
+  const forwarded = String(request.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const rawIp = forwarded || String(request.headers['cf-connecting-ip'] || request.headers['x-real-ip'] || request.socket.remoteAddress || '').trim();
+  const ipAddress = rawIp.replace(/^::ffff:/, '') || 'Unknown';
+  const localIp = ipAddress === '::1' || ipAddress === '127.0.0.1' || ipAddress.startsWith('10.') || ipAddress.startsWith('192.168.') || /^172\.(1[6-9]|2\d|3[01])\./.test(ipAddress);
+  const city = decodeHeader(request.headers['x-vercel-ip-city'] || request.headers['cf-ipcity']);
+  const region = decodeHeader(request.headers['x-vercel-ip-country-region'] || request.headers['cf-region']);
+  const country = String(request.headers['x-vercel-ip-country'] || request.headers['cf-ipcountry'] || '').trim();
+  const locationParts = [city, region, country].filter(Boolean);
+  return {
+    ipAddress,
+    location: localIp ? 'Local network' : (locationParts.join(', ') || 'Location unavailable')
+  };
+}
 
 async function loadDevices() {
   await mkdir(dataRoot, { recursive: true });
@@ -94,6 +118,19 @@ async function loadPatients() {
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS doctors_hospital_idx ON doctors(hospital_id);
+    CREATE TABLE IF NOT EXISTS staff (
+      employee_id TEXT PRIMARY KEY,
+      hospital_id TEXT NOT NULL,
+      hospital_name TEXT NOT NULL,
+      hospital_location TEXT NOT NULL,
+      full_name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_salt TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS staff_hospital_idx ON staff(hospital_id);
     CREATE TABLE IF NOT EXISTS patient_document_sessions (
       id TEXT PRIMARY KEY,
       token_hash TEXT NOT NULL,
@@ -105,6 +142,9 @@ async function loadPatients() {
       id TEXT PRIMARY KEY,
       upload_session_id TEXT NOT NULL,
       patient_id TEXT,
+      patient_reference TEXT,
+      patient_name TEXT,
+      uploaded_by_staff_id TEXT,
       original_name TEXT NOT NULL,
       mime_type TEXT NOT NULL,
       size_bytes INTEGER NOT NULL,
@@ -115,22 +155,14 @@ async function loadPatients() {
     );
     CREATE INDEX IF NOT EXISTS patient_documents_session_idx ON patient_documents(upload_session_id);
     CREATE INDEX IF NOT EXISTS patient_documents_patient_idx ON patient_documents(patient_id);
-    CREATE TABLE IF NOT EXISTS patient_checkups (
-      id TEXT PRIMARY KEY,
-      opd_number TEXT NOT NULL UNIQUE,
-      patient_id TEXT NOT NULL,
-      conversation_id TEXT NOT NULL UNIQUE,
-      language TEXT NOT NULL,
-      doctor_name TEXT NOT NULL,
-      doctor_specialty TEXT NOT NULL,
-      summary TEXT,
-      status TEXT NOT NULL DEFAULT 'processing',
-      created_at TEXT NOT NULL,
-      completed_at TEXT,
-      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
-    );
-    CREATE INDEX IF NOT EXISTS patient_checkups_patient_idx ON patient_checkups(patient_id, created_at DESC);
   `);
+  const patientDocumentColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_documents)').all().map(column => column.name));
+  const patientDocumentMigrations = [
+    ['patient_reference', 'TEXT'], ['patient_name', 'TEXT'], ['uploaded_by_staff_id', 'TEXT']
+  ];
+  for (const [column, type] of patientDocumentMigrations) {
+    if (!patientDocumentColumns.has(column)) patientsDb.exec(`ALTER TABLE patient_documents ADD COLUMN ${column} ${type}`);
+  }
   const doctorColumns = new Set(patientsDb.prepare('PRAGMA table_info(doctors)').all().map(column => column.name));
   const doctorMigrations = [
     ['full_name', 'TEXT'], ['degree', 'TEXT'], ['specialty', 'TEXT'],
@@ -212,155 +244,6 @@ function requestOrigin(request) {
   return `${protocol}://${request.headers.host || `localhost:${port}`}`;
 }
 
-function requestIp(request) {
-  return String(request.headers['x-forwarded-for'] || request.socket.remoteAddress || 'unknown').split(',')[0].trim();
-}
-
-async function createElevenLabsSignedUrl(request, response) {
-  const apiKey = String(process.env.ELEVENLABS_API_KEY || '').trim();
-  const agentId = String(process.env.ELEVENLABS_AGENT_ID || '').trim();
-  if (!apiKey || !/^agent_[a-zA-Z0-9]+$/.test(agentId)) {
-    return sendJson(response, 503, { configured: false, error: 'ElevenLabs agent is not configured' });
-  }
-  const ip = requestIp(request);
-  const lastIssued = elevenLabsSignedUrlLastIssued.get(ip) || 0;
-  if (Date.now() - lastIssued < 5_000) return sendJson(response, 429, { error: 'Please wait before reconnecting' });
-  const endpoint = new URL('https://api.elevenlabs.io/v1/convai/conversation/get-signed-url');
-  endpoint.searchParams.set('agent_id', agentId);
-  const result = await fetch(endpoint, { headers: { 'xi-api-key': apiKey, Accept: 'application/json' } });
-  if (!result.ok) {
-    console.error(`ElevenLabs signed URL request failed (${result.status})`);
-    return sendJson(response, 502, { error: 'Voice agent is temporarily unavailable' });
-  }
-  const payload = await result.json();
-  if (!payload.signed_url) return sendJson(response, 502, { error: 'Voice agent returned an invalid session' });
-  elevenLabsSignedUrlLastIssued.set(ip, Date.now());
-  sendJson(response, 200, { configured: true, signedUrl: payload.signed_url, expiresIn: 900 });
-}
-
-async function serveElevenLabsClient(response) {
-  try {
-    const body = await readFile(resolve('node_modules/@elevenlabs/client/dist/lib.iife.js'));
-    response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=86400' });
-    response.end(body);
-  } catch {
-    sendJson(response, 404, { error: 'ElevenLabs client is unavailable' });
-  }
-}
-
-const wait = milliseconds => new Promise(resolveWait => setTimeout(resolveWait, milliseconds));
-
-function publicCheckup(row) {
-  return {
-    id: row.id,
-    opdNumber: row.opd_number,
-    patientId: row.patient_id,
-    conversationId: row.conversation_id,
-    language: row.language,
-    doctor: { name: row.doctor_name, specialty: row.doctor_specialty },
-    summary: row.summary,
-    status: row.status,
-    createdAt: row.created_at,
-    completedAt: row.completed_at
-  };
-}
-
-function assignDoctor(summary = '') {
-  const text = String(summary).toLowerCase();
-  if (/joint|knee|arthritis|stiff|जोड़|घुटन|गठिया/.test(text)) {
-    return { name: 'Dr. Nisha Rao', specialty: 'AYUSH Medicine' };
-  }
-  return { name: 'Dr. Aarav Mehta', specialty: 'General Medicine' };
-}
-
-function createOpdNumber() {
-  const date = new Date().toISOString().slice(0, 10).replaceAll('-', '');
-  let opdNumber;
-  do { opdNumber = `OPD-${date}-${randomInt(1000, 10000)}`; }
-  while (patientsDb.prepare('SELECT 1 FROM patient_checkups WHERE opd_number = ?').get(opdNumber));
-  return opdNumber;
-}
-
-async function hydrateCheckupSummary(checkupId) {
-  if (activeCheckupHydrations.has(checkupId)) return;
-  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ?').get(checkupId);
-  if (!row || row.status === 'completed') return;
-  activeCheckupHydrations.add(checkupId);
-  try {
-    const apiKey = String(process.env.ELEVENLABS_API_KEY || '').trim();
-    const agentId = String(process.env.ELEVENLABS_AGENT_ID || '').trim();
-    if (!apiKey || !agentId) throw new Error('ElevenLabs is not configured');
-    for (let attempt = 0; attempt < 20; attempt += 1) {
-      if (attempt) await wait(1500);
-      const endpoint = `https://api.elevenlabs.io/v1/convai/conversations/${encodeURIComponent(row.conversation_id)}/summary?max_messages=80`;
-      const result = await fetch(endpoint, { headers: { 'xi-api-key': apiKey, Accept: 'application/json' } });
-      if (result.status === 404 || result.status === 409 || result.status === 425) continue;
-      if (!result.ok) throw new Error(`ElevenLabs summary request failed (${result.status})`);
-      const payload = await result.json();
-      if (payload.agent_id && payload.agent_id !== agentId) throw new Error('Conversation does not belong to the configured agent');
-      const summary = String(payload.transcript_summary || '').trim();
-      if (!summary || payload.status === 'processing') continue;
-      const doctor = assignDoctor(summary);
-      patientsDb.prepare(`
-        UPDATE patient_checkups
-        SET summary = ?, doctor_name = ?, doctor_specialty = ?, status = 'completed', completed_at = ?
-        WHERE id = ?
-      `).run(summary.slice(0, 6000), doctor.name, doctor.specialty, new Date().toISOString(), checkupId);
-      return;
-    }
-    throw new Error('ElevenLabs summary is still processing');
-  } catch (error) {
-    console.error(`Check-up summary ${checkupId} failed:`, error.message);
-    patientsDb.prepare("UPDATE patient_checkups SET status = 'pending' WHERE id = ?").run(checkupId);
-  } finally {
-    activeCheckupHydrations.delete(checkupId);
-  }
-}
-
-async function completePatientCheckup(request, response) {
-  const body = await readJson(request);
-  const patientId = String(body.patientId || '').trim();
-  const conversationId = String(body.conversationId || '').trim();
-  const language = String(body.language || 'English').trim().slice(0, 40) || 'English';
-  if (!/^AS-\d{6}$/.test(patientId) || !patientsDb.prepare('SELECT 1 FROM patients WHERE id = ?').get(patientId)) {
-    return sendJson(response, 404, { error: 'Patient account was not found' });
-  }
-  if (!/^conv_[a-zA-Z0-9]+$/.test(conversationId)) return sendJson(response, 400, { error: 'A completed AI conversation is required' });
-
-  const existing = patientsDb.prepare('SELECT * FROM patient_checkups WHERE conversation_id = ?').get(conversationId);
-  if (existing) {
-    if (existing.patient_id !== patientId) return sendJson(response, 409, { error: 'This conversation is already linked to another patient' });
-    if (existing.status !== 'completed') void hydrateCheckupSummary(existing.id);
-    return sendJson(response, existing.status === 'completed' ? 200 : 202, { checkup: publicCheckup(existing) });
-  }
-
-  const doctor = assignDoctor();
-  const checkup = {
-    id: randomUUID(), opdNumber: createOpdNumber(), patientId, conversationId, language,
-    doctor, createdAt: new Date().toISOString()
-  };
-  patientsDb.prepare(`
-    INSERT INTO patient_checkups (
-      id, opd_number, patient_id, conversation_id, language, doctor_name, doctor_specialty,
-      summary, status, created_at, completed_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 'processing', ?, NULL)
-  `).run(
-    checkup.id, checkup.opdNumber, checkup.patientId, checkup.conversationId, checkup.language,
-    doctor.name, doctor.specialty, checkup.createdAt
-  );
-  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ?').get(checkup.id);
-  void hydrateCheckupSummary(checkup.id);
-  sendJson(response, 202, { checkup: publicCheckup(row) });
-}
-
-function getPatientCheckup(_request, response, checkupId, url) {
-  const patientId = String(url.searchParams.get('patientId') || '');
-  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ? AND patient_id = ?').get(checkupId, patientId);
-  if (!row) return sendJson(response, 404, { error: 'Check-up was not found' });
-  if (row.status !== 'completed') void hydrateCheckupSummary(row.id);
-  sendJson(response, 200, { checkup: publicCheckup(row) });
-}
-
 function documentSession(id, token) {
   const session = patientsDb.prepare('SELECT * FROM patient_document_sessions WHERE id = ?').get(id);
   if (!session || !token || hash(token) !== session.token_hash) return null;
@@ -426,6 +309,31 @@ async function uploadPatientDocument(request, response, id) {
   `).run(documentId, id, originalName, mimeType, file.length, storedName, createdAt);
   const row = patientsDb.prepare('SELECT * FROM patient_documents WHERE id = ?').get(documentId);
   sendJson(response, 201, { file: publicPatientDocument(row, id, token) });
+}
+
+async function completeStaffDocumentUpload(request, response) {
+  const body = await readJson(request);
+  const sessionId = String(body.documentSessionId || '');
+  const sessionToken = String(body.documentSessionToken || '');
+  const patientReference = String(body.patientId || '').trim().slice(0, 40);
+  const patientName = String(body.patientName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+  const staffId = normalizeStaffId(body.staffId);
+  const session = documentSession(sessionId, sessionToken);
+  if (!session) return sendJson(response, 400, { error: 'The document upload session is invalid or expired' });
+  if (!patientReference || !patientName) return sendJson(response, 400, { error: 'Select a patient before saving documents' });
+  if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
+    return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
+  }
+  const documentCount = Number(patientsDb.prepare('SELECT COUNT(*) AS count FROM patient_documents WHERE upload_session_id = ?').get(sessionId).count);
+  if (!documentCount) return sendJson(response, 400, { error: 'Upload at least one prescription or document' });
+  const patient = patientsDb.prepare('SELECT id FROM patients WHERE id = ?').get(patientReference);
+  patientsDb.prepare(`
+    UPDATE patient_documents
+    SET patient_id = ?, patient_reference = ?, patient_name = ?, uploaded_by_staff_id = ?
+    WHERE upload_session_id = ?
+  `).run(patient?.id || null, patientReference, patientName, staffId, sessionId);
+  patientsDb.prepare("UPDATE patient_document_sessions SET status = 'completed' WHERE id = ?").run(sessionId);
+  sendJson(response, 200, { saved: true, patientId: patientReference, documentCount });
 }
 
 async function servePatientDocument(request, response, sessionId, documentId, url) {
@@ -503,6 +411,16 @@ function signupOtpConfig(_request, response) {
   sendJson(response, 200, { provider: 'server' });
 }
 
+async function patientRegistrationAvailability(request, response) {
+  const body = await readJson(request);
+  const phone = normalizeIndianPhone(body.phone);
+  if (!phone) return sendJson(response, 400, { error: 'Enter a valid 10-digit Indian mobile number' });
+  if (patients.some(patient => patient.phone === phone)) {
+    return sendJson(response, 409, { available: false, error: 'An account already exists for this phone number. Sign in instead.' });
+  }
+  sendJson(response, 200, { available: true });
+}
+
 async function verifyMsg91AccessToken(accessToken) {
   const { authKey, configured } = msg91Config();
   if (!configured) throw new Error('MSG91 is not configured');
@@ -528,6 +446,9 @@ async function requestSignupOtp(request, response) {
   const body = await readJson(request);
   const phone = normalizeIndianPhone(body.phone);
   if (!phone) return sendJson(response, 400, { error: 'Enter a valid 10-digit Indian mobile number' });
+  if (patients.some(patient => patient.phone === phone)) {
+    return sendJson(response, 409, { error: 'An account already exists for this phone number. Sign in instead.' });
+  }
   const lastSent = signupOtpLastSent.get(phone) || 0;
   const retryAfter = Math.ceil((signupOtpCooldownMs - (Date.now() - lastSent)) / 1000);
   if (retryAfter > 0) return sendJson(response, 429, { error: `Please wait ${retryAfter}s before requesting another OTP`, retryAfter });
@@ -695,6 +616,10 @@ function normalizeDoctorId(value) {
   return String(value || '').trim().toUpperCase().replace(/\s+/g, '');
 }
 
+function normalizeStaffId(value) {
+  return String(value || '').trim().slice(0, 80);
+}
+
 const allowedDoctorSpecialties = new Set([
   'General Medicine', 'Gynaecology', 'Orthopaedics', 'Paediatrics', 'General Surgery',
   'Cardiology', 'Dermatology', 'ENT', 'Ophthalmology', 'Psychiatry', 'AYUSH Medicine', 'Other'
@@ -801,42 +726,201 @@ async function loginDoctor(request, response) {
   sendJson(response, 200, { doctor: publicDoctor(row) });
 }
 
+function publicStaff(row) {
+  return {
+    id: row.employee_id,
+    fullName: row.full_name,
+    phone: row.phone,
+    email: row.email,
+    hospitalId: row.hospital_id,
+    hospitalName: row.hospital_name,
+    hospitalLocation: row.hospital_location,
+    createdAt: row.created_at
+  };
+}
+
+async function createStaffRegistration(request, response) {
+  const body = await readJson(request);
+  const hospital = hospitalBranches.get(String(body.hospitalId || ''));
+  const employeeId = normalizeStaffId(body.employeeId);
+  const password = String(body.password || '');
+  const fullName = String(body.fullName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+  const phone = normalizeIndianPhone(body.phone);
+  const email = String(body.email || '').trim().toLowerCase().slice(0, 120);
+  if (!hospital) return sendJson(response, 400, { error: 'Select a valid hospital branch' });
+  if (!employeeId) return sendJson(response, 400, { error: 'Enter an employee ID' });
+  if (password.length < 8 || password.length > 128) {
+    return sendJson(response, 400, { error: 'Password must contain at least 8 characters' });
+  }
+  if (fullName.length < 2) return sendJson(response, 400, { error: 'Enter the staff member’s full name' });
+  if (!phone) return sendJson(response, 400, { error: 'Enter a valid 10-digit Indian mobile number' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return sendJson(response, 400, { error: 'Enter a valid professional email address' });
+  if (patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(employeeId)) {
+    return sendJson(response, 409, { error: 'This employee ID is already registered' });
+  }
+  if (patientsDb.prepare('SELECT employee_id FROM staff WHERE email = ?').get(email)) {
+    return sendJson(response, 409, { error: 'This professional email is already associated with an account' });
+  }
+  const passwordSalt = randomBytes(16).toString('hex');
+  const createdAt = new Date().toISOString();
+  patientsDb.prepare(`
+    INSERT INTO staff (
+      employee_id, hospital_id, hospital_name, hospital_location, full_name, phone, email,
+      password_salt, password_hash, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    employeeId, hospital.id, hospital.name, hospital.location, fullName, phone, email,
+    passwordSalt, scryptSync(password, passwordSalt, 64).toString('hex'), createdAt
+  );
+  const staff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(employeeId);
+  sendJson(response, 201, { staff: publicStaff(staff) });
+}
+
+async function loginStaff(request, response) {
+  const body = await readJson(request);
+  const employeeId = String(body.employeeId || '').trim();
+  const password = String(body.password || '');
+  if (!employeeId || !password) return sendJson(response, 401, { error: 'Enter any employee ID and your password' });
+  const exactRow = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(normalizeStaffId(employeeId));
+  const candidates = exactRow ? [exactRow] : patientsDb.prepare('SELECT * FROM staff ORDER BY datetime(created_at) DESC').all();
+  let row = null;
+  for (const candidateRow of candidates) {
+    const candidate = scryptSync(password, candidateRow.password_salt, 64);
+    const stored = Buffer.from(candidateRow.password_hash, 'hex');
+    if (stored.length === candidate.length && timingSafeEqual(stored, candidate)) {
+      row = candidateRow;
+      break;
+    }
+  }
+  if (!row) return sendJson(response, 401, { error: 'Password is incorrect' });
+  sendJson(response, 200, { staff: publicStaff(row) });
+}
+
+function listStaffPatientQueue(request, response, url) {
+  const staffId = normalizeStaffId(url.searchParams.get('staffId'));
+  if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
+    return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
+  }
+  const queue = patientsDb.prepare(`
+    SELECT id, full_name, created_at
+    FROM patients
+    ORDER BY datetime(created_at) DESC
+  `).all().map(row => ({ id: row.id, fullName: row.full_name }));
+  sendJson(response, 200, { patients: queue });
+}
+
+function getStaffProfile(request, response, url) {
+  const staffId = normalizeStaffId(url.searchParams.get('staffId'));
+  const staff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(staffId);
+  if (!staff) return sendJson(response, 404, { error: 'Staff profile was not found' });
+  sendJson(response, 200, { staff: publicStaff(staff) });
+}
+
 async function createEnrollment(request, response) {
   purgeExpiredEnrollments();
+  const body = await readJson(request);
+  const staffId = normalizeStaffId(body.staffId);
+  if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
+    return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
+  }
   let code;
   do { code = String(randomInt(0, 1_000_000)).padStart(6, '0'); }
   while ([...enrollments.values()].some(item => item.codeHash === hash(code)));
   const id = randomUUID();
-  const pendingToken = randomBytes(24).toString('base64url');
+  const creatorToken = randomBytes(24).toString('base64url');
+  const claimToken = randomBytes(24).toString('base64url');
   const expiresAt = Date.now() + enrollmentTtlMs;
-  enrollments.set(id, { id, codeHash: hash(code), pendingHash: hash(pendingToken), expiresAt, status: 'pending' });
-  const qrDataUrl = await QRCode.toDataURL(`AROGSEVAK-AUTH:${code}`, { width: 360, margin: 1, color: { dark: '#102b27', light: '#ffffff' } });
-  sendJson(response, 201, { id, code, qrDataUrl, expiresAt }, {
-    'Set-Cookie': `arog_enrollment=${encodeURIComponent(pendingToken)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=600${secureCookie(request)}`
+  const origin = `http://${request.headers.host || `localhost:${port}`}`;
+  const setupUrl = `${origin}/device-enroll.html?enrollment=${encodeURIComponent(id)}&token=${encodeURIComponent(claimToken)}`;
+  enrollments.set(id, {
+    id, staffId, codeHash: hash(code), creatorHash: hash(creatorToken), claimHash: hash(claimToken),
+    expiresAt, status: 'open', request: null
   });
+  const qrDataUrl = await QRCode.toDataURL(setupUrl, { width: 360, margin: 1, color: { dark: '#102b27', light: '#ffffff' } });
+  sendJson(response, 201, { id, code, creatorToken, qrDataUrl, setupUrl, expiresAt });
 }
 
-function enrollmentStatus(request, response, id) {
+function enrollmentStatus(request, response, id, url) {
   purgeExpiredEnrollments();
   const enrollment = enrollments.get(id);
-  const pendingToken = cookies(request).arog_enrollment;
-  if (!enrollment || !pendingToken || hash(pendingToken) !== enrollment.pendingHash) return sendJson(response, 404, { status: 'expired' });
+  const requestToken = url.searchParams.get('requestToken') || '';
+  if (!enrollment || !enrollment.request || hash(requestToken) !== enrollment.request.tokenHash) return sendJson(response, 404, { status: 'expired' });
+  if (enrollment.status === 'rejected') return sendJson(response, 200, { status: 'rejected' });
   if (enrollment.status !== 'authorized') return sendJson(response, 200, { status: 'pending', expiresAt: enrollment.expiresAt });
   const headers = { 'Set-Cookie': `arog_device=${encodeURIComponent(enrollment.deviceToken)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000${secureCookie(request)}` };
   sendJson(response, 200, { status: 'authorized', device: publicDevice(enrollment.device) }, headers);
   enrollments.delete(id);
 }
 
-async function authorizeDevice(request, response) {
+async function requestDeviceAuthorization(request, response, id) {
   purgeExpiredEnrollments();
   const body = await readJson(request);
   const name = String(body.name || '').trim().slice(0, 60);
+  const claimToken = String(body.claimToken || '');
   const code = String(body.code || '').trim();
-  if (!name || !/^\d{6}$/.test(code)) return sendJson(response, 400, { error: 'Device name and a valid 6-digit code are required' });
-  const enrollment = [...enrollments.values()].find(item => item.status === 'pending' && item.codeHash === hash(code));
-  if (!enrollment) return sendJson(response, 404, { error: 'Code is invalid or expired' });
+  const enrollment = id
+    ? enrollments.get(id)
+    : [...enrollments.values()].find(item => item.status === 'open' && /^\d{6}$/.test(code) && item.codeHash === hash(code));
+  if (!name) return sendJson(response, 400, { error: 'Enter a name for this device' });
+  const validClaim = enrollment && ((id && hash(claimToken) === enrollment.claimHash) || (!id && /^\d{6}$/.test(code)));
+  if (!enrollment || enrollment.status !== 'open' || !validClaim) {
+    return sendJson(response, 404, { error: 'This invitation is invalid or has expired' });
+  }
+  const requestToken = randomBytes(24).toString('base64url');
+  const network = deviceNetworkDetails(request);
+  enrollment.status = 'requested';
+  enrollment.request = {
+    name,
+    platform: String(body.platform || request.headers['user-agent'] || 'Unknown device').slice(0, 140),
+    ipAddress: network.ipAddress,
+    location: network.location,
+    requestedAt: new Date().toISOString(),
+    tokenHash: hash(requestToken)
+  };
+  sendJson(response, 201, { status: 'pending', enrollmentId: enrollment.id, requestToken, expiresAt: enrollment.expiresAt });
+}
+
+function manageEnrollment(request, response, id, url) {
+  purgeExpiredEnrollments();
+  const enrollment = enrollments.get(id);
+  const creatorToken = url.searchParams.get('creatorToken') || '';
+  if (!enrollment || hash(creatorToken) !== enrollment.creatorHash) return sendJson(response, 404, { status: 'expired' });
+  sendJson(response, 200, {
+    status: enrollment.status,
+    expiresAt: enrollment.expiresAt,
+    request: enrollment.request ? {
+      name: enrollment.request.name,
+      platform: enrollment.request.platform,
+      ipAddress: enrollment.request.ipAddress,
+      location: enrollment.request.location,
+      requestedAt: enrollment.request.requestedAt
+    } : null
+  });
+}
+
+async function decideDeviceAuthorization(request, response, id) {
+  purgeExpiredEnrollments();
+  const body = await readJson(request);
+  const enrollment = enrollments.get(id);
+  if (!enrollment || hash(String(body.creatorToken || '')) !== enrollment.creatorHash) {
+    return sendJson(response, 404, { error: 'This invitation is invalid or has expired' });
+  }
+  if (enrollment.status !== 'requested' || !enrollment.request) return sendJson(response, 409, { error: 'There is no pending device request' });
+  if (body.decision === 'reject') {
+    enrollment.status = 'rejected';
+    return sendJson(response, 200, { status: 'rejected' });
+  }
+  if (body.decision !== 'approve') return sendJson(response, 400, { error: 'Choose approve or reject' });
   const deviceToken = randomBytes(32).toString('base64url');
-  const device = { id: randomUUID(), name, tokenHash: hash(deviceToken), authorizedAt: new Date().toISOString(), lastSeenAt: null };
+  const device = {
+    id: randomUUID(),
+    name: enrollment.request.name,
+    tokenHash: hash(deviceToken),
+    ipAddress: enrollment.request.ipAddress,
+    location: enrollment.request.location,
+    authorizedAt: new Date().toISOString(),
+    lastSeenAt: null
+  };
   devices.push(device);
   await saveDevices();
   Object.assign(enrollment, { status: 'authorized', device, deviceToken });
@@ -847,6 +931,14 @@ async function listDevices(_request, response) {
   sendJson(response, 200, { devices: devices.map(publicDevice).sort((a, b) => b.authorizedAt.localeCompare(a.authorizedAt)) });
 }
 
+async function revokeDevice(_request, response, id) {
+  const deviceIndex = devices.findIndex(device => device.id === id);
+  if (deviceIndex < 0) return sendJson(response, 404, { error: 'Authorized device was not found' });
+  const [revokedDevice] = devices.splice(deviceIndex, 1);
+  await saveDevices();
+  sendJson(response, 200, { revoked: true, device: publicDevice(revokedDevice) });
+}
+
 async function deviceSession(request, response) {
   const token = cookies(request).arog_device;
   const device = token && devices.find(item => item.tokenHash === hash(token));
@@ -854,6 +946,12 @@ async function deviceSession(request, response) {
   device.lastSeenAt = new Date().toISOString();
   void saveDevices();
   sendJson(response, 200, { authorized: true, device: publicDevice(device), allowedRole: 'patient' });
+}
+
+function exitDeviceSession(request, response) {
+  sendJson(response, 200, { authorized: false }, {
+    'Set-Cookie': `arog_device=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secureCookie(request)}`
+  });
 }
 
 async function serveStatic(request, response) {
@@ -885,7 +983,9 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'GET' && documentFileMatch) return await servePatientDocument(request, response, documentFileMatch[1], documentFileMatch[2], url);
     const documentUploadMatch = url.pathname.match(/^\/api\/document-upload-sessions\/([0-9a-f-]+)\/files$/i);
     if (request.method === 'POST' && documentUploadMatch) return await uploadPatientDocument(request, response, documentUploadMatch[1]);
+    if (request.method === 'POST' && url.pathname === '/api/staff-patient-documents') return await completeStaffDocumentUpload(request, response);
     if (request.method === 'GET' && url.pathname === '/api/signup-otp/config') return signupOtpConfig(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/patient-registration-availability') return await patientRegistrationAvailability(request, response);
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/request') return await requestSignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-registrations') return await createPatientRegistration(request, response);
@@ -893,16 +993,24 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === '/api/hospital-branches') return listHospitalBranches(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-registrations') return await createDoctorRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-login') return await loginDoctor(request, response);
-    if (request.method === 'POST' && url.pathname === '/api/patient-checkups') return await completePatientCheckup(request, response);
-    const patientCheckupMatch = url.pathname.match(/^\/api\/patient-checkups\/([0-9a-f-]+)$/i);
-    if (request.method === 'GET' && patientCheckupMatch) return getPatientCheckup(request, response, patientCheckupMatch[1], url);
+    if (request.method === 'POST' && url.pathname === '/api/staff-registrations') return await createStaffRegistration(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/staff-login') return await loginStaff(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/staff-patient-queue') return listStaffPatientQueue(request, response, url);
+    if (request.method === 'GET' && url.pathname === '/api/staff-profile') return getStaffProfile(request, response, url);
     const statusMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/status$/i);
-    if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1]);
-    if (request.method === 'POST' && url.pathname === '/api/device-authorizations') return await authorizeDevice(request, response);
+    if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1], url);
+    const requestMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/request$/i);
+    if (request.method === 'POST' && requestMatch) return await requestDeviceAuthorization(request, response, requestMatch[1]);
+    if (request.method === 'POST' && url.pathname === '/api/device-enrollment-requests') return await requestDeviceAuthorization(request, response, '');
+    const manageMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/manage$/i);
+    if (request.method === 'GET' && manageMatch) return manageEnrollment(request, response, manageMatch[1], url);
+    const decisionMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/decision$/i);
+    if (request.method === 'POST' && decisionMatch) return await decideDeviceAuthorization(request, response, decisionMatch[1]);
     if (request.method === 'GET' && url.pathname === '/api/devices') return await listDevices(request, response);
+    const deviceMatch = url.pathname.match(/^\/api\/devices\/([0-9a-f-]+)$/i);
+    if (request.method === 'DELETE' && deviceMatch) return await revokeDevice(request, response, deviceMatch[1]);
     if (request.method === 'GET' && url.pathname === '/api/device-session') return await deviceSession(request, response);
-    if (request.method === 'GET' && url.pathname === '/api/elevenlabs/signed-url') return await createElevenLabsSignedUrl(request, response);
-    if (request.method === 'GET' && url.pathname === '/vendor/elevenlabs-client.js') return await serveElevenLabsClient(response);
+    if (request.method === 'POST' && url.pathname === '/api/device-session/logout') return exitDeviceSession(request, response);
     if (request.method === 'GET' || request.method === 'HEAD') return await serveStatic(request, response);
     sendJson(response, 405, { error: 'Method not allowed' });
   } catch (error) {
