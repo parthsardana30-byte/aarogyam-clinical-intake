@@ -136,28 +136,45 @@
     .doctor-top-tab[aria-selected="true"] { color: #fff; background: var(--ink); box-shadow: 0 7px 18px rgba(16,43,39,.16); }
     .doctor-top-tab:focus-visible { outline: 3px solid rgba(14,102,85,.2); outline-offset: 2px; }
     .doctor-availability-control {
-      display: none; align-items: center; gap: 4px; margin-right: 6px; padding: 4px 4px 4px 7px;
+      position: relative; display: none; align-items: center; gap: 7px; margin-right: 6px; padding: 5px;
       border: 1px solid rgba(16,43,39,.11); border-radius: 14px;
-      background: rgba(248,251,249,.9); box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+      background: rgba(248,251,249,.94); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 7px 18px rgba(16,43,39,.05);
     }
-    .doctor-availability-toggle { display: inline-flex; align-items: center; gap: 3px; }
+    .doctor-availability-toggle { display: inline-flex; align-items: center; gap: 4px; }
     .app-shell.doctor-session .doctor-availability-control { display: inline-flex; }
     .doctor-availability-label {
-      display: inline-flex; align-items: center; gap: 5px; color: #536a64; font-size: .62rem;
-      font-weight: 820; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 7px; padding-left: 5px; color: #536a64; font-size: .64rem;
+      font-weight: 820; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
     }
     .doctor-availability-label::before {
       content: ""; width: 7px; height: 7px; border-radius: 50%; background: #1e9b68;
       box-shadow: 0 0 0 3px rgba(30,155,104,.13);
     }
+    .doctor-availability-control[data-current-status="inactive"] .doctor-availability-label::before { background: #8a9793; box-shadow: 0 0 0 3px rgba(138,151,147,.14); }
     .doctor-availability-option {
-      min-height: 32px; padding: 0 6px; border: 0; border-radius: 9px;
-      background: transparent; color: #536a64; font: inherit; font-size: .67rem; font-weight: 780;
+      min-height: 32px; padding: 0 10px; border: 0; border-radius: 9px;
+      background: transparent; color: #536a64; font: inherit; font-size: .7rem; font-weight: 790;
       white-space: nowrap; cursor: pointer; transition: background .18s ease, color .18s ease, box-shadow .18s ease;
     }
     .doctor-availability-option:hover { color: var(--ink); background: rgba(255,255,255,.68); }
-    .doctor-availability-option[aria-pressed="true"] { color: #fff; background: var(--ink); box-shadow: 0 7px 18px rgba(16,43,39,.16); }
+    .doctor-availability-option[data-status="active"][aria-pressed="true"] { color: #126345; background: #dff3e9; box-shadow: inset 0 0 0 1px rgba(30,155,104,.13); }
+    .doctor-availability-option[data-status="inactive"][aria-pressed="true"] { color: #fff; background: #66736f; box-shadow: 0 7px 18px rgba(16,43,39,.12); }
     .doctor-availability-option:focus-visible { outline: 3px solid rgba(14,102,85,.2); outline-offset: 2px; }
+    .availability-inline-confirm {
+      position: absolute; z-index: 35; top: calc(100% + 9px); right: 0; width: max-content; max-width: min(350px, calc(100vw - 32px));
+      display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 8px; padding: 10px;
+      border: 1px solid rgba(16,43,39,.14); border-radius: 13px; background: #fff; color: var(--ink);
+      box-shadow: 0 16px 38px rgba(16,43,39,.17); animation: availabilityIn .16s ease-out;
+    }
+    .availability-inline-confirm[hidden] { display: none; }
+    .availability-inline-confirm::before { content: ""; position: absolute; top: -6px; right: 32px; width: 10px; height: 10px; border: 1px solid rgba(16,43,39,.14); border-right: 0; border-bottom: 0; background: #fff; transform: rotate(45deg); }
+    .availability-inline-copy { margin: 0 3px; color: #526a64; font-size: .76rem; white-space: nowrap; }
+    .availability-inline-copy strong { color: var(--ink); }
+    .availability-inline-action { min-height: 34px; padding: 0 10px; border-radius: 9px; font: inherit; font-size: .72rem; font-weight: 800; cursor: pointer; }
+    .availability-inline-action.cancel { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
+    .availability-inline-action.confirm { border: 0; background: var(--ink); color: #fff; }
+    .availability-inline-action:hover { transform: translateY(-1px); }
+    @keyframes availabilityIn { from { opacity: 0; transform: translateY(-4px); } }
     .doctor-notify-button {
       position: absolute; left: calc(50% + 140px); top: 50%; transform: translateY(-50%);
       display: none; min-height: 40px; padding: 0 10px; border: 1px solid var(--line-strong);
@@ -680,35 +697,24 @@
     }
     .doctor-panel { display: none; }
     .doctor-panel.active { display: block; animation: appear .22s ease-out; }
-    .doctor-carousel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+    .doctor-carousel { display: grid; grid-template-columns: 132px minmax(0, 1fr) 132px; gap: 16px; align-items: center; }
     .doctor-carousel .doctor-focus { transition: opacity .18s ease, transform .24s ease; }
     .doctor-carousel.is-shifting-next .doctor-focus { opacity: .18; transform: translateX(-12px); }
     .doctor-carousel.is-shifting-previous .doctor-focus { opacity: .18; transform: translateX(12px); }
-    .patient-preview {
-      min-width: 0; min-height: 100%; display: flex; flex-direction: column; align-self: stretch; padding: 26px 22px; border: 1px solid var(--line-strong);
-      border-radius: 12px; background: #f8faf9; color: var(--ink); text-align: left; cursor: pointer;
-      transition: border-color .18s ease, background .18s ease, transform .18s ease;
+    .patient-nav-button {
+      min-width: 0; min-height: 54px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 14px;
+      border: 1px solid var(--line-strong); border-radius: 16px; background: rgba(255,255,255,.82); color: var(--ink);
+      font: inherit; font-size: .8rem; font-weight: 820; white-space: nowrap; cursor: pointer;
+      box-shadow: 0 10px 24px rgba(16,43,39,.06); transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
     }
-    .patient-preview-select { display: block; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-    .patient-preview-select::after { content: "Open patient"; display: block; width: 100%; margin-top: 22px; padding: 10px 8px; border: 1px solid var(--line-strong); border-radius: 8px; background: #fff; color: var(--teal-dark); font-size: .75rem; font-weight: 800; text-align: center; }
-    .patient-preview-select:hover::after { border-color: var(--teal); background: var(--mint); }
-    .patient-preview-select:focus-visible { outline: 3px solid rgba(14,102,85,.2); outline-offset: 3px; border-radius: 8px; }
-    .patient-preview:hover { border-color: var(--teal); background: #fff; transform: translateY(-2px); }
-    .patient-preview:focus-visible { outline: 3px solid rgba(14,102,85,.2); outline-offset: 2px; }
-    .patient-preview.empty { display: grid; place-items: center; cursor: default; color: #82928d; text-align: center; }
-    .patient-preview.empty:hover { border-color: var(--line-strong); background: #f8faf9; transform: none; }
-    .patient-preview-label { display: block; margin-bottom: 28px; color: #718681; font-size: .7rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
-    .patient-preview-avatar { width: 46px; height: 46px; display: grid; place-items: center; margin-bottom: 16px; border-radius: 10px; background: #e4efeb; color: var(--teal-dark); font-size: .82rem; font-weight: 800; }
-    .patient-preview strong, .patient-preview small { display: block; }
-    .patient-preview strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .98rem; }
-    .patient-preview small { margin-top: 8px; color: var(--ink-soft); font-size: .78rem; line-height: 1.5; }
-    .patient-preview-concern { margin: 18px 0 0; color: var(--ink-soft); font-size: .8rem; line-height: 1.55; }
-    .patient-preview-status { display: inline-block; width: fit-content; margin-top: auto; padding: 5px 8px; border-radius: 5px; background: #eaf3ef; color: var(--teal-dark); font-size: .68rem; font-weight: 750; }
-    .patient-preview-notify { display: block; width: 100%; min-height: 38px; margin-top: 22px; border: 1px solid var(--line-strong); border-radius: 8px; background: #fff; color: var(--ink); font: inherit; font-size: .78rem; font-weight: 780; cursor: pointer; }
-    .patient-preview-notify:hover { border-color: var(--teal); background: var(--mint); }
+    .patient-nav-button svg { width: 18px; height: 18px; flex: 0 0 auto; }
+    .patient-nav-button.next svg { order: 2; }
+    .patient-nav-button:hover:not(:disabled) { border-color: var(--teal); background: var(--ink); color: #fff; transform: translateY(-2px); box-shadow: 0 14px 30px rgba(16,43,39,.14); }
+    .patient-nav-button:focus-visible { outline: 3px solid rgba(14,102,85,.2); outline-offset: 3px; }
+    .patient-nav-button:disabled { cursor: not-allowed; opacity: .38; box-shadow: none; }
     .inline-history { display: none; }
     .inline-history.active { display: block; grid-column: 2; grid-row: 1; height: 100%; overflow: auto; animation: appear .2s ease-out; }
-    .doctor-carousel > .patient-preview:last-child { grid-column: 3; grid-row: 1; }
+    .doctor-carousel > .patient-nav-button.next { grid-column: 3; grid-row: 1; }
     .inline-history-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-bottom: 1px solid var(--line); }
     .inline-history-head h2 { margin: 0; font-size: 1.1rem; }
     .inline-history-back { min-height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: #fff; color: var(--ink); font: inherit; font-size: .75rem; font-weight: 780; cursor: pointer; }
@@ -923,12 +929,10 @@
     .history-empty { display: none; padding: 26px; color: #6b807b; text-align: center; }
     .history-empty.visible { display: block; }
     @media (max-width: 1180px) {
-      .doctor-carousel { grid-template-columns: 1fr; }
-      .inline-history.active { grid-column: 1; grid-row: 1; }
-      .patient-preview { min-height: 0; }
-      .patient-preview.empty { min-height: 70px; }
-      .patient-preview-label { margin-bottom: 10px; }
-      .patient-preview-avatar { float: left; margin: 0 10px 0 0; }
+      .doctor-carousel { grid-template-columns: 1fr 1fr; }
+      .doctor-carousel .doctor-focus, .inline-history.active { grid-column: 1 / -1; grid-row: 1; }
+      .patient-nav-button { grid-row: 2; }
+      .doctor-carousel > .patient-nav-button.next { grid-column: 2; grid-row: 2; }
       .focus-header { grid-template-columns: 1fr auto; }
       .vitals-inline { grid-column: 1 / -1; grid-row: 2; }
       .vital-inline:first-child { border-left: 0; padding-left: 0; }
@@ -936,6 +940,8 @@
       .focus-summary { border-right: 0; border-bottom: 1px solid var(--line); }
     }
     @media (max-width: 760px) {
+      .availability-inline-confirm { position: fixed; top: 82px; right: 14px; left: 14px; width: auto; grid-template-columns: 1fr auto auto; }
+      .availability-inline-confirm::before { display: none; }
       .summary-facts { grid-template-columns: 1fr; }
       .focus-header { grid-template-columns: 1fr; }
       .focus-header > .primary-button { width: 100%; }
@@ -989,9 +995,6 @@
     .device-authorize { border: 0; background: var(--ink); color: #fff; }
     .device-authorize:disabled { cursor: not-allowed; opacity: .42; }
     .device-dialog-form { max-height: min(880px, calc(100dvh - 32px)); overflow-y:auto; }
-    .availability-dialog { width: min(420px, calc(100vw - 32px)); }
-    .availability-dialog-copy { color: var(--ink-soft); line-height: 1.5; }
-    .availability-dialog-copy strong { color: var(--ink); }
     .device-invite { display:grid; grid-template-columns:210px 1fr; gap:22px; align-items:center; padding:18px; border:1px solid var(--line); border-radius:19px; background:#f7faf8; }
     .device-invite-qr { width:210px; aspect-ratio:1; display:grid; place-items:center; overflow:hidden; border:1px solid var(--line); border-radius:16px; background:#fff; color:var(--soft); font-size:.82rem; text-align:center; }
     .device-invite-qr img { width:100%; height:100%; display:block; }
@@ -1875,12 +1878,17 @@
         <button class="doctor-top-tab" type="button" role="tab" data-doctor-panel="history" aria-selected="false">Patient history</button>
       </nav>
       <div class="top-actions">
-        <div class="doctor-availability-control" aria-label="Doctor availability">
+        <div class="doctor-availability-control" aria-label="Doctor availability" data-current-status="active">
           <span class="doctor-availability-label">Availability</span>
           <div class="doctor-availability-toggle" role="group">
           <button class="doctor-availability-option" type="button" data-status="active" aria-pressed="true">Active</button>
           <button class="doctor-availability-option" type="button" data-status="inactive" aria-pressed="false">Not active</button>
         </div>
+          <div class="availability-inline-confirm" id="availabilityConfirmation" hidden aria-live="polite">
+            <p class="availability-inline-copy">Switch to <strong id="availabilityConfirmationStatus">Not active</strong>?</p>
+            <button class="availability-inline-action cancel" id="cancelAvailabilityChange" type="button">Cancel</button>
+            <button class="availability-inline-action confirm" id="confirmAvailabilityChange" type="button">Confirm</button>
+          </div>
         </div>
         <div class="settings-wrap">
           <button class="settings-button" id="settingsButton" type="button" aria-label="Open settings" aria-expanded="false" aria-controls="settingsMenu">
@@ -2144,16 +2152,7 @@
           <div class="doctor-main">
             <div class="doctor-panel active" data-doctor-panel-content="current">
               <div class="doctor-carousel" aria-label="Patient navigator">
-                <div class="patient-preview" aria-label="Previous patient">
-                  <button class="patient-preview-select" type="button" data-patient-shift="-1" aria-label="Open previous patient">
-                  <span class="patient-preview-label">Previous patient</span>
-                  <span class="patient-preview-avatar" data-preview-avatar="previous">—</span>
-                  <strong data-preview-name="previous">No previous patient</strong>
-                  <small data-preview-meta="previous">You are at the first patient.</small>
-                  <p class="patient-preview-concern" data-preview-concern="previous">No earlier patient in this consultation session.</p>
-                  <span class="patient-preview-status" data-preview-status="previous" hidden="">Completed</span>
-                  </button>
-                </div>
+                <button class="patient-nav-button previous" type="button" data-patient-shift="-1" aria-label="Previous patient"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14.5 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Previous</span></button>
               <section class="card doctor-focus" aria-label="Current patient workspace">
                 <header class="focus-header">
                   <div class="focus-patient"><div class="patient-avatar">AS</div><div><strong>Ananya Sharma</strong><small>42 years · Female · PT-001 · Hindi intake</small></div></div>
@@ -2183,17 +2182,7 @@
                   <article class="inline-history-item"><time>18 Nov 2025</time><div><strong>HbA1c laboratory panel</strong><p>HbA1c result: 6.8% from a verified laboratory report.</p></div></article>
                 </div>
               </section>
-                <div class="patient-preview" aria-label="Next patient">
-                  <button class="patient-preview-select" type="button" data-patient-shift="1" aria-label="Open next patient">
-                  <span class="patient-preview-label">Next patient</span>
-                  <span class="patient-preview-avatar" data-preview-avatar="next">RM</span>
-                  <strong data-preview-name="next">Rohan Mehta</strong>
-                  <small data-preview-meta="next">PT-002 · 35 years · Male</small>
-                  <p class="patient-preview-concern" data-preview-concern="next">Intermittent chest discomfort and fatigue.</p>
-                  <span class="patient-preview-status" data-preview-status="next">Waiting</span>
-                  </button>
-                  <button class="patient-preview-notify" type="button" data-notify-next>Notify</button>
-                </div>
+                <button class="patient-nav-button next" type="button" data-patient-shift="1" aria-label="Next patient"><span>Next</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9.5 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               </div>
             </div>
 
@@ -2215,19 +2204,6 @@
       </section>
     </main>
   </div>
-
-  <dialog class="device-dialog availability-dialog" id="availabilityDialog" aria-labelledby="availabilityDialogTitle">
-    <div class="device-dialog-form">
-      <div class="device-dialog-head">
-        <div><h2 id="availabilityDialogTitle">Update availability?</h2><p class="availability-dialog-copy">Set your doctor availability to <strong id="availabilityDialogStatus">Not active</strong>?</p></div>
-        <button class="device-dialog-close" id="closeAvailabilityDialog" type="button" aria-label="Cancel">×</button>
-      </div>
-      <div class="device-dialog-actions">
-        <button class="device-cancel" id="cancelAvailabilityChange" type="button">Cancel</button>
-        <button class="device-authorize" id="confirmAvailabilityChange" type="button">Confirm change</button>
-      </div>
-    </div>
-  </dialog>
 
   <dialog class="device-dialog" id="deviceDialog" aria-labelledby="deviceDialogTitle">
     <div class="device-dialog-form" id="deviceForm">
@@ -3255,8 +3231,8 @@
     const viewPatientRecordsHero = document.getElementById('viewPatientRecordsHero');
     const toast = document.getElementById('toast');
     const deviceDialog = document.getElementById('deviceDialog');
-    const availabilityDialog = document.getElementById('availabilityDialog');
-    const availabilityDialogStatus = document.getElementById('availabilityDialogStatus');
+    const availabilityConfirmation = document.getElementById('availabilityConfirmation');
+    const availabilityConfirmationStatus = document.getElementById('availabilityConfirmationStatus');
     const confirmAvailabilityChange = document.getElementById('confirmAvailabilityChange');
     let pendingDoctorStatus = null;
     const deviceForm = document.getElementById('deviceForm');
@@ -3928,21 +3904,11 @@
       const previous = demoDoctorPatients[activeDoctorPatientIndex - 1];
       const next = demoDoctorPatients[activeDoctorPatientIndex + 1];
       const updatePreview = (side, patient) => {
-        const card = document.querySelector(`[data-patient-shift="${side === 'previous' ? -1 : 1}"]`)?.closest('.patient-preview');
-        const avatar = document.querySelector(`[data-preview-avatar="${side}"]`);
-        const name = document.querySelector(`[data-preview-name="${side}"]`);
-        const meta = document.querySelector(`[data-preview-meta="${side}"]`);
-        const concern = document.querySelector(`[data-preview-concern="${side}"]`);
-        const status = document.querySelector(`[data-preview-status="${side}"]`);
-        if (!card || !avatar || !name || !meta || !concern || !status) return;
-        card.classList.toggle('empty', !patient);
-        card.setAttribute('aria-disabled', String(!patient));
-        avatar.textContent = patient?.initials || '—';
-        name.textContent = patient?.fullName || `No ${side} patient`;
-        meta.textContent = patient ? `${patient.id} · ${patient.age} years · ${patient.sex} · ${patient.language}` : `You are at the ${side === 'previous' ? 'first' : 'last'} patient.`;
-        concern.textContent = patient ? patient.concern : `No ${side === 'previous' ? 'earlier' : 'later'} patient in this consultation session.`;
-        status.hidden = !patient;
-        if (patient) status.textContent = patient.status;
+        const button = document.querySelector(`[data-patient-shift="${side === 'previous' ? -1 : 1}"]`);
+        if (!button) return;
+        button.disabled = !patient;
+        button.title = patient ? `${side === 'previous' ? 'Previous' : 'Next'}: ${patient.fullName}` : `No ${side} patient`;
+        button.setAttribute('aria-label', patient ? `${side === 'previous' ? 'Previous' : 'Next'} patient: ${patient.fullName}` : `No ${side} patient`);
       };
       updatePreview('previous', previous);
       updatePreview('next', next);
@@ -3955,8 +3921,6 @@
       document.querySelectorAll('.vital-inline strong').forEach((node, index) => { node.textContent = current.vitals[index] || '—'; });
       const concern = document.querySelector('.focus-summary .summary-block:first-of-type .clinical-bullets');
       if (concern) concern.innerHTML = `<li><strong>${current.concern}</strong></li><li>${current.meta}</li>`;
-      const notify = document.querySelector('[data-notify-next]');
-      if (notify) notify.disabled = !next;
     }
 
     function routeFromLocation() {
@@ -4182,18 +4146,7 @@
           window.requestAnimationFrame(() => carousel?.classList.remove(`is-shifting-${direction}`));
         }, 140);
       };
-      card.addEventListener('click', event => {
-        if (event.target.closest('[data-notify-next]')) return;
-        shiftPatient();
-      });
-      card.addEventListener('keydown', event => {
-        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); shiftPatient(); }
-      });
-    });
-    document.querySelector('[data-notify-next]')?.addEventListener('click', event => {
-      event.stopPropagation();
-      const next = demoDoctorPatients[activeDoctorPatientIndex + 1];
-      if (next) showToast('Patient notified', `${next.fullName} has been notified to be ready next.`);
+      card.addEventListener('click', shiftPatient);
     });
     patientNavButtons.forEach(button => button.addEventListener('click', () => navigateRoute(`patient/${button.dataset.patientRoute}`, false, true)));
     renderDoctorPatientNavigator();
@@ -4212,6 +4165,7 @@
     function setDoctorStatus(status, announce = false) {
       const nextStatus = doctorStatusLabels[status] ? status : 'active';
       doctorStatusButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.status === nextStatus)));
+      document.querySelector('.doctor-availability-control')?.setAttribute('data-current-status', nextStatus);
       localStorage.setItem('aarogyamDoctorStatus', nextStatus);
       if (announce) showToast('Availability updated', `Your status is now ${doctorStatusLabels[nextStatus].toLowerCase()}.`);
     }
@@ -4219,20 +4173,20 @@
     doctorStatusButtons.forEach(button => button.addEventListener('click', () => {
       if (button.dataset.status === localStorage.getItem('aarogyamDoctorStatus')) return;
       pendingDoctorStatus = button.dataset.status;
-      availabilityDialogStatus.textContent = doctorStatusLabels[pendingDoctorStatus];
-      availabilityDialog.showModal();
+      availabilityConfirmationStatus.textContent = doctorStatusLabels[pendingDoctorStatus];
+      availabilityConfirmation.hidden = false;
+      confirmAvailabilityChange.focus();
     }));
-    function closeAvailabilityDialog() {
+    function closeAvailabilityConfirmation() {
       pendingDoctorStatus = null;
-      availabilityDialog.close();
+      availabilityConfirmation.hidden = true;
     }
     confirmAvailabilityChange.addEventListener('click', () => {
       if (pendingDoctorStatus) setDoctorStatus(pendingDoctorStatus, true);
-      closeAvailabilityDialog();
+      closeAvailabilityConfirmation();
     });
-    document.getElementById('cancelAvailabilityChange').addEventListener('click', closeAvailabilityDialog);
-    document.getElementById('closeAvailabilityDialog').addEventListener('click', closeAvailabilityDialog);
-    availabilityDialog.addEventListener('click', event => { if (event.target === availabilityDialog) closeAvailabilityDialog(); });
+    document.getElementById('cancelAvailabilityChange').addEventListener('click', closeAvailabilityConfirmation);
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && !availabilityConfirmation.hidden) closeAvailabilityConfirmation(); });
 
     function answerDoctorRecordQuestion(question) {
       const query = question.trim().toLowerCase();
