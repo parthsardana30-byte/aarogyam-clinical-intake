@@ -155,6 +155,27 @@ async function loadPatients() {
     );
     CREATE INDEX IF NOT EXISTS patient_documents_session_idx ON patient_documents(upload_session_id);
     CREATE INDEX IF NOT EXISTS patient_documents_patient_idx ON patient_documents(patient_id);
+    CREATE TABLE IF NOT EXISTS patient_checkups (
+      id TEXT PRIMARY KEY,
+      patient_id TEXT NOT NULL,
+      conversation_id TEXT NOT NULL,
+      language TEXT NOT NULL,
+      hospital_id TEXT,
+      hospital_name TEXT NOT NULL,
+      hospital_location TEXT,
+      doctor_id TEXT,
+      doctor_name TEXT NOT NULL,
+      doctor_specialty TEXT NOT NULL,
+      room_number TEXT NOT NULL,
+      opd_number TEXT NOT NULL UNIQUE,
+      patient_number TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'completed',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS patient_checkups_patient_idx ON patient_checkups(patient_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS patient_checkups_created_idx ON patient_checkups(created_at DESC);
   `);
   const patientDocumentColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_documents)').all().map(column => column.name));
   const patientDocumentMigrations = [
@@ -802,11 +823,127 @@ function listStaffPatientQueue(request, response, url) {
     return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
   }
   const queue = patientsDb.prepare(`
-    SELECT id, full_name, created_at
-    FROM patients
-    ORDER BY datetime(created_at) DESC
-  `).all().map(row => ({ id: row.id, fullName: row.full_name }));
+    SELECT p.id, p.full_name, p.created_at,
+      c.language, c.doctor_name, c.doctor_specialty, c.room_number,
+      c.opd_number, c.patient_number, c.hospital_name, c.hospital_location
+    FROM patients p
+    LEFT JOIN patient_checkups c ON c.id = (
+      SELECT latest.id FROM patient_checkups latest
+      WHERE latest.patient_id = p.id
+      ORDER BY datetime(latest.created_at) DESC LIMIT 1
+    )
+    ORDER BY datetime(p.created_at) DESC
+  `).all().map(row => ({
+    id: row.id,
+    fullName: row.full_name,
+    language: row.language || null,
+    doctor: row.doctor_name ? {
+      name: row.doctor_name,
+      specialty: row.doctor_specialty,
+      roomNumber: row.room_number
+    } : null,
+    opdNumber: row.opd_number || null,
+    patientNumber: row.patient_number || null,
+    hospitalName: row.hospital_name || null,
+    hospitalLocation: row.hospital_location || null
+  }));
   sendJson(response, 200, { patients: queue });
+}
+
+function publicCheckup(row) {
+  return {
+    id: row.id,
+    patientId: row.patient_id,
+    conversationId: row.conversation_id,
+    language: row.language,
+    hospital: {
+      id: row.hospital_id || null,
+      name: row.hospital_name,
+      location: row.hospital_location || null
+    },
+    doctor: {
+      id: row.doctor_id || null,
+      name: row.doctor_name,
+      specialty: row.doctor_specialty,
+      roomNumber: row.room_number
+    },
+    opdNumber: row.opd_number,
+    patientNumber: row.patient_number,
+    summary: row.summary,
+    status: row.status,
+    createdAt: row.created_at
+  };
+}
+
+async function createPatientCheckup(request, response) {
+  const body = await readJson(request);
+  const patientId = String(body.patientId || '').trim();
+  const conversationId = String(body.conversationId || '').trim().slice(0, 180);
+  const language = String(body.language || 'English').trim().slice(0, 40) || 'English';
+  const patient = patientsDb.prepare('SELECT id FROM patients WHERE id = ?').get(patientId);
+  if (!patient) return sendJson(response, 404, { error: 'Patient account was not found' });
+  if (!conversationId) return sendJson(response, 400, { error: 'Complete the AI intake before creating an OPD visit' });
+
+  const existing = patientsDb.prepare('SELECT * FROM patient_checkups WHERE patient_id = ? AND conversation_id = ?').get(patientId, conversationId);
+  if (existing) return sendJson(response, 200, { checkup: publicCheckup(existing) });
+
+  const token = cookies(request).arog_device;
+  const device = token && devices.find(item => item.tokenHash === hash(token));
+  let hospitalId = device?.hospitalId || null;
+  let hospitalName = device?.hospitalName || null;
+  let hospitalLocation = device?.hospitalLocation || null;
+  const doctor = hospitalId
+    ? patientsDb.prepare('SELECT * FROM doctors WHERE hospital_id = ? ORDER BY datetime(created_at), doctor_id LIMIT 1').get(hospitalId)
+    : patientsDb.prepare('SELECT * FROM doctors ORDER BY datetime(created_at), doctor_id LIMIT 1').get();
+  if (doctor) {
+    hospitalId = doctor.hospital_id;
+    hospitalName = doctor.hospital_name;
+    hospitalLocation = doctor.hospital_location;
+  }
+  const fallbackHospital = hospitalBranches.get(hospitalId) || hospitalBranches.values().next().value;
+  hospitalId ||= fallbackHospital.id;
+  hospitalName ||= fallbackHospital.name;
+  hospitalLocation ||= fallbackHospital.location;
+
+  const createdAt = new Date().toISOString();
+  const dateKey = createdAt.slice(0, 10).replaceAll('-', '');
+  const visitCount = Number(patientsDb.prepare("SELECT COUNT(*) AS count FROM patient_checkups WHERE date(created_at) = date(?)").get(createdAt).count) + 1;
+  const sequence = String(visitCount).padStart(3, '0');
+  const id = randomUUID();
+  const opdNumber = `OPD-${dateKey}-${sequence}`;
+  const patientNumber = `P-${sequence}`;
+  const doctorName = doctor?.full_name || 'Duty Medical Officer';
+  const doctorSpecialty = doctor?.specialty || 'General Medicine';
+  const roomNumber = doctor?.room_number || 'ROOM-01';
+  const summary = `AI-assisted intake completed in ${language}. The conversation is ready for the assigned doctor's clinical review.`;
+
+  patientsDb.prepare(`
+    INSERT INTO patient_checkups (
+      id, patient_id, conversation_id, language, hospital_id, hospital_name, hospital_location,
+      doctor_id, doctor_name, doctor_specialty, room_number, opd_number, patient_number,
+      summary, status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?)
+  `).run(
+    id, patientId, conversationId, language, hospitalId, hospitalName, hospitalLocation,
+    doctor?.doctor_id || null, doctorName, doctorSpecialty, roomNumber, opdNumber, patientNumber,
+    summary, createdAt
+  );
+  const checkup = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ?').get(id);
+  sendJson(response, 201, { checkup: publicCheckup(checkup) });
+}
+
+function getPatientCheckup(_request, response, id, url) {
+  const patientId = String(url.searchParams.get('patientId') || '').trim();
+  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ? AND patient_id = ?').get(id, patientId);
+  if (!row) return sendJson(response, 404, { error: 'OPD visit was not found' });
+  sendJson(response, 200, { checkup: publicCheckup(row) });
+}
+
+function getLatestPatientCheckup(_request, response, url) {
+  const patientId = String(url.searchParams.get('patientId') || '').trim();
+  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE patient_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patientId);
+  if (!row) return sendJson(response, 404, { error: 'No completed OPD visit is available yet' });
+  sendJson(response, 200, { checkup: publicCheckup(row) });
 }
 
 function getStaffProfile(request, response, url) {
@@ -912,10 +1049,15 @@ async function decideDeviceAuthorization(request, response, id) {
   }
   if (body.decision !== 'approve') return sendJson(response, 400, { error: 'Choose approve or reject' });
   const deviceToken = randomBytes(32).toString('base64url');
+  const authorizingStaff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(enrollment.staffId);
   const device = {
     id: randomUUID(),
     name: enrollment.request.name,
     tokenHash: hash(deviceToken),
+    staffId: enrollment.staffId,
+    hospitalId: authorizingStaff?.hospital_id || null,
+    hospitalName: authorizingStaff?.hospital_name || null,
+    hospitalLocation: authorizingStaff?.hospital_location || null,
     ipAddress: enrollment.request.ipAddress,
     location: enrollment.request.location,
     authorizedAt: new Date().toISOString(),
@@ -990,6 +1132,10 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-registrations') return await createPatientRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-login') return await loginPatient(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/patient-checkups') return await createPatientCheckup(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/patient-checkups/latest') return getLatestPatientCheckup(request, response, url);
+    const checkupMatch = url.pathname.match(/^\/api\/patient-checkups\/([0-9a-f-]+)$/i);
+    if (request.method === 'GET' && checkupMatch) return getPatientCheckup(request, response, checkupMatch[1], url);
     if (request.method === 'GET' && url.pathname === '/api/hospital-branches') return listHospitalBranches(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-registrations') return await createDoctorRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-login') return await loginDoctor(request, response);

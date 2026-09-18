@@ -493,20 +493,18 @@
     .checkup-result[hidden] { display: none; }
     .checkup-result-card { width: min(880px, 100%); overflow: hidden; border: 1px solid rgba(16,43,39,.11); border-radius: 30px; background: rgba(255,255,255,.94); box-shadow: 0 28px 80px rgba(16,43,39,.13); }
     .checkup-result-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; padding: clamp(28px, 5vw, 48px); background: linear-gradient(145deg, #153e35, #0c2924); color: #fff; }
-    .checkup-result-kicker { margin: 0 0 10px; color: #a9dfcb; font-size: .73rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
     .checkup-result-head h1 { margin: 0; color: #fff; font-size: clamp(2rem, 5vw, 3.6rem); }
-    .opd-ticket { min-width: 210px; padding: 18px 20px; border: 1px solid rgba(255,255,255,.2); border-radius: 18px; background: rgba(255,255,255,.1); }
+    .visit-ticket-stack { display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); gap: 10px; }
+    .opd-ticket { min-width: 0; padding: 18px 20px; border: 1px solid rgba(255,255,255,.2); border-radius: 18px; background: rgba(255,255,255,.1); }
     .opd-ticket span, .result-doctor span { display: block; color: #a9c7bd; font-size: .72rem; font-weight: 760; letter-spacing: .09em; text-transform: uppercase; }
     .opd-ticket strong { display: block; margin-top: 6px; font-size: 1.18rem; letter-spacing: .02em; }
     .checkup-result-body { padding: clamp(26px, 4vw, 42px); }
-    .result-doctor { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; margin-bottom: 26px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+    .result-doctor { display: grid; grid-template-columns: 1fr auto auto; gap: 16px; align-items: center; margin-bottom: 26px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
     .result-doctor strong { display: block; margin-top: 5px; color: var(--ink); font-size: 1.35rem; }
     .result-doctor-badge { padding: 8px 12px; border-radius: 999px; background: var(--mint); color: var(--teal-dark); font-size: .78rem; font-weight: 750; }
-    .result-summary h2 { margin: 0 0 10px; font-size: 1rem; }
-    .result-summary p { min-height: 88px; margin: 0; color: #4e6861; line-height: 1.7; white-space: pre-wrap; }
-    .result-summary-status { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; color: #688079; font-size: .8rem; }
-    .result-summary-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #f0a05c; box-shadow: 0 0 0 5px rgba(240,160,92,.14); }
-    .result-summary-status.ready::before { background: #3b9d78; box-shadow: 0 0 0 5px rgba(59,157,120,.14); }
+    .result-room { min-width: 118px; padding: 11px 14px; border-radius: 14px; background: #f2f7f5; text-align: center; }
+    .result-room span { color: #688079; }
+    .result-room strong { margin-top: 3px; font-size: 1rem; }
     .checkup-result-actions { display: flex; justify-content: flex-end; margin-top: 30px; }
     .checkup-result-done { min-height: 52px; padding: 0 25px; border: 0; border-radius: 15px; background: var(--ink); color: #fff; font: inherit; font-weight: 760; cursor: pointer; }
     /* Patient conversation: a single viewport with a scrollable transcript. */
@@ -1588,8 +1586,10 @@
       .language-back, .language-continue { width: 100%; }
       .checkup-result { padding: 8px; }
       .checkup-result-head { grid-template-columns: 1fr; }
+      .visit-ticket-stack { grid-template-columns: 1fr; }
       .opd-ticket { min-width: 0; }
       .result-doctor { grid-template-columns: 1fr; }
+      .result-room { text-align: left; }
       .voice-session { padding: 0; }
       .voice-experience { height: max(440px, calc(100dvh - 145px)); }
       .voice-orb { width: 180px; }
@@ -1867,8 +1867,7 @@
         <div class="brand-name">Arogyam</div>
       </a>
       <nav class="patient-top-tabs" aria-label="Patient pages" role="tablist">
-        <button class="patient-top-tab" type="button" role="tab" data-patient-route="start" aria-selected="true">Dashboard</button>
-        <button class="patient-top-tab" type="button" role="tab" data-patient-route="records" aria-selected="false">My records</button>
+        <button class="patient-top-tab" type="button" role="tab" data-patient-route="records" aria-selected="true">My records</button>
         <button class="patient-top-tab" type="button" role="tab" aria-selected="false" data-toast="Access and consent|Your record access preferences are available here.">Access &amp; consent</button>
       </nav>
       <nav class="doctor-top-tabs" aria-label="Doctor pages" role="tablist">
@@ -1966,9 +1965,9 @@
           <div class="card-header"><h2>Patient queue</h2></div>
           <div style="overflow-x:auto">
             <table class="queue-table">
-              <thead><tr><th>Patient</th><th>Language</th><th>Requested specialist</th><th>Documents</th></tr></thead>
+              <thead><tr><th>Patient / token</th><th>Doctor / room</th><th>OPD</th><th>Language</th><th>Documents</th></tr></thead>
               <tbody id="staffPatientQueueBody">
-                <tr><td colspan="4"><small>Loading registered patients…</small></td></tr>
+                <tr><td colspan="5"><small>Loading registered patients…</small></td></tr>
               </tbody>
             </table>
           </div>
@@ -2072,18 +2071,17 @@
         <section class="checkup-result" id="checkupResult" aria-labelledby="checkupResultTitle" hidden>
           <article class="checkup-result-card">
             <header class="checkup-result-head">
-              <div><p class="checkup-result-kicker">Check-up completed</p><h1 id="checkupResultTitle" tabindex="-1">Your OPD visit is ready</h1></div>
-              <div class="opd-ticket"><span>OPD number</span><strong id="checkupOpdNumber">Generating…</strong></div>
+              <div><h1 id="checkupResultTitle" tabindex="-1">Your OPD visit is ready</h1></div>
+              <div class="visit-ticket-stack">
+                <div class="opd-ticket"><span>OPD number</span><strong id="checkupOpdNumber">Generating…</strong></div>
+                <div class="opd-ticket"><span>Patient number</span><strong id="checkupPatientNumber">Generating…</strong></div>
+              </div>
             </header>
             <div class="checkup-result-body">
               <div class="result-doctor">
                 <div><span>Assigned doctor</span><strong id="checkupDoctorName">Assigning doctor…</strong></div>
                 <div class="result-doctor-badge" id="checkupDoctorSpecialty">Outpatient care</div>
-              </div>
-              <div class="result-summary">
-                <h2>AI intake summary</h2>
-                <p id="checkupSummaryText">Arogyam is preparing a concise summary for your doctor.</p>
-                <span class="result-summary-status" id="checkupSummaryStatus">Generating securely…</span>
+                <div class="result-room"><span>Room number</span><strong id="checkupDoctorRoom">Assigning…</strong></div>
               </div>
               <div class="checkup-result-actions"><button class="checkup-result-done" id="finishCheckupResult" type="button">Done</button></div>
             </div>
@@ -3083,7 +3081,7 @@
       if (!mergedQueue.length) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 4;
+        cell.colSpan = 5;
         const copy = document.createElement('small');
         copy.textContent = message || 'No registered patients are available yet.';
         cell.append(copy); row.append(cell); staffPatientQueueBody.append(row);
@@ -3093,17 +3091,20 @@
         const row = document.createElement('tr');
         const identity = document.createElement('td');
         const name = document.createElement('strong'); name.textContent = patient.fullName;
-        const id = document.createElement('small'); id.textContent = patient.id;
+        const id = document.createElement('small'); id.textContent = patient.patientNumber ? `${patient.patientNumber} · ${patient.id}` : patient.id;
         identity.append(name, document.createElement('br'), id);
-        const demoPatient = demoDoctorPatients.find(demo => demo.id === patient.id);
-        const language = document.createElement('td'); language.textContent = demoPatient?.language || 'Not recorded';
-        const specialist = document.createElement('td'); specialist.className = 'requested-specialist'; specialist.textContent = demoPatient ? 'General medicine' : 'Not assigned';
+        const doctor = document.createElement('td');
+        const doctorName = document.createElement('strong'); doctorName.textContent = patient.doctor?.name || 'Not assigned';
+        const doctorRoom = document.createElement('small'); doctorRoom.textContent = patient.doctor ? `${patient.doctor.specialty} · ${patient.doctor.roomNumber}` : 'Waiting for AI intake';
+        doctor.append(doctorName, document.createElement('br'), doctorRoom);
+        const opd = document.createElement('td'); opd.textContent = patient.opdNumber || 'Pending';
+        const language = document.createElement('td'); language.textContent = patient.language || 'Not recorded';
         const documents = document.createElement('td');
         const button = document.createElement('button');
         button.className = 'queue-document-action'; button.type = 'button';
         button.dataset.patientDocument = patient.id; button.dataset.patientName = patient.fullName;
         button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Upload documents';
-        documents.append(button); row.append(identity, language, specialist, documents); staffPatientQueueBody.append(row);
+        documents.append(button); row.append(identity, doctor, opd, language, documents); staffPatientQueueBody.append(row);
       });
     }
 
@@ -3435,7 +3436,8 @@
       ['.settings-menu-head strong', 'settings.title'], ['.settings-menu-head small', 'settings.subtitle'], ['.settings-field > span', 'settings.language'], ['#logoutButton span', 'settings.logout'],
       ['#reception .doctor-nav-button:nth-child(1) .nav-label', 'staff.nav.queue'], ['#addAuthorizedDevice .nav-label', 'staff.nav.authorizeDevice'],
       ['#receptionTitle', 'staff.title'],
-      ['#reception th:nth-child(1)', 'staff.table.patient'], ['#reception th:nth-child(2)', 'staff.table.language'],
+      ['#reception th:nth-child(1)', 'staff.table.patientToken'], ['#reception th:nth-child(2)', 'staff.table.doctorRoom'],
+      ['#reception th:nth-child(3)', 'staff.table.opd'], ['#reception th:nth-child(4)', 'staff.table.language'], ['#reception th:nth-child(5)', 'staff.table.documents'],
       ['#patient .doctor-nav-button:nth-child(1) .nav-label', 'patient.nav.start'], ['#patient .doctor-nav-button:nth-child(2) .nav-label', 'patient.nav.records'], ['#patient .doctor-nav-button:nth-child(3) .nav-label', 'patient.nav.consent'],
       ['#languageForm h1', 'patient.chooseLanguage'], ['#backToCheckupWelcome', 'common.back'], ['#confirmLanguage', 'common.continue'],
       ['#voiceStatus', 'patient.voice.ready'], ['#voiceQuestion', 'patient.voice.question'], ['#autoMicText', 'patient.voice.connecting'], ['#endVoiceSession', 'patient.voice.end'],
@@ -3649,13 +3651,23 @@
       confirmLanguage.disabled = false;
     }
 
-    function showCheckupResult() {
+    async function showCheckupResult() {
       checkupLaunch.hidden = true;
       checkupFlow.hidden = true;
       patientRecords.hidden = true;
       checkupResult.hidden = false;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', 'false'));
       document.getElementById('checkupResultTitle').focus?.({ preventScroll: true });
+      if (!currentCheckup && activePatient?.id) {
+        try {
+          const response = await fetch(`/api/patient-checkups/latest?patientId=${encodeURIComponent(activePatient.id)}`, { cache: 'no-store' });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.checkup) throw new Error(data.error || 'Could not load the latest OPD visit');
+          renderCompletedCheckup(data.checkup);
+        } catch (error) {
+          showToast('OPD visit unavailable', error.message || 'Complete the AI intake to receive an assignment.');
+        }
+      }
     }
 
     viewPatientRecordsHero.addEventListener('click', () => navigateRoute('patient/records', false, true));
@@ -3666,7 +3678,7 @@
 
     document.getElementById('backToCheckupWelcome').addEventListener('click', () => {
       if (routeFromLocation() === 'patient/language' && history.length > 1) history.back();
-      else navigateRoute('patient/start', false, true);
+      else navigateRoute('patient/records', false, true);
     });
 
     languageForm.addEventListener('submit', event => {
@@ -4043,7 +4055,10 @@
     try {
       const storedPatientName = localStorage.getItem('arogPatientName');
       const storedPatientId = localStorage.getItem('arogPatientId');
-      if (storedPatientName) applyPatientIdentity({ fullName: storedPatientName, id: storedPatientId });
+      if (storedPatientName && storedPatientId) {
+        applyPatientIdentity({ fullName: storedPatientName, id: storedPatientId });
+        patientLoggedInThisSession = true;
+      }
       const storedDoctor = JSON.parse(localStorage.getItem('arogDoctor') || 'null');
       if (storedDoctor) applyDoctorIdentity(storedDoctor);
       const storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null');
@@ -4065,8 +4080,12 @@
         }
       }
       if (!authorizedPatientDevice && /^patient\/(?:language|voice|summary)$/.test(route)) {
-        route = 'patient/start';
-        history.replaceState({ route }, '', '#/patient/start');
+        route = 'patient/records';
+        history.replaceState({ route }, '', '#/patient/records');
+      }
+      if (route === 'patient/start') {
+        route = authorizedPatientDevice ? 'patient/language' : 'patient/records';
+        history.replaceState({ route }, '', `#/${route}`);
       }
       if (route === 'patient/intake') {
         route = 'patient/voice';
@@ -4516,7 +4535,7 @@
           patientLoggedInThisSession = true;
           resetCheckup();
         }
-        navigateRoute(role === 'patient' ? (authorizedPatientDevice ? 'patient/language' : 'patient/start') : role === 'doctor' ? 'doctor/current' : 'staff/queue');
+        navigateRoute(role === 'patient' ? (authorizedPatientDevice ? 'patient/language' : 'patient/records') : role === 'doctor' ? 'doctor/current' : 'staff/queue');
       } catch (error) {
         if (!cancelled) console.error('Login transition failed', error);
       } finally {
@@ -4556,11 +4575,15 @@
     document.getElementById('logoutButton').addEventListener('click', () => {
       setSettingsOpen(false);
       patientLoggedInThisSession = false;
+      try {
+        localStorage.removeItem('arogPatientId');
+        localStorage.removeItem('arogPatientName');
+      } catch (_) {}
       navigateRoute('roles');
     });
 
     tabs.forEach(tab => tab.addEventListener('click', () => {
-      const destination = tab.dataset.view === 'patient' ? 'patient/start' : tab.dataset.view === 'doctor' ? 'doctor/current' : 'staff/queue';
+      const destination = tab.dataset.view === 'patient' ? 'patient/records' : tab.dataset.view === 'doctor' ? 'doctor/current' : 'staff/queue';
       navigateRoute(destination);
     }));
     document.querySelectorAll('[data-start-intake]').forEach(button => button.addEventListener('click', () => {
@@ -4610,10 +4633,10 @@
     const voiceSendButton = voiceChatForm.querySelector('[type="submit"]');
     const endVoiceSessionButton = document.getElementById('endVoiceSession');
     const checkupOpdNumber = document.getElementById('checkupOpdNumber');
+    const checkupPatientNumber = document.getElementById('checkupPatientNumber');
     const checkupDoctorName = document.getElementById('checkupDoctorName');
     const checkupDoctorSpecialty = document.getElementById('checkupDoctorSpecialty');
-    const checkupSummaryText = document.getElementById('checkupSummaryText');
-    const checkupSummaryStatus = document.getElementById('checkupSummaryStatus');
+    const checkupDoctorRoom = document.getElementById('checkupDoctorRoom');
     let recognition = null;
     let voiceGeneration = 0;
     let replyPending = false;
@@ -4816,30 +4839,21 @@
     function renderCompletedCheckup(checkup) {
       currentCheckup = checkup;
       checkupOpdNumber.textContent = checkup.opdNumber || 'Pending';
+      checkupPatientNumber.textContent = checkup.patientNumber || 'Pending';
       checkupDoctorName.textContent = checkup.doctor?.name || 'Doctor assignment pending';
       checkupDoctorSpecialty.textContent = checkup.doctor?.specialty || 'Outpatient care';
-      const ready = checkup.status === 'completed' && checkup.summary;
-      checkupSummaryText.textContent = ready
-        ? checkup.summary
-        : 'Arogyam is preparing a concise summary for your doctor. Your OPD number is already confirmed.';
-      checkupSummaryStatus.textContent = ready ? 'AI summary ready for clinical review' : 'Generating securely…';
-      checkupSummaryStatus.classList.toggle('ready', Boolean(ready));
+      checkupDoctorRoom.textContent = checkup.doctor?.roomNumber || 'Pending';
     }
 
     async function pollCheckupSummary(checkupId, patientId, attempt = 0) {
-      if (!checkupId || attempt >= 30) {
-        checkupSummaryStatus.textContent = 'Summary is taking longer than expected. It will remain linked to this OPD visit.';
-        return;
-      }
+      if (!checkupId || attempt >= 30) return;
       try {
         const response = await fetch(`/api/patient-checkups/${encodeURIComponent(checkupId)}?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Could not load the summary');
         renderCompletedCheckup(data.checkup);
         if (data.checkup.status === 'completed') return;
-      } catch (error) {
-        if (attempt >= 29) checkupSummaryStatus.textContent = error.message || 'Summary could not be loaded.';
-      }
+      } catch (_) {}
       checkupSummaryPoll = setTimeout(() => void pollCheckupSummary(checkupId, patientId, attempt + 1), 1500);
     }
 

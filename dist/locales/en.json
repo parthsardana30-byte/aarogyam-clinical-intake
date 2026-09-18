@@ -3,7 +3,7 @@
   "staff.nav.queue": "Patient queue", "staff.nav.history": "Patient history", "staff.nav.documents": "Documents", "staff.nav.authorizeDevice": "Add authorized device",
   "staff.title": "Today’s intake queue", "staff.startIntake": "+ Start new intake",
   "staff.metrics.registered": "Patients registered today", "staff.metrics.average": "Average intake time", "staff.metrics.ready": "Cases ready for doctors",
-  "staff.table.patient": "Patient", "staff.table.status": "Status", "staff.table.language": "Language", "staff.table.wait": "Wait",
+  "staff.table.patient": "Patient", "staff.table.patientToken": "Patient / token", "staff.table.doctorRoom": "Doctor / room", "staff.table.opd": "OPD", "staff.table.documents": "Documents", "staff.table.status": "Status", "staff.table.language": "Language", "staff.table.wait": "Wait",
   "staff.status.review": "Doctor review", "staff.status.active": "Intake active", "staff.status.waiting": "Waiting",
   "staff.actions.title": "Reception actions", "staff.actions.begin": "Begin assisted intake", "staff.actions.beginHelp": "Open the patient conversation",
   "staff.actions.scan": "Scan previous document", "staff.actions.scanHelp": "Add a prescription or report", "staff.actions.consent": "Review consent requests", "staff.actions.consentHelp": "Check pending record access",
