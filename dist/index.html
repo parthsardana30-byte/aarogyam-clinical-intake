@@ -698,6 +698,7 @@
     .doctor-panel { display: none; }
     .doctor-panel.active { display: block; animation: appear .22s ease-out; }
     .doctor-carousel { display: grid; grid-template-columns: 132px minmax(0, 1fr) 132px; gap: 16px; align-items: center; }
+    .doctor-carousel > .doctor-focus { grid-column: 2; grid-row: 1; }
     .doctor-carousel .doctor-focus { transition: opacity .18s ease, transform .24s ease; }
     .doctor-carousel.is-shifting-next .doctor-focus { opacity: .18; transform: translateX(-12px); }
     .doctor-carousel.is-shifting-previous .doctor-focus { opacity: .18; transform: translateX(12px); }
@@ -714,7 +715,22 @@
     .patient-nav-button:disabled { cursor: not-allowed; opacity: .38; box-shadow: none; }
     .inline-history { display: none; }
     .inline-history.active { display: block; grid-column: 2; grid-row: 1; height: 100%; overflow: auto; animation: appear .2s ease-out; }
-    .doctor-carousel > .patient-nav-button.next { grid-column: 3; grid-row: 1; }
+    .next-patient-nav { position: relative; grid-column: 3; grid-row: 1; display: grid; align-items: center; }
+    .next-patient-confirm {
+      position: absolute; z-index: 12; right: calc(100% + 10px); top: 50%; width: 270px; padding: 13px;
+      border: 1px solid rgba(16,43,39,.14); border-radius: 14px; background: #fff; box-shadow: 0 16px 38px rgba(16,43,39,.17);
+      transform: translateY(-50%); animation: nextConfirmIn .16s ease-out;
+    }
+    .next-patient-confirm[hidden] { display: none; }
+    .next-patient-confirm::after { content: ""; position: absolute; top: 50%; right: -6px; width: 10px; height: 10px; border: 1px solid rgba(16,43,39,.14); border-left: 0; border-bottom: 0; background: #fff; transform: translateY(-50%) rotate(45deg); }
+    .next-patient-confirm strong, .next-patient-confirm small { display: block; }
+    .next-patient-confirm strong { margin-bottom: 4px; font-size: .83rem; }
+    .next-patient-confirm small { color: var(--ink-soft); font-size: .73rem; line-height: 1.4; }
+    .next-patient-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 11px; }
+    .next-patient-confirm-actions button { min-height: 34px; border-radius: 9px; font: inherit; font-size: .72rem; font-weight: 800; cursor: pointer; }
+    .next-patient-cancel { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
+    .next-patient-approve { border: 0; background: var(--ink); color: #fff; }
+    @keyframes nextConfirmIn { from { opacity: 0; transform: translate(5px,-50%); } }
     .inline-history-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-bottom: 1px solid var(--line); }
     .inline-history-head h2 { margin: 0; font-size: 1.1rem; }
     .inline-history-back { min-height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: #fff; color: var(--ink); font: inherit; font-size: .75rem; font-weight: 780; cursor: pointer; }
@@ -906,6 +922,18 @@
     .compact-assistant-answer strong { color: var(--ink); }
     .focus-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 20px; border-top: 1px solid var(--line); background: #fbfcfb; color: #6d7f7a; font-size: .74rem; }
     .focus-footer span:first-child { display: flex; align-items: center; gap: 7px; }
+    .previous-record-panel { padding: 18px 22px 20px; border-top: 1px solid var(--line); background: linear-gradient(135deg, #fff, #f7faf8); }
+    .previous-record-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    .previous-record-head .eyebrow { margin-bottom: 4px; color: var(--teal); }
+    .previous-record-head h3 { margin: 0; font-size: 1rem; }
+    .previous-record-head p { margin: 3px 0 0; color: var(--ink-soft); font-size: .76rem; }
+    .previous-record-head button { border: 0; background: transparent; color: var(--teal); font: inherit; font-size: .76rem; font-weight: 820; cursor: pointer; white-space: nowrap; }
+    .previous-record-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+    .previous-record-item { min-width: 0; padding: 12px 13px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.88); }
+    .previous-record-item time, .previous-record-item strong, .previous-record-item small { display: block; }
+    .previous-record-item time { margin-bottom: 5px; color: var(--teal); font-size: .68rem; font-weight: 820; }
+    .previous-record-item strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
+    .previous-record-item small { margin-top: 4px; color: var(--ink-soft); font-size: .7rem; line-height: 1.4; }
     @keyframes doctorRise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes statusPulse { 50% { box-shadow: 0 0 0 5px rgba(30,155,104,0); } 0%, 100% { box-shadow: 0 0 0 2px rgba(30,155,104,.16); } }
     @media (prefers-reduced-motion: reduce) { .doctor-focus { animation: none; } .record-assist-panel > summary::after { transition: none; } }
@@ -931,8 +959,9 @@
     @media (max-width: 1180px) {
       .doctor-carousel { grid-template-columns: 1fr 1fr; }
       .doctor-carousel .doctor-focus, .inline-history.active { grid-column: 1 / -1; grid-row: 1; }
-      .patient-nav-button { grid-row: 2; }
-      .doctor-carousel > .patient-nav-button.next { grid-column: 2; grid-row: 2; }
+      .next-patient-nav { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
+      .next-patient-confirm { right: 50%; top: auto; bottom: calc(100% + 9px); transform: translateX(50%); }
+      .next-patient-confirm::after { top: auto; right: 50%; bottom: -6px; transform: translateX(50%) rotate(135deg); }
       .focus-header { grid-template-columns: 1fr auto; }
       .vitals-inline { grid-column: 1 / -1; grid-row: 2; }
       .vital-inline:first-child { border-left: 0; padding-left: 0; }
@@ -950,6 +979,8 @@
       .focus-summary .summary-facts { grid-template-columns: repeat(2,minmax(0,1fr)); }
       .compact-assistant-form { grid-template-columns: 1fr; }
       .focus-footer { align-items: flex-start; flex-direction: column; }
+      .previous-record-head { align-items: flex-start; flex-direction: column; }
+      .previous-record-list { grid-template-columns: 1fr; }
       .next-patient-hero { align-items: flex-start; flex-direction: column; }
       .next-patient-hero .primary-button { width: 100%; }
       .next-patient-details { grid-template-columns: 1fr; }
@@ -2152,7 +2183,6 @@
           <div class="doctor-main">
             <div class="doctor-panel active" data-doctor-panel-content="current">
               <div class="doctor-carousel" aria-label="Patient navigator">
-                <button class="patient-nav-button previous" type="button" data-patient-shift="-1" aria-label="Previous patient"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14.5 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Previous</span></button>
               <section class="card doctor-focus" aria-label="Current patient workspace">
                 <header class="focus-header">
                   <div class="focus-patient"><div class="patient-avatar">AS</div><div><strong>Ananya Sharma</strong><small>42 years · Female · PT-001 · Hindi intake</small></div></div>
@@ -2173,6 +2203,10 @@
                   </aside>
                 </div>
                 <footer class="focus-footer"><span><span aria-hidden="true">ⓘ</span> AI-generated content supports review and does not replace clinical assessment.</span><span class="prototype-label">Demo patient data</span></footer>
+                <section class="previous-record-panel" aria-labelledby="previousRecordTitle">
+                  <header class="previous-record-head"><div><div class="eyebrow">Previous patient record</div><h3 id="previousRecordTitle">Kavita Rao</h3><p id="previousRecordMeta">PT-005 · Most recent completed consultation</p></div><button type="button" data-doctor-panel="history">View full history →</button></header>
+                  <div class="previous-record-list" id="previousRecordList"></div>
+                </section>
               </section>
               <section class="card inline-history" data-inline-history aria-label="Patient history">
                 <header class="inline-history-head"><h2>Ananya Sharma’s patient history</h2><button class="inline-history-back" type="button" data-close-inline-history>← Back to patient</button></header>
@@ -2182,21 +2216,18 @@
                   <article class="inline-history-item"><time>18 Nov 2025</time><div><strong>HbA1c laboratory panel</strong><p>HbA1c result: 6.8% from a verified laboratory report.</p></div></article>
                 </div>
               </section>
-                <button class="patient-nav-button next" type="button" data-patient-shift="1" aria-label="Next patient"><span>Next</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9.5 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <div class="next-patient-nav">
+                  <button class="patient-nav-button next" type="button" data-next-patient aria-label="Next patient"><span>Next</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9.5 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                  <div class="next-patient-confirm" id="nextPatientConfirmation" hidden aria-live="polite"><strong>Open next patient?</strong><small id="nextPatientConfirmationName">Rohan Mehta will become the current patient.</small><div class="next-patient-confirm-actions"><button class="next-patient-cancel" id="cancelNextPatient" type="button">Cancel</button><button class="next-patient-approve" id="confirmNextPatient" type="button">Continue</button></div></div>
+                </div>
               </div>
             </div>
 
             <div class="doctor-panel" data-doctor-panel-content="history">
-              <div class="page-heading clinical-heading"><div><div class="eyebrow">Longitudinal record</div><h1>Ananya Sharma’s medical history</h1><p class="heading-copy">All available encounters and documents, ordered by date.</p></div><button class="secondary-button" type="button" data-doctor-panel="current">← Current patient</button></div>
-              <section class="card history-patient-bar"><div><strong>Ananya Sharma · PT-001</strong><small>42 years · Female · 5 records available</small></div><div class="history-filters" aria-label="Filter medical history"><button class="history-filter" type="button" data-history-filter="all" aria-pressed="true">All</button><button class="history-filter" type="button" data-history-filter="visit" aria-pressed="false">Consultations</button><button class="history-filter" type="button" data-history-filter="prescription" aria-pressed="false">Prescriptions</button><button class="history-filter" type="button" data-history-filter="lab" aria-pressed="false">Labs</button></div></section>
+              <div class="page-heading clinical-heading"><div><div class="eyebrow">Previous patient · longitudinal record</div><h1 id="doctorHistoryTitle">Previous patient’s medical history</h1><p class="heading-copy">All available encounters and documents, ordered by date.</p></div><button class="secondary-button" type="button" data-doctor-panel="current">← Current patient</button></div>
+              <section class="card history-patient-bar"><div><strong id="doctorHistoryPatient">Previous patient</strong><small id="doctorHistoryMeta">Medical records available</small></div><div class="history-filters" aria-label="Filter medical history"><button class="history-filter" type="button" data-history-filter="all" aria-pressed="true">All</button><button class="history-filter" type="button" data-history-filter="visit" aria-pressed="false">Consultations</button><button class="history-filter" type="button" data-history-filter="prescription" aria-pressed="false">Prescriptions</button><button class="history-filter" type="button" data-history-filter="lab" aria-pressed="false">Labs</button></div></section>
               <div class="history-toolbar"><input class="history-search" id="doctorHistorySearch" type="search" maxlength="120" aria-label="Search this patient's history" placeholder="Search conditions, medicines, dates or documents"><button class="secondary-button" type="button" data-toast="History exported|A date-wise medical history export has been prepared.">Export history</button></div>
-              <div class="dated-history" id="datedPatientHistory">
-                <article class="card dated-record" data-record-kind="prescription" data-record-search="14 june 2026 prescription metformin 500 mg medicine diabetes uploaded patient"><header class="dated-record-head"><div><time datetime="2026-06-14">14 June 2026</time><h3>Prescription uploaded by patient</h3></div><span class="record-type">Prescription</span></header><p>Metformin 500 mg appears in the uploaded prescription. Current medication status has not yet been confirmed with the patient.</p><div class="record-source-links"><button type="button" data-toast="Document preview|Opening the source prescription from 14 June 2026.">View source prescription</button></div></article>
-                <article class="card dated-record" data-record-kind="visit" data-record-search="02 may 2026 consultation digestive discomfort abdominal heaviness appetite bloating dr aarav mehta"><header class="dated-record-head"><div><time datetime="2026-05-02">02 May 2026</time><h3>OPD consultation · Digestive discomfort</h3></div><span class="record-type">Consultation</span></header><p>Reported post-meal heaviness, bloating and reduced appetite. Advised lighter meals, hydration and review if symptoms persisted.</p><div class="record-source-links"><button type="button" data-toast="Visit record opened|The consultation note from 02 May 2026 is ready for review.">Consultation note</button><button type="button" data-toast="Care plan opened|The care plan from 02 May 2026 is ready for review.">Care plan</button></div></article>
-                <article class="card dated-record" data-record-kind="visit" data-record-search="12 february 2026 follow up metabolic health glucose diet exercise no adverse reaction"><header class="dated-record-head"><div><time datetime="2026-02-12">12 February 2026</time><h3>Follow-up · Metabolic health</h3></div><span class="record-type">Consultation</span></header><p>Diet and activity plan reviewed. No adverse medicine reaction was documented during this encounter.</p><div class="record-source-links"><button type="button" data-toast="Visit record opened|The follow-up note from 12 February 2026 is ready for review.">Follow-up note</button></div></article>
-                <article class="card dated-record" data-record-kind="lab" data-record-search="18 november 2025 lab hba1c 6.8 glucose pathology report"><header class="dated-record-head"><div><time datetime="2025-11-18">18 November 2025</time><h3>HbA1c laboratory panel</h3></div><span class="record-type">Lab result</span></header><p>HbA1c: <strong>6.8%</strong>. Result imported from a verified laboratory report uploaded to the patient record.</p><div class="record-source-links"><button type="button" data-toast="Lab report opened|The verified HbA1c report from 18 November 2025 is ready for review.">View lab report</button></div></article>
-                <article class="card dated-record" data-record-kind="visit" data-record-search="29 august 2025 annual wellness assessment no drug allergy baseline visit"><header class="dated-record-head"><div><time datetime="2025-08-29">29 August 2025</time><h3>Annual wellness assessment</h3></div><span class="record-type">Consultation</span></header><p>Baseline assessment completed. No known drug allergy was recorded and routine preventive follow-up was advised.</p><div class="record-source-links"><button type="button" data-toast="Assessment opened|The annual wellness assessment from 29 August 2025 is ready for review.">Assessment summary</button></div></article>
-              </div>
+              <div class="dated-history" id="datedPatientHistory"></div>
               <div class="card history-empty" id="doctorHistoryEmpty">No records match this search and filter.</div>
             </div>
           </div>
@@ -2361,6 +2392,33 @@
       { id: 'PT-003', fullName: 'Meera Iyer', age: 51, sex: 'Female', language: 'English', status: 'Waiting', initials: 'MI', vitals: ['122/78', '74 bpm', '99%'], concern: 'Recurring knee stiffness and morning discomfort.', meta: 'Previous consultation records are available for review.' },
       { id: 'PT-004', fullName: 'Vikram Singh', age: 29, sex: 'Male', language: 'Punjabi', status: 'Waiting', initials: 'VS', vitals: ['126/80', '76 bpm', '98%'], concern: 'Persistent cough and throat irritation.', meta: 'Patient has been marked ready by reception.' }
     ];
+    const doctorPatientHistories = {
+      'PT-005': [
+        { date: '12 Sep 2026', iso: '2026-09-12', kind: 'visit', type: 'Consultation', title: 'Allergic rhinitis review', summary: 'Seasonal nasal congestion and sinus pressure reviewed. Steam inhalation and allergen avoidance were advised.' },
+        { date: '04 Mar 2026', iso: '2026-03-04', kind: 'prescription', type: 'Prescription', title: 'Allergy prescription', summary: 'Cetirizine 10 mg was documented for short-term symptom relief.' },
+        { date: '18 Dec 2025', iso: '2025-12-18', kind: 'lab', type: 'Lab result', title: 'Absolute eosinophil count', summary: 'AEC result recorded as 520 cells/µL in the verified laboratory report.' }
+      ],
+      'PT-001': [
+        { date: '14 Jun 2026', iso: '2026-06-14', kind: 'prescription', type: 'Prescription', title: 'Prescription uploaded', summary: 'Metformin 500 mg appears in the uploaded prescription; current use still requires confirmation.' },
+        { date: '02 May 2026', iso: '2026-05-02', kind: 'visit', type: 'Consultation', title: 'Digestive discomfort', summary: 'Post-meal heaviness, bloating and reduced appetite were documented during the OPD consultation.' },
+        { date: '18 Nov 2025', iso: '2025-11-18', kind: 'lab', type: 'Lab result', title: 'HbA1c laboratory panel', summary: 'HbA1c was recorded as 6.8% in a verified laboratory report.' }
+      ],
+      'PT-002': [
+        { date: '09 Aug 2026', iso: '2026-08-09', kind: 'visit', type: 'Consultation', title: 'Fatigue assessment', summary: 'Intermittent fatigue was reviewed; hydration, sleep and symptom monitoring were discussed.' },
+        { date: '22 Apr 2026', iso: '2026-04-22', kind: 'lab', type: 'Lab result', title: 'Complete blood count', summary: 'CBC values were within the laboratory reference ranges.' },
+        { date: '11 Jan 2026', iso: '2026-01-11', kind: 'prescription', type: 'Prescription', title: 'Supportive care prescription', summary: 'A short supportive care plan was recorded after the consultation.' }
+      ],
+      'PT-003': [
+        { date: '28 Jul 2026', iso: '2026-07-28', kind: 'visit', type: 'Consultation', title: 'Knee stiffness review', summary: 'Morning knee stiffness and mobility limitations were assessed.' },
+        { date: '17 Feb 2026', iso: '2026-02-17', kind: 'lab', type: 'Lab result', title: 'Vitamin D panel', summary: 'Vitamin D result was recorded as 24 ng/mL.' },
+        { date: '06 Oct 2025', iso: '2025-10-06', kind: 'prescription', type: 'Prescription', title: 'Pain management plan', summary: 'Topical pain relief and gentle mobility exercises were documented.' }
+      ],
+      'PT-004': [
+        { date: '03 Sep 2026', iso: '2026-09-03', kind: 'visit', type: 'Consultation', title: 'Respiratory review', summary: 'Persistent cough and throat irritation were reviewed with no urgent red flags documented.' },
+        { date: '14 May 2026', iso: '2026-05-14', kind: 'prescription', type: 'Prescription', title: 'Cough relief prescription', summary: 'A short symptomatic care prescription was recorded.' },
+        { date: '21 Jan 2026', iso: '2026-01-21', kind: 'lab', type: 'Lab result', title: 'Chest screening report', summary: 'Screening report was uploaded and marked for clinician review.' }
+      ]
+    };
     let activeDoctorPatientIndex = 1;
     let signupOtpProvider = null;
     let msg91WidgetReady = null;
@@ -3424,7 +3482,7 @@
       ['.doctor-top-tabs .doctor-top-tab:nth-child(1)', 'doctor.nav.current'], ['.doctor-top-tabs .doctor-top-tab:nth-child(2)', 'doctor.nav.history'],
       ['#doctor .summary-section:nth-child(1) h3', 'doctor.chiefConcern'], ['#doctor .summary-section:nth-child(2) h3', 'doctor.context'], ['#doctor .summary-section:nth-child(3) h3', 'doctor.ayurvedic'], ['#doctor .summary-section:nth-child(4) h3', 'doctor.flags'],
       ['#doctor .doctor-actions .primary-button', 'doctor.approve'], ['#doctor .doctor-actions .secondary-button:nth-child(2)', 'doctor.edit'], ['#doctor .doctor-actions .secondary-button:nth-child(3)', 'doctor.evidence'], ['#doctor .doctor-layout aside .card-header h2', 'doctor.timeline'], ['#doctor .doctor-layout aside .secondary-button', 'doctor.completeHistory'],
-      ['[data-doctor-panel-content="history"] .page-heading h1', 'history.title'], ['[data-doctor-panel-content="history"] .heading-copy', 'history.subtitle'], ['[data-doctor-panel-content="history"] .history-toolbar button', 'history.recent'],
+      ['[data-doctor-panel-content="history"] .heading-copy', 'history.subtitle'], ['[data-doctor-panel-content="history"] .history-toolbar button', 'history.recent'],
       ['#deviceDialogTitle', 'device.title'], ['#deviceDialogTitle + p', 'device.subtitle'], ['#deviceNameField', 'device.name', 'direct'], ['#deviceCodeField', 'device.code', 'direct'],
       ['#deviceMethodScan', 'device.scan'], ['#deviceMethodManual', 'device.manual'], ['#deviceScanStatus', 'device.scanHelp'], ['#startDeviceQrScan', 'device.startScanner'],
       ['#deviceSetupHelp', 'device.setupHelp'], ['#deviceSetupLink', 'device.openSetup'], ['#authorizedDevicesTitle', 'device.listTitle'],
@@ -3899,19 +3957,88 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function createHistoryRecord(record, compact = false) {
+      if (compact) {
+        const item = document.createElement('article');
+        item.className = 'previous-record-item';
+        const date = document.createElement('time');
+        date.dateTime = record.iso;
+        date.textContent = record.date;
+        const title = document.createElement('strong');
+        title.textContent = record.title;
+        const summary = document.createElement('small');
+        summary.textContent = record.summary;
+        item.append(date, title, summary);
+        return item;
+      }
+      const item = document.createElement('article');
+      item.className = 'card dated-record';
+      item.dataset.recordKind = record.kind;
+      item.dataset.recordSearch = `${record.date} ${record.type} ${record.title} ${record.summary}`.toLowerCase();
+      const head = document.createElement('header');
+      head.className = 'dated-record-head';
+      const heading = document.createElement('div');
+      const date = document.createElement('time');
+      date.dateTime = record.iso;
+      date.textContent = record.date;
+      const title = document.createElement('h3');
+      title.textContent = record.title;
+      heading.append(date, title);
+      const type = document.createElement('span');
+      type.className = 'record-type';
+      type.textContent = record.type;
+      head.append(heading, type);
+      const summary = document.createElement('p');
+      summary.textContent = record.summary;
+      const links = document.createElement('div');
+      links.className = 'record-source-links';
+      const source = document.createElement('button');
+      source.type = 'button';
+      source.textContent = `View ${record.kind === 'lab' ? 'lab report' : record.kind === 'prescription' ? 'prescription' : 'consultation note'}`;
+      source.addEventListener('click', () => showToast('Record opened', `${record.title} from ${record.date} is ready for review.`));
+      links.append(source);
+      item.append(head, summary, links);
+      return item;
+    }
+
+    function renderPreviousPatientHistory(patient) {
+      const records = patient ? (doctorPatientHistories[patient.id] || []) : [];
+      const previousTitle = document.getElementById('previousRecordTitle');
+      const previousMeta = document.getElementById('previousRecordMeta');
+      const previousList = document.getElementById('previousRecordList');
+      const historyTitle = document.getElementById('doctorHistoryTitle');
+      const historyPatient = document.getElementById('doctorHistoryPatient');
+      const historyMeta = document.getElementById('doctorHistoryMeta');
+      const historyList = document.getElementById('datedPatientHistory');
+      if (!patient) {
+        previousTitle.textContent = 'No previous patient';
+        previousMeta.textContent = 'Complete the current consultation to create history.';
+        previousList.replaceChildren();
+        historyTitle.textContent = 'No previous patient history';
+        historyPatient.textContent = 'No previous patient';
+        historyMeta.textContent = 'No records available';
+        historyList.replaceChildren();
+        return;
+      }
+      previousTitle.textContent = patient.fullName;
+      previousMeta.textContent = `${patient.id} · ${patient.age} years · ${patient.sex} · ${records.length} records`;
+      previousList.replaceChildren(...records.slice(0, 3).map(record => createHistoryRecord(record, true)));
+      historyTitle.textContent = `${patient.fullName}’s medical history`;
+      historyPatient.textContent = `${patient.fullName} · ${patient.id}`;
+      historyMeta.textContent = `${patient.age} years · ${patient.sex} · ${records.length} records available`;
+      historyList.replaceChildren(...records.map(record => createHistoryRecord(record)));
+    }
+
     function renderDoctorPatientNavigator() {
       const current = demoDoctorPatients[activeDoctorPatientIndex];
       const previous = demoDoctorPatients[activeDoctorPatientIndex - 1];
       const next = demoDoctorPatients[activeDoctorPatientIndex + 1];
-      const updatePreview = (side, patient) => {
-        const button = document.querySelector(`[data-patient-shift="${side === 'previous' ? -1 : 1}"]`);
-        if (!button) return;
-        button.disabled = !patient;
-        button.title = patient ? `${side === 'previous' ? 'Previous' : 'Next'}: ${patient.fullName}` : `No ${side} patient`;
-        button.setAttribute('aria-label', patient ? `${side === 'previous' ? 'Previous' : 'Next'} patient: ${patient.fullName}` : `No ${side} patient`);
-      };
-      updatePreview('previous', previous);
-      updatePreview('next', next);
+      const nextButton = document.querySelector('[data-next-patient]');
+      if (nextButton) {
+        nextButton.disabled = !next;
+        nextButton.title = next ? `Next: ${next.fullName}` : 'No next patient';
+        nextButton.setAttribute('aria-label', next ? `Next patient: ${next.fullName}` : 'No next patient');
+      }
       const focusPatient = document.querySelector('.focus-patient');
       if (focusPatient) {
         focusPatient.querySelector('.patient-avatar').textContent = current.initials;
@@ -3921,6 +4048,7 @@
       document.querySelectorAll('.vital-inline strong').forEach((node, index) => { node.textContent = current.vitals[index] || '—'; });
       const concern = document.querySelector('.focus-summary .summary-block:first-of-type .clinical-bullets');
       if (concern) concern.innerHTML = `<li><strong>${current.concern}</strong></li><li>${current.meta}</li>`;
+      renderPreviousPatientHistory(previous);
     }
 
     function routeFromLocation() {
@@ -4132,22 +4260,33 @@
       inlineHistory?.classList.remove('active');
       if (currentDoctorCard) currentDoctorCard.hidden = false;
     });
-    document.querySelectorAll('[data-patient-shift]').forEach(card => {
-      const shiftPatient = () => {
-        const nextIndex = activeDoctorPatientIndex + Number(card.dataset.patientShift);
-        if (!demoDoctorPatients[nextIndex]) return;
-        const carousel = document.querySelector('.doctor-carousel');
-        const direction = Number(card.dataset.patientShift) > 0 ? 'next' : 'previous';
-        carousel?.classList.add(`is-shifting-${direction}`);
-        window.setTimeout(() => {
-          activeDoctorPatientIndex = nextIndex;
-          renderDoctorPatientNavigator();
-          navigateRoute('doctor/current');
-          window.requestAnimationFrame(() => carousel?.classList.remove(`is-shifting-${direction}`));
-        }, 140);
-      };
-      card.addEventListener('click', shiftPatient);
+    const nextPatientButton = document.querySelector('[data-next-patient]');
+    const nextPatientConfirmation = document.getElementById('nextPatientConfirmation');
+    const nextPatientConfirmationName = document.getElementById('nextPatientConfirmationName');
+    function closeNextPatientConfirmation() { nextPatientConfirmation.hidden = true; }
+    nextPatientButton?.addEventListener('click', () => {
+      const next = demoDoctorPatients[activeDoctorPatientIndex + 1];
+      if (!next) return;
+      nextPatientConfirmationName.textContent = `${next.fullName} will become the current patient.`;
+      nextPatientConfirmation.hidden = false;
+      document.getElementById('confirmNextPatient').focus();
     });
+    document.getElementById('cancelNextPatient')?.addEventListener('click', closeNextPatientConfirmation);
+    document.getElementById('confirmNextPatient')?.addEventListener('click', () => {
+      const nextIndex = activeDoctorPatientIndex + 1;
+      if (!demoDoctorPatients[nextIndex]) return closeNextPatientConfirmation();
+      closeNextPatientConfirmation();
+      const carousel = document.querySelector('.doctor-carousel');
+      carousel?.classList.add('is-shifting-next');
+      window.setTimeout(() => {
+        activeDoctorPatientIndex = nextIndex;
+        renderDoctorPatientNavigator();
+        updateDoctorHistory();
+        navigateRoute('doctor/current');
+        window.requestAnimationFrame(() => carousel?.classList.remove('is-shifting-next'));
+      }, 140);
+    });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && !nextPatientConfirmation.hidden) closeNextPatientConfirmation(); });
     patientNavButtons.forEach(button => button.addEventListener('click', () => navigateRoute(`patient/${button.dataset.patientRoute}`, false, true)));
     renderDoctorPatientNavigator();
 
@@ -4156,7 +4295,6 @@
     const doctorAssistantAnswer = document.getElementById('doctorAssistantAnswer');
     const doctorStatusButtons = [...document.querySelectorAll('.doctor-availability-option')];
     const doctorHistorySearch = document.getElementById('doctorHistorySearch');
-    const doctorHistoryRecords = [...document.querySelectorAll('.dated-record')];
     const doctorHistoryFilters = [...document.querySelectorAll('[data-history-filter]')];
     const doctorHistoryEmpty = document.getElementById('doctorHistoryEmpty');
     let activeDoctorHistoryFilter = 'all';
@@ -4222,7 +4360,7 @@
     function updateDoctorHistory() {
       const search = (doctorHistorySearch?.value || '').trim().toLowerCase();
       let visibleCount = 0;
-      doctorHistoryRecords.forEach(record => {
+      document.querySelectorAll('#datedPatientHistory .dated-record').forEach(record => {
         const matchesType = activeDoctorHistoryFilter === 'all' || record.dataset.recordKind === activeDoctorHistoryFilter;
         const matchesSearch = !search || record.dataset.recordSearch.includes(search);
         record.hidden = !(matchesType && matchesSearch);
