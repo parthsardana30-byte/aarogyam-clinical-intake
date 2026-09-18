@@ -934,6 +934,29 @@
     .previous-record-item time { margin-bottom: 5px; color: var(--teal); font-size: .68rem; font-weight: 820; }
     .previous-record-item strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
     .previous-record-item small { margin-top: 4px; color: var(--ink-soft); font-size: .7rem; line-height: 1.4; }
+    .previous-patients-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
+    .previous-patients-heading h1 { margin: 4px 0 5px; font-size: 1.55rem; }
+    .previous-patients-heading p { margin: 0; color: var(--ink-soft); font-size: .84rem; }
+    .previous-patient-search { width: min(360px, 100%); }
+    .previous-patient-search input { width: 100%; min-height: 46px; padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: 13px; background: rgba(255,255,255,.86); color: var(--ink); font: inherit; }
+    .previous-patient-search input:focus { outline: 3px solid rgba(14,102,85,.13); border-color: var(--teal); }
+    .previous-patients-list { display: grid; gap: 10px; }
+    .previous-patient-row { display: grid; grid-template-columns: auto minmax(160px,.8fr) minmax(220px,1.4fr) auto; align-items: center; gap: 16px; padding: 15px 17px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.88); box-shadow: 0 6px 18px rgba(16,43,39,.04); transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
+    .previous-patient-row:hover { border-color: rgba(14,102,85,.28); transform: translateY(-1px); box-shadow: 0 10px 24px rgba(16,43,39,.07); }
+    .previous-patient-avatar { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; background: var(--mint); color: var(--teal-dark); font-size: .78rem; font-weight: 850; }
+    .previous-patient-identity strong, .previous-patient-identity small, .previous-patient-visit strong, .previous-patient-visit small { display: block; }
+    .previous-patient-identity strong { font-size: .9rem; }
+    .previous-patient-identity small, .previous-patient-visit small { margin-top: 3px; color: var(--ink-soft); font-size: .73rem; }
+    .previous-patient-visit strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82rem; }
+    .previous-patient-history-button { min-height: 38px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 10px; background: #fff; color: var(--teal-dark); font: inherit; font-size: .75rem; font-weight: 820; cursor: pointer; white-space: nowrap; }
+    .previous-patient-history-button:hover { border-color: var(--teal); background: var(--mint); }
+    .previous-patients-empty { display: none; padding: 28px; color: var(--ink-soft); text-align: center; }
+    .previous-patients-empty.visible { display: block; }
+    .history-detail-heading { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 13px; margin-bottom: 16px; }
+    .history-detail-heading h1 { margin: 3px 0 3px; font-size: 1.35rem; }
+    .history-detail-heading p { margin: 0; color: var(--ink-soft); font-size: .8rem; }
+    .history-back-button { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line-strong); border-radius: 12px; background: #fff; color: var(--ink); font: inherit; font-size: 1.1rem; font-weight: 800; cursor: pointer; }
+    .history-back-button:hover { border-color: var(--teal); background: var(--mint); }
     @keyframes doctorRise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes statusPulse { 50% { box-shadow: 0 0 0 5px rgba(30,155,104,0); } 0%, 100% { box-shadow: 0 0 0 2px rgba(30,155,104,.16); } }
     @media (prefers-reduced-motion: reduce) { .doctor-focus { animation: none; } .record-assist-panel > summary::after { transition: none; } }
@@ -981,6 +1004,11 @@
       .focus-footer { align-items: flex-start; flex-direction: column; }
       .previous-record-head { align-items: flex-start; flex-direction: column; }
       .previous-record-list { grid-template-columns: 1fr; }
+      .previous-patients-heading { align-items: stretch; flex-direction: column; gap: 14px; }
+      .previous-patient-search { width: 100%; }
+      .previous-patient-row { grid-template-columns: auto minmax(0,1fr); gap: 12px; }
+      .previous-patient-visit, .previous-patient-history-button { grid-column: 2; }
+      .previous-patient-history-button { width: max-content; }
       .next-patient-hero { align-items: flex-start; flex-direction: column; }
       .next-patient-hero .primary-button { width: 100%; }
       .next-patient-details { grid-template-columns: 1fr; }
@@ -1906,7 +1934,7 @@
       </nav>
       <nav class="doctor-top-tabs" aria-label="Doctor pages" role="tablist">
         <button class="doctor-top-tab" type="button" role="tab" data-doctor-panel="current" aria-selected="true">Current patient</button>
-        <button class="doctor-top-tab" type="button" role="tab" data-doctor-panel="history" aria-selected="false">Patient history</button>
+        <button class="doctor-top-tab" type="button" role="tab" data-doctor-panel="previous" aria-selected="false">Previous patients</button>
       </nav>
       <div class="top-actions">
         <div class="doctor-availability-control" aria-label="Doctor availability" data-current-status="active">
@@ -2204,7 +2232,7 @@
                 </div>
                 <footer class="focus-footer"><span><span aria-hidden="true">ⓘ</span> AI-generated content supports review and does not replace clinical assessment.</span><span class="prototype-label">Demo patient data</span></footer>
                 <section class="previous-record-panel" aria-labelledby="previousRecordTitle">
-                  <header class="previous-record-head"><div><div class="eyebrow">Previous patient record</div><h3 id="previousRecordTitle">Kavita Rao</h3><p id="previousRecordMeta">PT-005 · Most recent completed consultation</p></div><button type="button" data-doctor-panel="history">View full history →</button></header>
+                  <header class="previous-record-head"><div><div class="eyebrow">Previous patient record</div><h3 id="previousRecordTitle">Kavita Rao</h3><p id="previousRecordMeta">PT-005 · Most recent completed consultation</p></div><button type="button" data-view-previous-history>View full history →</button></header>
                   <div class="previous-record-list" id="previousRecordList"></div>
                 </section>
               </section>
@@ -2223,10 +2251,16 @@
               </div>
             </div>
 
+            <div class="doctor-panel" data-doctor-panel-content="previous">
+              <div class="previous-patients-heading"><div><div class="eyebrow">Completed consultations</div><h1>Previous patients</h1><p>Find a patient and open their complete medical history.</p></div><label class="previous-patient-search"><span class="sr-only">Search previous patients</span><input id="previousPatientsSearch" type="search" maxlength="100" placeholder="Search by name, patient ID or concern"></label></div>
+              <div class="previous-patients-list" id="previousPatientsList" aria-live="polite"></div>
+              <div class="card previous-patients-empty" id="previousPatientsEmpty">No previous patients match this search.</div>
+            </div>
+
             <div class="doctor-panel" data-doctor-panel-content="history">
-              <div class="page-heading clinical-heading"><div><div class="eyebrow">Previous patient · longitudinal record</div><h1 id="doctorHistoryTitle">Previous patient’s medical history</h1><p class="heading-copy">All available encounters and documents, ordered by date.</p></div><button class="secondary-button" type="button" data-doctor-panel="current">← Current patient</button></div>
+              <div class="history-detail-heading"><button class="history-back-button" type="button" data-doctor-panel="previous" aria-label="Back to previous patients">←</button><div><div class="eyebrow">Medical history</div><h1 id="doctorHistoryTitle">Previous patient’s medical history</h1><p class="heading-copy">All encounters and documents, newest first.</p></div></div>
               <section class="card history-patient-bar"><div><strong id="doctorHistoryPatient">Previous patient</strong><small id="doctorHistoryMeta">Medical records available</small></div><div class="history-filters" aria-label="Filter medical history"><button class="history-filter" type="button" data-history-filter="all" aria-pressed="true">All</button><button class="history-filter" type="button" data-history-filter="visit" aria-pressed="false">Consultations</button><button class="history-filter" type="button" data-history-filter="prescription" aria-pressed="false">Prescriptions</button><button class="history-filter" type="button" data-history-filter="lab" aria-pressed="false">Labs</button></div></section>
-              <div class="history-toolbar"><input class="history-search" id="doctorHistorySearch" type="search" maxlength="120" aria-label="Search this patient's history" placeholder="Search conditions, medicines, dates or documents"><button class="secondary-button" type="button" data-toast="History exported|A date-wise medical history export has been prepared.">Export history</button></div>
+              <div class="history-toolbar"><input class="history-search" id="doctorHistorySearch" type="search" maxlength="120" aria-label="Search this patient's history" placeholder="Search conditions, medicines, dates or documents"></div>
               <div class="dated-history" id="datedPatientHistory"></div>
               <div class="card history-empty" id="doctorHistoryEmpty">No records match this search and filter.</div>
             </div>
@@ -2392,6 +2426,10 @@
       { id: 'PT-003', fullName: 'Meera Iyer', age: 51, sex: 'Female', language: 'English', status: 'Waiting', initials: 'MI', vitals: ['122/78', '74 bpm', '99%'], concern: 'Recurring knee stiffness and morning discomfort.', meta: 'Previous consultation records are available for review.' },
       { id: 'PT-004', fullName: 'Vikram Singh', age: 29, sex: 'Male', language: 'Punjabi', status: 'Waiting', initials: 'VS', vitals: ['126/80', '76 bpm', '98%'], concern: 'Persistent cough and throat irritation.', meta: 'Patient has been marked ready by reception.' }
     ];
+    const archivedDoctorPatients = [
+      { id: 'PT-006', fullName: 'Arjun Patel', age: 58, sex: 'Male', language: 'Gujarati', status: 'Completed', initials: 'AP', concern: 'Blood pressure follow-up and medicine review.' },
+      { id: 'PT-007', fullName: 'Sunita Verma', age: 63, sex: 'Female', language: 'Hindi', status: 'Completed', initials: 'SV', concern: 'Diabetes follow-up and glucose report review.' }
+    ];
     const doctorPatientHistories = {
       'PT-005': [
         { date: '12 Sep 2026', iso: '2026-09-12', kind: 'visit', type: 'Consultation', title: 'Allergic rhinitis review', summary: 'Seasonal nasal congestion and sinus pressure reviewed. Steam inhalation and allergen avoidance were advised.' },
@@ -2417,6 +2455,16 @@
         { date: '03 Sep 2026', iso: '2026-09-03', kind: 'visit', type: 'Consultation', title: 'Respiratory review', summary: 'Persistent cough and throat irritation were reviewed with no urgent red flags documented.' },
         { date: '14 May 2026', iso: '2026-05-14', kind: 'prescription', type: 'Prescription', title: 'Cough relief prescription', summary: 'A short symptomatic care prescription was recorded.' },
         { date: '21 Jan 2026', iso: '2026-01-21', kind: 'lab', type: 'Lab result', title: 'Chest screening report', summary: 'Screening report was uploaded and marked for clinician review.' }
+      ],
+      'PT-006': [
+        { date: '30 Aug 2026', iso: '2026-08-30', kind: 'visit', type: 'Consultation', title: 'Hypertension follow-up', summary: 'Home blood-pressure readings and adherence to the current treatment plan were reviewed.' },
+        { date: '12 Jun 2026', iso: '2026-06-12', kind: 'prescription', type: 'Prescription', title: 'Blood pressure prescription', summary: 'The ongoing antihypertensive medicine plan was documented for continued use.' },
+        { date: '08 Feb 2026', iso: '2026-02-08', kind: 'lab', type: 'Lab result', title: 'Kidney function panel', summary: 'Creatinine and electrolyte results were recorded within the laboratory reference ranges.' }
+      ],
+      'PT-007': [
+        { date: '18 Aug 2026', iso: '2026-08-18', kind: 'visit', type: 'Consultation', title: 'Diabetes follow-up', summary: 'Glucose trends, diet and the current medicine schedule were reviewed.' },
+        { date: '02 Aug 2026', iso: '2026-08-02', kind: 'lab', type: 'Lab result', title: 'HbA1c panel', summary: 'HbA1c was recorded as 7.1% in the verified laboratory report.' },
+        { date: '15 Mar 2026', iso: '2026-03-15', kind: 'prescription', type: 'Prescription', title: 'Diabetes prescription', summary: 'The existing oral medicine plan was renewed after clinical review.' }
       ]
     };
     let activeDoctorPatientIndex = 1;
@@ -3479,10 +3527,10 @@
       ['#patientRecordsTitle', 'records.title'], ['#patientRecords .records-heading p', 'records.subtitle'], ['#patientRecords .records-summary-card:nth-child(1) span', 'records.consultations'], ['#patientRecords .records-summary-card:nth-child(2) span', 'records.documents'], ['#patientRecords .records-summary-card:nth-child(3) span', 'records.followup'],
       ['#patientRecordFilter option[value="all"]', 'records.filter.all'], ['#patientRecordFilter option[value="visit"]', 'records.filter.visits'], ['#patientRecordFilter option[value="document"]', 'records.filter.documents'], ['#patientRecordsEmpty', 'records.empty'],
       ['#patientRecords .record-detail-row:nth-child(1) > span', 'records.clinician'], ['#patientRecords .record-detail-row:nth-child(2) > span', 'records.summary'], ['#patientRecords .record-detail-row:nth-child(3) > span', 'records.plan'],
-      ['.doctor-top-tabs .doctor-top-tab:nth-child(1)', 'doctor.nav.current'], ['.doctor-top-tabs .doctor-top-tab:nth-child(2)', 'doctor.nav.history'],
+      ['.doctor-top-tabs .doctor-top-tab:nth-child(1)', 'doctor.nav.current'], ['.doctor-top-tabs .doctor-top-tab:nth-child(2)', 'doctor.nav.previous'],
       ['#doctor .summary-section:nth-child(1) h3', 'doctor.chiefConcern'], ['#doctor .summary-section:nth-child(2) h3', 'doctor.context'], ['#doctor .summary-section:nth-child(3) h3', 'doctor.ayurvedic'], ['#doctor .summary-section:nth-child(4) h3', 'doctor.flags'],
       ['#doctor .doctor-actions .primary-button', 'doctor.approve'], ['#doctor .doctor-actions .secondary-button:nth-child(2)', 'doctor.edit'], ['#doctor .doctor-actions .secondary-button:nth-child(3)', 'doctor.evidence'], ['#doctor .doctor-layout aside .card-header h2', 'doctor.timeline'], ['#doctor .doctor-layout aside .secondary-button', 'doctor.completeHistory'],
-      ['[data-doctor-panel-content="history"] .heading-copy', 'history.subtitle'], ['[data-doctor-panel-content="history"] .history-toolbar button', 'history.recent'],
+      ['[data-doctor-panel-content="history"] .heading-copy', 'history.subtitle'],
       ['#deviceDialogTitle', 'device.title'], ['#deviceDialogTitle + p', 'device.subtitle'], ['#deviceNameField', 'device.name', 'direct'], ['#deviceCodeField', 'device.code', 'direct'],
       ['#deviceMethodScan', 'device.scan'], ['#deviceMethodManual', 'device.manual'], ['#deviceScanStatus', 'device.scanHelp'], ['#startDeviceQrScan', 'device.startScanner'],
       ['#deviceSetupHelp', 'device.setupHelp'], ['#deviceSetupLink', 'device.openSetup'], ['#authorizedDevicesTitle', 'device.listTitle'],
@@ -3952,8 +4000,10 @@
     }
 
     function openDoctorPanel(id) {
-      doctorNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.doctorPanel === id)));
+      const activeNavigation = id === 'history' ? 'previous' : id;
+      doctorNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.doctorPanel === activeNavigation)));
       doctorPanels.forEach(panel => panel.classList.toggle('active', panel.dataset.doctorPanelContent === id));
+      if (id === 'previous') renderPreviousPatients();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -4027,6 +4077,57 @@
       historyPatient.textContent = `${patient.fullName} · ${patient.id}`;
       historyMeta.textContent = `${patient.age} years · ${patient.sex} · ${records.length} records available`;
       historyList.replaceChildren(...records.map(record => createHistoryRecord(record)));
+      document.querySelectorAll('[data-history-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.historyFilter === 'all')));
+      const search = document.getElementById('doctorHistorySearch');
+      if (search) search.value = '';
+      document.getElementById('doctorHistoryEmpty')?.classList.remove('visible');
+    }
+
+    function getPreviousDoctorPatients() {
+      return [...demoDoctorPatients.slice(0, activeDoctorPatientIndex).reverse(), ...archivedDoctorPatients];
+    }
+
+    function renderPreviousPatients() {
+      const list = document.getElementById('previousPatientsList');
+      const empty = document.getElementById('previousPatientsEmpty');
+      const search = (document.getElementById('previousPatientsSearch')?.value || '').trim().toLowerCase();
+      if (!list || !empty) return;
+      const patients = getPreviousDoctorPatients().filter(patient => `${patient.fullName} ${patient.id} ${patient.concern} ${patient.language}`.toLowerCase().includes(search));
+      const rows = patients.map(patient => {
+        const records = doctorPatientHistories[patient.id] || [];
+        const row = document.createElement('article');
+        row.className = 'previous-patient-row';
+        const avatar = document.createElement('div');
+        avatar.className = 'previous-patient-avatar';
+        avatar.textContent = patient.initials;
+        const identity = document.createElement('div');
+        identity.className = 'previous-patient-identity';
+        const name = document.createElement('strong');
+        name.textContent = patient.fullName;
+        const meta = document.createElement('small');
+        meta.textContent = `${patient.id} · ${patient.age} years · ${patient.sex} · ${patient.language}`;
+        identity.append(name, meta);
+        const visit = document.createElement('div');
+        visit.className = 'previous-patient-visit';
+        const concern = document.createElement('strong');
+        concern.textContent = patient.concern;
+        const lastVisit = document.createElement('small');
+        lastVisit.textContent = records[0] ? `Last visit ${records[0].date} · ${records.length} records` : 'No medical records available';
+        visit.append(concern, lastVisit);
+        const open = document.createElement('button');
+        open.className = 'previous-patient-history-button';
+        open.type = 'button';
+        open.textContent = 'View history';
+        open.setAttribute('aria-label', `View ${patient.fullName}'s medical history`);
+        open.addEventListener('click', () => {
+          renderPreviousPatientHistory(patient);
+          navigateRoute('doctor/history');
+        });
+        row.append(avatar, identity, visit, open);
+        return row;
+      });
+      list.replaceChildren(...rows);
+      empty.classList.toggle('visible', rows.length === 0);
     }
 
     function renderDoctorPatientNavigator() {
@@ -4049,6 +4150,7 @@
       const concern = document.querySelector('.focus-summary .summary-block:first-of-type .clinical-bullets');
       if (concern) concern.innerHTML = `<li><strong>${current.concern}</strong></li><li>${current.meta}</li>`;
       renderPreviousPatientHistory(previous);
+      renderPreviousPatients();
     }
 
     function routeFromLocation() {
@@ -4220,7 +4322,7 @@
         return;
       }
 
-      const doctorMatch = route.match(/^doctor\/(current|history)$/);
+      const doctorMatch = route.match(/^doctor\/(current|previous|history)$/);
       if (doctorMatch) {
         showSession('doctor', 'doctor');
         openDoctorPanel(doctorMatch[1]);
@@ -4250,6 +4352,12 @@
     }
 
     document.querySelectorAll('[data-doctor-panel]').forEach(button => button.addEventListener('click', () => navigateRoute(`doctor/${button.dataset.doctorPanel}`)));
+    document.querySelector('[data-view-previous-history]')?.addEventListener('click', () => {
+      const previous = demoDoctorPatients[activeDoctorPatientIndex - 1];
+      renderPreviousPatientHistory(previous);
+      navigateRoute('doctor/history');
+    });
+    document.getElementById('previousPatientsSearch')?.addEventListener('input', renderPreviousPatients);
     const inlineHistory = document.querySelector('[data-inline-history]');
     const currentDoctorCard = document.querySelector('.doctor-focus');
     document.querySelectorAll('[data-open-inline-history]').forEach(button => button.addEventListener('click', () => {
