@@ -522,6 +522,9 @@
     .result-room { min-width: 118px; padding: 11px 14px; border-radius: 14px; background: #f2f7f5; text-align: center; }
     .result-room span { color: #688079; }
     .result-room strong { margin-top: 3px; font-size: 1rem; }
+    .result-summary { padding: 20px 22px; border: 1px solid #d7e4dd; border-radius: 18px; background: linear-gradient(145deg, #f5faf7, #edf5f1); }
+    .result-summary span { display: block; color: #56736a; font-size: .72rem; font-weight: 780; letter-spacing: .09em; text-transform: uppercase; }
+    .result-summary p { margin: 9px 0 0; color: #28483f; line-height: 1.65; white-space: pre-line; }
     .checkup-result-actions { display: flex; justify-content: flex-end; margin-top: 30px; }
     .checkup-result-done { min-height: 52px; padding: 0 25px; border: 0; border-radius: 15px; background: var(--ink); color: #fff; font: inherit; font-weight: 760; cursor: pointer; }
     .doctor-choice-step { min-height: calc(100dvh - 24px); display: grid; place-items: center; padding: 24px; }
@@ -529,6 +532,9 @@
     .doctor-choice-card { width: min(980px, 100%); padding: clamp(26px, 4vw, 44px); border: 1px solid rgba(16,43,39,.11); border-radius: 28px; background: rgba(255,255,255,.95); box-shadow: 0 28px 80px rgba(16,43,39,.12); }
     .doctor-choice-card h1 { margin: 5px 0 8px; font-size: clamp(2rem, 4vw, 3.2rem); }
     .doctor-choice-card > p { margin: 0 0 24px; color: var(--ink-soft); }
+    .doctor-choice-summary { margin: 0 0 24px; padding: 17px 19px; border: 1px solid #d8e5df; border-radius: 17px; background: #f4f9f6; }
+    .doctor-choice-summary span { display: block; color: #55746a; font-size: .7rem; font-weight: 780; letter-spacing: .09em; text-transform: uppercase; }
+    .doctor-choice-summary p { max-height: 170px; overflow-y: auto; margin: 8px 0 0; color: #29493f; line-height: 1.55; white-space: pre-line; }
     .specialty-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
     .specialty-option { position: relative; display: block; }
     .specialty-option input { position: absolute; opacity: 0; pointer-events: none; }
@@ -2169,6 +2175,10 @@
             <div class="eyebrow">Choose your care team</div>
             <h1 id="doctorChoiceTitle" tabindex="-1">Which specialist would you like to see?</h1>
             <p>Select a department. Arogyam will assign the available doctor with the shortest queue.</p>
+            <div class="doctor-choice-summary">
+              <span>AI intake summary</span>
+              <p id="doctorChoiceSummary">Complete the conversation to generate a summary.</p>
+            </div>
             <fieldset class="specialty-options" id="specialtyOptions" aria-label="Medical specialty"></fieldset>
             <p class="doctor-choice-status" id="doctorChoiceStatus" role="status" aria-live="polite"></p>
             <div class="doctor-choice-actions">
@@ -2191,6 +2201,10 @@
                 <div><span>Assigned doctor</span><strong id="checkupDoctorName">Assigning doctor…</strong></div>
                 <div class="result-doctor-badge" id="checkupDoctorSpecialty">Outpatient care</div>
                 <div class="result-room"><span>Room number</span><strong id="checkupDoctorRoom">Assigning…</strong></div>
+              </div>
+              <div class="result-summary">
+                <span>AI intake summary</span>
+                <p id="checkupIntakeSummary">Your conversation summary will appear here.</p>
               </div>
               <div class="checkup-result-actions"><button class="checkup-result-done" id="finishCheckupResult" type="button">Done</button></div>
             </div>
@@ -3795,6 +3809,8 @@
       languageStep.hidden = true;
       languageForm.reset();
       confirmLanguage.disabled = false;
+      const summary = document.getElementById('checkupIntakeSummary');
+      if (summary) summary.textContent = 'Your conversation summary will appear here.';
     }
 
     async function showCheckupResult() {
@@ -5015,17 +5031,23 @@
       Manipuri: 'mni-IN', Marathi: 'mr-IN', Nepali: 'ne-NP', Odia: 'or-IN', Punjabi: 'pa-IN', Sanskrit: 'sa-IN',
       Santali: 'sat-IN', Sindhi: 'sd-IN', Tamil: 'ta-IN', Telugu: 'te-IN', Urdu: 'ur-IN'
     };
-    function appendChatMessage(text, type, note) {
-      intakeTranscript.push({ role: type === 'ai' ? 'assistant' : 'patient', text: String(text).trim() });
+    function appendChatMessage(text, type, note = '') {
+      const cleanText = String(text || '').trim();
+      if (!cleanText) return false;
+      intakeTranscript.push({ role: type === 'ai' ? 'assistant' : 'patient', text: cleanText });
       const message = document.createElement('div');
       message.className = `voice-chat-message ${type}`;
       const body = document.createElement('p');
-      body.textContent = text;
-      const meta = document.createElement('small');
-      meta.textContent = note;
-      message.append(body, meta);
+      body.textContent = cleanText;
+      message.append(body);
+      if (note) {
+        const meta = document.createElement('small');
+        meta.textContent = note;
+        message.append(meta);
+      }
       voiceChatMessages.appendChild(message);
       voiceChatMessages.scrollTop = voiceChatMessages.scrollHeight;
+      return true;
     }
 
     const voiceTalkButton = document.getElementById('voiceTalkButton');
@@ -5039,6 +5061,8 @@
     const checkupDoctorName = document.getElementById('checkupDoctorName');
     const checkupDoctorSpecialty = document.getElementById('checkupDoctorSpecialty');
     const checkupDoctorRoom = document.getElementById('checkupDoctorRoom');
+    const checkupIntakeSummary = document.getElementById('checkupIntakeSummary');
+    const doctorChoiceSummary = document.getElementById('doctorChoiceSummary');
     let recognition = null;
     let voiceGeneration = 0;
     let replyPending = false;
@@ -5052,6 +5076,16 @@
     let hasPatientResponse = false;
     let currentCheckup = null;
     let checkupSummaryPoll = null;
+    let elevenSessionGeneration = 0;
+    let elevenSignedUrlCache = null;
+    let elevenSignedUrlPromise = null;
+    let elevenLastAudioChunkAt = 0;
+    let elevenLastAudibleOutputAt = 0;
+    let elevenOutputMonitor = null;
+    let agentAudioFallbackTimer = null;
+    let speechPlaybackRetryTimer = null;
+    let speechFallbackActive = false;
+    const seenElevenMessages = new Set();
 
     function setVoiceHint(text, error = false) {
       voiceInputStatus.textContent = text;
@@ -5067,10 +5101,13 @@
       voiceChatMessages.setAttribute('aria-busy', String(replyPending));
     }
 
-    function stopMicrophone() {
-      void stopElevenLabsSession();
+    async function stopMicrophone() {
+      const stopPromise = stopElevenLabsSession();
       voiceGeneration += 1;
       clearTimeout(voiceTimer);
+      clearTimeout(agentAudioFallbackTimer);
+      clearTimeout(speechPlaybackRetryTimer);
+      speechFallbackActive = false;
       const previous = recognition;
       recognition = null;
       if (previous) previous.abort();
@@ -5078,6 +5115,7 @@
       replyPending = false;
       syncVoiceControls();
       setVoiceHint('Tap Talk to start the live AI voice session.');
+      await stopPromise;
     }
 
     function setAgentOrbState(state = 'idle') {
@@ -5090,26 +5128,83 @@
 
     async function stopElevenLabsSession() {
       const session = elevenConversation;
+      elevenSessionGeneration += 1;
       elevenConversation = null;
+      elevenStartPromise = null;
       elevenConnecting = false;
       elevenTextOnly = false;
+      elevenLastAudioChunkAt = 0;
+      elevenLastAudibleOutputAt = 0;
+      clearTimeout(agentAudioFallbackTimer);
+      if (elevenOutputMonitor) clearInterval(elevenOutputMonitor);
+      elevenOutputMonitor = null;
       setAgentOrbState();
       if (!session) return;
       try { await session.endSession(); }
       catch (_) { /* Session may already be closed. */ }
     }
 
-    function handleElevenLabsMessage(payload) {
+    function normalizeTranscriptText(text) {
+      return String(text || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    }
+
+    function startElevenOutputMonitor(session, sessionGeneration) {
+      if (elevenOutputMonitor) clearInterval(elevenOutputMonitor);
+      elevenOutputMonitor = setInterval(() => {
+        if (sessionGeneration !== elevenSessionGeneration || session !== elevenConversation || !session?.isOpen?.()) {
+          clearInterval(elevenOutputMonitor);
+          elevenOutputMonitor = null;
+          return;
+        }
+        try {
+          if (Number(session.getOutputVolume?.() || 0) > .002) {
+            elevenLastAudibleOutputAt = Date.now();
+            clearTimeout(agentAudioFallbackTimer);
+            if (speechFallbackActive && 'speechSynthesis' in window) {
+              window.speechSynthesis.cancel();
+              speechFallbackActive = false;
+            }
+          }
+        } catch (_) { /* Output analysis is best-effort. */ }
+      }, 120);
+    }
+
+    function scheduleAgentAudioFallback(text, messageReceivedAt, sessionGeneration) {
+      clearTimeout(agentAudioFallbackTimer);
+      agentAudioFallbackTimer = setTimeout(() => {
+        if (sessionGeneration !== elevenSessionGeneration || routeFromLocation() !== 'patient/voice') return;
+        const audibleAroundReply = elevenLastAudibleOutputAt >= messageReceivedAt - 4000;
+        if (elevenTextOnly || !audibleAroundReply) {
+          speakAI(text, languageSelect.value, true);
+          setVoiceHint(elevenTextOnly ? 'Reply is playing through device audio.' : 'Voice playback restored through device audio.');
+        }
+      }, elevenTextOnly ? 80 : 2500);
+    }
+
+    function handleElevenLabsMessage(payload, sessionGeneration) {
+      if (sessionGeneration !== elevenSessionGeneration) return;
       const text = String(payload?.message || '').trim();
       if (!text) return;
       const isAgent = payload.role === 'agent' || payload.source === 'ai';
-      appendChatMessage(text, isAgent ? 'ai' : 'user', isAgent ? 'Arogyam · ElevenLabs' : 'You · voice');
+      const normalized = normalizeTranscriptText(text);
+      const role = isAgent ? 'assistant' : 'patient';
+      const eventKey = `${role}:${payload?.event_id ?? normalized}`;
+      const exactDuplicate = seenElevenMessages.has(eventKey)
+        || intakeTranscript.slice(-8).some(item => item.role === role && normalizeTranscriptText(item.text) === normalized);
+      const repeatedOpening = isAgent && !hasPatientResponse && intakeTranscript.some(item => item.role === 'assistant');
+      seenElevenMessages.add(eventKey);
       if (isAgent) {
         voiceQuestion.textContent = text;
         replyPending = false;
+        if (!exactDuplicate && !repeatedOpening) {
+          appendChatMessage(text, 'ai');
+          scheduleAgentAudioFallback(text, Date.now(), sessionGeneration);
+        }
       } else {
         hasPatientResponse = true;
         replyPending = true;
+        elevenLastAudibleOutputAt = 0;
+        if (!exactDuplicate) appendChatMessage(text, 'user', 'You · voice');
       }
       syncVoiceControls();
     }
@@ -5117,8 +5212,10 @@
     function startElevenLabsSession() {
       if (elevenConversation?.isOpen()) return Promise.resolve(elevenConversation);
       if (elevenStartPromise) return elevenStartPromise;
-      elevenStartPromise = connectElevenLabsSession().finally(() => { elevenStartPromise = null; });
-      return elevenStartPromise;
+      const startPromise = connectElevenLabsSession();
+      elevenStartPromise = startPromise;
+      void startPromise.finally(() => { if (elevenStartPromise === startPromise) elevenStartPromise = null; });
+      return startPromise;
     }
 
     async function ensureElevenLabsClient() {
@@ -5136,6 +5233,30 @@
       return Boolean(window.ElevenLabsClient?.Conversation);
     }
 
+    async function prefetchElevenLabsSignedUrl() {
+      if (elevenSignedUrlCache && elevenSignedUrlCache.expiresAt > Date.now() + 30_000) return elevenSignedUrlCache;
+      if (elevenSignedUrlPromise) return elevenSignedUrlPromise;
+      const request = (async () => {
+        const response = await fetch('/api/elevenlabs/signed-url', { cache: 'no-store' });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
+        elevenSignedUrlCache = {
+          signedUrl: payload.signedUrl,
+          expiresAt: Date.now() + Math.max(30, Number(payload.expiresIn || 900) - 30) * 1000
+        };
+        return elevenSignedUrlCache;
+      })();
+      elevenSignedUrlPromise = request;
+      try { return await request; }
+      finally { if (elevenSignedUrlPromise === request) elevenSignedUrlPromise = null; }
+    }
+
+    async function takeElevenLabsSignedUrl() {
+      const cached = await prefetchElevenLabsSignedUrl();
+      if (elevenSignedUrlCache === cached) elevenSignedUrlCache = null;
+      return cached.signedUrl;
+    }
+
     function isMicrophonePermissionError(error) {
       const name = String(error?.name || '');
       const message = String(error?.message || error || '');
@@ -5143,7 +5264,7 @@
         || /permission denied|not allowed|microphone.*denied/i.test(message);
     }
 
-    function elevenSessionOptions({ signedUrl, preferredLanguage, elevenLanguage, textOnly = false }) {
+    function elevenSessionOptions({ signedUrl, preferredLanguage, elevenLanguage, sessionGeneration, textOnly = false }) {
       return {
         signedUrl,
         connectionType: 'websocket',
@@ -5154,6 +5275,7 @@
         },
         dynamicVariables: { preferred_language: preferredLanguage },
         onConnect: () => {
+          if (sessionGeneration !== elevenSessionGeneration) return;
           elevenConnecting = false;
           elevenTextOnly = textOnly;
           setAgentOrbState(textOnly ? 'idle' : 'listening');
@@ -5162,31 +5284,42 @@
             : 'Connected — speak naturally. Tap the orb to stop.');
         },
         onModeChange: ({ mode }) => {
-          if (textOnly) return;
+          if (sessionGeneration !== elevenSessionGeneration || textOnly) return;
           setAgentOrbState(mode === 'speaking' ? 'speaking' : 'listening');
           setVoiceHint(mode === 'speaking' ? 'Arogyam is speaking…' : 'Listening…');
         },
-        onMessage: handleElevenLabsMessage,
+        onAudio: () => {
+          if (sessionGeneration === elevenSessionGeneration) elevenLastAudioChunkAt = Date.now();
+        },
+        onMessage: payload => handleElevenLabsMessage(payload, sessionGeneration),
         onError: message => {
+          if (sessionGeneration !== elevenSessionGeneration) return;
           const detail = String(message || 'Voice connection error.');
           console.error('ElevenLabs session error:', detail);
           setVoiceHint(detail, true);
         },
         onDisconnect: () => {
+          if (sessionGeneration !== elevenSessionGeneration) return;
           elevenConversation = null;
           elevenConnecting = false;
           elevenTextOnly = false;
           replyPending = false;
+          if (elevenOutputMonitor) clearInterval(elevenOutputMonitor);
+          elevenOutputMonitor = null;
           setAgentOrbState();
           syncVoiceControls();
         }
       };
     }
 
-    async function connectElevenLabsTextSession(signedUrl, preferredLanguage, elevenLanguage) {
+    async function connectElevenLabsTextSession(signedUrl, preferredLanguage, elevenLanguage, sessionGeneration) {
       const session = await window.ElevenLabsClient.Conversation.startSession(
-        elevenSessionOptions({ signedUrl, preferredLanguage, elevenLanguage, textOnly: true })
+        elevenSessionOptions({ signedUrl, preferredLanguage, elevenLanguage, sessionGeneration, textOnly: true })
       );
+      if (sessionGeneration !== elevenSessionGeneration) {
+        await session.endSession().catch(() => {});
+        return null;
+      }
       elevenConversation = session;
       elevenTextOnly = true;
       currentConversationId = session.getId();
@@ -5202,6 +5335,7 @@
         elevenConsentGranted = window.confirm('To start voice chat, your microphone audio and conversation transcript will be processed by ElevenLabs. Continue?');
         if (!elevenConsentGranted) return null;
       }
+      const sessionGeneration = ++elevenSessionGeneration;
       elevenConnecting = true;
       setAgentOrbState('connecting');
       setVoiceHint('Connecting to Arogyam voice…');
@@ -5211,18 +5345,23 @@
       let elevenLanguage = elevenLanguageCodes[preferredLanguage] || 'en';
       try {
         if (!await ensureElevenLabsClient()) throw new Error('The ElevenLabs voice client could not be loaded.');
-        const response = await fetch('/api/elevenlabs/signed-url', { cache: 'no-store' });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
-        signedUrl = payload.signedUrl;
+        signedUrl = await takeElevenLabsSignedUrl();
+        if (sessionGeneration !== elevenSessionGeneration) return null;
         const session = await window.ElevenLabsClient.Conversation.startSession(
-          elevenSessionOptions({ signedUrl, preferredLanguage, elevenLanguage })
+          elevenSessionOptions({ signedUrl, preferredLanguage, elevenLanguage, sessionGeneration })
         );
+        if (sessionGeneration !== elevenSessionGeneration) {
+          await session.endSession().catch(() => {});
+          return null;
+        }
         elevenConversation = session;
         currentConversationId = session.getId();
+        session.setVolume?.({ volume: 1 });
+        startElevenOutputMonitor(session, sessionGeneration);
         syncVoiceControls();
         return session;
       } catch (error) {
+        if (sessionGeneration !== elevenSessionGeneration) return null;
         elevenConnecting = false;
         setAgentOrbState();
         const message = error instanceof Error ? error.message : 'Could not connect to the voice agent.';
@@ -5230,7 +5369,7 @@
         if (isMicrophonePermissionError(error)) {
           try {
             if (!signedUrl) throw new Error('AI chat session could not be created.');
-            return await connectElevenLabsTextSession(signedUrl, preferredLanguage, elevenLanguage);
+            return await connectElevenLabsTextSession(signedUrl, preferredLanguage, elevenLanguage, sessionGeneration);
           } catch (fallbackError) {
             const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : 'AI chat is unavailable.';
             setVoiceHint(fallbackMessage, true);
@@ -5246,25 +5385,49 @@
       }
     }
 
-    function speakAI(text, language) {
-      if (!readRepliesAloud) return;
+    function speakAI(text, language, force = false, attempt = 0) {
+      if (!force && !readRepliesAloud) return;
       if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
         setVoiceHint('Audio playback is unavailable in this browser. Replies appear above.', true);
         return;
       }
-      window.speechSynthesis.cancel();
+      clearTimeout(speechPlaybackRetryTimer);
+      speechFallbackActive = force;
+      const synthesis = window.speechSynthesis;
+      synthesis.cancel();
+      synthesis.resume();
       const generation = voiceGeneration;
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = speechLanguageCodes[language] || 'en-IN';
       utterance.rate = .96;
-      utterance.onstart = () => { if (generation === voiceGeneration) setVoiceHint('Reading reply aloud…'); };
-      utterance.onend = () => { if (generation === voiceGeneration) setVoiceHint('Your turn — tap Talk or type a reply.'); };
+      const voices = synthesis.getVoices();
+      const languagePrefix = utterance.lang.toLowerCase().split('-')[0];
+      utterance.voice = voices.find(voice => voice.lang.toLowerCase() === utterance.lang.toLowerCase())
+        || voices.find(voice => voice.lang.toLowerCase().startsWith(languagePrefix))
+        || null;
+      let started = false;
+      utterance.onstart = () => {
+        started = true;
+        clearTimeout(speechPlaybackRetryTimer);
+        if (generation === voiceGeneration) setVoiceHint('Arogyam is speaking…');
+      };
+      utterance.onend = () => {
+        speechFallbackActive = false;
+        if (generation === voiceGeneration) setVoiceHint('Your turn — tap Talk or type a reply.');
+      };
       utterance.onerror = event => {
+        if (!['canceled', 'interrupted'].includes(event.error)) speechFallbackActive = false;
         if (generation === voiceGeneration && !['canceled', 'interrupted'].includes(event.error)) {
           setVoiceHint('Could not play audio. You can read the reply above.', true);
         }
       };
-      window.speechSynthesis.speak(utterance);
+      setTimeout(() => {
+        if (generation !== voiceGeneration) return;
+        synthesis.speak(utterance);
+        speechPlaybackRetryTimer = setTimeout(() => {
+          if (!started && generation === voiceGeneration && attempt < 1) speakAI(text, language, true, attempt + 1);
+        }, 900);
+      }, attempt ? 140 : 60);
     }
 
     async function prepareVoiceSession(language) {
@@ -5281,14 +5444,19 @@
       currentCheckup = null;
       pendingIntake = null;
       intakeTranscript = [];
+      doctorChoiceSummary.textContent = 'Complete the conversation to generate a summary.';
+      seenElevenMessages.clear();
+      elevenLastAudioChunkAt = 0;
+      elevenLastAudibleOutputAt = 0;
       if (checkupSummaryPoll) clearTimeout(checkupSummaryPoll);
       checkupSummaryPoll = null;
       setVoiceHint('Tap Talk to start the live AI voice session.');
       syncVoiceControls();
+      void prefetchElevenLabsSignedUrl().catch(() => {});
     }
 
     async function startVoiceSession(language) {
-      stopMicrophone();
+      await stopMicrophone();
       await prepareVoiceSession(language);
       // The patient explicitly starts microphone capture with Talk.
     }
@@ -5301,6 +5469,10 @@
         setVoiceHint('Live AI is not connected. Tap Talk and try again.', true);
         return;
       }
+      const normalized = normalizeTranscriptText(message);
+      const alreadyShown = intakeTranscript.slice(-8).some(item => item.role === 'patient' && normalizeTranscriptText(item.text) === normalized);
+      if (!alreadyShown) appendChatMessage(message, 'user', source === 'typed' ? 'You · typed' : 'You · voice');
+      elevenLastAudibleOutputAt = 0;
       session.sendUserMessage(message);
       hasPatientResponse = true;
       voiceChatInput.value = '';
@@ -5316,14 +5488,33 @@
       checkupDoctorName.textContent = checkup.doctor?.name || 'Doctor assignment pending';
       checkupDoctorSpecialty.textContent = checkup.doctor?.specialty || 'Outpatient care';
       checkupDoctorRoom.textContent = checkup.doctor?.roomNumber || 'Pending';
+      checkupIntakeSummary.textContent = checkup.summary || 'The intake was completed and shared with the assigned doctor.';
     }
 
     function buildIntakeSummary() {
-      const patientStatements = intakeTranscript.filter(item => item.role === 'patient').map(item => item.text).filter(Boolean);
-      const assistantStatements = intakeTranscript.filter(item => item.role === 'assistant').map(item => item.text).filter(Boolean);
-      const reported = patientStatements.slice(0, 8).join(' ');
-      const context = assistantStatements.length ? `The AI intake covered ${assistantStatements.length} clinical follow-up question${assistantStatements.length === 1 ? '' : 's'}.` : '';
-      return `${reported ? `Patient reported: ${reported}` : 'Patient completed the AI-guided intake.'} ${context}`.trim().slice(0, 6000);
+      const exchanges = [];
+      let currentQuestion = '';
+      for (const item of intakeTranscript) {
+        const text = String(item.text || '').trim();
+        if (!text) continue;
+        if (item.role === 'assistant') currentQuestion = text;
+        else if (item.role === 'patient') {
+          exchanges.push({ question: currentQuestion || 'What health concern brings you in today?', answer: text });
+          currentQuestion = '';
+        }
+      }
+      if (!exchanges.length) return 'Patient completed the AI-guided intake. No spoken or typed response was captured.';
+      const lines = [
+        `Main concern: ${exchanges[0].answer}`,
+        `Questions answered: ${exchanges.length}`,
+        '',
+        'Conversation summary:'
+      ];
+      exchanges.slice(0, 10).forEach((exchange, index) => {
+        lines.push(`${index + 1}. Asked: ${exchange.question}`);
+        lines.push(`   Patient answered: ${exchange.answer}`);
+      });
+      return lines.join('\n').slice(0, 6000);
     }
 
     async function loadDoctorSpecialties() {
@@ -5408,7 +5599,9 @@
       endVoiceSessionButton.disabled = true;
       setVoiceHint('Finishing your check-up…');
       await stopElevenLabsSession();
-      pendingIntake = { conversationId, language: languageSelect.value, summary: buildIntakeSummary() };
+      const summary = buildIntakeSummary();
+      doctorChoiceSummary.textContent = summary;
+      pendingIntake = { conversationId, language: languageSelect.value, summary };
       navigateRoute('patient/specialty');
       void loadDoctorSpecialties();
       endVoiceSessionButton.disabled = false;
