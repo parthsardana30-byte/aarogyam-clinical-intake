@@ -2355,7 +2355,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"><strong id="toastTitle"></strong><small id="toastText"></small></div>
 
-  <script src="/vendor/elevenlabs-client.js"></script>
+  <script src="/vendor/elevenlabs-client.js?v=1.1.0"></script>
   <script>
     const loginScreen = document.getElementById('loginScreen');
     const rolePicker = document.getElementById('rolePicker');
@@ -5086,6 +5086,21 @@
       return elevenStartPromise;
     }
 
+    async function ensureElevenLabsClient() {
+      if (window.ElevenLabsClient?.Conversation) return true;
+      const staleScript = document.querySelector('script[src*="/vendor/elevenlabs-client.js"]');
+      if (staleScript) staleScript.remove();
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = `/vendor/elevenlabs-client.js?v=1.1.0-${Date.now()}`;
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('The ElevenLabs voice client could not be loaded.'));
+        document.head.appendChild(script);
+      });
+      return Boolean(window.ElevenLabsClient?.Conversation);
+    }
+
     function createDemoVoiceSession() {
       let open = true;
       const id = `conv_demo${Date.now()}`;
@@ -5121,15 +5136,12 @@
         elevenConsentGranted = window.confirm('To start voice chat, your microphone audio and conversation transcript will be processed by ElevenLabs. Continue?');
         if (!elevenConsentGranted) return null;
       }
-      if (!window.ElevenLabsClient?.Conversation) {
-        showToast('Voice agent unavailable', 'The voice client could not be loaded. Please refresh and try again.');
-        return null;
-      }
       elevenConnecting = true;
       setAgentOrbState('connecting');
       setVoiceHint('Connecting to Arogyam voice…');
       syncVoiceControls();
       try {
+        if (!await ensureElevenLabsClient()) throw new Error('The ElevenLabs voice client could not be loaded.');
         const response = await fetch('/api/elevenlabs/signed-url', { cache: 'no-store' });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
