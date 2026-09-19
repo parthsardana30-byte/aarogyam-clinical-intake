@@ -160,6 +160,7 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
     method: 'POST', body: JSON.stringify({
       staffId: 'STAFF-A', patientId: patient.id, patientName: patient.fullName,
       intakeId: secondA.payload.intake.id,
+      documentCategory: 'lab',
       documentSessionId: documentSession.payload.id, documentSessionToken: documentSession.payload.token,
     }),
   });
@@ -224,8 +225,16 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
     headers: { Authorization: `Bearer ${patientLogin.payload.sessionToken}` },
   });
   assert.equal(dashboard.response.status, 200);
+  assert.equal(dashboard.payload.summary.consultationCount, 3);
+  assert.equal(dashboard.payload.visits.length, 3);
+  const ahmedabadVisit = dashboard.payload.visits.find(item => item.id === secondA.payload.intake.id);
+  assert.equal(ahmedabadVisit.vitals.heartRate, 78);
+  assert.equal(ahmedabadVisit.doctor.name, 'Dr. Aarav Mehta');
+  assert.equal(ahmedabadVisit.documents.some(item => item.category === 'lab'), true);
+  assert.equal(dashboard.payload.accessHistory.some(item => item.doctor?.id === 'CHA-GEN-1001'), true);
   const prescriptionDocument = dashboard.payload.documents.find(item => item.name.includes(prescription.payload.prescriptionId));
   assert.equal(prescriptionDocument.type, 'application/pdf');
+  assert.equal(prescriptionDocument.category, 'prescription');
   const pdf = await fetch(`${origin}${prescriptionDocument.previewUrl}`, {
     headers: { Authorization: `Bearer ${patientLogin.payload.sessionToken}` },
   });

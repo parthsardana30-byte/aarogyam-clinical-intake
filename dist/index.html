@@ -1206,8 +1206,9 @@
     .device-scan-status { min-height: 20px; margin: 0 0 12px; color: var(--ink-soft); font-size: .82rem; text-align: center; }
     .device-start-scan { width: 100%; min-height: 47px; border: 1px solid var(--line-strong); border-radius: 13px; background: #fff; color: var(--ink); font: inherit; font-weight: 760; cursor: pointer; }
     .device-field { display: grid; gap: 7px; margin-bottom: 15px; color: #49635d; font-size: .82rem; font-weight: 750; }
-    .device-field input { min-height: 49px; padding: 11px 13px; border: 1px solid var(--line-strong); border-radius: 13px; background: #f8faf9; color: var(--ink); font: inherit; }
-    .device-field input:focus { outline: 3px solid rgba(14,102,85,.13); border-color: var(--teal); }
+    .device-field input, .device-field select { min-height: 49px; padding: 11px 13px; border: 1px solid var(--line-strong); border-radius: 13px; background: #f8faf9; color: var(--ink); font: inherit; }
+    .device-field select { cursor: pointer; }
+    .device-field input:focus, .device-field select:focus { outline: 3px solid rgba(14,102,85,.13); border-color: var(--teal); }
     .device-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
     .device-dialog-actions button { min-height: 44px; border-radius: 12px; padding: 0 16px; font: inherit; font-weight: 750; cursor: pointer; }
     .device-cancel { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
@@ -1737,6 +1738,21 @@
     .record-files { display: grid; gap: 8px; }
     .record-file { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; background: #f8faf9; color: var(--ink); font-weight: 700; }
     .record-file small { color: #70837f; font-weight: 500; }
+    .record-vitals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .record-vital { padding: 10px 11px; border: 1px solid #cfe0da; border-radius: 12px; background: #f2f8f5; }
+    .record-vital span, .record-vital strong { display: block; }
+    .record-vital span { color: #668078; font-size: .68rem; font-weight: 780; text-transform: uppercase; letter-spacing: .05em; }
+    .record-vital strong { margin-top: 4px; font-size: .88rem; }
+    .patient-access-history { animation: appear .24s ease-out; }
+    .access-history-list { position: relative; display: grid; gap: 12px; margin-top: 18px; }
+    .access-history-list::before { content: ""; position: absolute; left: 26px; top: 24px; bottom: 24px; width: 2px; background: #cfe1db; }
+    .access-history-item { position: relative; display: grid; grid-template-columns: 54px minmax(0,1fr) auto; gap: 15px; align-items: center; padding: 18px 20px; border: 1px solid rgba(16,43,39,.1); border-radius: 18px; background: rgba(255,255,255,.86); box-shadow: 0 12px 34px rgba(16,43,39,.05); }
+    .access-history-mark { z-index: 1; width: 14px; height: 14px; justify-self: center; border: 4px solid #edf6f2; border-radius: 50%; background: var(--teal); box-sizing: content-box; }
+    .access-history-copy strong, .access-history-copy span, .access-history-copy small { display: block; }
+    .access-history-copy span { margin-top: 4px; color: #5e756f; }
+    .access-history-copy small { margin-top: 6px; color: #718681; }
+    .access-history-uhid { padding: 7px 10px; border-radius: 999px; background: var(--mint); color: var(--teal); font-size: .75rem; font-weight: 800; white-space: nowrap; }
+    .access-history-empty { padding: 36px; border: 1px dashed var(--line-strong); border-radius: 18px; background: rgba(255,255,255,.55); color: #667b76; text-align: center; }
     @media (max-width: 1080px) {
       .intake-grid, .portal-main .intake-grid { grid-template-columns: 230px 1fr; }
       .side-stack { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
@@ -1774,6 +1790,9 @@
       .login-form-area { padding: 30px 22px 22px; }
       .login-form-header { grid-template-columns: 44px 1fr 44px; gap: 10px; margin-bottom: 22px; }
       .login-form-brand .brand-mark { width: 42px; height: 42px; }
+      .record-vitals { grid-template-columns: 1fr; }
+      .access-history-item { grid-template-columns: 36px minmax(0,1fr); }
+      .access-history-uhid { grid-column: 2; justify-self: start; }
       .login-form-brand .brand-name { font-size: 1.35rem; }
       .back-button { width: 44px; height: 44px; border-radius: 14px; }
       .registration-grid, .condition-options { grid-template-columns: 1fr; }
@@ -2109,7 +2128,7 @@
       </a>
       <nav class="patient-top-tabs" aria-label="Patient pages" role="tablist">
         <button class="patient-top-tab" type="button" role="tab" data-patient-route="records" aria-selected="true">My records</button>
-        <button class="patient-top-tab" type="button" role="tab" aria-selected="false" data-toast="Access and consent|Your record access preferences are available here.">Access &amp; consent</button>
+        <button class="patient-top-tab" type="button" role="tab" data-patient-route="access-history" aria-selected="false">Access history</button>
       </nav>
       <nav class="doctor-top-tabs" aria-label="Doctor pages" role="tablist">
         <label class="doctor-patient-searchbar">
@@ -2359,48 +2378,38 @@
             <div><h1 id="patientRecordsTitle" tabindex="-1">My records</h1></div>
           </div>
           <div class="records-summary" aria-label="Record summary">
-            <article class="records-summary-card"><span>Consultations</span><strong>3 visits</strong></article>
-            <article class="records-summary-card"><span>Documents</span><strong>4 files</strong></article>
-            <article class="records-summary-card"><span>Next follow-up</span><strong>21 Sep</strong></article>
+            <article class="records-summary-card"><span>Consultations</span><strong>0 visits</strong></article>
+            <article class="records-summary-card"><span>Documents</span><strong>0 files</strong></article>
+            <article class="records-summary-card"><span>Hospitals visited</span><strong>0 hospitals</strong></article>
           </div>
           <div class="records-toolbar">
             <input class="records-search" id="patientRecordSearch" type="search" maxlength="120" placeholder="Search visits, doctors or concerns" aria-label="Search patient records">
             <select class="records-filter" id="patientRecordFilter" aria-label="Filter patient records">
               <option value="all">All records</option>
               <option value="visit">Consultations</option>
-              <option value="document">Documents</option>
+              <option value="lab">Lab reports</option>
+              <option value="prescription">Prescriptions</option>
             </select>
           </div>
           <div class="patient-records-layout">
             <div class="patient-record-list" id="patientRecordList" aria-label="Patient record list">
-              <button class="patient-record-item" type="button" data-record-id="digestive" data-record-type="visit" aria-selected="true">
-                <span class="record-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M10 13h5M10 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-                <span class="record-copy"><strong>Digestive discomfort</strong><small>Dr. Aarav Mehta · 02 May 2026</small></span><span class="record-status follow-up">Follow-up due</span>
-              </button>
-              <button class="patient-record-item" type="button" data-record-id="joints" data-record-type="visit" aria-selected="false">
-                <span class="record-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                <span class="record-copy"><strong>Joint stiffness review</strong><small>Dr. Nisha Rao · 12 Jan 2026</small></span><span class="record-status">Completed</span>
-              </button>
-              <button class="patient-record-item" type="button" data-record-id="annual" data-record-type="visit" aria-selected="false">
-                <span class="record-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 2.7 8.1 7 10 4.3-1.9 7-5.5 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                <span class="record-copy"><strong>Annual health review</strong><small>Dr. Aarav Mehta · 04 Sep 2025</small></span><span class="record-status">Completed</span>
-              </button>
-              <button class="patient-record-item" type="button" data-record-id="prescription" data-record-type="document" aria-selected="false">
-                <span class="record-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18H6V3Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-                <span class="record-copy"><strong>Prescription upload</strong><small>Added 14 Jun 2026 · PDF</small></span><span class="record-status">Document</span>
-              </button>
-              <div class="records-empty" id="patientRecordsEmpty" hidden>No matching records found.</div>
+              <div class="records-empty" id="patientRecordsEmpty">No medical records are available yet.</div>
             </div>
             <aside class="card record-detail" id="patientRecordDetail" aria-live="polite">
-              <div class="record-detail-top"><span id="recordDetailMeta">02 May 2026 · Consultation</span><h2 id="recordDetailTitle">Digestive discomfort</h2></div>
+              <div class="record-detail-top"><span id="recordDetailMeta">Patient record</span><h2 id="recordDetailTitle">Select a record</h2></div>
               <div class="record-detail-body">
-                <div class="record-detail-row"><span>Clinician</span><p id="recordDetailDoctor">Dr. Aarav Mehta · General Surgeon</p></div>
-                <div class="record-detail-row"><span>Visit summary</span><p id="recordDetailSummary">Abdominal heaviness and reduced appetite for 2–3 days, especially after meals.</p></div>
-                <div class="record-detail-row"><span>Care plan</span><p id="recordDetailPlan">Light meals, regular hydration and a follow-up consultation if symptoms continue.</p></div>
-                <div class="record-detail-row"><span>Documents</span><div class="record-files" id="recordDetailFiles"><div class="record-file"><span>Visit summary</span><small>PDF</small></div><div class="record-file"><span>Prescription</span><small>PDF</small></div></div></div>
+                <div class="record-detail-row"><span>Clinician</span><p id="recordDetailDoctor">Not recorded</p></div>
+                <div class="record-detail-row"><span>Visit summary</span><p id="recordDetailSummary">Choose a consultation, lab report or prescription.</p></div>
+                <div class="record-detail-row"><span>Visit details</span><p id="recordDetailPlan">Your hospital and encounter information will appear here.</p></div>
+                <div class="record-detail-row" id="recordDetailVitalsRow" hidden><span>Vitals</span><div class="record-vitals" id="recordDetailVitals"></div></div>
+                <div class="record-detail-row"><span>Documents</span><div class="record-files" id="recordDetailFiles"></div></div>
               </div>
             </aside>
           </div>
+        </section>
+        <section class="patient-access-history" id="patientAccessHistory" aria-labelledby="patientAccessHistoryTitle" hidden>
+          <div class="records-heading"><div><h1 id="patientAccessHistoryTitle" tabindex="-1">Access history</h1><p>Your hospital visits and the clinicians who assessed you.</p></div></div>
+          <div class="access-history-list" id="patientAccessHistoryList"><div class="access-history-empty">No hospital visits are available yet.</div></div>
         </section>
           </div>
         </div>
@@ -2529,6 +2538,13 @@
           <div class="document-qr-copy"><strong>Scan to upload from phone</strong><small>Uploaded files will appear here automatically. This link expires after 30 minutes.</small></div>
         </div>
       </div>
+      <label class="device-field">Document type
+        <select id="staffDocumentCategory" required>
+          <option value="other">Other medical document</option>
+          <option value="lab">Lab report</option>
+          <option value="prescription">Prescription</option>
+        </select>
+      </label>
       <div class="document-file-list" id="staffDocumentList" aria-live="polite"></div>
       <p class="document-upload-status" id="staffDocumentStatus" role="status" aria-live="polite"></p>
       <div class="device-dialog-actions">
@@ -3581,6 +3597,7 @@
             patientId: staffDocumentPatient.id,
             patientName: staffDocumentPatient.name,
             intakeId: staffDocumentPatient.intakeId,
+            documentCategory: document.getElementById('staffDocumentCategory').value,
             documentSessionId: staffDocumentSession.id,
             documentSessionToken: staffDocumentSession.token
           })
@@ -3722,6 +3739,7 @@
     const doctorChoiceStep = document.getElementById('doctorChoiceStep');
     const doctorChoiceStatus = document.getElementById('doctorChoiceStatus');
     const patientRecords = document.getElementById('patientRecords');
+    const patientAccessHistory = document.getElementById('patientAccessHistory');
     const checkupWelcome = document.getElementById('checkupWelcome');
     const languageStep = document.getElementById('languageStep');
     const languageForm = document.getElementById('languageForm');
@@ -3793,7 +3811,7 @@
       Malayalam: 'ml', Marathi: 'mr', Nepali: 'ne', Punjabi: 'pa', Sindhi: 'sd', Tamil: 'ta',
       Telugu: 'te', Urdu: 'ur'
     };
-    const globalUiKeys = ['Settings', 'Language', 'Log out', 'Patient queue', 'Patient history', 'Documents', 'Start check-up', 'My records', 'Access & consent', 'Current patient', 'Initiate check-up', 'Choose your language', 'Back', 'Continue', 'Recent visits', 'Open record', 'End check-up', 'Live chat', 'Send'];
+    const globalUiKeys = ['Settings', 'Language', 'Log out', 'Patient queue', 'Patient history', 'Documents', 'Start check-up', 'My records', 'Access history', 'Current patient', 'Initiate check-up', 'Choose your language', 'Back', 'Continue', 'Recent visits', 'Open record', 'End check-up', 'Live chat', 'Send'];
     const globalUiPacks = {
       Assamese: ['ছেটিংছ', 'ভাষা', 'লগ আউট', 'ৰোগীৰ শাৰী', 'ৰোগীৰ ইতিহাস', 'নথিপত্ৰ', 'চেক-আপ আৰম্ভ কৰক', 'মোৰ ৰেকৰ্ড', 'প্ৰৱেশ আৰু সন্মতি', 'বৰ্তমান ৰোগী', 'চেক-আপ আৰম্ভ কৰক', 'আপোনাৰ ভাষা বাছনি কৰক', 'পিছলৈ', 'আগবাঢ়ক', 'শেহতীয়া ভিজিট', 'ৰেকৰ্ড খোলক', 'চেক-আপ শেষ কৰক', 'লাইভ চেট', 'পঠিয়াওক'],
       Bengali: ['সেটিংস', 'ভাষা', 'লগ আউট', 'রোগীর সারি', 'রোগীর ইতিহাস', 'নথি', 'চেক-আপ শুরু করুন', 'আমার রেকর্ড', 'অ্যাক্সেস ও সম্মতি', 'বর্তমান রোগী', 'চেক-আপ শুরু করুন', 'আপনার ভাষা বেছে নিন', 'পিছনে', 'চালিয়ে যান', 'সাম্প্রতিক ভিজিট', 'রেকর্ড খুলুন', 'চেক-আপ শেষ করুন', 'লাইভ চ্যাট', 'পাঠান'],
@@ -3927,7 +3945,7 @@
       ['#voiceStatus', 'patient.voice.ready'], ['#voiceQuestion', 'patient.voice.question'], ['#autoMicText', 'patient.voice.connecting'], ['#endVoiceSession', 'patient.voice.end'],
       ['.voice-chat-send-label', 'common.send'],
       ['#patientRecordsTitle', 'records.title'], ['#patientRecords .records-heading p', 'records.subtitle'], ['#patientRecords .records-summary-card:nth-child(1) span', 'records.consultations'], ['#patientRecords .records-summary-card:nth-child(2) span', 'records.documents'], ['#patientRecords .records-summary-card:nth-child(3) span', 'records.followup'],
-      ['#patientRecordFilter option[value="all"]', 'records.filter.all'], ['#patientRecordFilter option[value="visit"]', 'records.filter.visits'], ['#patientRecordFilter option[value="document"]', 'records.filter.documents'], ['#patientRecordsEmpty', 'records.empty'],
+      ['#patientRecordFilter option[value="all"]', 'records.filter.all'], ['#patientRecordFilter option[value="visit"]', 'records.filter.visits'], ['#patientRecordFilter option[value="lab"]', 'records.filter.labs'], ['#patientRecordFilter option[value="prescription"]', 'records.filter.prescriptions'], ['#patientRecordsEmpty', 'records.empty'],
       ['#patientRecords .record-detail-row:nth-child(1) > span', 'records.clinician'], ['#patientRecords .record-detail-row:nth-child(2) > span', 'records.summary'], ['#patientRecords .record-detail-row:nth-child(3) > span', 'records.plan'],
       ['.doctor-top-tabs .doctor-top-tab:nth-child(1)', 'doctor.nav.records'],
       ['#doctor .summary-section:nth-child(1) h3', 'doctor.chiefConcern'], ['#doctor .summary-section:nth-child(2) h3', 'doctor.context'], ['#doctor .summary-section:nth-child(3) h3', 'doctor.ayurvedic'], ['#doctor .summary-section:nth-child(4) h3', 'doctor.flags'],
@@ -4104,6 +4122,7 @@
       checkupFlow.hidden = !isVoice;
       doctorChoiceStep.hidden = !isIntakeSummary;
       patientRecords.hidden = true;
+      patientAccessHistory.hidden = true;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'start')));
       checkupWelcome.hidden = !isStart;
       languageStep.hidden = !isLanguage;
@@ -4125,9 +4144,24 @@
       checkupFlow.hidden = true;
       doctorChoiceStep.hidden = true;
       patientRecords.hidden = false;
+      patientAccessHistory.hidden = true;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'records')));
       void loadPatientRecordDocuments();
       if (focus) document.getElementById('patientRecordsTitle').focus({ preventScroll: true });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showPatientAccessHistory(focus = false) {
+      clearTimeout(voiceTimer);
+      stopMicrophone();
+      checkupLaunch.hidden = true;
+      checkupFlow.hidden = true;
+      doctorChoiceStep.hidden = true;
+      patientRecords.hidden = true;
+      patientAccessHistory.hidden = false;
+      patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'access-history')));
+      void loadPatientRecordDocuments();
+      if (focus) document.getElementById('patientAccessHistoryTitle').focus({ preventScroll: true });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -4895,7 +4929,7 @@
         if (blockedRoleRoute || protectedPatientRoute) {
           route = protectedPatientRoute ? 'login/device-patient' : 'roles';
           history.replaceState({ route }, '', `#/${route}`);
-        } else if (patientLoggedInThisSession && /^patient\/(?:start|records)$/.test(route)) {
+        } else if (patientLoggedInThisSession && /^patient\/(?:start|records|access-history)$/.test(route)) {
           route = 'patient/language';
           history.replaceState({ route }, '', '#/patient/language');
         }
@@ -4907,7 +4941,7 @@
         } else if (/^patient\/(?:language|voice|intake-summary|specialty|summary)$/.test(route)) {
           route = patientLoggedInThisSession ? 'patient/start' : 'login/patient';
           history.replaceState({ route }, '', `#/${route}`);
-        } else if (!patientLoggedInThisSession && /^patient\/(?:start|records)$/.test(route)) {
+        } else if (!patientLoggedInThisSession && /^patient\/(?:start|records|access-history)$/.test(route)) {
           route = 'login/patient';
           history.replaceState({ route }, '', '#/login/patient');
         }
@@ -4947,7 +4981,7 @@
         return;
       }
 
-      const patientMatch = route.match(/^patient\/(start|language|voice|intake-summary|records)$/);
+      const patientMatch = route.match(/^patient\/(start|language|voice|intake-summary|records|access-history)$/);
       if (patientMatch) {
         showSession('patient', 'patient');
         const isVoiceRoute = patientMatch[1] === 'voice';
@@ -4956,6 +4990,7 @@
         appShell.classList.toggle('voice-mode', isVoiceRoute);
         appShell.classList.toggle('checkup-active', isCheckupActive);
         if (patientMatch[1] === 'records') showPatientRecords(focus);
+        else if (patientMatch[1] === 'access-history') showPatientAccessHistory(focus);
         else setCheckupStage(patientMatch[1], focus);
         return;
       }
@@ -5250,21 +5285,31 @@
       }
     });
 
-    const patientRecordData = {
-      digestive: { meta: '02 May 2026 · Consultation', title: 'Digestive discomfort', doctor: 'Dr. Aarav Mehta · General Surgeon', summary: 'Abdominal heaviness and reduced appetite for 2–3 days, especially after meals.', plan: 'Light meals, regular hydration and a follow-up consultation if symptoms continue.', files: [['Visit summary', 'PDF'], ['Prescription', 'PDF']] },
-      joints: { meta: '12 Jan 2026 · Consultation', title: 'Joint stiffness review', doctor: 'Dr. Nisha Rao · AYUSH Physician', summary: 'Morning stiffness in both knees with improvement after gentle movement.', plan: 'Continue the prescribed mobility routine and review again if swelling or pain increases.', files: [['Consultation note', 'PDF']] },
-      annual: { meta: '04 Sep 2025 · Health review', title: 'Annual health review', doctor: 'Dr. Aarav Mehta · General Surgeon', summary: 'Routine preventive review with no new symptoms or urgent concerns reported.', plan: 'Maintain current diet and activity routine. Repeat preventive review after twelve months.', files: [['Health review', 'PDF']] },
-      prescription: { meta: '14 Jun 2026 · Document', title: 'Prescription upload', doctor: 'Uploaded by Ananya Sharma', summary: 'A prescription shared with the care team for medication reconciliation.', plan: 'This document is available to the treating clinician during the next consultation.', files: [['Prescription · 14 Jun 2026', 'PDF']] }
-    };
-    const patientRecordItems = [...document.querySelectorAll('.patient-record-item')];
+    const patientRecordData = {};
+    let patientRecordItems = [];
     const patientRecordSearch = document.getElementById('patientRecordSearch');
     const patientRecordFilter = document.getElementById('patientRecordFilter');
     const patientRecordsEmpty = document.getElementById('patientRecordsEmpty');
+    const patientDate = value => new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(value));
 
     function bindPatientRecordItem(item) {
       if (item.dataset.bound === 'true') return;
       item.dataset.bound = 'true';
       item.addEventListener('click', () => selectPatientRecord(item.dataset.recordId));
+    }
+
+    function createPatientRecordItem(id, type, title, subtitle, status) {
+      const item = document.createElement('button');
+      item.className = 'patient-record-item'; item.type = 'button';
+      item.dataset.recordId = id; item.dataset.recordType = type; item.setAttribute('aria-selected', 'false');
+      const icon = document.createElement('span'); icon.className = 'record-icon';
+      icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18H6V3Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+      const copy = document.createElement('span'); copy.className = 'record-copy';
+      const strong = document.createElement('strong'); strong.textContent = title;
+      const small = document.createElement('small'); small.textContent = subtitle;
+      const badge = document.createElement('span'); badge.className = 'record-status'; badge.textContent = status;
+      copy.append(strong, small); item.append(icon, copy, badge); bindPatientRecordItem(item);
+      return item;
     }
 
     async function openPatientDocument(record) {
@@ -5274,6 +5319,27 @@
       const url = URL.createObjectURL(await response.blob());
       window.open(url, '_blank', 'noopener');
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    }
+
+    function renderPatientAccessHistory(history = []) {
+      const list = document.getElementById('patientAccessHistoryList');
+      list.replaceChildren();
+      if (!history.length) {
+        const empty = document.createElement('div'); empty.className = 'access-history-empty';
+        empty.textContent = 'No hospital visits are available yet.'; list.append(empty); return;
+      }
+      history.forEach(visit => {
+        const item = document.createElement('article'); item.className = 'access-history-item';
+        const mark = document.createElement('span'); mark.className = 'access-history-mark'; mark.setAttribute('aria-hidden', 'true');
+        const copy = document.createElement('div'); copy.className = 'access-history-copy';
+        const hospital = document.createElement('strong'); hospital.textContent = visit.hospitalName;
+        const clinician = document.createElement('span');
+        clinician.textContent = visit.doctor ? `Assessed by ${visit.doctor.name} · ${visit.doctor.specialty}` : 'Doctor assessment not recorded yet';
+        const meta = document.createElement('small');
+        meta.textContent = `${patientDate(visit.visitedAt)} · ${visit.hospitalLocation || 'Location not recorded'} · ${visit.encounterNumber || 'Encounter pending'}`;
+        const uhid = document.createElement('span'); uhid.className = 'access-history-uhid'; uhid.textContent = `UHID ${visit.uhid || 'Pending'}`;
+        copy.append(hospital, clinician, meta); item.append(mark, copy, uhid); list.append(item);
+      });
     }
 
     async function loadPatientRecordDocuments() {
@@ -5287,28 +5353,46 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Could not load patient records');
         const list = document.getElementById('patientRecordList');
+        list.replaceChildren(patientRecordsEmpty);
+        patientRecordItems = [];
+        Object.keys(patientRecordData).forEach(key => delete patientRecordData[key]);
+        const visitsById = new Map((data.visits || []).map(visit => [visit.id, visit]));
+        for (const visit of data.visits || []) {
+          const id = `visit-${visit.id}`;
+          patientRecordData[id] = {
+            meta: `${patientDate(visit.createdAt)} · Consultation`, title: visit.encounterNumber || 'Hospital consultation',
+            doctor: visit.doctor ? `${visit.doctor.name} · ${visit.doctor.specialty}` : 'Doctor assessment not recorded yet',
+            summary: visit.summary || 'No consultation summary was recorded.',
+            plan: `${visit.hospitalName}${visit.hospitalLocation ? `, ${visit.hospitalLocation}` : ''} · UHID ${visit.uhid || 'Pending'}`,
+            files: visit.documents || [], vitals: visit.vitals
+          };
+          const item = createPatientRecordItem(id, 'visit', visit.encounterNumber || 'Hospital consultation', `${visit.hospitalName} · ${patientDate(visit.createdAt)}`, 'Consultation');
+          list.insertBefore(item, patientRecordsEmpty); patientRecordItems.push(item);
+        }
         for (const documentRecord of data.documents || []) {
           const id = `document-${documentRecord.id}`;
+          const visit = visitsById.get(documentRecord.intakeId);
+          const category = documentRecord.category || 'other';
+          const categoryLabel = category === 'prescription' ? 'Prescription' : category === 'lab' ? 'Lab report' : 'Document';
           patientRecordData[id] = {
-            meta: `${new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(documentRecord.createdAt))} · Document`,
+            meta: `${patientDate(documentRecord.createdAt)} · ${categoryLabel}`,
             title: documentRecord.name,
-            doctor: documentRecord.name.startsWith('Prescription RX-') ? 'Prescription issued by your treating doctor' : 'Uploaded to your secure patient record',
-            summary: documentRecord.name.startsWith('Prescription RX-') ? 'This prescription includes your clinician’s instructions, medicines and follow-up plan.' : 'This health document is available to you and your care team.',
-            plan: 'Open the PDF to review the complete authenticated document.',
-            files: [[documentRecord.name, documentRecord.type.includes('pdf') ? 'PDF' : 'Document']],
-            previewUrl: documentRecord.previewUrl
+            doctor: visit?.doctor ? `${visit.doctor.name} · ${visit.doctor.specialty}` : 'Uploaded to your secure patient record',
+            summary: category === 'prescription' ? 'Prescription issued for this hospital encounter.' : category === 'lab' ? 'Lab report uploaded to this hospital encounter.' : 'Medical document uploaded to your patient record.',
+            plan: visit ? `${visit.hospitalName} · ${visit.encounterNumber || 'Hospital encounter'}` : 'Open the file to review the complete document.',
+            files: [documentRecord], vitals: null
           };
-          if (patientRecordItems.some(item => item.dataset.recordId === id)) continue;
-          const item = document.createElement('button'); item.className = 'patient-record-item'; item.type = 'button';
-          item.dataset.recordId = id; item.dataset.recordType = 'document'; item.setAttribute('aria-selected', 'false');
-          item.innerHTML = `<span class="record-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18H6V3Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="record-copy"><strong></strong><small></small></span><span class="record-status">Document</span>`;
-          item.querySelector('strong').textContent = documentRecord.name;
-          item.querySelector('small').textContent = `Added ${new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(documentRecord.createdAt))} · PDF`;
-          list.insertBefore(item, patientRecordsEmpty); patientRecordItems.push(item); bindPatientRecordItem(item);
+          const item = createPatientRecordItem(id, category, documentRecord.name, `Added ${patientDate(documentRecord.createdAt)} · ${documentRecord.type.includes('pdf') ? 'PDF' : 'File'}`, categoryLabel);
+          list.insertBefore(item, patientRecordsEmpty); patientRecordItems.push(item);
         }
         const summaryCards = document.querySelectorAll('#patientRecords .records-summary-card strong');
         if (summaryCards[0]) summaryCards[0].textContent = `${data.summary?.consultationCount || 0} visits`;
         if (summaryCards[1]) summaryCards[1].textContent = `${data.summary?.documentCount || 0} files`;
+        if (summaryCards[2]) {
+          const hospitalCount = new Set((data.accessHistory || []).map(visit => visit.hospitalId).filter(Boolean)).size;
+          summaryCards[2].textContent = `${hospitalCount} hospital${hospitalCount === 1 ? '' : 's'}`;
+        }
+        renderPatientAccessHistory(data.accessHistory || []);
         filterPatientRecords();
       } catch (error) { showToast('Records unavailable', error.message || 'Could not load your records.'); }
     }
@@ -5319,7 +5403,7 @@
       const language = languageSelect.value;
       const translated = await Promise.all([
         record.meta, record.title, record.doctor, record.summary, record.plan,
-        ...record.files.flatMap(file => file)
+        ...record.files.flatMap(file => [file.name, file.type?.includes('pdf') ? 'PDF' : 'File'])
       ].map(value => translateDynamicText(value, language)));
       const [meta, title, doctor, summary, plan, ...fileParts] = translated;
       patientRecordItems.forEach(item => item.setAttribute('aria-selected', String(item.dataset.recordId === id)));
@@ -5328,13 +5412,30 @@
       document.getElementById('recordDetailDoctor').textContent = doctor;
       document.getElementById('recordDetailSummary').textContent = summary;
       document.getElementById('recordDetailPlan').textContent = plan;
-      document.getElementById('recordDetailFiles').innerHTML = record.files.map((_, index) => `<div class="record-file"><span>${fileParts[index * 2]}</span><small>${fileParts[index * 2 + 1]}</small></div>`).join('');
-      if (record.previewUrl) {
-        const file = document.getElementById('recordDetailFiles').querySelector('.record-file');
-        file.tabIndex = 0; file.setAttribute('role', 'button'); file.title = 'Open secure document';
-        file.addEventListener('click', () => openPatientDocument(record));
-        file.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPatientDocument(record); } });
+      const vitalsRow = document.getElementById('recordDetailVitalsRow');
+      const vitals = document.getElementById('recordDetailVitals');
+      vitals.replaceChildren(); vitalsRow.hidden = !record.vitals;
+      if (record.vitals) {
+        [['Blood pressure', `${record.vitals.systolic}/${record.vitals.diastolic} mmHg`], ['Pulse', `${record.vitals.heartRate} bpm`], ['SpO₂', `${record.vitals.oxygenSaturation}%`]].forEach(([label, value]) => {
+          const card = document.createElement('div'); card.className = 'record-vital';
+          const name = document.createElement('span'); name.textContent = label;
+          const reading = document.createElement('strong'); reading.textContent = value;
+          card.append(name, reading); vitals.append(card);
+        });
       }
+      const fileList = document.getElementById('recordDetailFiles'); fileList.replaceChildren();
+      record.files.forEach((file, index) => {
+        const row = document.createElement('div'); row.className = 'record-file';
+        const name = document.createElement('span'); name.textContent = fileParts[index * 2];
+        const type = document.createElement('small'); type.textContent = fileParts[index * 2 + 1];
+        row.append(name, type);
+        if (file.previewUrl) {
+          row.tabIndex = 0; row.setAttribute('role', 'button'); row.title = 'Open secure document';
+          row.addEventListener('click', () => openPatientDocument(file));
+          row.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPatientDocument(file); } });
+        }
+        fileList.append(row);
+      });
     }
 
     function filterPatientRecords() {
@@ -5351,7 +5452,6 @@
       if (visible.length && (!selected || selected.hidden)) selectPatientRecord(visible[0].dataset.recordId);
     }
 
-    patientRecordItems.forEach(bindPatientRecordItem);
     patientRecordSearch.addEventListener('input', filterPatientRecords);
     patientRecordFilter.addEventListener('change', filterPatientRecords);
 

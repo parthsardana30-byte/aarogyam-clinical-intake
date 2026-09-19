@@ -260,7 +260,8 @@ async function loadPatients() {
   const patientDocumentColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_documents)').all().map(column => column.name));
   const patientDocumentMigrations = [
     ['patient_reference', 'TEXT'], ['patient_name', 'TEXT'], ['uploaded_by_staff_id', 'TEXT'],
-    ['hospital_id', 'TEXT'], ['intake_id', 'TEXT']
+    ['hospital_id', 'TEXT'], ['intake_id', 'TEXT'], ['uploaded_by_doctor_id', 'TEXT'],
+    ['document_category', "TEXT NOT NULL DEFAULT 'other'"]
   ];
   for (const [column, type] of patientDocumentMigrations) {
     if (!patientDocumentColumns.has(column)) patientsDb.exec(`ALTER TABLE patient_documents ADD COLUMN ${column} ${type}`);
@@ -562,6 +563,9 @@ async function completeStaffDocumentUpload(request, response) {
   const patientName = String(body.patientName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
   const staffId = normalizeStaffId(body.staffId);
   const requestedIntakeId = String(body.intakeId || '').trim();
+  const documentCategory = ['lab', 'prescription', 'other'].includes(body.documentCategory)
+    ? body.documentCategory
+    : 'other';
   const session = documentSession(sessionId, sessionToken);
   if (!session) return sendJson(response, 400, { error: 'The document upload session is invalid or expired' });
   if (!patientReference || !patientName) return sendJson(response, 400, { error: 'Select a patient before saving documents' });
@@ -580,9 +584,9 @@ async function completeStaffDocumentUpload(request, response) {
   if (!intake) return sendJson(response, 404, { error: 'No hospital intake was found for this patient' });
   patientsDb.prepare(`
     UPDATE patient_documents
-    SET patient_id = ?, patient_reference = ?, patient_name = ?, uploaded_by_staff_id = ?, hospital_id = ?, intake_id = ?
+    SET patient_id = ?, patient_reference = ?, patient_name = ?, uploaded_by_staff_id = ?, hospital_id = ?, intake_id = ?, document_category = ?
     WHERE upload_session_id = ?
-  `).run(patient.id, patientReference, patientName, staffId, staff.hospital_id, intake.id, sessionId);
+  `).run(patient.id, patientReference, patientName, staffId, staff.hospital_id, intake.id, documentCategory, sessionId);
   patientsDb.prepare("UPDATE patient_document_sessions SET status = 'completed' WHERE id = ?").run(sessionId);
   sendJson(response, 200, { saved: true, patientId: patientReference, documentCount });
 }
@@ -870,12 +874,18 @@ async function loginPatient(request, response) {
 }
 
 function publicDashboardDocument(row) {
+  const inferredCategory = /^prescription\b|\brx[- _]/i.test(row.original_name)
+    ? 'prescription'
+    : /\b(?:lab|pathology|radiology|blood|test)\b/i.test(row.original_name) ? 'lab' : 'other';
   return {
     id: row.id,
     name: row.original_name,
     type: row.mime_type,
     size: row.size_bytes,
     createdAt: row.created_at,
+    category: row.document_category && row.document_category !== 'other' ? row.document_category : inferredCategory,
+    hospitalId: row.hospital_id || null,
+    intakeId: row.intake_id || null,
     previewUrl: `/api/patients/${encodeURIComponent(row.patient_id)}/documents/${encodeURIComponent(row.id)}`
   };
 }
@@ -884,12 +894,63 @@ function getPatientDashboard(request, response, patientId) {
   if (!authorizePatient(request, response, patientId)) return;
   const patient = patients.find(item => item.id === patientId);
   if (!patient) return sendJson(response, 404, { error: 'Patient account was not found' });
-  const checkups = patientsDb.prepare('SELECT * FROM patient_checkups WHERE patient_id = ? ORDER BY datetime(created_at) DESC').all(patientId);
+  const intakes = patientsDb.prepare(`
+    SELECT i.*,
+      v.heart_rate, v.oxygen_saturation, v.systolic_bp, v.diastolic_bp, v.recorded_at,
+      d.doctor_id, d.full_name AS doctor_name, d.specialty AS doctor_specialty
+    FROM patient_intakes i
+    LEFT JOIN patient_vitals v ON v.id = (
+      SELECT latest.id FROM patient_vitals latest
+      WHERE latest.patient_id = i.patient_id AND (latest.intake_id = i.id OR (latest.intake_id IS NULL AND latest.hospital_id = i.hospital_id))
+      ORDER BY CASE WHEN latest.intake_id = i.id THEN 0 ELSE 1 END, datetime(latest.recorded_at) DESC LIMIT 1
+    )
+    LEFT JOIN doctors d ON d.doctor_id = (
+      SELECT pd.uploaded_by_doctor_id FROM patient_documents pd
+      WHERE pd.patient_id = i.patient_id AND pd.intake_id = i.id AND pd.uploaded_by_doctor_id IS NOT NULL
+      ORDER BY datetime(pd.created_at) DESC LIMIT 1
+    )
+    WHERE i.patient_id = ?
+    ORDER BY datetime(i.created_at) DESC
+  `).all(patientId);
   const documents = patientsDb.prepare('SELECT * FROM patient_documents WHERE patient_id = ? ORDER BY datetime(created_at) DESC').all(patientId);
+  const visits = intakes.map(row => {
+    const branch = hospitalBranches.get(row.hospital_id);
+    return {
+      id: row.id,
+      encounterNumber: row.encounter_number,
+      hospitalId: row.hospital_id,
+      hospitalName: branch?.name || 'Hospital',
+      hospitalLocation: branch?.location || '',
+      uhid: row.hospital_uhid,
+      summary: row.summary,
+      language: row.language,
+      intakeSource: row.intake_source,
+      createdAt: row.created_at,
+      doctor: row.doctor_id ? { id: row.doctor_id, name: row.doctor_name, specialty: row.doctor_specialty } : null,
+      vitals: row.recorded_at ? {
+        heartRate: row.heart_rate,
+        oxygenSaturation: row.oxygen_saturation,
+        systolic: row.systolic_bp,
+        diastolic: row.diastolic_bp,
+        recordedAt: row.recorded_at
+      } : null,
+      documents: documents.filter(document => document.intake_id === row.id).map(publicDashboardDocument)
+    };
+  });
   sendJson(response, 200, {
     patient: publicPatientProfile(patient),
-    summary: { consultationCount: checkups.length, documentCount: documents.length },
-    checkups: checkups.map(publicCheckup),
+    summary: { consultationCount: visits.length, documentCount: documents.length },
+    visits,
+    accessHistory: visits.map(visit => ({
+      id: visit.id,
+      hospitalId: visit.hospitalId,
+      hospitalName: visit.hospitalName,
+      hospitalLocation: visit.hospitalLocation,
+      uhid: visit.uhid,
+      encounterNumber: visit.encounterNumber,
+      visitedAt: visit.createdAt,
+      doctor: visit.doctor
+    })),
     documents: documents.map(publicDashboardDocument)
   });
 }
@@ -1777,10 +1838,10 @@ async function createDoctorPrescription(request, response) {
     patientsDb.prepare(`
       INSERT INTO patient_documents (
         id, upload_session_id, patient_id, patient_reference, patient_name, original_name, mime_type,
-        size_bytes, stored_name, created_at, hospital_id, intake_id
-      ) VALUES (?, ?, ?, ?, ?, ?, 'application/pdf', ?, ?, ?, ?, ?)
+        size_bytes, stored_name, created_at, hospital_id, intake_id, uploaded_by_doctor_id, document_category
+      ) VALUES (?, ?, ?, ?, ?, ?, 'application/pdf', ?, ?, ?, ?, ?, ?, 'prescription')
     `).run(documentId, uploadSessionId, patient.id, identity.uhid, patient.full_name,
-      `Prescription ${prescriptionId}.pdf`, pdf.length, storedName, createdAt, doctor.hospital_id, intake.id);
+      `Prescription ${prescriptionId}.pdf`, pdf.length, storedName, createdAt, doctor.hospital_id, intake.id, doctor.doctor_id);
     patientsDb.exec('COMMIT');
   } catch (error) {
     patientsDb.exec('ROLLBACK');
