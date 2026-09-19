@@ -5045,6 +5045,7 @@
     let readRepliesAloud = false;
     let elevenConversation = null;
     let elevenConnecting = false;
+    let elevenTextOnly = false;
     let elevenConsentGranted = false;
     let elevenStartPromise = null;
     let currentConversationId = '';
@@ -5059,8 +5060,8 @@
 
     function syncVoiceControls() {
       const voiceActive = !!elevenConversation || elevenConnecting;
-      voiceTalkButton.setAttribute('aria-pressed', String(voiceActive));
-      voiceTalkLabel.textContent = elevenConnecting ? 'Connecting…' : voiceActive ? 'Stop' : 'Talk';
+      voiceTalkButton.setAttribute('aria-pressed', String(voiceActive && !elevenTextOnly));
+      voiceTalkLabel.textContent = elevenConnecting ? 'Connecting…' : elevenTextOnly ? 'Retry Talk' : voiceActive ? 'Stop' : 'Talk';
       voiceSendButton.disabled = replyPending || !voiceChatInput.value.trim();
       voiceTalkButton.disabled = false;
       voiceChatMessages.setAttribute('aria-busy', String(replyPending));
@@ -5091,6 +5092,7 @@
       const session = elevenConversation;
       elevenConversation = null;
       elevenConnecting = false;
+      elevenTextOnly = false;
       setAgentOrbState();
       if (!session) return;
       try { await session.endSession(); }
@@ -5134,32 +5136,63 @@
       return Boolean(window.ElevenLabsClient?.Conversation);
     }
 
-    function createDemoVoiceSession() {
-      let open = true;
-      const id = `conv_demo${Date.now()}`;
-      const session = {
-        isOpen: () => open,
-        getId: () => id,
-        endSession: async () => { open = false; },
-        sendUserMessage: message => {
-          appendChatMessage(message, 'user', 'You · demo intake');
-          window.setTimeout(() => {
-            if (!open) return;
-            const reply = 'Thank you. I have recorded that for the doctor. Please add any medicines, allergies, or other symptoms that may help with your consultation.';
-            appendChatMessage(reply, 'ai', 'Arogyam · demo intake');
-            voiceQuestion.textContent = reply;
-            replyPending = false;
-            syncVoiceControls();
-            setVoiceHint('Your response is recorded. Add more details or end the check-up.');
-          }, 350);
+    function isMicrophonePermissionError(error) {
+      const name = String(error?.name || '');
+      const message = String(error?.message || error || '');
+      return /NotAllowedError|PermissionDeniedError/i.test(name)
+        || /permission denied|not allowed|microphone.*denied/i.test(message);
+    }
+
+    function elevenSessionOptions({ signedUrl, preferredLanguage, elevenLanguage, textOnly = false }) {
+      return {
+        signedUrl,
+        connectionType: 'websocket',
+        textOnly,
+        overrides: {
+          agent: { language: elevenLanguage },
+          conversation: { textOnly }
+        },
+        dynamicVariables: { preferred_language: preferredLanguage },
+        onConnect: () => {
+          elevenConnecting = false;
+          elevenTextOnly = textOnly;
+          setAgentOrbState(textOnly ? 'idle' : 'listening');
+          setVoiceHint(textOnly
+            ? 'Arogyam AI is connected in text mode. Type below, or tap Retry Talk for voice.'
+            : 'Connected — speak naturally. Tap the orb to stop.');
+        },
+        onModeChange: ({ mode }) => {
+          if (textOnly) return;
+          setAgentOrbState(mode === 'speaking' ? 'speaking' : 'listening');
+          setVoiceHint(mode === 'speaking' ? 'Arogyam is speaking…' : 'Listening…');
+        },
+        onMessage: handleElevenLabsMessage,
+        onError: message => {
+          const detail = String(message || 'Voice connection error.');
+          console.error('ElevenLabs session error:', detail);
+          setVoiceHint(detail, true);
+        },
+        onDisconnect: () => {
+          elevenConversation = null;
+          elevenConnecting = false;
+          elevenTextOnly = false;
+          replyPending = false;
+          setAgentOrbState();
+          syncVoiceControls();
         }
       };
+    }
+
+    async function connectElevenLabsTextSession(signedUrl, preferredLanguage, elevenLanguage) {
+      const session = await window.ElevenLabsClient.Conversation.startSession(
+        elevenSessionOptions({ signedUrl, preferredLanguage, elevenLanguage, textOnly: true })
+      );
       elevenConversation = session;
-      currentConversationId = id;
-      setAgentOrbState('listening');
-      setVoiceHint('Demo AI intake is ready. Type your health concern below.');
-      appendChatMessage(voiceQuestion.textContent, 'ai', 'Arogyam · demo intake');
-      showToast('Demo AI intake', 'ElevenLabs is not configured, so the local test conversation is active.');
+      elevenTextOnly = true;
+      currentConversationId = session.getId();
+      setAgentOrbState();
+      setVoiceHint('Arogyam AI is connected in text mode. Type below, or tap Retry Talk for voice.');
+      showToast('AI chat connected', 'Voice input is blocked in this browser, so the same ElevenLabs agent is ready in text mode.');
       syncVoiceControls();
       return session;
     }
@@ -5173,37 +5206,18 @@
       setAgentOrbState('connecting');
       setVoiceHint('Connecting to Arogyam voice…');
       syncVoiceControls();
+      let signedUrl = '';
+      let preferredLanguage = languageSelect.value;
+      let elevenLanguage = elevenLanguageCodes[preferredLanguage] || 'en';
       try {
         if (!await ensureElevenLabsClient()) throw new Error('The ElevenLabs voice client could not be loaded.');
         const response = await fetch('/api/elevenlabs/signed-url', { cache: 'no-store' });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
-        const preferredLanguage = languageSelect.value;
-        const elevenLanguage = elevenLanguageCodes[preferredLanguage] || 'en';
-        const session = await window.ElevenLabsClient.Conversation.startSession({
-          signedUrl: payload.signedUrl,
-          connectionType: 'websocket',
-          overrides: { agent: { language: elevenLanguage } },
-          dynamicVariables: { preferred_language: preferredLanguage },
-          onConnect: () => {
-            elevenConnecting = false;
-            setAgentOrbState('listening');
-            setVoiceHint('Connected — speak naturally. Tap the orb to stop.');
-          },
-          onModeChange: ({ mode }) => {
-            setAgentOrbState(mode === 'speaking' ? 'speaking' : 'listening');
-            setVoiceHint(mode === 'speaking' ? 'Arogyam is speaking…' : 'Listening…');
-          },
-          onMessage: handleElevenLabsMessage,
-          onError: message => setVoiceHint(String(message || 'Voice connection error.'), true),
-          onDisconnect: () => {
-            elevenConversation = null;
-            elevenConnecting = false;
-            replyPending = false;
-            setAgentOrbState();
-            syncVoiceControls();
-          }
-        });
+        signedUrl = payload.signedUrl;
+        const session = await window.ElevenLabsClient.Conversation.startSession(
+          elevenSessionOptions({ signedUrl, preferredLanguage, elevenLanguage })
+        );
         elevenConversation = session;
         currentConversationId = session.getId();
         syncVoiceControls();
@@ -5212,7 +5226,19 @@
         elevenConnecting = false;
         setAgentOrbState();
         const message = error instanceof Error ? error.message : 'Could not connect to the voice agent.';
-        if (/not configured|unavailable/i.test(message)) return createDemoVoiceSession();
+        console.error('ElevenLabs voice start failed:', error);
+        if (isMicrophonePermissionError(error)) {
+          try {
+            if (!signedUrl) throw new Error('AI chat session could not be created.');
+            return await connectElevenLabsTextSession(signedUrl, preferredLanguage, elevenLanguage);
+          } catch (fallbackError) {
+            const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : 'AI chat is unavailable.';
+            setVoiceHint(fallbackMessage, true);
+            showToast('AI connection unavailable', fallbackMessage);
+            syncVoiceControls();
+            return null;
+          }
+        }
         setVoiceHint(message, true);
         showToast('Voice agent unavailable', message);
         syncVoiceControls();
@@ -5388,14 +5414,20 @@
       endVoiceSessionButton.disabled = false;
     }
 
-    voiceTalkButton.addEventListener('click', () => {
-      if (elevenConversation || elevenConnecting) void stopElevenLabsSession();
-      else void startElevenLabsSession();
+    voiceTalkButton.addEventListener('click', async () => {
+      if (elevenTextOnly) {
+        await stopElevenLabsSession();
+        await startElevenLabsSession();
+      } else if (elevenConversation || elevenConnecting) await stopElevenLabsSession();
+      else await startElevenLabsSession();
     });
 
-    voiceOrb.addEventListener('click', () => {
-      if (elevenConversation || elevenConnecting) void stopElevenLabsSession();
-      else void startElevenLabsSession();
+    voiceOrb.addEventListener('click', async () => {
+      if (elevenTextOnly) {
+        await stopElevenLabsSession();
+        await startElevenLabsSession();
+      } else if (elevenConversation || elevenConnecting) await stopElevenLabsSession();
+      else await startElevenLabsSession();
     });
 
     voiceAudioToggle.addEventListener('click', () => {
