@@ -5077,7 +5077,10 @@
       const documentHistory = patient.documents.map(item => ({
         date: new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(item.createdAt)),
         iso: item.createdAt.slice(0, 10), kind: item.type.includes('pdf') ? 'prescription' : 'lab', type: 'Document',
-        title: item.name, summary: 'Document uploaded by the hospital care team.', previewUrl: item.previewUrl
+        title: item.name,
+        summary: item.aiSummary || (item.analysisStatus === 'processing' || item.analysisStatus === 'queued'
+          ? 'Gemini is reading this document.' : 'Document uploaded by the hospital care team.'),
+        previewUrl: item.previewUrl
       }));
       return {
         ...patient,
@@ -6609,7 +6612,7 @@
       if (!pendingSummarySave) return;
       const button = document.getElementById('finishIntakeSummary');
       button.disabled = true;
-      doctorChoiceStatus.textContent = 'Saving your intake summary…';
+      doctorChoiceStatus.textContent = 'Gemini is preparing and saving your medical summary…';
       try {
         const response = await fetch('/api/patient-intakes', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -6617,6 +6620,7 @@
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.intake) throw new Error(data.error || 'Could not save the intake summary');
+        doctorChoiceSummary.textContent = data.intake.summary;
         pendingSummarySave = null;
         button.textContent = authorizedPatientDevice ? 'Finish and sign out' : 'Done';
         doctorChoiceStatus.textContent = '';
@@ -6677,7 +6681,10 @@
         doctorChoiceCompletion.hidden = !finalAgentMessage;
         doctorChoiceCompletionMessage.textContent = finalAgentMessage;
         summaryPatientId = patientId;
-        pendingSummarySave = { patientId, conversationId, language: languageSelect.value, summary };
+        pendingSummarySave = {
+          patientId, conversationId, language: languageSelect.value, summary,
+          transcript: intakeTranscript.slice(-40).map(item => ({ role: item.role, text: String(item.text || '').slice(0, 1200) }))
+        };
         navigateRoute('patient/intake-summary');
         await saveIntakeSummary();
       } finally {
