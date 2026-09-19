@@ -17,9 +17,16 @@ const documentUploadTtlMs = 30 * 60 * 1000;
 const maxDocumentBytes = 8 * 1024 * 1024;
 const signupOtpTtlMs = 5 * 60 * 1000;
 const signupOtpCooldownMs = 30 * 1000;
+const temporaryTestDeviceEnabled = String(process.env.ALLOW_TEST_DEVICE_CODE || '').trim().toLowerCase() === 'true';
+const temporaryTestDeviceCode = String(process.env.TEST_DEVICE_CODE || '').trim();
+const temporaryTestDeviceSessionHours = Math.min(24, Math.max(1, Number(process.env.TEST_DEVICE_SESSION_HOURS || 24) || 24));
+const temporaryTestDeviceSessionMs = temporaryTestDeviceSessionHours * 60 * 60 * 1000;
+const manualDeviceCodeWindowMs = 15 * 60 * 1000;
+const manualDeviceCodeMaxAttempts = 10;
 const enrollments = new Map();
 const signupOtps = new Map();
 const signupOtpLastSent = new Map();
+const manualDeviceCodeAttempts = new Map();
 const hospitalBranches = new Map([
   ['civil-ahmedabad', { id: 'civil-ahmedabad', name: 'Civil Hospital', location: 'Ahmedabad, Gujarat', issuedDoctorIds: new Set(['CHA-DR-2187']) }],
   ['civil-gurugram', { id: 'civil-gurugram', name: 'Civil Hospital', location: 'Gurugram, Haryana', issuedDoctorIds: new Set(['CHG-DR-3304']) }],
@@ -27,8 +34,22 @@ const hospitalBranches = new Map([
   ['civil-nashik', { id: 'civil-nashik', name: 'Civil Hospital', location: 'Nashik, Maharashtra', issuedDoctorIds: new Set(['CHN-DR-5576']) }],
   ['civil-rajkot', { id: 'civil-rajkot', name: 'Civil Hospital', location: 'Rajkot, Gujarat', issuedDoctorIds: new Set(['CHR-DR-6631']) }]
 ]);
+const testDoctorPassword = 'Aarogyam@2026';
+const testDoctorAccounts = [
+  { id: 'CHA-GEN-1001', fullName: 'Dr. Aarav Mehta', degree: 'MBBS, MD', specialty: 'General Medicine', registration: 'GMC-10001', experience: 12, room: 'G-101', phone: '9000001001', email: 'general@aarogyam.test' },
+  { id: 'CHA-GYN-1002', fullName: 'Dr. Meera Kapoor', degree: 'MBBS, MS', specialty: 'Gynaecology', registration: 'GMC-10002', experience: 11, room: 'GY-201', phone: '9000001002', email: 'gynaecology@aarogyam.test' },
+  { id: 'CHA-ORT-1003', fullName: 'Dr. Nisha Rao', degree: 'MBBS, MS', specialty: 'Orthopaedics', registration: 'GMC-10003', experience: 10, room: 'OR-301', phone: '9000001003', email: 'orthopaedics@aarogyam.test' },
+  { id: 'CHA-PED-1004', fullName: 'Dr. Kabir Shah', degree: 'MBBS, MD', specialty: 'Paediatrics', registration: 'GMC-10004', experience: 9, room: 'P-102', phone: '9000001004', email: 'paediatrics@aarogyam.test' },
+  { id: 'CHA-SUR-1005', fullName: 'Dr. Rohan Desai', degree: 'MBBS, MS', specialty: 'General Surgery', registration: 'GMC-10005', experience: 14, room: 'S-204', phone: '9000001005', email: 'surgery@aarogyam.test' },
+  { id: 'CHA-CAR-1006', fullName: 'Dr. Isha Verma', degree: 'MBBS, DM', specialty: 'Cardiology', registration: 'GMC-10006', experience: 13, room: 'C-110', phone: '9000001006', email: 'cardiology@aarogyam.test' },
+  { id: 'CHA-DER-1007', fullName: 'Dr. Neel Joshi', degree: 'MBBS, MD', specialty: 'Dermatology', registration: 'GMC-10007', experience: 8, room: 'D-205', phone: '9000001007', email: 'dermatology@aarogyam.test' },
+  { id: 'CHA-ENT-1008', fullName: 'Dr. Sana Khan', degree: 'MBBS, MS', specialty: 'ENT', registration: 'GMC-10008', experience: 9, room: 'E-106', phone: '9000001008', email: 'ent@aarogyam.test' },
+  { id: 'CHA-OPH-1009', fullName: 'Dr. Arjun Patel', degree: 'MBBS, MS', specialty: 'Ophthalmology', registration: 'GMC-10009', experience: 10, room: 'O-208', phone: '9000001009', email: 'ophthalmology@aarogyam.test' },
+  { id: 'CHA-PSY-1010', fullName: 'Dr. Riya Sen', degree: 'MBBS, MD', specialty: 'Psychiatry', registration: 'GMC-10010', experience: 8, room: 'PS-305', phone: '9000001010', email: 'psychiatry@aarogyam.test' },
+  { id: 'CHA-AYU-1011', fullName: 'Dr. Dev Sharma', degree: 'BAMS, MD', specialty: 'AYUSH Medicine', registration: 'GMC-10011', experience: 15, room: 'A-109', phone: '9000001011', email: 'ayush@aarogyam.test' },
+  { id: 'CHA-OTH-1012', fullName: 'Dr. Tara Nair', degree: 'MBBS, MD', specialty: 'Other', registration: 'GMC-10012', experience: 7, room: 'M-210', phone: '9000001012', email: 'multispecialty@aarogyam.test' }
+];
 const elevenLabsSignedUrlLastIssued = new Map();
-const activeCheckupHydrations = new Set();
 let devices = [];
 let patients = [];
 let patientsDb;
@@ -46,7 +67,9 @@ const publicDevice = device => ({
   authorizedAt: device.authorizedAt,
   lastSeenAt: device.lastSeenAt || null,
   ipAddress: device.ipAddress || null,
-  location: device.location || null
+  location: device.location || null,
+  accessMode: device.accessMode || 'standard',
+  expiresAt: device.expiresAt || null
 });
 
 function deviceNetworkDetails(request) {
@@ -159,19 +182,46 @@ async function loadPatients() {
     CREATE INDEX IF NOT EXISTS patient_documents_patient_idx ON patient_documents(patient_id);
     CREATE TABLE IF NOT EXISTS patient_checkups (
       id TEXT PRIMARY KEY,
-      opd_number TEXT NOT NULL UNIQUE,
       patient_id TEXT NOT NULL,
-      conversation_id TEXT NOT NULL UNIQUE,
+      conversation_id TEXT NOT NULL,
       language TEXT NOT NULL,
+      hospital_id TEXT,
+      hospital_name TEXT NOT NULL,
+      hospital_location TEXT,
+      doctor_id TEXT,
       doctor_name TEXT NOT NULL,
       doctor_specialty TEXT NOT NULL,
-      summary TEXT,
-      status TEXT NOT NULL DEFAULT 'processing',
+      room_number TEXT NOT NULL,
+      opd_number TEXT NOT NULL UNIQUE,
+      patient_number TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      specialty_requested TEXT,
+      status TEXT NOT NULL DEFAULT 'waiting',
       created_at TEXT NOT NULL,
+      started_at TEXT,
       completed_at TEXT,
       FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS patient_checkups_patient_idx ON patient_checkups(patient_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS patient_checkups_created_idx ON patient_checkups(created_at DESC);
+    CREATE TABLE IF NOT EXISTS patient_intakes (
+      id TEXT PRIMARY KEY,
+      patient_id TEXT NOT NULL,
+      conversation_id TEXT NOT NULL,
+      language TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      UNIQUE(patient_id, conversation_id),
+      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS patient_intakes_patient_idx ON patient_intakes(patient_id, created_at DESC);
+  `);
+  // Preserve summaries from visits created by the retired OPD queue flow.
+  patientsDb.exec(`
+    INSERT OR IGNORE INTO patient_intakes (id, patient_id, conversation_id, language, summary, created_at)
+    SELECT id, patient_id, conversation_id, language, summary, created_at
+    FROM patient_checkups
+    WHERE TRIM(conversation_id) <> '' AND TRIM(summary) <> ''
   `);
   const patientDocumentColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_documents)').all().map(column => column.name));
   const patientDocumentMigrations = [
@@ -190,6 +240,30 @@ async function loadPatients() {
     if (!doctorColumns.has(column)) patientsDb.exec(`ALTER TABLE doctors ADD COLUMN ${column} ${type}`);
   }
   patientsDb.exec('CREATE UNIQUE INDEX IF NOT EXISTS doctors_medical_registration_idx ON doctors(medical_registration_number)');
+  const checkupColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_checkups)').all().map(column => column.name));
+  const checkupMigrations = [
+    ['hospital_id', 'TEXT'], ['hospital_name', 'TEXT'], ['hospital_location', 'TEXT'],
+    ['doctor_id', 'TEXT'], ['room_number', 'TEXT'], ['patient_number', 'TEXT'],
+    ['specialty_requested', 'TEXT'], ['started_at', 'TEXT'], ['completed_at', 'TEXT']
+  ];
+  for (const [column, type] of checkupMigrations) {
+    if (!checkupColumns.has(column)) patientsDb.exec(`ALTER TABLE patient_checkups ADD COLUMN ${column} ${type}`);
+  }
+  const seedDoctor = patientsDb.prepare(`
+    INSERT OR IGNORE INTO doctors (
+      doctor_id, hospital_id, hospital_name, hospital_location, full_name, degree, specialty,
+      medical_registration_number, years_experience, room_number, phone, email,
+      password_salt, password_hash, created_at
+    ) VALUES (?, 'civil-ahmedabad', 'Civil Hospital', 'Ahmedabad, Gujarat', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  for (const [index, doctor] of testDoctorAccounts.entries()) {
+    const salt = `aarogyam-test-doctor-${String(index + 1).padStart(2, '0')}`;
+    seedDoctor.run(
+      doctor.id, doctor.fullName, doctor.degree, doctor.specialty, doctor.registration,
+      doctor.experience, doctor.room, doctor.phone, doctor.email, salt,
+      scryptSync(testDoctorPassword, salt, 64).toString('hex'), new Date(2026, 8, 1, 9, index).toISOString()
+    );
+  }
   const rows = patientsDb.prepare('SELECT * FROM patients').all();
   patients = rows.map(row => ({
     id: row.id,
@@ -238,6 +312,20 @@ function cookies(request) {
   return Object.fromEntries((request.headers.cookie || '').split(';').map(item => item.trim().split('=').map(decodeURIComponent)).filter(parts => parts.length === 2));
 }
 
+function authorizedDeviceForRequest(request) {
+  const token = cookies(request).arog_device;
+  if (!token) return null;
+  const deviceIndex = devices.findIndex(item => item.tokenHash === hash(token));
+  if (deviceIndex < 0) return null;
+  const device = devices[deviceIndex];
+  if (device.expiresAt && new Date(device.expiresAt).getTime() <= Date.now()) {
+    devices.splice(deviceIndex, 1);
+    void saveDevices().catch(() => {});
+    return null;
+  }
+  return device;
+}
+
 function secureCookie(request) {
   return request.socket.encrypted || request.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
 }
@@ -256,16 +344,32 @@ async function readJson(request, maxBytes = 20_000) {
   return JSON.parse(body || '{}');
 }
 
-function requestOrigin(request) {
-  const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
-  return `${protocol}://${request.headers.host || `localhost:${port}`}`;
-}
-
 function requestIp(request) {
   return String(request.headers['x-forwarded-for'] || request.socket.remoteAddress || 'unknown').split(',')[0].trim();
 }
 
+function allowManualDeviceCodeAttempt(request) {
+  const ip = requestIp(request);
+  const cutoff = Date.now() - manualDeviceCodeWindowMs;
+  const recent = (manualDeviceCodeAttempts.get(ip) || []).filter(timestamp => timestamp > cutoff);
+  if (recent.length >= manualDeviceCodeMaxAttempts) {
+    manualDeviceCodeAttempts.set(ip, recent);
+    return false;
+  }
+  recent.push(Date.now());
+  manualDeviceCodeAttempts.set(ip, recent);
+  return true;
+}
+
+function isTemporaryTestDeviceCode(code) {
+  if (!temporaryTestDeviceEnabled || !/^\d{6}$/.test(temporaryTestDeviceCode) || !/^\d{6}$/.test(code)) return false;
+  return timingSafeEqual(Buffer.from(code), Buffer.from(temporaryTestDeviceCode));
+}
+
 async function createElevenLabsSignedUrl(request, response) {
+  if (!authorizedDeviceForRequest(request)) {
+    return sendJson(response, 403, { configured: true, error: 'Voice check-up is available only on an authorized device' });
+  }
   const apiKey = String(process.env.ELEVENLABS_API_KEY || '').trim();
   const agentId = String(process.env.ELEVENLABS_AGENT_ID || '').trim();
   if (!apiKey || !/^agent_[a-zA-Z0-9]+$/.test(agentId)) {
@@ -277,10 +381,7 @@ async function createElevenLabsSignedUrl(request, response) {
   const endpoint = new URL('https://api.elevenlabs.io/v1/convai/conversation/get-signed-url');
   endpoint.searchParams.set('agent_id', agentId);
   const result = await fetch(endpoint, { headers: { 'xi-api-key': apiKey, Accept: 'application/json' } });
-  if (!result.ok) {
-    console.error(`ElevenLabs signed URL request failed (${result.status})`);
-    return sendJson(response, 502, { error: 'Voice agent is temporarily unavailable' });
-  }
+  if (!result.ok) return sendJson(response, 502, { error: 'Voice agent is temporarily unavailable' });
   const payload = await result.json();
   if (!payload.signed_url) return sendJson(response, 502, { error: 'Voice agent returned an invalid session' });
   elevenLabsSignedUrlLastIssued.set(ip, Date.now());
@@ -297,117 +398,9 @@ async function serveElevenLabsClient(response) {
   }
 }
 
-const wait = milliseconds => new Promise(resolveWait => setTimeout(resolveWait, milliseconds));
-
-function publicCheckup(row) {
-  return {
-    id: row.id,
-    opdNumber: row.opd_number,
-    patientId: row.patient_id,
-    conversationId: row.conversation_id,
-    language: row.language,
-    doctor: { name: row.doctor_name, specialty: row.doctor_specialty },
-    summary: row.summary,
-    status: row.status,
-    createdAt: row.created_at,
-    completedAt: row.completed_at
-  };
-}
-
-function assignDoctor(summary = '') {
-  const text = String(summary).toLowerCase();
-  if (/joint|knee|arthritis|stiff|जोड़|घुटन|गठिया/.test(text)) {
-    return { name: 'Dr. Nisha Rao', specialty: 'AYUSH Medicine' };
-  }
-  return { name: 'Dr. Aarav Mehta', specialty: 'General Medicine' };
-}
-
-function createOpdNumber() {
-  const date = new Date().toISOString().slice(0, 10).replaceAll('-', '');
-  let opdNumber;
-  do { opdNumber = `OPD-${date}-${randomInt(1000, 10000)}`; }
-  while (patientsDb.prepare('SELECT 1 FROM patient_checkups WHERE opd_number = ?').get(opdNumber));
-  return opdNumber;
-}
-
-async function hydrateCheckupSummary(checkupId) {
-  if (activeCheckupHydrations.has(checkupId)) return;
-  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ?').get(checkupId);
-  if (!row || row.status === 'completed') return;
-  activeCheckupHydrations.add(checkupId);
-  try {
-    const apiKey = String(process.env.ELEVENLABS_API_KEY || '').trim();
-    const agentId = String(process.env.ELEVENLABS_AGENT_ID || '').trim();
-    if (!apiKey || !agentId) throw new Error('ElevenLabs is not configured');
-    for (let attempt = 0; attempt < 20; attempt += 1) {
-      if (attempt) await wait(1500);
-      const endpoint = `https://api.elevenlabs.io/v1/convai/conversations/${encodeURIComponent(row.conversation_id)}/summary?max_messages=80`;
-      const result = await fetch(endpoint, { headers: { 'xi-api-key': apiKey, Accept: 'application/json' } });
-      if (result.status === 404 || result.status === 409 || result.status === 425) continue;
-      if (!result.ok) throw new Error(`ElevenLabs summary request failed (${result.status})`);
-      const payload = await result.json();
-      if (payload.agent_id && payload.agent_id !== agentId) throw new Error('Conversation does not belong to the configured agent');
-      const summary = String(payload.transcript_summary || '').trim();
-      if (!summary || payload.status === 'processing') continue;
-      const doctor = assignDoctor(summary);
-      patientsDb.prepare(`
-        UPDATE patient_checkups
-        SET summary = ?, doctor_name = ?, doctor_specialty = ?, status = 'completed', completed_at = ?
-        WHERE id = ?
-      `).run(summary.slice(0, 6000), doctor.name, doctor.specialty, new Date().toISOString(), checkupId);
-      return;
-    }
-    throw new Error('ElevenLabs summary is still processing');
-  } catch (error) {
-    console.error(`Check-up summary ${checkupId} failed:`, error.message);
-    patientsDb.prepare("UPDATE patient_checkups SET status = 'pending' WHERE id = ?").run(checkupId);
-  } finally {
-    activeCheckupHydrations.delete(checkupId);
-  }
-}
-
-async function completePatientCheckup(request, response) {
-  const body = await readJson(request);
-  const patientId = String(body.patientId || '').trim();
-  const conversationId = String(body.conversationId || '').trim();
-  const language = String(body.language || 'English').trim().slice(0, 40) || 'English';
-  if (!/^AS-\d{6}$/.test(patientId) || !patientsDb.prepare('SELECT 1 FROM patients WHERE id = ?').get(patientId)) {
-    return sendJson(response, 404, { error: 'Patient account was not found' });
-  }
-  if (!/^conv_[a-zA-Z0-9]+$/.test(conversationId)) return sendJson(response, 400, { error: 'A completed AI conversation is required' });
-
-  const existing = patientsDb.prepare('SELECT * FROM patient_checkups WHERE conversation_id = ?').get(conversationId);
-  if (existing) {
-    if (existing.patient_id !== patientId) return sendJson(response, 409, { error: 'This conversation is already linked to another patient' });
-    if (existing.status !== 'completed') void hydrateCheckupSummary(existing.id);
-    return sendJson(response, existing.status === 'completed' ? 200 : 202, { checkup: publicCheckup(existing) });
-  }
-
-  const doctor = assignDoctor();
-  const checkup = {
-    id: randomUUID(), opdNumber: createOpdNumber(), patientId, conversationId, language,
-    doctor, createdAt: new Date().toISOString()
-  };
-  patientsDb.prepare(`
-    INSERT INTO patient_checkups (
-      id, opd_number, patient_id, conversation_id, language, doctor_name, doctor_specialty,
-      summary, status, created_at, completed_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 'processing', ?, NULL)
-  `).run(
-    checkup.id, checkup.opdNumber, checkup.patientId, checkup.conversationId, checkup.language,
-    doctor.name, doctor.specialty, checkup.createdAt
-  );
-  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ?').get(checkup.id);
-  void hydrateCheckupSummary(checkup.id);
-  sendJson(response, 202, { checkup: publicCheckup(row) });
-}
-
-function getPatientCheckup(_request, response, checkupId, url) {
-  const patientId = String(url.searchParams.get('patientId') || '');
-  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ? AND patient_id = ?').get(checkupId, patientId);
-  if (!row) return sendJson(response, 404, { error: 'Check-up was not found' });
-  if (row.status !== 'completed') void hydrateCheckupSummary(row.id);
-  sendJson(response, 200, { checkup: publicCheckup(row) });
+function requestOrigin(request) {
+  const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
+  return `${protocol}://${request.headers.host || `localhost:${port}`}`;
 }
 
 function documentSession(id, token) {
@@ -852,7 +845,7 @@ async function createDoctorRegistration(request, response) {
   if (!Number.isInteger(yearsExperience) || yearsExperience < 0 || yearsExperience > 70) {
     return sendJson(response, 400, { error: 'Years of experience must be between 0 and 70' });
   }
-  if (!/^[A-Z0-9 -]{1,20}$/.test(roomNumber)) return sendJson(response, 400, { error: 'Enter a valid room or OPD number' });
+  if (!/^[A-Z0-9 -]{1,20}$/.test(roomNumber)) return sendJson(response, 400, { error: 'Enter a valid room number' });
   if (!phone) return sendJson(response, 400, { error: 'Enter a valid 10-digit Indian mobile number' });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return sendJson(response, 400, { error: 'Enter a valid professional email address' });
   if (patientsDb.prepare('SELECT doctor_id FROM doctors WHERE doctor_id = ?').get(doctorId)) {
@@ -962,18 +955,110 @@ async function loginStaff(request, response) {
   sendJson(response, 200, { staff: publicStaff(row) });
 }
 
-function listStaffPatientQueue(request, response, url) {
+function listStaffPatients(request, response, url) {
   const staffId = normalizeStaffId(url.searchParams.get('staffId'));
   if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
     return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
   }
-  const queue = patientsDb.prepare(`
-    SELECT id, full_name, created_at
-    FROM patients
-    ORDER BY datetime(created_at) DESC
-  `).all().map(row => ({ id: row.id, fullName: row.full_name }));
-  sendJson(response, 200, { patients: queue });
+  const patients = patientsDb.prepare(`
+    SELECT p.id, p.full_name, p.created_at,
+      i.language, i.created_at AS intake_created_at
+    FROM patients p
+    LEFT JOIN patient_intakes i ON i.id = (
+      SELECT latest.id FROM patient_intakes latest
+      WHERE latest.patient_id = p.id
+      ORDER BY datetime(latest.created_at) DESC LIMIT 1
+    )
+    ORDER BY datetime(p.created_at) DESC
+  `).all().map(row => ({
+    id: row.id,
+    fullName: row.full_name,
+    language: row.language || null,
+    intakeCompletedAt: row.intake_created_at || null
+  }));
+  sendJson(response, 200, { patients });
 }
+
+async function createPatientIntake(request, response) {
+  if (!authorizedDeviceForRequest(request)) {
+    return sendJson(response, 403, { error: 'AI check-up is available only on an authorized device' });
+  }
+  const body = await readJson(request);
+  const patientId = String(body.patientId || '').trim();
+  const conversationId = String(body.conversationId || '').trim().slice(0, 180);
+  const language = String(body.language || 'English').trim().slice(0, 40) || 'English';
+  const summary = String(body.summary || '').trim().replace(/\s+/g, ' ').slice(0, 6000);
+  if (!patientsDb.prepare('SELECT id FROM patients WHERE id = ?').get(patientId)) {
+    return sendJson(response, 404, { error: 'Patient account was not found' });
+  }
+  if (!conversationId || !summary) {
+    return sendJson(response, 400, { error: 'Complete the AI intake before saving its summary' });
+  }
+  const existing = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? AND conversation_id = ?').get(patientId, conversationId);
+  if (existing) return sendJson(response, 200, { intake: existing });
+  const id = randomUUID();
+  patientsDb.prepare('INSERT INTO patient_intakes (id, patient_id, conversation_id, language, summary, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(id, patientId, conversationId, language, summary, new Date().toISOString());
+  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ?').get(id);
+  sendJson(response, 201, { intake });
+}
+
+function getLatestPatientIntake(request, response, url) {
+  if (!authorizedDeviceForRequest(request)) {
+    return sendJson(response, 403, { error: 'AI check-up is available only on an authorized device' });
+  }
+  const patientId = String(url.searchParams.get('patientId') || '').trim();
+  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patientId);
+  if (!intake) return sendJson(response, 404, { error: 'No completed intake summary is available yet' });
+  sendJson(response, 200, { intake });
+}
+
+
+function patientAge(dateOfBirth) {
+  const birth = new Date(`${dateOfBirth}T00:00:00Z`);
+  const now = new Date();
+  let age = now.getUTCFullYear() - birth.getUTCFullYear();
+  const birthdayPassed = now.getUTCMonth() > birth.getUTCMonth()
+    || (now.getUTCMonth() === birth.getUTCMonth() && now.getUTCDate() >= birth.getUTCDate());
+  if (!birthdayPassed) age -= 1;
+  return Math.max(0, age);
+}
+
+function publicDoctorRecord(row) {
+  return {
+    patientId: row.patient_id,
+    fullName: row.full_name,
+    age: patientAge(row.date_of_birth),
+    gender: row.gender,
+    bloodGroup: row.blood_group,
+    heightCm: row.height_cm,
+    weightKg: row.weight_kg,
+    conditions: JSON.parse(row.conditions_json || '[]'),
+    allergies: row.allergies || 'None reported',
+    language: row.language,
+    summary: row.summary,
+    documentCount: Number(row.document_count || 0),
+    createdAt: row.created_at
+  };
+}
+
+
+function listDoctorRecords(_request, response, url) {
+  const doctorId = normalizeDoctorId(url.searchParams.get('doctorId'));
+  const doctor = patientsDb.prepare('SELECT * FROM doctors WHERE doctor_id = ?').get(doctorId);
+  if (!doctor) return sendJson(response, 404, { error: 'Doctor account was not found' });
+  const rows = patientsDb.prepare(`
+    SELECT c.*, p.full_name, p.date_of_birth, p.gender, p.height_cm, p.weight_kg,
+      p.blood_group, p.conditions_json, p.allergies,
+      (SELECT COUNT(*) FROM patient_documents pd WHERE pd.patient_id = p.id) AS document_count
+    FROM patient_checkups c
+    JOIN patients p ON p.id = c.patient_id
+    WHERE c.doctor_id = ? AND c.status = 'completed'
+    ORDER BY datetime(c.created_at) DESC
+  `).all(doctorId).map(publicDoctorRecord);
+  sendJson(response, 200, { doctor: publicDoctor(doctor), records: rows });
+}
+
 
 function getStaffProfile(request, response, url) {
   const staffId = normalizeStaffId(url.searchParams.get('staffId'));
@@ -1024,10 +1109,42 @@ async function requestDeviceAuthorization(request, response, id) {
   const name = String(body.name || '').trim().slice(0, 60);
   const claimToken = String(body.claimToken || '');
   const code = String(body.code || '').trim();
+  if (!name) return sendJson(response, 400, { error: 'Enter a name for this device' });
+  if (!id && !allowManualDeviceCodeAttempt(request)) {
+    return sendJson(response, 429, { error: 'Too many authorization attempts. Please wait 15 minutes and try again.' });
+  }
+  if (!id && isTemporaryTestDeviceCode(code)) {
+    const deviceToken = randomBytes(32).toString('base64url');
+    const network = deviceNetworkDetails(request);
+    const hospital = hospitalBranches.values().next().value;
+    const authorizedAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + temporaryTestDeviceSessionMs).toISOString();
+    const device = {
+      id: randomUUID(),
+      name,
+      tokenHash: hash(deviceToken),
+      staffId: 'temporary-test-code',
+      hospitalId: hospital.id,
+      hospitalName: hospital.name,
+      hospitalLocation: hospital.location,
+      platform: String(body.platform || request.headers['user-agent'] || 'Unknown device').slice(0, 140),
+      ipAddress: network.ipAddress,
+      location: network.location,
+      authorizedAt,
+      lastSeenAt: null,
+      accessMode: 'test-checkup',
+      expiresAt
+    };
+    devices.push(device);
+    await saveDevices();
+    manualDeviceCodeAttempts.delete(requestIp(request));
+    const maxAge = Math.floor(temporaryTestDeviceSessionMs / 1000);
+    const headers = { 'Set-Cookie': `arog_device=${encodeURIComponent(deviceToken)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${secureCookie(request)}` };
+    return sendJson(response, 201, { status: 'authorized', device: publicDevice(device), expiresAt }, headers);
+  }
   const enrollment = id
     ? enrollments.get(id)
     : [...enrollments.values()].find(item => item.status === 'open' && /^\d{6}$/.test(code) && item.codeHash === hash(code));
-  if (!name) return sendJson(response, 400, { error: 'Enter a name for this device' });
   const validClaim = enrollment && ((id && hash(claimToken) === enrollment.claimHash) || (!id && /^\d{6}$/.test(code)));
   if (!enrollment || enrollment.status !== 'open' || !validClaim) {
     return sendJson(response, 404, { error: 'This invitation is invalid or has expired' });
@@ -1078,10 +1195,15 @@ async function decideDeviceAuthorization(request, response, id) {
   }
   if (body.decision !== 'approve') return sendJson(response, 400, { error: 'Choose approve or reject' });
   const deviceToken = randomBytes(32).toString('base64url');
+  const authorizingStaff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(enrollment.staffId);
   const device = {
     id: randomUUID(),
     name: enrollment.request.name,
     tokenHash: hash(deviceToken),
+    staffId: enrollment.staffId,
+    hospitalId: authorizingStaff?.hospital_id || null,
+    hospitalName: authorizingStaff?.hospital_name || null,
+    hospitalLocation: authorizingStaff?.hospital_location || null,
     ipAddress: enrollment.request.ipAddress,
     location: enrollment.request.location,
     authorizedAt: new Date().toISOString(),
@@ -1106,8 +1228,7 @@ async function revokeDevice(_request, response, id) {
 }
 
 async function deviceSession(request, response) {
-  const token = cookies(request).arog_device;
-  const device = token && devices.find(item => item.tokenHash === hash(token));
+  const device = authorizedDeviceForRequest(request);
   if (!device) return sendJson(response, 200, { authorized: false });
   device.lastSeenAt = new Date().toISOString();
   void saveDevices();
@@ -1156,16 +1277,16 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-registrations') return await createPatientRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-login') return await loginPatient(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/patient-intakes') return await createPatientIntake(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/patient-intakes/latest') return getLatestPatientIntake(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/hospital-branches') return listHospitalBranches(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-registrations') return await createDoctorRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-login') return await loginDoctor(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/doctor-records') return listDoctorRecords(request, response, url);
     if (request.method === 'POST' && url.pathname === '/api/staff-registrations') return await createStaffRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/staff-login') return await loginStaff(request, response);
-    if (request.method === 'GET' && url.pathname === '/api/staff-patient-queue') return listStaffPatientQueue(request, response, url);
+    if (request.method === 'GET' && url.pathname === '/api/staff-patients') return listStaffPatients(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/staff-profile') return getStaffProfile(request, response, url);
-    if (request.method === 'POST' && url.pathname === '/api/patient-checkups') return await completePatientCheckup(request, response);
-    const patientCheckupMatch = url.pathname.match(/^\/api\/patient-checkups\/([0-9a-f-]+)$/i);
-    if (request.method === 'GET' && patientCheckupMatch) return getPatientCheckup(request, response, patientCheckupMatch[1], url);
     const statusMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/status$/i);
     if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1], url);
     const requestMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/request$/i);
