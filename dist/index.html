@@ -1103,11 +1103,8 @@
       .current-summary-facts { grid-template-columns: 1fr; }
       .doctor-patient-searchbar { width: 100%; }
     }
-    .history-detail-heading { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 13px; margin-bottom: 16px; }
-    .history-detail-heading h1 { margin: 3px 0 3px; font-size: 1.35rem; }
-    .history-detail-heading p { margin: 0; color: var(--ink-soft); font-size: .8rem; }
-    .history-back-button { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line-strong); border-radius: 12px; background: #fff; color: var(--ink); font: inherit; font-size: 1.1rem; font-weight: 800; cursor: pointer; }
-    .history-back-button:hover { border-color: var(--teal); background: var(--mint); }
+    .history-detail-heading { margin-bottom: 16px; }
+    .history-detail-heading h1 { margin: 0; font-size: 1.35rem; }
     @keyframes doctorRise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes statusPulse { 50% { box-shadow: 0 0 0 5px rgba(30,155,104,0); } 0%, 100% { box-shadow: 0 0 0 2px rgba(30,155,104,.16); } }
     @media (prefers-reduced-motion: reduce) { .doctor-focus { animation: none; } .record-assist-panel > summary::after { transition: none; } }
@@ -2475,7 +2472,7 @@
             </div>
 
             <div class="doctor-panel" data-doctor-panel-content="history">
-              <div class="history-detail-heading"><button class="history-back-button" type="button" data-doctor-panel="previous" aria-label="Back to previous patients">←</button><div><div class="eyebrow">Medical history</div><h1 id="doctorHistoryTitle">Previous patient’s medical history</h1><p class="heading-copy">All encounters and documents, newest first.</p></div></div>
+              <div class="history-detail-heading"><h1 id="doctorHistoryTitle">Previous patient’s medical history</h1></div>
               <section class="card history-patient-bar"><div><strong id="doctorHistoryPatient">Previous patient</strong><small id="doctorHistoryMeta">Medical records available</small></div><div class="history-filters" aria-label="Filter medical history"><button class="history-filter" type="button" data-history-filter="all" aria-pressed="true">All</button><button class="history-filter" type="button" data-history-filter="visit" aria-pressed="false">Consultations</button><button class="history-filter" type="button" data-history-filter="prescription" aria-pressed="false">Prescriptions</button><button class="history-filter" type="button" data-history-filter="lab" aria-pressed="false">Labs</button></div></section>
               <div class="history-toolbar"><input class="history-search" id="doctorHistorySearch" type="search" maxlength="120" aria-label="Search this patient's history" placeholder="Search conditions, medicines, dates or documents"></div>
               <div class="dated-history" id="datedPatientHistory"></div>
