@@ -1106,13 +1106,12 @@ async function createPatientCheckup(request, response) {
   const patientId = String(body.patientId || '').trim();
   const conversationId = String(body.conversationId || '').trim().slice(0, 180);
   const language = String(body.language || 'English').trim().slice(0, 40) || 'English';
-  const specialty = String(body.specialty || '').trim();
+  const requestedSpecialty = String(body.specialty || '').trim();
+  const specialty = allowedDoctorSpecialties.has(requestedSpecialty) ? requestedSpecialty : 'General Medicine';
   const suppliedSummary = String(body.summary || '').trim().replace(/\s+/g, ' ').slice(0, 6000);
   const patient = patientsDb.prepare('SELECT id FROM patients WHERE id = ?').get(patientId);
   if (!patient) return sendJson(response, 404, { error: 'Patient account was not found' });
   if (!conversationId) return sendJson(response, 400, { error: 'Complete the AI intake before creating an OPD visit' });
-  if (!allowedDoctorSpecialties.has(specialty)) return sendJson(response, 400, { error: 'Choose a valid medical specialty' });
-
   const existing = patientsDb.prepare('SELECT * FROM patient_checkups WHERE patient_id = ? AND conversation_id = ?').get(patientId, conversationId);
   if (existing) return sendJson(response, 200, { checkup: publicCheckup(existing) });
 
