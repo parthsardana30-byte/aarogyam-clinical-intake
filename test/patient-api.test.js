@@ -50,7 +50,6 @@ after(async () => {
 
 test('patient registration, login and dashboard stay patient-scoped', async () => {
   const phone = '9876543210';
-  const identityNumber = '800123456789';
   const password = 'Test@123';
 
   const otpRequest = await json('/api/signup-otp/request', {
@@ -71,8 +70,6 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
       phone,
       otpRequestId: otpRequest.payload.id,
       otpVerificationToken: verification.payload.verificationToken,
-      identityMethod: 'aadhaar',
-      identityNumber,
       fullName: 'Integration Test Patient',
       dateOfBirth: '1995-06-15',
       gender: 'Female',
@@ -88,8 +85,39 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   assert.match(registration.payload.patient.id, /^AS-\d{6}$/);
   assert.ok(registration.payload.sessionToken);
 
+  const phoneLogin = await json('/api/patient-login', {
+    method: 'POST', body: JSON.stringify({ phone, password }),
+  });
+  assert.equal(phoneLogin.response.status, 200);
+  assert.ok(phoneLogin.payload.sessionToken);
+
+  const loginOtpRequest = await json('/api/signup-otp/request', {
+    method: 'POST', body: JSON.stringify({ phone, purpose: 'login' }),
+  });
+  const loginOtpVerification = await json('/api/signup-otp/verify', {
+    method: 'POST', body: JSON.stringify({ phone, purpose: 'login', id: loginOtpRequest.payload.id, otp: loginOtpRequest.payload.demoOtp }),
+  });
+  const otpLogin = await json('/api/patient-login-otp', {
+    method: 'POST', body: JSON.stringify({ phone, otpRequestId: loginOtpRequest.payload.id, otpVerificationToken: loginOtpVerification.payload.verificationToken }),
+  });
+  assert.equal(otpLogin.response.status, 200);
+  assert.ok(otpLogin.payload.sessionToken);
+
+  const resetOtpRequest = await json('/api/signup-otp/request', {
+    method: 'POST', body: JSON.stringify({ phone, purpose: 'reset' }),
+  });
+  const resetOtpVerification = await json('/api/signup-otp/verify', {
+    method: 'POST', body: JSON.stringify({ phone, purpose: 'reset', id: resetOtpRequest.payload.id, otp: resetOtpRequest.payload.demoOtp }),
+  });
+  const reset = await json('/api/patient-password-reset', {
+    method: 'POST', body: JSON.stringify({ phone, otpRequestId: resetOtpRequest.payload.id,
+      otpVerificationToken: resetOtpVerification.payload.verificationToken, password: 'NewTest@123' }),
+  });
+  assert.equal(reset.response.status, 200);
+  assert.ok(reset.payload.sessionToken);
+
   const login = await json('/api/patient-login', {
-    method: 'POST', body: JSON.stringify({ identityMethod: 'aadhaar', identityNumber, password }),
+    method: 'POST', body: JSON.stringify({ phone, password: 'NewTest@123' }),
   });
   assert.equal(login.response.status, 200);
   assert.ok(login.payload.sessionToken);
@@ -101,6 +129,14 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   assert.equal(denied.response.status, 401);
 
   const auth = { Authorization: `Bearer ${login.payload.sessionToken}` };
+  const linkAbha = await json(`/api/patients/${patientId}/link-abha`, {
+    method: 'POST', headers: auth, body: JSON.stringify({ abhaNumber: '80012345678901' }),
+  });
+  assert.equal(linkAbha.response.status, 200);
+  assert.equal(linkAbha.payload.last4, '8901');
+  const accessHistory = await json(`/api/patients/${patientId}/access-history`, { headers: auth });
+  assert.equal(accessHistory.response.status, 200);
+  assert.deepEqual(accessHistory.payload.accessHistory, []);
   const initialDashboard = await json(`/api/patients/${patientId}/dashboard`, { headers: auth });
   assert.equal(initialDashboard.response.status, 200);
   assert.equal(initialDashboard.payload.patient.profile.fullName, 'Integration Test Patient');
@@ -121,4 +157,19 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   const dashboard = await json(`/api/patients/${patientId}/dashboard`, { headers: auth });
   assert.equal(dashboard.payload.summary.documentCount, 1);
   assert.equal(dashboard.payload.documents[0].name, 'test-result.png');
+});
+
+test('OTP login tells an unregistered patient to register first', async () => {
+  const phone = '9876543299';
+  const request = await json('/api/signup-otp/request', {
+    method: 'POST', body: JSON.stringify({ phone, purpose: 'login' }),
+  });
+  assert.equal(request.response.status, 404);
+  assert.equal(request.payload.error, 'No patient account is linked to this mobile number');
+
+  const login = await json('/api/patient-login-otp', {
+    method: 'POST', body: JSON.stringify({ phone, otpRequestId: 'missing', otpVerificationToken: 'missing' }),
+  });
+  assert.equal(login.response.status, 404);
+  assert.equal(login.payload.error, 'No account found for this mobile number. Please register first.');
 });
