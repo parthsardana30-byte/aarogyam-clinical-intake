@@ -4366,7 +4366,14 @@
       const source = document.createElement('button');
       source.type = 'button';
       source.textContent = `View ${record.kind === 'lab' ? 'lab report' : record.kind === 'prescription' ? 'prescription' : 'consultation note'}`;
-      source.addEventListener('click', () => showToast('Record opened', `${record.title} from ${record.date} is ready for review.`));
+      source.addEventListener('click', () => {
+        if (record.previewUrl) {
+          const opened = window.open(record.previewUrl, '_blank', 'noopener');
+          if (!opened) showToast('Allow pop-ups', 'Your browser blocked the document tab. Allow pop-ups for Arogyam and try again.');
+          return;
+        }
+        showToast('No document attached', `${record.title} contains a clinical record but no uploaded file.`);
+      });
       links.append(source);
       item.append(head, summary, links);
       return item;
@@ -4654,7 +4661,7 @@
       const documentHistory = patient.documents.map(item => ({
         date: new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(item.createdAt)),
         iso: item.createdAt.slice(0, 10), kind: item.type.includes('pdf') ? 'prescription' : 'lab', type: 'Document',
-        title: item.name, summary: 'Document uploaded by the hospital care team.'
+        title: item.name, summary: 'Document uploaded by the hospital care team.', previewUrl: item.previewUrl
       }));
       return {
         ...patient,
