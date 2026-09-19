@@ -356,6 +356,12 @@
     .patient-table th { color: #687d78; font-size: .77rem; text-transform: uppercase; letter-spacing: .06em; }
     .patient-table tbody tr:last-child td { border-bottom: 0; }
     .staff-patients-card { width: 100%; }
+    .staff-patient-table-head { align-items: center; }
+    .staff-patient-search { width: min(360px, 100%); min-height: 44px; display: flex; align-items: center; gap: 9px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 13px; background: #f8faf9; color: #627972; }
+    .staff-patient-search:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14,102,85,.11); }
+    .staff-patient-search svg { width: 18px; height: 18px; flex: 0 0 auto; }
+    .staff-patient-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; }
+    .staff-patient-search input::placeholder { color: #82938e; }
     .staff-action-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 30px; }
     .staff-action-card {
       --action-accent: 15, 136, 127;
@@ -392,14 +398,21 @@
       .staff-action-card:is(:hover, :focus-visible), .staff-action-card:is(:hover, :focus-visible) .staff-action-icon { transform: none; }
       .staff-action-icon svg [stroke] { animation: none !important; stroke-dashoffset: 0 !important; }
     }
-    #reception .patient-table th:nth-child(1), #reception .patient-table td:nth-child(1) { width: 29%; }
-    #reception .patient-table th:nth-child(2), #reception .patient-table td:nth-child(2) { width: 16%; }
-    #reception .patient-table th:nth-child(3), #reception .patient-table td:nth-child(3) { width: 31%; }
-    #reception .patient-table th:nth-child(4), #reception .patient-table td:nth-child(4) { width: 24%; }
+    #reception .patient-table { min-width: 780px; }
+    #reception .patient-table th:nth-child(1), #reception .patient-table td:nth-child(1) { width: 24%; }
+    #reception .patient-table th:nth-child(2), #reception .patient-table td:nth-child(2) { width: 20%; }
+    #reception .patient-table th:nth-child(3), #reception .patient-table td:nth-child(3) { width: 27%; }
+    #reception .patient-table th:nth-child(4), #reception .patient-table td:nth-child(4) { width: 29%; }
     .requested-specialist { color: var(--teal-dark); font-weight: 750; }
-    .patient-document-action { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 11px; background: #f5faf8; color: var(--teal-dark); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
-    .patient-document-action svg { width: 17px; height: 17px; flex: 0 0 17px; }
-    .patient-document-action:is(:hover, :focus-visible) { border-color: var(--teal); background: var(--mint); outline: none; transform: translateY(-1px); }
+    .patient-row-action { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 11px; background: #f5faf8; color: var(--teal-dark); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+    .patient-row-action svg { width: 17px; height: 17px; flex: 0 0 17px; }
+    .patient-row-action:is(:hover, :focus-visible) { border-color: var(--teal); background: var(--mint); outline: none; transform: translateY(-1px); }
+    .patient-row-action.vitals { background: #eef4ff; border-color: #cad8ef; color: #315d89; }
+    .patient-row-action.vitals:is(:hover, :focus-visible) { background: #e2ecfb; border-color: #7da1ca; }
+    .patient-action-stack { display: grid; justify-items: start; gap: 6px; }
+    .patient-action-stack small { color: var(--ink-soft); font-size: .7rem; line-height: 1.35; }
+    .patient-summary-action { margin-top: 7px; padding: 0; border: 0; background: transparent; color: var(--teal); font: inherit; font-size: .74rem; font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .patient-summary-action:is(:hover, :focus-visible) { color: var(--teal-dark); outline: none; }
     .status-pill { display: inline-flex; padding: 5px 9px; border-radius: 999px; background: var(--mint); color: var(--teal-dark); font-size: .76rem; font-weight: 750; }
     .status-pill.waiting { background: #f0eee7; color: #625d4e; }
     .status-pill.review { background: var(--orange-soft); color: #8b4b15; }
@@ -1079,6 +1092,20 @@
     .staff-document-patient strong, .staff-document-patient small { display: block; }
     .staff-document-patient small { margin-top: 2px; color: var(--ink-soft); }
     .staff-document-patient span:last-child { color: var(--teal-dark); font-size: .76rem; font-weight: 800; }
+    .staff-vitals-dialog { width: min(620px, calc(100vw - 32px)); }
+    .staff-vitals-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .staff-vitals-grid .device-field { margin: 0; }
+    .staff-vitals-status { min-height: 22px; margin: 16px 0 0; color: #a14343; font-size: .82rem; font-weight: 700; }
+    .staff-summary-dialog { width: min(720px, calc(100vw - 32px)); }
+    .staff-summary-list { display: grid; gap: 13px; max-height: min(58vh, 520px); overflow-y: auto; padding: 2px 4px 2px 0; }
+    .staff-summary-card { padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #f6faf8; }
+    .staff-summary-card header { display: flex; justify-content: space-between; gap: 14px; margin-bottom: 10px; color: var(--ink-soft); font-size: .75rem; font-weight: 750; }
+    .staff-summary-card p { margin: 0; color: var(--ink); line-height: 1.65; white-space: pre-wrap; }
+    @media (max-width: 680px) {
+      .staff-patient-table-head { align-items: stretch; flex-direction: column; }
+      .staff-patient-search { width: 100%; }
+      .staff-vitals-grid { grid-template-columns: 1fr; }
+    }
     .staff-profile-page { max-width: 1040px; margin: 0 auto; }
     .staff-profile-back { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 13px; background: rgba(255,255,255,.78); color: var(--ink); font: inherit; font-weight: 760; cursor: pointer; }
     .staff-profile-back svg { width: 18px; height: 18px; }
@@ -2030,10 +2057,17 @@
           <div><h1 id="receptionTitle">Patient records</h1></div>
         </div>
         <article class="card staff-patients-card">
-          <div class="card-header"><h2>Registered patients</h2></div>
+          <div class="card-header staff-patient-table-head">
+            <h2>Registered patients</h2>
+            <label class="staff-patient-search">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span class="sr-only">Search patients</span>
+              <input id="staffPatientSearch" type="search" autocomplete="off" maxlength="100" placeholder="Search by patient name or UHID" />
+            </label>
+          </div>
           <div style="overflow-x:auto">
             <table class="patient-table">
-              <thead><tr><th>Patient</th><th>AI intake</th><th>Language</th><th>Documents</th></tr></thead>
+              <thead><tr><th>Patient</th><th>UHID</th><th>Upload documents</th><th>Upload vitals</th></tr></thead>
               <tbody id="staffPatientsBody">
                 <tr><td colspan="4"><small>Loading registered patients…</small></td></tr>
               </tbody>
@@ -2280,6 +2314,40 @@
     </form>
   </dialog>
 
+  <dialog class="device-dialog staff-vitals-dialog" id="staffVitalsDialog" aria-labelledby="staffVitalsDialogTitle">
+    <form class="device-dialog-form" id="staffVitalsForm">
+      <div class="device-dialog-head">
+        <div><h2 id="staffVitalsDialogTitle">Upload patient vitals</h2><p>Record the latest measurements taken at reception.</p></div>
+        <button class="device-dialog-close" id="closeStaffVitalsDialog" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="staff-document-patient"><div><strong id="staffVitalsPatientName">Patient</strong><small id="staffVitalsPatientUhid">UHID</small></div><span>Current measurements</span></div>
+      <div class="staff-vitals-grid">
+        <label class="device-field">Heart rate (bpm)<input id="staffHeartRate" type="number" min="30" max="250" step="1" inputmode="numeric" required placeholder="e.g. 78" /></label>
+        <label class="device-field">Oxygen saturation (%)<input id="staffOxygenSaturation" type="number" min="50" max="100" step="1" inputmode="numeric" required placeholder="e.g. 98" /></label>
+        <label class="device-field">Systolic BP (mmHg)<input id="staffSystolicBp" type="number" min="60" max="260" step="1" inputmode="numeric" required placeholder="e.g. 120" /></label>
+        <label class="device-field">Diastolic BP (mmHg)<input id="staffDiastolicBp" type="number" min="30" max="160" step="1" inputmode="numeric" required placeholder="e.g. 80" /></label>
+      </div>
+      <p class="staff-vitals-status" id="staffVitalsStatus" role="status" aria-live="polite"></p>
+      <div class="device-dialog-actions">
+        <button class="device-cancel" id="cancelStaffVitalsDialog" type="button">Cancel</button>
+        <button class="device-authorize" id="saveStaffVitals" type="submit">Save vitals</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="device-dialog staff-summary-dialog" id="staffSummaryDialog" aria-labelledby="staffSummaryDialogTitle">
+    <div class="device-dialog-form">
+      <div class="device-dialog-head">
+        <div><h2 id="staffSummaryDialogTitle">Patient AI summaries</h2><p><strong id="staffSummaryPatientName">Patient</strong> · <span id="staffSummaryPatientUhid">UHID</span></p></div>
+        <button class="device-dialog-close" id="closeStaffSummaryDialog" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="staff-summary-list" id="staffSummaryList"></div>
+      <div class="device-dialog-actions">
+        <button class="device-cancel" id="doneStaffSummaryDialog" type="button">Close</button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"><strong id="toastTitle"></strong><small id="toastText"></small></div>
 
   <script src="/vendor/elevenlabs-client.js?v=1.1.0"></script>
@@ -2357,6 +2425,21 @@
     const staffDocumentStatus = document.getElementById('staffDocumentStatus');
     const saveStaffDocuments = document.getElementById('saveStaffDocuments');
     const staffPatientsBody = document.getElementById('staffPatientsBody');
+    const staffPatientSearch = document.getElementById('staffPatientSearch');
+    const staffVitalsDialog = document.getElementById('staffVitalsDialog');
+    const staffVitalsForm = document.getElementById('staffVitalsForm');
+    const staffVitalsPatientName = document.getElementById('staffVitalsPatientName');
+    const staffVitalsPatientUhid = document.getElementById('staffVitalsPatientUhid');
+    const staffHeartRate = document.getElementById('staffHeartRate');
+    const staffOxygenSaturation = document.getElementById('staffOxygenSaturation');
+    const staffSystolicBp = document.getElementById('staffSystolicBp');
+    const staffDiastolicBp = document.getElementById('staffDiastolicBp');
+    const staffVitalsStatus = document.getElementById('staffVitalsStatus');
+    const saveStaffVitals = document.getElementById('saveStaffVitals');
+    const staffSummaryDialog = document.getElementById('staffSummaryDialog');
+    const staffSummaryPatientName = document.getElementById('staffSummaryPatientName');
+    const staffSummaryPatientUhid = document.getElementById('staffSummaryPatientUhid');
+    const staffSummaryList = document.getElementById('staffSummaryList');
     const patientConditionInputs = [...document.querySelectorAll('input[name="patientCondition"]')];
     const changeSignupMethod = document.getElementById('changeSignupMethod');
     const appShell = document.getElementById('appShell');
@@ -2377,6 +2460,8 @@
     let staffDocumentSession = null;
     let staffDocumentPoll = null;
     let staffDocumentPatient = null;
+    let staffVitalsPatient = null;
+    let staffPatientRecords = [];
     let pendingPatientHealth = { conditions: [], allergies: '' };
     let activePatient = null;
     const archivedDoctorPatients = [];
@@ -2409,6 +2494,10 @@
     keepDigits(signupOtpCode, 8);
     capWholeNumber(doctorExperience, 70);
     capWholeNumber(patientHeight, 250);
+    capWholeNumber(staffHeartRate, 250);
+    capWholeNumber(staffOxygenSaturation, 100);
+    capWholeNumber(staffSystolicBp, 260);
+    capWholeNumber(staffDiastolicBp, 160);
     patientWeight.addEventListener('input', () => {
       const match = patientWeight.value.replace(/[^\d.]/g, '').match(/^\d{0,3}(?:\.\d?)?/);
       let value = match ? match[0] : '';
@@ -3076,60 +3165,127 @@
       if (staffDocumentDialog.open) staffDocumentDialog.close();
     }
 
-    function renderStaffPatients(patients = [], message = '') {
+    function renderStaffPatients(patients = staffPatientRecords, message = '') {
       staffPatientsBody.innerHTML = '';
-      if (!patients.length) {
+      const search = staffPatientSearch.value.trim().toLowerCase();
+      const documentActionLabel = structuredMessages['staff.table.uploadDocuments'] || 'Upload documents';
+      const vitalsActionLabel = structuredMessages['staff.table.uploadVitals'] || 'Upload vitals';
+      const visiblePatients = patients.filter(patient => `${patient.fullName} ${patient.uhid}`.toLowerCase().includes(search));
+      if (!visiblePatients.length) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
         cell.colSpan = 4;
         const copy = document.createElement('small');
-        copy.textContent = message || 'No registered patients are available yet.';
+        copy.textContent = message || (search ? 'No patient matches this search.' : 'No AI summaries from your authorized devices yet.');
         cell.append(copy); row.append(cell); staffPatientsBody.append(row);
         return;
       }
-      patients.forEach(patient => {
+      visiblePatients.forEach(patient => {
         const row = document.createElement('tr');
         const identity = document.createElement('td');
         const name = document.createElement('strong'); name.textContent = patient.fullName;
-        const id = document.createElement('small'); id.textContent = patient.id;
-        identity.append(name, document.createElement('br'), id);
-        const intake = document.createElement('td');
-        intake.textContent = patient.intakeCompletedAt
-          ? `Completed · ${new Date(patient.intakeCompletedAt).toLocaleDateString('en-IN')}` : 'Not started';
-        const language = document.createElement('td'); language.textContent = patient.language || 'Not recorded';
+        const summaryAction = document.createElement('button');
+        const summaryCount = patient.intakeSummaries?.length || 0;
+        summaryAction.type = 'button'; summaryAction.className = 'patient-summary-action';
+        summaryAction.dataset.patientSummaries = patient.id;
+        summaryAction.textContent = `View ${summaryCount} AI summar${summaryCount === 1 ? 'y' : 'ies'}`;
+        identity.append(name, document.createElement('br'), summaryAction);
+        const uhid = document.createElement('td');
+        const uhidValue = document.createElement('strong'); uhidValue.textContent = patient.uhid;
+        uhid.append(uhidValue);
         const documents = document.createElement('td');
-        const button = document.createElement('button');
-        button.className = 'patient-document-action'; button.type = 'button';
-        button.dataset.patientDocument = patient.id; button.dataset.patientName = patient.fullName;
-        button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Upload documents';
-        documents.append(button); row.append(identity, intake, language, documents); staffPatientsBody.append(row);
+        const documentStack = document.createElement('div'); documentStack.className = 'patient-action-stack';
+        const documentButton = document.createElement('button');
+        documentButton.className = 'patient-row-action'; documentButton.type = 'button';
+        documentButton.dataset.patientDocument = patient.id; documentButton.dataset.patientName = patient.fullName;
+        documentButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        documentButton.append(documentActionLabel);
+        const documentCount = document.createElement('small');
+        documentCount.textContent = `${patient.documentCount} document${patient.documentCount === 1 ? '' : 's'} on file`;
+        documentStack.append(documentButton, documentCount); documents.append(documentStack);
+        const vitals = document.createElement('td');
+        const vitalsStack = document.createElement('div'); vitalsStack.className = 'patient-action-stack';
+        const vitalsButton = document.createElement('button');
+        vitalsButton.className = 'patient-row-action vitals'; vitalsButton.type = 'button';
+        vitalsButton.dataset.patientVitals = patient.id; vitalsButton.dataset.patientName = patient.fullName;
+        vitalsButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        vitalsButton.append(vitalsActionLabel);
+        const vitalsMeta = document.createElement('small');
+        vitalsMeta.textContent = patient.latestVitals
+          ? `${patient.latestVitals.heartRate} bpm · ${patient.latestVitals.oxygenSaturation}% O₂ · ${patient.latestVitals.bloodPressure.systolic}/${patient.latestVitals.bloodPressure.diastolic}`
+          : 'No vitals recorded';
+        vitalsStack.append(vitalsButton, vitalsMeta); vitals.append(vitalsStack);
+        row.append(identity, uhid, documents, vitals); staffPatientsBody.append(row);
       });
     }
 
     async function loadStaffPatients() {
       let storedStaff = null;
       try { storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null'); } catch (_) {}
-      if (!storedStaff?.id) return renderStaffPatients([], 'Sign in as hospital staff to view registered patients.');
+      if (!storedStaff?.id) {
+        staffPatientRecords = [];
+        return renderStaffPatients([], 'Sign in as hospital staff to view registered patients.');
+      }
       try {
         const response = await fetch(`/api/staff-patients?staffId=${encodeURIComponent(storedStaff.id)}`, { cache: 'no-store' });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not load registered patients');
-        renderStaffPatients(data.patients);
+        staffPatientRecords = data.patients;
+        renderStaffPatients();
       } catch (error) {
+        staffPatientRecords = [];
         renderStaffPatients([], error.message || 'Could not load registered patients.');
       }
     }
 
     staffPatientsBody.addEventListener('click', event => {
-      const button = event.target.closest('[data-patient-document]');
-      if (!button) return;
-      stopStaffDocumentSession();
-      staffDocumentPatient = { id: button.dataset.patientDocument, name: button.dataset.patientName };
-      staffDocumentPatientName.textContent = staffDocumentPatient.name;
-      staffDocumentPatientId.textContent = staffDocumentPatient.id;
-      staffDocumentDialog.showModal();
-      void ensureStaffDocumentSession().catch(error => setStaffDocumentStatus(error.message, true));
+      const documentButton = event.target.closest('[data-patient-document]');
+      if (documentButton) {
+        stopStaffDocumentSession();
+        staffDocumentPatient = { id: documentButton.dataset.patientDocument, name: documentButton.dataset.patientName };
+        staffDocumentPatientName.textContent = staffDocumentPatient.name;
+        staffDocumentPatientId.textContent = `UHID · ${staffDocumentPatient.id}`;
+        staffDocumentDialog.showModal();
+        void ensureStaffDocumentSession().catch(error => setStaffDocumentStatus(error.message, true));
+        return;
+      }
+      const summaryButton = event.target.closest('[data-patient-summaries]');
+      if (summaryButton) {
+        const patient = staffPatientRecords.find(item => item.id === summaryButton.dataset.patientSummaries);
+        if (!patient) return;
+        staffSummaryPatientName.textContent = patient.fullName;
+        staffSummaryPatientUhid.textContent = `UHID ${patient.uhid}`;
+        staffSummaryList.replaceChildren();
+        patient.intakeSummaries.forEach(summary => {
+          const card = document.createElement('article'); card.className = 'staff-summary-card';
+          const header = document.createElement('header');
+          const deviceName = document.createElement('span'); deviceName.textContent = summary.deviceName;
+          const createdAt = document.createElement('time'); createdAt.dateTime = summary.createdAt;
+          createdAt.textContent = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(summary.createdAt));
+          const text = document.createElement('p'); text.textContent = summary.summary;
+          header.append(deviceName, createdAt); card.append(header, text); staffSummaryList.append(card);
+        });
+        staffSummaryDialog.showModal();
+        return;
+      }
+      const vitalsButton = event.target.closest('[data-patient-vitals]');
+      if (!vitalsButton) return;
+      const patient = staffPatientRecords.find(item => item.id === vitalsButton.dataset.patientVitals);
+      staffVitalsPatient = { id: vitalsButton.dataset.patientVitals, name: vitalsButton.dataset.patientName };
+      staffVitalsForm.reset();
+      staffVitalsStatus.textContent = '';
+      staffVitalsPatientName.textContent = staffVitalsPatient.name;
+      staffVitalsPatientUhid.textContent = `UHID · ${staffVitalsPatient.id}`;
+      if (patient?.latestVitals) {
+        staffHeartRate.value = patient.latestVitals.heartRate;
+        staffOxygenSaturation.value = patient.latestVitals.oxygenSaturation;
+        staffSystolicBp.value = patient.latestVitals.bloodPressure.systolic;
+        staffDiastolicBp.value = patient.latestVitals.bloodPressure.diastolic;
+      }
+      staffVitalsDialog.showModal();
+      staffHeartRate.focus();
     });
+    staffPatientSearch.addEventListener('input', () => renderStaffPatients());
     void loadStaffPatients();
     document.getElementById('continueStaffDocumentOnDevice').addEventListener('click', () => staffDocumentInput.click());
     staffDocumentInput.addEventListener('change', () => uploadStaffPatientFiles([...staffDocumentInput.files]).catch(error => setStaffDocumentStatus(error.message, true)));
@@ -3158,10 +3314,62 @@
         if (!response.ok) throw new Error(data.error || 'Could not save patient documents');
         const patientName = staffDocumentPatient.name;
         closeStaffDocumentUpload();
+        await loadStaffPatients();
         showToast('Documents saved', `${data.documentCount} document${data.documentCount === 1 ? '' : 's'} added for ${patientName}.`);
       } catch (error) {
         setStaffDocumentStatus(error.message || 'Could not save patient documents.', true);
         saveStaffDocuments.disabled = false;
+      }
+    });
+
+    function closeStaffVitalsUpload() {
+      staffVitalsPatient = null;
+      staffVitalsForm.reset();
+      staffVitalsStatus.textContent = '';
+      saveStaffVitals.disabled = false;
+      if (staffVitalsDialog.open) staffVitalsDialog.close();
+    }
+
+    document.getElementById('closeStaffVitalsDialog').addEventListener('click', closeStaffVitalsUpload);
+    document.getElementById('cancelStaffVitalsDialog').addEventListener('click', closeStaffVitalsUpload);
+    staffVitalsDialog.addEventListener('cancel', event => { event.preventDefault(); closeStaffVitalsUpload(); });
+    staffVitalsDialog.addEventListener('click', event => { if (event.target === staffVitalsDialog) closeStaffVitalsUpload(); });
+    const closeStaffSummaryDialog = () => { if (staffSummaryDialog.open) staffSummaryDialog.close(); };
+    document.getElementById('closeStaffSummaryDialog').addEventListener('click', closeStaffSummaryDialog);
+    document.getElementById('doneStaffSummaryDialog').addEventListener('click', closeStaffSummaryDialog);
+    staffSummaryDialog.addEventListener('cancel', event => { event.preventDefault(); closeStaffSummaryDialog(); });
+    staffSummaryDialog.addEventListener('click', event => { if (event.target === staffSummaryDialog) closeStaffSummaryDialog(); });
+    staffVitalsForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!staffVitalsPatient || saveStaffVitals.disabled || !staffVitalsForm.reportValidity()) return;
+      const systolic = Number(staffSystolicBp.value);
+      const diastolic = Number(staffDiastolicBp.value);
+      if (systolic <= diastolic) {
+        staffVitalsStatus.textContent = 'Systolic pressure must be higher than diastolic pressure.';
+        staffSystolicBp.focus();
+        return;
+      }
+      saveStaffVitals.disabled = true;
+      staffVitalsStatus.textContent = 'Saving vitals…';
+      try {
+        const storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null');
+        const response = await fetch('/api/staff-patient-vitals', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            staffId: storedStaff?.id || '', patientId: staffVitalsPatient.id,
+            heartRate: Number(staffHeartRate.value), oxygenSaturation: Number(staffOxygenSaturation.value),
+            systolic, diastolic
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.vitals) throw new Error(data.error || 'Could not save patient vitals');
+        const patientName = staffVitalsPatient.name;
+        closeStaffVitalsUpload();
+        await loadStaffPatients();
+        showToast('Vitals saved', `Latest vitals added for ${patientName}.`);
+      } catch (error) {
+        staffVitalsStatus.textContent = error.message || 'Could not save patient vitals.';
+        saveStaffVitals.disabled = false;
       }
     });
 
@@ -3435,8 +3643,8 @@
       ['.settings-menu-head strong', 'settings.title'], ['.settings-menu-head small', 'settings.subtitle'], ['.settings-field > span', 'settings.language'], ['#logoutButton span', 'settings.logout'],
       ['#reception .doctor-nav-button:nth-child(1) .nav-label', 'staff.nav.patients'], ['#addAuthorizedDevice .nav-label', 'staff.nav.authorizeDevice'],
       ['#receptionTitle', 'staff.title'],
-      ['#reception th:nth-child(1)', 'staff.table.patient'], ['#reception th:nth-child(2)', 'staff.table.aiIntake'],
-      ['#reception th:nth-child(3)', 'staff.table.language'], ['#reception th:nth-child(4)', 'staff.table.documents'],
+      ['#reception th:nth-child(1)', 'staff.table.patient'], ['#reception th:nth-child(2)', 'staff.table.uhid'],
+      ['#reception th:nth-child(3)', 'staff.table.uploadDocuments'], ['#reception th:nth-child(4)', 'staff.table.uploadVitals'],
       ['#patient .doctor-nav-button:nth-child(1) .nav-label', 'patient.nav.start'], ['#patient .doctor-nav-button:nth-child(2) .nav-label', 'patient.nav.records'], ['#patient .doctor-nav-button:nth-child(3) .nav-label', 'patient.nav.consent'],
       ['#languageForm h1', 'patient.chooseLanguage'], ['#backToCheckupWelcome', 'common.back'], ['#confirmLanguage', 'common.continue'],
       ['#voiceStatus', 'patient.voice.ready'], ['#voiceQuestion', 'patient.voice.question'], ['#autoMicText', 'patient.voice.connecting'], ['#endVoiceSession', 'patient.voice.end'],
@@ -3469,8 +3677,10 @@
       if (messages['patient.chat.placeholder']) document.getElementById('voiceChatInput').placeholder = messages['patient.chat.placeholder'];
       if (messages['records.search']) document.getElementById('patientRecordSearch').placeholder = messages['records.search'];
       if (messages['history.search']) document.getElementById('doctorHistorySearch').placeholder = messages['history.search'];
+      if (messages['staff.search']) document.getElementById('staffPatientSearch').placeholder = messages['staff.search'];
       if (messages['device.namePlaceholder']) document.getElementById('deviceName')?.setAttribute('placeholder', messages['device.namePlaceholder']);
       if (messages['device.codePlaceholder']) document.getElementById('deviceCode')?.setAttribute('placeholder', messages['device.codePlaceholder']);
+      if (staffPatientRecords.length) renderStaffPatients();
     }
 
     async function loadStructuredLocale(language) {
@@ -3736,7 +3946,8 @@
           clearTimeout(revokeResetTimer);
           revoke.disabled = true;
           try {
-            const response = await fetch(`/api/devices/${encodeURIComponent(device.id)}`, { method:'DELETE' });
+            const storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null');
+            const response = await fetch(`/api/devices/${encodeURIComponent(device.id)}?staffId=${encodeURIComponent(storedStaff?.id || '')}`, { method:'DELETE' });
             const payload = await response.json();
             if (!response.ok) throw new Error(payload.error || 'Could not revoke device access');
             await loadAuthorizedDevices();
@@ -3757,7 +3968,8 @@
 
     async function loadAuthorizedDevices() {
       try {
-        const response = await fetch('/api/devices', { cache: 'no-store' });
+        const storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null');
+        const response = await fetch(`/api/devices?staffId=${encodeURIComponent(storedStaff?.id || '')}`, { cache: 'no-store' });
         if (!response.ok) throw new Error('Could not load authorized devices');
         const payload = await response.json();
         renderAuthorizedDevices(payload.devices || []);
