@@ -178,6 +178,25 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.equal(doctor.payload.patients[0].documents[0].name, 'previous-prescription.png');
   assert.equal(doctor.payload.patients.some(record => record.uhid === firstB.payload.intake.uhid), false);
 
+  const clinicalAnswer = await json('/api/doctor-clinical-assistant', {
+    method: 'POST', body: JSON.stringify({
+      doctorId: 'CHA-GEN-1001', patientId: patient.id,
+      question: 'What should I clarify first from the current intake and previous history?',
+    }),
+  });
+  assert.equal(clinicalAnswer.response.status, 200);
+  assert.match(clinicalAnswer.payload.answer, /Current intake/);
+  assert.equal(clinicalAnswer.payload.groundedIn.hasVitals, true);
+  assert.equal(clinicalAnswer.payload.groundedIn.documentCount, 1);
+
+  const nonMedicalQuestion = await json('/api/doctor-clinical-assistant', {
+    method: 'POST', body: JSON.stringify({
+      doctorId: 'CHA-GEN-1001', patientId: patient.id, question: 'Write a poem about the weather',
+    }),
+  });
+  assert.equal(nonMedicalQuestion.response.status, 422);
+  assert.match(nonMedicalQuestion.payload.error, /only medical questions/i);
+
   const prescription = await json('/api/doctor-prescriptions', {
     method: 'POST', body: JSON.stringify({
       doctorId: 'CHA-GEN-1001', patientId: patient.id,

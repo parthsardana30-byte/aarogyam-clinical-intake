@@ -1537,6 +1537,80 @@ function listDoctorPatients(_request, response, url) {
   sendJson(response, 200, { doctor: publicDoctor(doctor), patients: patientRecords });
 }
 
+function clinicalQuestionAllowed(question) {
+  return /\b(patient|symptom|pain|fever|medicine|medication|allerg|diagnos|treat|vital|blood|oxygen|pulse|history|document|prescription|risk|red[- ]?flag|clarif|ask|follow[- ]?up|investig|test|condition|disease|dose|health|clinical|intake|prior|current|urgent|refer|monitor|exam|complaint)\w*/i.test(question);
+}
+
+function clinicalVitalsAnswer(vitals) {
+  if (!vitals) return 'No reception vitals are recorded for this hospital encounter. Obtain and verify blood pressure, pulse and oxygen saturation before using vitals in a clinical decision.';
+  const observations = [];
+  if (vitals.systolic_bp >= 180 || vitals.diastolic_bp >= 120) observations.push('the recorded blood pressure is in a severely elevated range and should be repeated promptly while assessing for acute symptoms');
+  else if (vitals.systolic_bp >= 140 || vitals.diastolic_bp >= 90) observations.push('the recorded blood pressure is elevated and should be confirmed with a repeat measurement');
+  if (vitals.oxygen_saturation < 94) observations.push('oxygen saturation is below 94% and warrants prompt clinical assessment');
+  if (vitals.heart_rate < 50 || vitals.heart_rate > 120) observations.push('the pulse is outside the usual resting range and should be reassessed in context');
+  const interpretation = observations.length ? `Important: ${observations.join('; ')}.` : 'These values do not trigger the assistant’s basic threshold flags, but they still require clinical interpretation and confirmation.';
+  return `Latest recorded vitals: BP ${vitals.systolic_bp}/${vitals.diastolic_bp} mmHg, pulse ${vitals.heart_rate} bpm and SpO₂ ${vitals.oxygen_saturation}%. ${interpretation}`;
+}
+
+async function answerDoctorClinicalQuestion(request, response) {
+  const body = await readJson(request, 12_000);
+  const doctorId = normalizeDoctorId(body.doctorId);
+  const patientId = String(body.patientId || '').trim();
+  const question = String(body.question || '').trim().replace(/\s+/g, ' ').slice(0, 300);
+  if (question.length < 3) return sendJson(response, 400, { error: 'Enter a medical question about this patient' });
+  if (!clinicalQuestionAllowed(question)) {
+    return sendJson(response, 422, { error: 'This assistant answers only medical questions related to the selected patient.' });
+  }
+  const doctor = patientsDb.prepare('SELECT * FROM doctors WHERE doctor_id = ?').get(doctorId);
+  if (!doctor) return sendJson(response, 403, { error: 'A registered doctor account is required' });
+  const patient = patientsDb.prepare('SELECT * FROM patients WHERE id = ?').get(patientId);
+  if (!patient) return sendJson(response, 404, { error: 'Patient account was not found' });
+  const identity = patientsDb.prepare('SELECT * FROM patient_hospital_identities WHERE patient_id = ? AND hospital_id = ?').get(patientId, doctor.hospital_id);
+  if (!identity) return sendJson(response, 404, { error: 'This patient is not enrolled at your hospital' });
+  const intakes = patientsDb.prepare(`
+    SELECT summary, encounter_number, created_at FROM patient_intakes
+    WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(created_at) DESC LIMIT 6
+  `).all(patientId, doctor.hospital_id);
+  if (!intakes.length) return sendJson(response, 404, { error: 'No hospital encounter was found for this patient' });
+  const vitals = patientsDb.prepare(`
+    SELECT * FROM patient_vitals WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(recorded_at) DESC LIMIT 1
+  `).get(patientId, doctor.hospital_id);
+  const documents = patientsDb.prepare(`
+    SELECT original_name, created_at FROM patient_documents
+    WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(created_at) DESC LIMIT 6
+  `).all(patientId, doctor.hospital_id);
+  const current = intakes[0];
+  const previous = intakes.slice(1);
+  const conditions = JSON.parse(patient.conditions_json || '[]').filter(item => item && String(item).toLowerCase() !== 'none');
+  const allergies = patient.allergies || 'None reported';
+  const currentContext = `Current intake (${current.encounter_number}): ${current.summary}`;
+  const previousContext = previous.length
+    ? `Previous hospital intake: ${previous[0].summary}`
+    : 'No earlier hospital intake summary is available.';
+  const documentContext = documents.length
+    ? `${documents.length} hospital document${documents.length === 1 ? '' : 's'} ${documents.length === 1 ? 'is' : 'are'} available; the latest is ${documents[0].original_name}. Document contents must be reviewed directly before relying on them.`
+    : 'No prior hospital document is available.';
+  let answer;
+  if (/vital|blood pressure|\bbp\b|pulse|oxygen|spo2/i.test(question)) {
+    answer = `${clinicalVitalsAnswer(vitals)} ${currentContext}`;
+  } else if (/medic|dose|prescri|allerg|drug/i.test(question)) {
+    answer = `Recorded allergies: ${allergies}. Known conditions: ${conditions.length ? conditions.join(', ') : 'none recorded'}. ${currentContext} ${documentContext} Reconcile every current medicine, dose and reaction directly with the patient before prescribing.`;
+  } else if (/history|previous|prior|document|record/i.test(question)) {
+    answer = `${currentContext} ${previousContext} ${documentContext} The current presentation should be compared with prior diagnoses, medicines, allergies and changes in symptom pattern during the consultation.`;
+  } else if (/diagnos|differential|cause|impression/i.test(question)) {
+    answer = `${currentContext} ${previousContext} Use these findings to form a differential only after examination and clarification; this assistant cannot establish a diagnosis. Recorded conditions: ${conditions.length ? conditions.join(', ') : 'none recorded'}; allergies: ${allergies}.`;
+  } else if (/red[- ]?flag|urgent|emergency|risk|refer/i.test(question)) {
+    answer = `${currentContext} Check immediately for sudden or rapidly worsening symptoms, altered consciousness, focal neurological deficit, chest pain, severe breathlessness, persistent low oxygen saturation or haemodynamic instability. ${clinicalVitalsAnswer(vitals)} Escalate according to clinical judgement and local protocol.`;
+  } else {
+    answer = `${currentContext} ${previousContext} ${clinicalVitalsAnswer(vitals)} Clarify symptom onset and progression, current medicines, adherence, allergies, relevant red flags and what has changed since the prior record.`;
+  }
+  sendJson(response, 200, {
+    answer: `${answer} Clinical decision support only—confirm findings with the patient and use professional judgement.`,
+    patient: { id: patient.id, uhid: identity.uhid, encounterNumber: current.encounter_number },
+    groundedIn: { intakeCount: intakes.length, documentCount: documents.length, hasVitals: Boolean(vitals) }
+  });
+}
+
 function cleanPrescriptionText(value, limit = 1000) {
   return String(value || '').trim().replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').slice(0, limit);
 }
@@ -2016,6 +2090,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === '/api/doctor-profile') return getDoctorProfile(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/doctor-records') return listDoctorRecords(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/doctor-patients') return listDoctorPatients(request, response, url);
+    if (request.method === 'POST' && url.pathname === '/api/doctor-clinical-assistant') return await answerDoctorClinicalQuestion(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-prescriptions') return await createDoctorPrescription(request, response);
     const doctorDocumentMatch = url.pathname.match(/^\/api\/doctor-documents\/([0-9a-f-]+)$/i);
     if (request.method === 'GET' && doctorDocumentMatch) return await serveDoctorDocument(request, response, doctorDocumentMatch[1], url);
