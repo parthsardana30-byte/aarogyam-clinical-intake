@@ -524,6 +524,23 @@
     .result-room strong { margin-top: 3px; font-size: 1rem; }
     .checkup-result-actions { display: flex; justify-content: flex-end; margin-top: 30px; }
     .checkup-result-done { min-height: 52px; padding: 0 25px; border: 0; border-radius: 15px; background: var(--ink); color: #fff; font: inherit; font-weight: 760; cursor: pointer; }
+    .doctor-choice-step { min-height: calc(100dvh - 24px); display: grid; place-items: center; padding: 24px; }
+    .doctor-choice-step[hidden] { display: none; }
+    .doctor-choice-card { width: min(980px, 100%); padding: clamp(26px, 4vw, 44px); border: 1px solid rgba(16,43,39,.11); border-radius: 28px; background: rgba(255,255,255,.95); box-shadow: 0 28px 80px rgba(16,43,39,.12); }
+    .doctor-choice-card h1 { margin: 5px 0 8px; font-size: clamp(2rem, 4vw, 3.2rem); }
+    .doctor-choice-card > p { margin: 0 0 24px; color: var(--ink-soft); }
+    .specialty-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+    .specialty-option { position: relative; display: block; }
+    .specialty-option input { position: absolute; opacity: 0; pointer-events: none; }
+    .specialty-option span { min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; padding: 18px; border: 1px solid var(--line-strong); border-radius: 18px; background: #fbfdfc; cursor: pointer; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+    .specialty-option strong, .specialty-option small { display: block; }
+    .specialty-option small { color: var(--ink-soft); line-height: 1.45; }
+    .specialty-option input:checked + span { border-color: var(--teal); background: var(--mint); box-shadow: 0 10px 24px rgba(14,102,85,.12); transform: translateY(-2px); }
+    .specialty-option input:focus-visible + span { outline: 3px solid rgba(14,102,85,.2); outline-offset: 2px; }
+    .doctor-choice-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+    .doctor-choice-status { min-height: 22px; margin-top: 12px; color: #a14343; font-weight: 700; }
+    .doctor-queue-empty { padding: 54px 24px; text-align: center; color: var(--ink-soft); }
+    .doctor-queue-empty strong { display: block; margin-bottom: 7px; color: var(--ink); font-size: 1.2rem; }
     /* Patient conversation: a single viewport with a scrollable transcript. */
     .app-shell.patient-session.voice-mode .workspace { width: 100%; max-width: none; padding: 12px 0 0; }
     .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) .workspace { width: min(1280px, 100%); }
@@ -1647,6 +1664,8 @@
       .language-actions { align-items: stretch; flex-direction: column-reverse; }
       .language-back, .language-continue { width: 100%; }
       .checkup-result { padding: 8px; }
+      .doctor-choice-step { padding: 8px; }
+      .specialty-options { grid-template-columns: 1fr; }
       .checkup-result-head { grid-template-columns: 1fr; }
       .visit-ticket-stack { grid-template-columns: 1fr; }
       .opd-ticket { min-width: 0; }
@@ -2077,9 +2096,9 @@
             <section class="patient-dashboard-hero" aria-labelledby="patientDashboardTitle">
               <p class="patient-dashboard-kicker">Your patient account</p>
               <h1 class="checkup-welcome-title" id="patientDashboardTitle">Hello, <span id="patientWelcomeName">Patient</span></h1>
-              <p class="patient-dashboard-copy">Review your consultation history, uploaded documents and health records from one secure place.</p>
-              <button class="checkup-launch-button" id="viewPatientRecordsHero" type="button">
-                Open my records
+              <p class="patient-dashboard-copy">Start your AI health assessment, then choose the specialty you need. We will assign a doctor, room and unique queue number for your visit.</p>
+              <button class="checkup-launch-button" id="startCheckupButton" type="button">
+                Start AI assessment
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
             </section>
@@ -2135,6 +2154,19 @@
             </div>
           </section>
         </div>
+        <section class="doctor-choice-step" id="doctorChoiceStep" aria-labelledby="doctorChoiceTitle" hidden>
+          <form class="doctor-choice-card" id="doctorChoiceForm">
+            <div class="eyebrow">Choose your care team</div>
+            <h1 id="doctorChoiceTitle" tabindex="-1">Which specialist would you like to see?</h1>
+            <p>Select a department. Arogyam will assign the available doctor with the shortest queue.</p>
+            <fieldset class="specialty-options" id="specialtyOptions" aria-label="Medical specialty"></fieldset>
+            <p class="doctor-choice-status" id="doctorChoiceStatus" role="status" aria-live="polite"></p>
+            <div class="doctor-choice-actions">
+              <button class="secondary-button" id="backToVoiceCheckup" type="button">Back to intake</button>
+              <button class="primary-button" id="confirmDoctorChoice" type="submit" disabled>Join doctor queue</button>
+            </div>
+          </form>
+        </section>
         <section class="checkup-result" id="checkupResult" aria-labelledby="checkupResultTitle" hidden>
           <article class="checkup-result-card">
             <header class="checkup-result-head">
@@ -2213,24 +2245,24 @@
               <div class="doctor-carousel" aria-label="Patient navigator">
               <section class="card doctor-focus" aria-label="Current patient workspace">
                 <header class="focus-header">
-                  <div class="focus-patient"><div class="patient-avatar">AS</div><div><strong>Ananya Sharma</strong><small>42 years · Female · PT-001 · Hindi intake</small></div></div>
-                  <div class="vitals-inline" aria-label="Latest vital signs"><div class="vital-inline"><small>BP</small><strong>128/82</strong></div><div class="vital-inline"><small>Pulse</small><strong>78 bpm</strong></div><div class="vital-inline"><small>SpO₂</small><strong>98%</strong></div></div>
-                  <button class="primary-button" type="button" data-toast="Encounter started|Ananya Sharma’s consultation workspace is now active.">Start notes</button>
+                  <div class="focus-patient"><div class="patient-avatar" id="doctorCurrentPatientAvatar">—</div><div><strong id="doctorCurrentPatientName">No patient selected</strong><small id="doctorCurrentPatientMeta">Waiting for the next assigned patient</small></div></div>
+                  <div class="vitals-inline" aria-label="Patient details"><div class="vital-inline"><small>Height</small><strong id="doctorPatientHeight">—</strong></div><div class="vital-inline"><small>Weight</small><strong id="doctorPatientWeight">—</strong></div><div class="vital-inline"><small>Blood</small><strong id="doctorPatientBlood">—</strong></div></div>
+                  <button class="primary-button" id="doctorQueueAction" type="button" disabled>Begin consultation</button>
                 </header>
                 <div class="focus-grid">
                   <article class="focus-summary">
                     <header class="focus-summary-head"><div><span class="ai-spark">AI intake summary</span></div><span class="review-badge">Review required</span></header>
-                    <section class="summary-block"><h3>Presenting concern</h3><ul class="clinical-bullets"><li><strong>Abdominal heaviness and reduced appetite for 2–3 days.</strong></li><li>More noticeable after meals with bloating.</li><li>No vomiting or fever reported.</li></ul></section>
-                    <section class="summary-block"><h3>Patient-reported context</h3><div class="summary-facts"><div class="summary-fact"><small>Bowel movement</small><strong>Daily, incomplete</strong></div><div class="summary-fact"><small>Pain</small><strong>3/10</strong></div><div class="summary-fact"><small>Sleep</small><strong>Unchanged</strong></div><div class="summary-fact"><small>Similar episode</small><strong>May 2026</strong></div></div></section>
-                    <section class="summary-block"><h3>Medication context</h3><ul class="clinical-bullets"><li>Patient reported no regular medicines.</li><li>A prescription from 14 June lists <strong>metformin 500 mg</strong>.</li><li>Confirm whether the prescription is still being taken.</li></ul></section>
+                    <section class="summary-block"><h3>AI intake summary</h3><ul class="clinical-bullets" id="doctorAiSummary"><li><strong>No assigned patient is waiting.</strong></li></ul></section>
+                    <section class="summary-block"><h3>Patient-reported context</h3><div class="summary-facts" id="doctorPatientFacts"></div></section>
+                    <section class="summary-block"><h3>Conditions and allergies</h3><ul class="clinical-bullets" id="doctorHealthContext"><li>No patient selected.</li></ul></section>
                   </article>
                   <aside class="focus-rail">
-                    <section class="focus-rail-section"><div class="compact-alert"><span><strong>Confirm medication:</strong> today’s intake conflicts with the previous prescription.</span></div></section>
-                    <section class="focus-rail-section"><div class="focus-rail-title"><h3>Recent records</h3><button type="button" data-open-inline-history>View all →</button></div><div class="compact-records"><div class="compact-record"><time>14 Jun 26</time><div><strong>Prescription</strong><small>Metformin 500 mg listed</small></div></div><div class="compact-record"><time>02 May 26</time><div><strong>Digestive discomfort</strong><small>Previous OPD consultation</small></div></div><div class="compact-record"><time>18 Nov 25</time><div><strong>HbA1c panel</strong><small>Result: 6.8%</small></div></div></div></section>
+                    <section class="focus-rail-section"><div class="compact-alert"><span><strong>Queue token:</strong> <span id="doctorQueueToken">Waiting for assignment</span></span></div></section>
+                    <section class="focus-rail-section"><div class="focus-rail-title"><h3>Visit details</h3><button type="button" data-open-inline-history>View history →</button></div><div class="compact-records"><div class="compact-record"><time>OPD</time><div><strong id="doctorOpdNumber">—</strong><small id="doctorRequestedSpecialty">No specialty selected</small></div></div><div class="compact-record"><time>Files</time><div><strong id="doctorDocumentCount">0 documents</strong><small>Uploaded health records</small></div></div></div></section>
                     <section class="focus-rail-section"><details class="record-assist-panel"><summary>Ask AI about records</summary><p class="record-assist-copy">Search prior consultations, prescriptions and documents with dated evidence.</p><form class="compact-assistant-form" id="doctorRecordAssistant"><input class="assistant-input" id="doctorRecordQuery" type="search" autocomplete="off" maxlength="500" placeholder="Ask about medicines, labs…" aria-label="Ask a question about patient records"><button class="primary-button" type="submit">Ask</button></form><div class="compact-suggestions" aria-label="Suggested questions"><button class="assistant-chip" type="button" data-record-question="Which medicines were previously prescribed?">Medicines</button><button class="assistant-chip" type="button" data-record-question="Has this complaint happened before?">Similar complaints</button><button class="assistant-chip" type="button" data-record-question="Show the latest lab result">Latest lab</button></div><div class="compact-assistant-answer" id="doctorAssistantAnswer" aria-live="polite"><strong>Ask a question</strong> to find dated evidence in this patient’s records.</div></details></section>
                   </aside>
                 </div>
-                <footer class="focus-footer"><span><span aria-hidden="true">ⓘ</span> AI-generated content supports review and does not replace clinical assessment.</span><span class="prototype-label">Demo patient data</span></footer>
+                <footer class="focus-footer"><span><span aria-hidden="true">ⓘ</span> AI-generated content supports review and does not replace clinical assessment.</span><span class="prototype-label" id="doctorQueueStatusLabel">Live queue</span></footer>
                 <section class="previous-record-panel" aria-labelledby="previousRecordTitle">
                   <header class="previous-record-head"><div><div class="eyebrow">Previous patient record</div><h3 id="previousRecordTitle">Kavita Rao</h3><p id="previousRecordMeta">PT-005 · Most recent completed consultation</p></div><button type="button" data-view-previous-history>View full history →</button></header>
                   <div class="previous-record-list" id="previousRecordList"></div>
@@ -2467,7 +2499,14 @@
         { date: '15 Mar 2026', iso: '2026-03-15', kind: 'prescription', type: 'Prescription', title: 'Diabetes prescription', summary: 'The existing oral medicine plan was renewed after clinical review.' }
       ]
     };
-    let activeDoctorPatientIndex = 1;
+    demoDoctorPatients.length = 0;
+    archivedDoctorPatients.length = 0;
+    Object.keys(doctorPatientHistories).forEach(key => delete doctorPatientHistories[key]);
+    let activeDoctorPatientIndex = 0;
+    let activeDoctor = null;
+    let doctorQueuePoll = null;
+    let pendingIntake = null;
+    let intakeTranscript = [];
     let signupOtpProvider = null;
     let msg91WidgetReady = null;
     let hospitalBranchesReady = null;
@@ -3317,6 +3356,11 @@
     const checkupLaunch = document.getElementById('checkupLaunch');
     const checkupFlow = document.getElementById('checkupFlow');
     const checkupResult = document.getElementById('checkupResult');
+    const doctorChoiceStep = document.getElementById('doctorChoiceStep');
+    const doctorChoiceForm = document.getElementById('doctorChoiceForm');
+    const specialtyOptions = document.getElementById('specialtyOptions');
+    const doctorChoiceStatus = document.getElementById('doctorChoiceStatus');
+    const confirmDoctorChoice = document.getElementById('confirmDoctorChoice');
     const patientRecords = document.getElementById('patientRecords');
     const checkupWelcome = document.getElementById('checkupWelcome');
     const languageStep = document.getElementById('languageStep');
@@ -3334,7 +3378,6 @@
     const roleLanguageValue = document.getElementById('roleLanguageValue');
     const roleLanguageMenu = document.getElementById('roleLanguageMenu');
     const startCheckupButton = document.getElementById('startCheckupButton');
-    const viewPatientRecordsHero = document.getElementById('viewPatientRecordsHero');
     const toast = document.getElementById('toast');
     const deviceDialog = document.getElementById('deviceDialog');
     const availabilityConfirmation = document.getElementById('availabilityConfirmation');
@@ -3695,8 +3738,10 @@
       const isStart = stage === 'start';
       const isLanguage = stage === 'language';
       const isVoice = stage === 'voice';
-      checkupLaunch.hidden = isVoice;
+      const isSpecialty = stage === 'specialty';
+      checkupLaunch.hidden = isVoice || isSpecialty;
       checkupFlow.hidden = !isVoice;
+      doctorChoiceStep.hidden = !isSpecialty;
       checkupResult.hidden = true;
       patientRecords.hidden = true;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'start')));
@@ -3707,8 +3752,9 @@
         stopMicrophone();
       }
       if (isVoice) startVoiceSession(languageSelect.value);
-      if (focus && isStart) viewPatientRecordsHero.focus();
+      if (focus && isStart) startCheckupButton.focus();
       if (focus && isLanguage) languageOptions.querySelector('input').focus();
+      if (focus && isSpecialty) document.getElementById('doctorChoiceTitle').focus({ preventScroll: true });
     }
 
     function showPatientRecords(focus = false) {
@@ -3716,6 +3762,7 @@
       stopMicrophone();
       checkupLaunch.hidden = true;
       checkupFlow.hidden = true;
+      doctorChoiceStep.hidden = true;
       checkupResult.hidden = true;
       patientRecords.hidden = false;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'records')));
@@ -3726,6 +3773,7 @@
     function resetCheckup() {
       checkupLaunch.hidden = false;
       checkupFlow.hidden = true;
+      doctorChoiceStep.hidden = true;
       checkupResult.hidden = true;
       checkupWelcome.hidden = false;
       languageStep.hidden = true;
@@ -3736,6 +3784,7 @@
     async function showCheckupResult() {
       checkupLaunch.hidden = true;
       checkupFlow.hidden = true;
+      doctorChoiceStep.hidden = true;
       patientRecords.hidden = true;
       checkupResult.hidden = false;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', 'false'));
@@ -3752,7 +3801,10 @@
       }
     }
 
-    viewPatientRecordsHero.addEventListener('click', () => navigateRoute('patient/records', false, true));
+    startCheckupButton.addEventListener('click', () => {
+      resetCheckup();
+      navigateRoute('patient/language', false, true);
+    });
 
     languageOptions.addEventListener('change', () => {
       confirmLanguage.disabled = !languageForm.elements.checkupLanguage.value;
@@ -4084,7 +4136,7 @@
     }
 
     function getPreviousDoctorPatients() {
-      return [...demoDoctorPatients.slice(0, activeDoctorPatientIndex).reverse(), ...archivedDoctorPatients];
+      return [...archivedDoctorPatients];
     }
 
     function renderPreviousPatients() {
@@ -4132,7 +4184,6 @@
 
     function renderDoctorPatientNavigator() {
       const current = demoDoctorPatients[activeDoctorPatientIndex];
-      const previous = demoDoctorPatients[activeDoctorPatientIndex - 1];
       const next = demoDoctorPatients[activeDoctorPatientIndex + 1];
       const nextButton = document.querySelector('[data-next-patient]');
       if (nextButton) {
@@ -4141,6 +4192,27 @@
         nextButton.setAttribute('aria-label', next ? `Next patient: ${next.fullName}` : 'No next patient');
       }
       const focusPatient = document.querySelector('.focus-patient');
+      const queueAction = document.getElementById('doctorQueueAction');
+      if (!current) {
+        if (focusPatient) {
+          focusPatient.querySelector('.patient-avatar').textContent = '—';
+          focusPatient.querySelector('strong').textContent = 'No patients waiting';
+          focusPatient.querySelector('small').textContent = 'New specialty assignments will appear here automatically.';
+        }
+        ['doctorPatientHeight', 'doctorPatientWeight', 'doctorPatientBlood'].forEach(id => { document.getElementById(id).textContent = '—'; });
+        document.getElementById('doctorAiSummary').replaceChildren(Object.assign(document.createElement('li'), { textContent: 'The queue is currently clear.' }));
+        document.getElementById('doctorPatientFacts').replaceChildren();
+        document.getElementById('doctorHealthContext').replaceChildren(Object.assign(document.createElement('li'), { textContent: 'No patient selected.' }));
+        document.getElementById('doctorQueueToken').textContent = 'No active token';
+        document.getElementById('doctorOpdNumber').textContent = '—';
+        document.getElementById('doctorRequestedSpecialty').textContent = activeDoctor?.specialty || 'Specialty queue';
+        document.getElementById('doctorDocumentCount').textContent = '0 documents';
+        document.getElementById('doctorQueueStatusLabel').textContent = 'Queue clear';
+        if (queueAction) { queueAction.disabled = true; queueAction.textContent = 'Begin consultation'; }
+        renderPreviousPatientHistory(archivedDoctorPatients[0]);
+        renderPreviousPatients();
+        return;
+      }
       if (focusPatient) {
         focusPatient.querySelector('.patient-avatar').textContent = current.initials;
         focusPatient.querySelector('strong').textContent = current.fullName;
@@ -4148,9 +4220,100 @@
       }
       document.querySelectorAll('.vital-inline strong').forEach((node, index) => { node.textContent = current.vitals[index] || '—'; });
       const concern = document.querySelector('.focus-summary .summary-block:first-of-type .clinical-bullets');
-      if (concern) concern.innerHTML = `<li><strong>${current.concern}</strong></li><li>${current.meta}</li>`;
-      renderPreviousPatientHistory(previous);
+      if (concern) {
+        const summary = document.createElement('li');
+        const strong = document.createElement('strong');
+        strong.textContent = current.concern;
+        summary.append(strong);
+        const specialty = document.createElement('li');
+        specialty.textContent = `Requested department: ${current.requestedSpecialty}`;
+        concern.replaceChildren(summary, specialty);
+      }
+      const facts = document.getElementById('doctorPatientFacts');
+      facts.replaceChildren(...[
+        ['Language', current.language], ['Blood group', current.bloodGroup],
+        ['Height', `${current.heightCm} cm`], ['Weight', `${current.weightKg} kg`]
+      ].map(([label, value]) => {
+        const fact = document.createElement('div'); fact.className = 'summary-fact';
+        const small = document.createElement('small'); small.textContent = label;
+        const strong = document.createElement('strong'); strong.textContent = value;
+        fact.append(small, strong); return fact;
+      }));
+      const health = document.getElementById('doctorHealthContext');
+      const conditions = document.createElement('li');
+      conditions.textContent = `Conditions: ${current.conditions.length && !current.conditions.includes('none') ? current.conditions.join(', ') : 'None reported'}`;
+      const allergies = document.createElement('li');
+      allergies.textContent = `Allergies: ${current.allergies}`;
+      health.replaceChildren(conditions, allergies);
+      document.getElementById('doctorQueueToken').textContent = current.id;
+      document.getElementById('doctorOpdNumber').textContent = current.opdNumber;
+      document.getElementById('doctorRequestedSpecialty').textContent = current.requestedSpecialty;
+      document.getElementById('doctorDocumentCount').textContent = `${current.documentCount} document${current.documentCount === 1 ? '' : 's'}`;
+      document.getElementById('doctorQueueStatusLabel').textContent = current.status === 'in_consultation' ? 'In consultation' : 'Waiting';
+      if (queueAction) {
+        queueAction.disabled = false;
+        queueAction.textContent = current.status === 'in_consultation' ? 'Complete consultation' : 'Begin consultation';
+      }
+      renderPreviousPatientHistory(archivedDoctorPatients[0]);
       renderPreviousPatients();
+    }
+
+    function queuePatientFromApi(patient) {
+      return {
+        ...patient,
+        id: patient.patientNumber,
+        sourcePatientId: patient.patientId,
+        fullName: patient.fullName,
+        sex: patient.gender,
+        initials: patient.fullName.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase(),
+        vitals: [`${patient.heightCm} cm`, `${patient.weightKg} kg`, patient.bloodGroup],
+        concern: patient.summary,
+        meta: `${patient.requestedSpecialty} · ${patient.opdNumber}`
+      };
+    }
+
+    async function loadDoctorQueue() {
+      if (!activeDoctor?.id) {
+        demoDoctorPatients.splice(0);
+        renderDoctorPatientNavigator();
+        return;
+      }
+      try {
+        const currentCheckupId = demoDoctorPatients[activeDoctorPatientIndex]?.checkupId;
+        const response = await fetch(`/api/doctor-queue?doctorId=${encodeURIComponent(activeDoctor.id)}`, { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not load the doctor queue');
+        demoDoctorPatients.splice(0, demoDoctorPatients.length, ...data.queue.map(queuePatientFromApi));
+        archivedDoctorPatients.splice(0, archivedDoctorPatients.length, ...data.completed.map(queuePatientFromApi));
+        Object.keys(doctorPatientHistories).forEach(key => delete doctorPatientHistories[key]);
+        [...demoDoctorPatients, ...archivedDoctorPatients].forEach(patient => {
+          doctorPatientHistories[patient.id] = [{
+            date: new Date(patient.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+            iso: patient.createdAt.slice(0, 10), kind: 'visit', type: 'AI intake',
+            title: `${patient.requestedSpecialty} intake`, summary: patient.summary
+          }];
+        });
+        const preservedIndex = demoDoctorPatients.findIndex(patient => patient.checkupId === currentCheckupId);
+        const consultationIndex = demoDoctorPatients.findIndex(patient => patient.status === 'in_consultation');
+        activeDoctorPatientIndex = preservedIndex >= 0 ? preservedIndex : consultationIndex >= 0 ? consultationIndex : 0;
+        renderDoctorPatientNavigator();
+      } catch (error) {
+        showToast('Queue unavailable', error.message || 'Could not load assigned patients.');
+      }
+    }
+
+    async function updateCurrentDoctorQueueStatus() {
+      const current = demoDoctorPatients[activeDoctorPatientIndex];
+      if (!current || !activeDoctor?.id) return;
+      const nextStatus = current.status === 'in_consultation' ? 'completed' : 'in_consultation';
+      const response = await fetch(`/api/doctor-queue/${encodeURIComponent(current.checkupId)}/status`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ doctorId: activeDoctor.id, status: nextStatus })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return showToast('Queue update failed', data.error || 'Please try again.');
+      showToast(nextStatus === 'completed' ? 'Consultation completed' : 'Consultation started', `${current.fullName} · ${current.id}`);
+      await loadDoctorQueue();
     }
 
     function routeFromLocation() {
@@ -4158,6 +4321,8 @@
     }
 
     function showRolePicker() {
+      if (doctorQueuePoll) window.clearInterval(doctorQueuePoll);
+      doctorQueuePoll = null;
       appShell.hidden = true;
       appShell.classList.remove('doctor-session', 'patient-session', 'staff-session', 'checkup-active', 'voice-mode');
       loginScreen.hidden = false;
@@ -4189,6 +4354,7 @@
 
     function applyDoctorIdentity(doctor) {
       if (!doctor?.id) return;
+      activeDoctor = doctor;
       const displayName = doctor.fullName || `Doctor ${doctor.id}`;
       const doctorSidebarName = document.getElementById('doctorSidebarName');
       const doctorSidebarHospital = document.getElementById('doctorSidebarHospital');
@@ -4201,6 +4367,7 @@
         doctorSidebarHospital.title = `${doctor.hospitalName} · ${doctor.hospitalLocation}`;
       }
       if (doctorProfileMark) doctorProfileMark.textContent = displayName.replace(/^Dr\.?\s*/i, '').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || doctor.id.slice(0, 2);
+      void loadDoctorQueue();
     }
 
     function applyStaffIdentity(staff) {
@@ -4273,13 +4440,9 @@
           history.replaceState({ route }, '', '#/patient/language');
         }
       }
-      if (!authorizedPatientDevice && /^patient\/(?:language|voice|summary)$/.test(route)) {
+      if (!authorizedPatientDevice && !patientLoggedInThisSession && /^patient\/(?:language|voice|specialty|summary)$/.test(route)) {
         route = 'patient/records';
         history.replaceState({ route }, '', '#/patient/records');
-      }
-      if (route === 'patient/start') {
-        route = authorizedPatientDevice ? 'patient/language' : 'patient/records';
-        history.replaceState({ route }, '', `#/${route}`);
       }
       if (route === 'patient/intake') {
         route = 'patient/voice';
@@ -4307,12 +4470,12 @@
         return;
       }
 
-      const patientMatch = route.match(/^patient\/(start|language|voice|summary|records)$/);
+      const patientMatch = route.match(/^patient\/(start|language|voice|specialty|summary|records)$/);
       if (patientMatch) {
         showSession('patient', 'patient');
         const isVoiceRoute = patientMatch[1] === 'voice';
         const isSummaryRoute = patientMatch[1] === 'summary';
-        const isCheckupActive = patientMatch[1] === 'language' || isVoiceRoute || isSummaryRoute;
+        const isCheckupActive = patientMatch[1] === 'language' || patientMatch[1] === 'specialty' || isVoiceRoute || isSummaryRoute;
         patientView.classList.toggle('voice-route', isVoiceRoute);
         appShell.classList.toggle('voice-mode', isVoiceRoute);
         appShell.classList.toggle('checkup-active', isCheckupActive);
@@ -4326,6 +4489,8 @@
       if (doctorMatch) {
         showSession('doctor', 'doctor');
         openDoctorPanel(doctorMatch[1]);
+        void loadDoctorQueue();
+        if (!doctorQueuePoll) doctorQueuePoll = window.setInterval(() => void loadDoctorQueue(), 5000);
         return;
       }
 
@@ -4369,6 +4534,7 @@
       if (currentDoctorCard) currentDoctorCard.hidden = false;
     });
     const nextPatientButton = document.querySelector('[data-next-patient]');
+    document.getElementById('doctorQueueAction')?.addEventListener('click', () => void updateCurrentDoctorQueueStatus());
     const nextPatientConfirmation = document.getElementById('nextPatientConfirmation');
     const nextPatientConfirmationName = document.getElementById('nextPatientConfirmationName');
     function closeNextPatientConfirmation() { nextPatientConfirmation.hidden = true; }
@@ -4735,7 +4901,7 @@
           patientLoggedInThisSession = true;
           resetCheckup();
         }
-        navigateRoute(role === 'patient' ? (authorizedPatientDevice ? 'patient/language' : 'patient/records') : role === 'doctor' ? 'doctor/current' : 'staff/queue');
+        navigateRoute(role === 'patient' ? 'patient/start' : role === 'doctor' ? 'doctor/current' : 'staff/queue');
       } catch (error) {
         if (!cancelled) console.error('Login transition failed', error);
       } finally {
@@ -4778,7 +4944,9 @@
       try {
         localStorage.removeItem('arogPatientId');
         localStorage.removeItem('arogPatientName');
+        if (appShell.classList.contains('doctor-session')) localStorage.removeItem('arogDoctor');
       } catch (_) {}
+      if (appShell.classList.contains('doctor-session')) activeDoctor = null;
       navigateRoute('roles');
     });
 
@@ -4815,6 +4983,7 @@
       Santali: 'sat-IN', Sindhi: 'sd-IN', Tamil: 'ta-IN', Telugu: 'te-IN', Urdu: 'ur-IN'
     };
     function appendChatMessage(text, type, note) {
+      intakeTranscript.push({ role: type === 'ai' ? 'assistant' : 'patient', text: String(text).trim() });
       const message = document.createElement('div');
       message.className = `voice-chat-message ${type}`;
       const body = document.createElement('p');
@@ -4917,6 +5086,36 @@
       return elevenStartPromise;
     }
 
+    function createDemoVoiceSession() {
+      let open = true;
+      const id = `conv_demo${Date.now()}`;
+      const session = {
+        isOpen: () => open,
+        getId: () => id,
+        endSession: async () => { open = false; },
+        sendUserMessage: message => {
+          appendChatMessage(message, 'user', 'You · demo intake');
+          window.setTimeout(() => {
+            if (!open) return;
+            const reply = 'Thank you. I have recorded that for the doctor. Please add any medicines, allergies, or other symptoms that may help with your consultation.';
+            appendChatMessage(reply, 'ai', 'Arogyam · demo intake');
+            voiceQuestion.textContent = reply;
+            replyPending = false;
+            syncVoiceControls();
+            setVoiceHint('Your response is recorded. Add more details or end the check-up.');
+          }, 350);
+        }
+      };
+      elevenConversation = session;
+      currentConversationId = id;
+      setAgentOrbState('listening');
+      setVoiceHint('Demo AI intake is ready. Type your health concern below.');
+      appendChatMessage(voiceQuestion.textContent, 'ai', 'Arogyam · demo intake');
+      showToast('Demo AI intake', 'ElevenLabs is not configured, so the local test conversation is active.');
+      syncVoiceControls();
+      return session;
+    }
+
     async function connectElevenLabsSession() {
       if (!elevenConsentGranted) {
         elevenConsentGranted = window.confirm('To start voice chat, your microphone audio and conversation transcript will be processed by ElevenLabs. Continue?');
@@ -4968,6 +5167,7 @@
         elevenConnecting = false;
         setAgentOrbState();
         const message = error instanceof Error ? error.message : 'Could not connect to the voice agent.';
+        if (/not configured|unavailable/i.test(message)) return createDemoVoiceSession();
         setVoiceHint(message, true);
         showToast('Voice agent unavailable', message);
         syncVoiceControls();
@@ -5008,6 +5208,8 @@
       currentConversationId = '';
       hasPatientResponse = false;
       currentCheckup = null;
+      pendingIntake = null;
+      intakeTranscript = [];
       if (checkupSummaryPoll) clearTimeout(checkupSummaryPoll);
       checkupSummaryPoll = null;
       setVoiceHint('Tap Talk to start the live AI voice session.');
@@ -5045,6 +5247,70 @@
       checkupDoctorRoom.textContent = checkup.doctor?.roomNumber || 'Pending';
     }
 
+    function buildIntakeSummary() {
+      const patientStatements = intakeTranscript.filter(item => item.role === 'patient').map(item => item.text).filter(Boolean);
+      const assistantStatements = intakeTranscript.filter(item => item.role === 'assistant').map(item => item.text).filter(Boolean);
+      const reported = patientStatements.slice(0, 8).join(' ');
+      const context = assistantStatements.length ? `The AI intake covered ${assistantStatements.length} clinical follow-up question${assistantStatements.length === 1 ? '' : 's'}.` : '';
+      return `${reported ? `Patient reported: ${reported}` : 'Patient completed the AI-guided intake.'} ${context}`.trim().slice(0, 6000);
+    }
+
+    async function loadDoctorSpecialties() {
+      specialtyOptions.replaceChildren();
+      doctorChoiceStatus.textContent = 'Loading available doctors…';
+      confirmDoctorChoice.disabled = true;
+      try {
+        const response = await fetch('/api/doctor-specialties', { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not load medical departments');
+        data.specialties.forEach((entry, index) => {
+          const label = document.createElement('label'); label.className = 'specialty-option';
+          const input = document.createElement('input');
+          input.type = 'radio'; input.name = 'doctorSpecialty'; input.value = entry.specialty;
+          input.addEventListener('change', () => { confirmDoctorChoice.disabled = false; doctorChoiceStatus.textContent = ''; });
+          const card = document.createElement('span');
+          const specialty = document.createElement('strong'); specialty.textContent = entry.specialty;
+          const doctor = document.createElement('small');
+          doctor.textContent = `${entry.doctor.fullName} · Room ${entry.doctor.roomNumber} · ${entry.patientsWaiting} waiting`;
+          card.append(specialty, doctor); label.append(input, card); specialtyOptions.append(label);
+          if (index === 0) input.dataset.first = 'true';
+        });
+        doctorChoiceStatus.textContent = data.specialties.length ? '' : 'No doctors are currently available.';
+      } catch (error) {
+        doctorChoiceStatus.textContent = error.message || 'Could not load available doctors.';
+      }
+    }
+
+    doctorChoiceForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const specialty = new FormData(doctorChoiceForm).get('doctorSpecialty');
+      if (!specialty || !pendingIntake || !activePatient?.id) {
+        doctorChoiceStatus.textContent = 'Choose a specialty to join the queue.';
+        return;
+      }
+      confirmDoctorChoice.disabled = true;
+      doctorChoiceStatus.textContent = 'Assigning the best available doctor…';
+      try {
+        const response = await fetch('/api/patient-checkups', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patientId: activePatient.id, conversationId: pendingIntake.conversationId,
+            language: pendingIntake.language, summary: pendingIntake.summary, specialty
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.checkup) throw new Error(data.error || 'Could not join the doctor queue');
+        renderCompletedCheckup(data.checkup);
+        pendingIntake = null;
+        navigateRoute('patient/summary');
+      } catch (error) {
+        doctorChoiceStatus.textContent = error.message || 'Could not join the queue. Please try again.';
+        confirmDoctorChoice.disabled = false;
+      }
+    });
+
+    document.getElementById('backToVoiceCheckup').addEventListener('click', () => navigateRoute('patient/voice'));
+
     async function pollCheckupSummary(checkupId, patientId, attempt = 0) {
       if (!checkupId || attempt >= 30) return;
       try {
@@ -5069,25 +5335,12 @@
         return;
       }
       endVoiceSessionButton.disabled = true;
-      setVoiceHint('Finishing your check-up and creating the OPD visit…');
+      setVoiceHint('Finishing your check-up…');
       await stopElevenLabsSession();
-      try {
-        const response = await fetch('/api/patient-checkups', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ patientId, conversationId, language: languageSelect.value })
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.checkup) throw new Error(data.error || 'Could not complete the check-up');
-        renderCompletedCheckup(data.checkup);
-        navigateRoute('patient/summary');
-        if (data.checkup.status !== 'completed') void pollCheckupSummary(data.checkup.id, patientId);
-      } catch (error) {
-        setVoiceHint(error.message || 'Could not complete the check-up.', true);
-        showToast('Check-up not completed', error.message || 'Please try again.');
-      } finally {
-        endVoiceSessionButton.disabled = false;
-      }
+      pendingIntake = { conversationId, language: languageSelect.value, summary: buildIntakeSummary() };
+      navigateRoute('patient/specialty');
+      void loadDoctorSpecialties();
+      endVoiceSessionButton.disabled = false;
     }
 
     voiceTalkButton.addEventListener('click', () => {

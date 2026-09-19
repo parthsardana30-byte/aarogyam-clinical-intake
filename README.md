@@ -37,3 +37,22 @@ Camera-based QR scanning requires HTTPS (or localhost). On a raw HTTP VPS/IP,
 staff can use the six-digit manual code until TLS is configured.
 
 The current prototype uses synthetic demonstration records only. It must not be used to store real patient information.
+
+## Queue workflow test doctor accounts
+
+The local server seeds one doctor for every selectable specialty at Civil Hospital Ahmedabad. All accounts use the password `Aarogyam@2026`.
+
+| Specialty | Doctor ID | Doctor | Room |
+| --- | --- | --- | --- |
+| General Medicine | `CHA-GEN-1001` | Dr. Aarav Mehta | G-101 |
+| Gynaecology | `CHA-GYN-1002` | Dr. Meera Kapoor | GY-201 |
+| Orthopaedics | `CHA-ORT-1003` | Dr. Nisha Rao | OR-301 |
+| Paediatrics | `CHA-PED-1004` | Dr. Kabir Shah | P-102 |
+| General Surgery | `CHA-SUR-1005` | Dr. Rohan Desai | S-204 |
+| Cardiology | `CHA-CAR-1006` | Dr. Isha Verma | C-110 |
+| Dermatology | `CHA-DER-1007` | Dr. Neel Joshi | D-205 |
+| ENT | `CHA-ENT-1008` | Dr. Sana Khan | E-106 |
+| Ophthalmology | `CHA-OPH-1009` | Dr. Arjun Patel | O-208 |
+| Psychiatry | `CHA-PSY-1010` | Dr. Riya Sen | PS-305 |
+| AYUSH Medicine | `CHA-AYU-1011` | Dr. Dev Sharma | A-109 |
+| Other | `CHA-OTH-1012` | Dr. Tara Nair | M-210 |
