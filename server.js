@@ -215,6 +215,8 @@ async function loadPatients() {
   patientsDb.exec('CREATE UNIQUE INDEX IF NOT EXISTS doctors_medical_registration_idx ON doctors(medical_registration_number)');
   const checkupColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_checkups)').all().map(column => column.name));
   const checkupMigrations = [
+    ['hospital_id', 'TEXT'], ['hospital_name', 'TEXT'], ['hospital_location', 'TEXT'],
+    ['doctor_id', 'TEXT'], ['room_number', 'TEXT'], ['patient_number', 'TEXT'],
     ['specialty_requested', 'TEXT'], ['started_at', 'TEXT'], ['completed_at', 'TEXT']
   ];
   for (const [column, type] of checkupMigrations) {
