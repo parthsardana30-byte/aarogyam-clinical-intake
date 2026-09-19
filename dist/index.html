@@ -142,6 +142,9 @@
       padding: 0 13px; border: 1px solid rgba(16,43,39,.12); border-radius: 11px;
       background: rgba(255,255,255,.92); box-shadow: 0 8px 22px rgba(16,43,39,.06);
     }
+    .doctor-patient-searchbar button { width: 28px; height: 28px; flex: 0 0 auto; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--teal); cursor: pointer; }
+    .doctor-patient-searchbar button:hover { background: rgba(14,102,85,.09); }
+    .doctor-patient-searchbar button:focus-visible { outline: 3px solid rgba(14,102,85,.16); }
     .doctor-patient-searchbar svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--teal); }
     .doctor-patient-searchbar input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: .82rem; }
     .doctor-patient-searchbar input::placeholder { color: #788a85; }
@@ -2139,12 +2142,14 @@
         <button class="patient-top-tab" id="patientConsentButton" type="button" role="tab" aria-selected="false">Access &amp; consent</button>
       </nav>
       <nav class="doctor-top-tabs" aria-label="Doctor pages" role="tablist">
-        <label class="doctor-patient-searchbar">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          <span class="sr-only">Search by UHID, OPD number, patient name or masked phone</span>
-          <input id="doctorPatientSearch" type="search" list="doctorPatientOptions" maxlength="100" placeholder="Search by UHID, OPD number, name or phone" autocomplete="off" />
+        <form class="doctor-patient-searchbar" id="doctorPatientSearchForm" role="search">
+          <button type="submit" aria-label="Search patient">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <label class="sr-only" for="doctorPatientSearch">Search by patient ID, UHID, OPD number, patient name or masked phone</label>
+          <input id="doctorPatientSearch" type="search" list="doctorPatientOptions" maxlength="100" placeholder="Search patient ID, UHID, OPD number, name or phone" autocomplete="off" />
           <datalist id="doctorPatientOptions"></datalist>
-        </label>
+        </form>
       </nav>
       <div class="top-actions">
         <div class="doctor-availability-control" aria-label="Doctor availability" data-current-status="active">
@@ -5106,6 +5111,7 @@
         const options = document.getElementById('doctorPatientOptions');
         options.replaceChildren(...clinicalPatientCases.flatMap(patient => [
           Object.assign(document.createElement('option'), { value: patient.id, label: `${patient.fullName} · ${patient.opd}` }),
+          Object.assign(document.createElement('option'), { value: patient.sourcePatientId, label: `${patient.fullName} · Patient ID` }),
           Object.assign(document.createElement('option'), { value: patient.opd, label: `${patient.fullName} · UHID ${patient.id}` }),
           Object.assign(document.createElement('option'), { value: patient.fullName, label: `${patient.id} · ${patient.opd}` })
         ]));
@@ -5397,20 +5403,29 @@
     doctorHistorySearch?.addEventListener('input', updateDoctorHistory);
 
     const doctorPatientSearch = document.getElementById('doctorPatientSearch');
-    function selectClinicalPatientFromSearch() {
+    const doctorPatientSearchForm = document.getElementById('doctorPatientSearchForm');
+    const normalizePatientSearch = value => String(value || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    async function selectClinicalPatientFromSearch() {
       const query = doctorPatientSearch.value.trim().toLowerCase();
       if (!query) return;
-      const patient = clinicalPatientCases.find(item =>
-        item.fullName.toLowerCase() === query || item.id.toLowerCase() === query || item.opd.toLowerCase() === query
-        || item.fullName.toLowerCase().includes(query) || item.phoneMasked.toLowerCase().includes(query)
-      );
+      if (!clinicalPatientCases.length) await loadDoctorPatients();
+      const compactQuery = normalizePatientSearch(query);
+      const searchableValues = item => [item.sourcePatientId, item.id, item.opd, item.fullName, item.phoneMasked]
+        .map(value => ({ raw: String(value || '').toLowerCase(), compact: normalizePatientSearch(value) }));
+      const exactPatient = clinicalPatientCases.find(item => searchableValues(item)
+        .some(value => value.raw === query || value.compact === compactQuery));
+      const patient = exactPatient || clinicalPatientCases.find(item => searchableValues(item)
+        .some(value => value.raw.includes(query) || (compactQuery && value.compact.includes(compactQuery))));
       if (patient) {
         renderClinicalPatient(patient);
         navigateRoute('doctor/previous');
+        showToast('Patient selected', `${patient.fullName} · UHID ${patient.id}`);
+      } else {
+        showToast('Patient not found', 'Check the patient ID or UHID. Only patients registered at your hospital are searchable.');
       }
     }
-    doctorPatientSearch?.addEventListener('change', selectClinicalPatientFromSearch);
-    doctorPatientSearch?.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); selectClinicalPatientFromSearch(); } });
+    doctorPatientSearchForm?.addEventListener('submit', event => { event.preventDefault(); void selectClinicalPatientFromSearch(); });
+    doctorPatientSearch?.addEventListener('change', () => { if (doctorPatientSearch.value.trim()) void selectClinicalPatientFromSearch(); });
     document.getElementById('viewAllPatientHistory')?.addEventListener('click', () => {
       if (selectedClinicalPatient) openSelectedClinicalHistory('all');
       else showToast('Select a patient', 'Search for a hospital patient before opening documents.');
