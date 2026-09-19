@@ -44,7 +44,7 @@ The current prototype uses synthetic demonstration records only. It must not be 
 
 ## Patient intake and test doctor accounts
 
-On an authorized device, a patient completes the AI conversation and sees a saved intake summary with the instruction **Please proceed to reception**. The app no longer assigns a doctor, generates an OPD/token number, or manages a consultation queue. Reception can see registered patients and whether an AI intake is complete. Existing completed doctor consultations remain available as read-only historical records; older queued records are retained in storage but are no longer processed by this flow.
+On an authorized device, a patient completes the AI conversation and sees a saved intake summary with the instruction **Please proceed to reception**. Each saved summary is linked to the authorized device and to the staff account that approved that device. The staff dashboard shows only patients and summaries generated on that staff member's authorized devices, including every saved summary for a patient. The app no longer assigns a doctor, generates an OPD/token number, or manages a consultation queue. Existing completed doctor consultations remain available as read-only historical records; older queued records are retained in storage but are no longer processed by this flow.
 
 The local server seeds one doctor for every selectable specialty at Civil Hospital Ahmedabad. All accounts use the password `Aarogyam@2026`.
 

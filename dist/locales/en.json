@@ -3,7 +3,7 @@
   "staff.nav.patients": "Patients", "staff.nav.history": "Patient history", "staff.nav.documents": "Documents", "staff.nav.authorizeDevice": "Add authorized device",
   "staff.title": "Patient records", "staff.startIntake": "+ Start new intake",
   "staff.metrics.registered": "Patients registered today", "staff.metrics.average": "Average intake time", "staff.metrics.ready": "Cases ready for doctors",
-  "staff.table.patient": "Patient", "staff.table.aiIntake": "AI intake", "staff.table.documents": "Documents", "staff.table.status": "Status", "staff.table.language": "Language",
+  "staff.search": "Search by patient name or UHID", "staff.table.patient": "Patient", "staff.table.uhid": "UHID", "staff.table.uploadDocuments": "Upload documents", "staff.table.uploadVitals": "Upload vitals", "staff.table.documents": "Documents", "staff.table.status": "Status",
   "staff.status.review": "Doctor review", "staff.status.active": "Intake active", "staff.status.waiting": "Waiting",
   "staff.actions.title": "Reception actions", "staff.actions.begin": "Begin assisted intake", "staff.actions.beginHelp": "Open the patient conversation",
   "staff.actions.scan": "Scan previous document", "staff.actions.scanHelp": "Add a prescription or report", "staff.actions.consent": "Review consent requests", "staff.actions.consentHelp": "Check pending record access",

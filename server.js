@@ -210,11 +210,27 @@ async function loadPatients() {
       conversation_id TEXT NOT NULL,
       language TEXT NOT NULL,
       summary TEXT NOT NULL,
+      device_id TEXT,
+      staff_id TEXT,
       created_at TEXT NOT NULL,
       UNIQUE(patient_id, conversation_id),
-      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
+      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+      FOREIGN KEY(staff_id) REFERENCES staff(employee_id)
     );
     CREATE INDEX IF NOT EXISTS patient_intakes_patient_idx ON patient_intakes(patient_id, created_at DESC);
+    CREATE TABLE IF NOT EXISTS patient_vitals (
+      id TEXT PRIMARY KEY,
+      patient_id TEXT NOT NULL,
+      recorded_by_staff_id TEXT NOT NULL,
+      heart_rate INTEGER NOT NULL,
+      oxygen_saturation INTEGER NOT NULL,
+      systolic_bp INTEGER NOT NULL,
+      diastolic_bp INTEGER NOT NULL,
+      recorded_at TEXT NOT NULL,
+      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+      FOREIGN KEY(recorded_by_staff_id) REFERENCES staff(employee_id)
+    );
+    CREATE INDEX IF NOT EXISTS patient_vitals_patient_idx ON patient_vitals(patient_id, recorded_at DESC);
   `);
   // Preserve summaries from visits created by the retired OPD queue flow.
   patientsDb.exec(`
@@ -230,6 +246,12 @@ async function loadPatients() {
   for (const [column, type] of patientDocumentMigrations) {
     if (!patientDocumentColumns.has(column)) patientsDb.exec(`ALTER TABLE patient_documents ADD COLUMN ${column} ${type}`);
   }
+  const patientIntakeColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_intakes)').all().map(column => column.name));
+  const patientIntakeMigrations = [['device_id', 'TEXT'], ['staff_id', 'TEXT']];
+  for (const [column, type] of patientIntakeMigrations) {
+    if (!patientIntakeColumns.has(column)) patientsDb.exec(`ALTER TABLE patient_intakes ADD COLUMN ${column} ${type}`);
+  }
+  patientsDb.exec('CREATE INDEX IF NOT EXISTS patient_intakes_staff_idx ON patient_intakes(staff_id, created_at DESC)');
   const doctorColumns = new Set(patientsDb.prepare('PRAGMA table_info(doctors)').all().map(column => column.name));
   const doctorMigrations = [
     ['full_name', 'TEXT'], ['degree', 'TEXT'], ['specialty', 'TEXT'],
@@ -960,27 +982,96 @@ function listStaffPatients(request, response, url) {
   if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
     return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
   }
-  const patients = patientsDb.prepare(`
+  const rows = patientsDb.prepare(`
     SELECT p.id, p.full_name, p.created_at,
-      i.language, i.created_at AS intake_created_at
-    FROM patients p
-    LEFT JOIN patient_intakes i ON i.id = (
-      SELECT latest.id FROM patient_intakes latest
+      (SELECT COUNT(*) FROM patient_documents pd WHERE pd.patient_id = p.id) AS document_count,
+      v.heart_rate, v.oxygen_saturation, v.systolic_bp, v.diastolic_bp, v.recorded_at,
+      i.id AS intake_id, i.summary, i.created_at AS intake_created_at, i.device_id
+    FROM patient_intakes i
+    JOIN patients p ON p.id = i.patient_id
+    LEFT JOIN patient_vitals v ON v.id = (
+      SELECT latest.id FROM patient_vitals latest
       WHERE latest.patient_id = p.id
-      ORDER BY datetime(latest.created_at) DESC LIMIT 1
+      ORDER BY datetime(latest.recorded_at) DESC LIMIT 1
     )
-    ORDER BY datetime(p.created_at) DESC
-  `).all().map(row => ({
-    id: row.id,
-    fullName: row.full_name,
-    language: row.language || null,
-    intakeCompletedAt: row.intake_created_at || null
-  }));
+    WHERE i.staff_id = ?
+    ORDER BY datetime(i.created_at) DESC
+  `).all(staffId);
+  const patientMap = new Map();
+  for (const row of rows) {
+    if (!patientMap.has(row.id)) {
+      patientMap.set(row.id, {
+        id: row.id,
+        uhid: row.id,
+        fullName: row.full_name,
+        documentCount: Number(row.document_count || 0),
+        latestVitals: row.recorded_at ? {
+          heartRate: row.heart_rate,
+          oxygenSaturation: row.oxygen_saturation,
+          bloodPressure: { systolic: row.systolic_bp, diastolic: row.diastolic_bp },
+          recordedAt: row.recorded_at
+        } : null,
+        intakeSummaries: []
+      });
+    }
+    const device = devices.find(item => item.id === row.device_id && item.staffId === staffId);
+    patientMap.get(row.id).intakeSummaries.push({
+      id: row.intake_id,
+      summary: row.summary,
+      createdAt: row.intake_created_at,
+      deviceId: row.device_id,
+      deviceName: device?.name || 'Authorized patient device'
+    });
+  }
+  const patients = [...patientMap.values()];
   sendJson(response, 200, { patients });
 }
 
+async function createStaffPatientVitals(request, response) {
+  const body = await readJson(request);
+  const staffId = normalizeStaffId(body.staffId);
+  const patientId = String(body.patientId || '').trim();
+  const heartRate = Number(body.heartRate);
+  const oxygenSaturation = Number(body.oxygenSaturation);
+  const systolic = Number(body.systolic);
+  const diastolic = Number(body.diastolic);
+  if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
+    return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
+  }
+  if (!patientsDb.prepare('SELECT id FROM patients WHERE id = ?').get(patientId)) {
+    return sendJson(response, 404, { error: 'Patient record was not found' });
+  }
+  if (!Number.isInteger(heartRate) || heartRate < 30 || heartRate > 250) {
+    return sendJson(response, 400, { error: 'Heart rate must be between 30 and 250 bpm' });
+  }
+  if (!Number.isInteger(oxygenSaturation) || oxygenSaturation < 50 || oxygenSaturation > 100) {
+    return sendJson(response, 400, { error: 'Oxygen saturation must be between 50% and 100%' });
+  }
+  if (!Number.isInteger(systolic) || systolic < 60 || systolic > 260) {
+    return sendJson(response, 400, { error: 'Systolic pressure must be between 60 and 260 mmHg' });
+  }
+  if (!Number.isInteger(diastolic) || diastolic < 30 || diastolic > 160 || systolic <= diastolic) {
+    return sendJson(response, 400, { error: 'Enter a valid diastolic pressure lower than the systolic pressure' });
+  }
+  const vitals = {
+    id: randomUUID(), patientId, staffId, heartRate, oxygenSaturation,
+    systolic, diastolic, recordedAt: new Date().toISOString()
+  };
+  patientsDb.prepare(`
+    INSERT INTO patient_vitals (
+      id, patient_id, recorded_by_staff_id, heart_rate, oxygen_saturation,
+      systolic_bp, diastolic_bp, recorded_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    vitals.id, vitals.patientId, vitals.staffId, vitals.heartRate,
+    vitals.oxygenSaturation, vitals.systolic, vitals.diastolic, vitals.recordedAt
+  );
+  sendJson(response, 201, { vitals });
+}
+
 async function createPatientIntake(request, response) {
-  if (!authorizedDeviceForRequest(request)) {
+  const device = authorizedDeviceForRequest(request);
+  if (!device) {
     return sendJson(response, 403, { error: 'AI check-up is available only on an authorized device' });
   }
   const body = await readJson(request);
@@ -994,11 +1085,18 @@ async function createPatientIntake(request, response) {
   if (!conversationId || !summary) {
     return sendJson(response, 400, { error: 'Complete the AI intake before saving its summary' });
   }
+  const linkedStaffId = patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(normalizeStaffId(device.staffId))?.employee_id || null;
   const existing = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? AND conversation_id = ?').get(patientId, conversationId);
-  if (existing) return sendJson(response, 200, { intake: existing });
+  if (existing) {
+    if ((!existing.device_id || !existing.staff_id) && linkedStaffId) {
+      patientsDb.prepare('UPDATE patient_intakes SET device_id = ?, staff_id = ? WHERE id = ?')
+        .run(device.id, linkedStaffId, existing.id);
+    }
+    return sendJson(response, 200, { intake: patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ?').get(existing.id) });
+  }
   const id = randomUUID();
-  patientsDb.prepare('INSERT INTO patient_intakes (id, patient_id, conversation_id, language, summary, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-    .run(id, patientId, conversationId, language, summary, new Date().toISOString());
+  patientsDb.prepare('INSERT INTO patient_intakes (id, patient_id, conversation_id, language, summary, device_id, staff_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(id, patientId, conversationId, language, summary, device.id, linkedStaffId, new Date().toISOString());
   const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ?').get(id);
   sendJson(response, 201, { intake });
 }
@@ -1215,12 +1313,22 @@ async function decideDeviceAuthorization(request, response, id) {
   sendJson(response, 201, { device: publicDevice(device) });
 }
 
-async function listDevices(_request, response) {
-  sendJson(response, 200, { devices: devices.map(publicDevice).sort((a, b) => b.authorizedAt.localeCompare(a.authorizedAt)) });
+async function listDevices(_request, response, url) {
+  const staffId = normalizeStaffId(url.searchParams.get('staffId'));
+  if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
+    return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
+  }
+  const staffDevices = devices.filter(device => device.staffId === staffId).map(publicDevice)
+    .sort((a, b) => b.authorizedAt.localeCompare(a.authorizedAt));
+  sendJson(response, 200, { devices: staffDevices });
 }
 
-async function revokeDevice(_request, response, id) {
-  const deviceIndex = devices.findIndex(device => device.id === id);
+async function revokeDevice(_request, response, id, url) {
+  const staffId = normalizeStaffId(url.searchParams.get('staffId'));
+  if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
+    return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
+  }
+  const deviceIndex = devices.findIndex(device => device.id === id && device.staffId === staffId);
   if (deviceIndex < 0) return sendJson(response, 404, { error: 'Authorized device was not found' });
   const [revokedDevice] = devices.splice(deviceIndex, 1);
   await saveDevices();
@@ -1286,6 +1394,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/staff-registrations') return await createStaffRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/staff-login') return await loginStaff(request, response);
     if (request.method === 'GET' && url.pathname === '/api/staff-patients') return listStaffPatients(request, response, url);
+    if (request.method === 'POST' && url.pathname === '/api/staff-patient-vitals') return await createStaffPatientVitals(request, response);
     if (request.method === 'GET' && url.pathname === '/api/staff-profile') return getStaffProfile(request, response, url);
     const statusMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/status$/i);
     if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1], url);
@@ -1296,9 +1405,9 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'GET' && manageMatch) return manageEnrollment(request, response, manageMatch[1], url);
     const decisionMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/decision$/i);
     if (request.method === 'POST' && decisionMatch) return await decideDeviceAuthorization(request, response, decisionMatch[1]);
-    if (request.method === 'GET' && url.pathname === '/api/devices') return await listDevices(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/devices') return await listDevices(request, response, url);
     const deviceMatch = url.pathname.match(/^\/api\/devices\/([0-9a-f-]+)$/i);
-    if (request.method === 'DELETE' && deviceMatch) return await revokeDevice(request, response, deviceMatch[1]);
+    if (request.method === 'DELETE' && deviceMatch) return await revokeDevice(request, response, deviceMatch[1], url);
     if (request.method === 'GET' && url.pathname === '/api/device-session') return await deviceSession(request, response);
     if (request.method === 'POST' && url.pathname === '/api/device-session/logout') return exitDeviceSession(request, response);
     if (request.method === 'GET' && url.pathname === '/api/elevenlabs/signed-url') return await createElevenLabsSignedUrl(request, response);
