@@ -991,7 +991,7 @@
     .patient-verified-chip { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid #bddccb; border-radius: 999px; background: #eff9f4; color: #176548; font-size: .69rem; font-weight: 820; white-space: nowrap; }
     .patient-verified-chip[hidden] { display: none; }
     .patient-verified-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #2fa36f; box-shadow: 0 0 0 3px rgba(47,163,111,.13); }
-    .doctor-clinical-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,2fr) minmax(0,1fr); gap: 14px; align-items: stretch; }
+    .doctor-clinical-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,2fr) minmax(0,2fr); gap: 14px; align-items: stretch; }
     .clinical-work-card { min-width: 0; min-height: 590px; display: flex; flex-direction: column; }
     .clinical-work-head { min-height: 78px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 17px 18px 14px; border-bottom: 1px solid var(--line); }
     .clinical-work-head span { display: block; margin-bottom: 4px; color: var(--teal); font-size: .63rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
@@ -1033,6 +1033,13 @@
     .prescription-auto-note { display: flex; gap: 8px; align-items: flex-start; margin: 14px 14px 0; padding: 10px 11px; border: 1px solid #cfe1d9; border-radius: 10px; background: #eff8f4; color: #47645c; font-size: .67rem; line-height: 1.45; }
     .prescription-auto-note::before { content: "✓"; width: 18px; height: 18px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: var(--teal); color: #fff; font-size: .62rem; font-weight: 900; }
     .prescription-sheet { display: grid; gap: 0; }
+    .rx-tabs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 5px; margin: 12px 14px 0; padding: 4px; border: 1px solid #d8e3df; border-radius: 11px; background: #edf4f1; }
+    .rx-tab { min-width: 0; min-height: 35px; padding: 6px 7px; border: 0; border-radius: 8px; background: transparent; color: #5a716a; font: inherit; font-size: .64rem; font-weight: 820; cursor: pointer; transition: background .18s ease, color .18s ease, box-shadow .18s ease; }
+    .rx-tab[aria-selected="true"] { background: #fff; color: var(--teal-dark); box-shadow: 0 2px 8px rgba(13,58,52,.1); }
+    .rx-tab:hover { color: var(--teal-dark); }
+    .rx-tab:focus-visible { outline: 3px solid rgba(14,102,85,.16); outline-offset: 1px; }
+    .rx-tab-count { display: inline-grid; min-width: 17px; height: 17px; margin-left: 3px; padding: 0 4px; place-items: center; border-radius: 999px; background: #dcece6; color: var(--teal-dark); font-size: .56rem; }
+    .rx-tab-panel[hidden] { display: none; }
     .rx-section { padding: 15px 14px; border-bottom: 1px solid var(--line); }
     .rx-section:last-child { border-bottom: 0; }
     .rx-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
@@ -1045,11 +1052,15 @@
     .rx-field input, .rx-field select { min-height: 35px; padding: 7px 8px; }
     .rx-field textarea { min-height: 58px; padding: 8px; resize: vertical; line-height: 1.42; }
     .rx-field input:focus, .rx-field textarea:focus, .rx-field select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14,102,85,.09); }
-    .rx-medication-list { display: grid; gap: 9px; }
-    .rx-medication { position: relative; padding: 10px; border: 1px solid #d8e3df; border-radius: 11px; background: #f7faf8; }
-    .rx-medication::before { content: "Rx"; position: absolute; top: 10px; right: 10px; color: #9db5ad; font: 800 .68rem Georgia, serif; }
-    .rx-medication .rx-field-grid { padding-right: 22px; }
-    .rx-remove-medicine { margin-top: 8px; padding: 0; border: 0; background: transparent; color: #a74c3e; font: inherit; font-size: .62rem; font-weight: 800; cursor: pointer; }
+    .rx-medication-list { display: grid; gap: 8px; }
+    .rx-medication-empty { margin: 0; padding: 18px 12px; border: 1px dashed #b8cec6; border-radius: 11px; background: #f7faf8; color: var(--ink-soft); font-size: .68rem; line-height: 1.45; text-align: center; }
+    .rx-medication { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 10px 11px; border: 1px solid #d8e3df; border-radius: 11px; background: #f7faf8; }
+    .rx-medication-copy { min-width: 0; }
+    .rx-medication-copy strong { display: block; overflow: hidden; color: var(--ink); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+    .rx-medication-copy span { display: block; margin-top: 3px; overflow: hidden; color: var(--ink-soft); font-size: .61rem; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+    .rx-medication-actions { display: flex; gap: 4px; }
+    .rx-medication-actions button { min-height: 30px; padding: 0 8px; border: 1px solid #cfdeda; border-radius: 8px; background: #fff; color: var(--teal-dark); font: inherit; font-size: .6rem; font-weight: 820; cursor: pointer; }
+    .rx-medication-actions .rx-remove-medicine { color: #a74c3e; }
     .rx-add-medicine { min-height: 34px; padding: 0 10px; border: 1px dashed #8bbbae; border-radius: 9px; background: #eef8f4; color: var(--teal-dark); font: inherit; font-size: .66rem; font-weight: 830; cursor: pointer; }
     .prescription-meta { display: flex; justify-content: space-between; gap: 8px; margin: 10px 14px 14px; color: var(--ink-soft); font-size: .65rem; }
     .prescription-actions { display: grid; gap: 8px; padding: 14px 18px 18px; border-top: 1px solid var(--line); }
@@ -1057,6 +1068,20 @@
     .prescription-secondary { border: 1px solid var(--line-strong); background: #fff; color: var(--teal-dark); }
     .prescription-upload { border: 0; background: var(--teal); color: #fff; box-shadow: 0 10px 22px rgba(14,102,85,.16); }
     .prescription-upload:disabled { cursor: wait; opacity: .62; box-shadow: none; }
+    .rx-medicine-dialog { width: min(650px, calc(100vw - 28px)); max-height: min(760px, calc(100vh - 28px)); padding: 0; border: 0; border-radius: 19px; background: #fff; color: var(--ink); box-shadow: 0 30px 80px rgba(13,44,40,.28); }
+    .rx-medicine-dialog::backdrop { background: rgba(18,42,38,.55); backdrop-filter: blur(5px); }
+    .rx-medicine-form { display: flex; max-height: inherit; flex-direction: column; }
+    .rx-dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 20px 22px 16px; border-bottom: 1px solid var(--line); }
+    .rx-dialog-head span { display: block; margin-bottom: 4px; color: var(--teal); font-size: .62rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+    .rx-dialog-head h2 { margin: 0; font-size: 1.12rem; }
+    .rx-dialog-close { width: 36px; height: 36px; border: 0; border-radius: 10px; background: #edf4f1; color: var(--ink); font: inherit; font-size: 1.05rem; cursor: pointer; }
+    .rx-dialog-body { display: grid; gap: 16px; overflow: auto; padding: 18px 22px; }
+    .rx-dialog-group { display: grid; gap: 9px; }
+    .rx-dialog-group h3 { margin: 0; color: var(--ink); font-size: .74rem; }
+    .rx-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px 20px; border-top: 1px solid var(--line); background: #fff; }
+    .rx-dialog-actions button { min-height: 39px; padding: 0 16px; border-radius: 10px; font: inherit; font-size: .7rem; font-weight: 830; cursor: pointer; }
+    .rx-dialog-cancel { border: 1px solid var(--line-strong); background: #fff; color: var(--teal-dark); }
+    .rx-dialog-save { border: 0; background: var(--teal); color: #fff; }
     @media (max-width: 900px) {
       .app-shell.doctor-session .topbar { grid-template-columns: auto minmax(180px, 1fr) auto; gap: 10px; padding-inline: 14px; }
       .app-shell.doctor-session .doctor-availability-label { display: none; }
@@ -1069,6 +1094,7 @@
       .clinical-work-card { min-height: 0; }
       .patient-verified-chip { align-self: flex-start; }
       .patient-context-line { display: block; }
+      .rx-dialog-head, .rx-dialog-body, .rx-dialog-actions { padding-inline: 15px; }
     }
     @media (max-width: 620px) {
       .doctor-clinical-header { align-items: flex-start; flex-direction: column; }
@@ -2414,8 +2440,13 @@
                   <header class="clinical-work-head"><div><span>Current encounter</span><h2>Prescription</h2></div></header>
                   <div class="clinical-work-body">
                     <div class="prescription-auto-note">Doctor, hospital, patient, date, registration and authentication details are added automatically to the PDF.</div>
+                    <div class="rx-tabs" role="tablist" aria-label="Prescription sections">
+                      <button class="rx-tab" id="rxTabClinical" type="button" role="tab" aria-selected="true" aria-controls="rxPanelClinical" data-rx-tab="clinical">Clinical</button>
+                      <button class="rx-tab" id="rxTabMedicines" type="button" role="tab" aria-selected="false" aria-controls="rxPanelMedicines" data-rx-tab="medicines">Medicines <span class="rx-tab-count" id="rxMedicineCount">0</span></button>
+                      <button class="rx-tab" id="rxTabInstructions" type="button" role="tab" aria-selected="false" aria-controls="rxPanelInstructions" data-rx-tab="instructions">Instructions</button>
+                    </div>
                     <div class="prescription-sheet" id="prescriptionEditor">
-                      <section class="rx-section">
+                      <section class="rx-section rx-tab-panel" id="rxPanelClinical" role="tabpanel" aria-labelledby="rxTabClinical" data-rx-panel="clinical">
                         <div class="rx-section-heading"><h3>Clinical information</h3><span>Required</span></div>
                         <div class="rx-field-grid">
                           <label class="rx-field wide">Chief complaint / symptoms<textarea id="rxChiefComplaint" maxlength="1200" placeholder="Symptoms, onset, duration and severity" required></textarea></label>
@@ -2423,11 +2454,11 @@
                           <label class="rx-field wide">Relevant allergies<textarea id="rxAllergies" maxlength="500" placeholder="Drug allergies and reactions"></textarea></label>
                         </div>
                       </section>
-                      <section class="rx-section">
+                      <section class="rx-section rx-tab-panel" id="rxPanelMedicines" role="tabpanel" aria-labelledby="rxTabMedicines" data-rx-panel="medicines" hidden>
                         <div class="rx-section-heading"><h3>Medication details</h3><button class="rx-add-medicine" id="addPrescriptionMedicine" type="button">+ Add medicine</button></div>
                         <div class="rx-medication-list" id="prescriptionMedicationList"></div>
                       </section>
-                      <section class="rx-section">
+                      <section class="rx-section rx-tab-panel" id="rxPanelInstructions" role="tabpanel" aria-labelledby="rxTabInstructions" data-rx-panel="instructions" hidden>
                         <div class="rx-section-heading"><h3>Other instructions</h3><span>As applicable</span></div>
                         <div class="rx-field-grid">
                           <label class="rx-field wide">Investigations / tests<textarea id="rxInvestigations" maxlength="1200" placeholder="Tests to be completed"></textarea></label>
@@ -2540,6 +2571,46 @@
         <button class="device-cancel" id="doneStaffSummaryDialog" type="button">Close</button>
       </div>
     </div>
+  </dialog>
+
+  <dialog class="rx-medicine-dialog" id="prescriptionMedicineDialog" aria-labelledby="rxMedicineDialogTitle">
+    <form class="rx-medicine-form" id="prescriptionMedicineForm">
+      <div class="rx-dialog-head">
+        <div><span>Prescription medicine</span><h2 id="rxMedicineDialogTitle">Add medicine</h2></div>
+        <button class="rx-dialog-close" id="closePrescriptionMedicineDialog" type="button" aria-label="Close medicine editor">×</button>
+      </div>
+      <div class="rx-dialog-body">
+        <section class="rx-dialog-group">
+          <h3>Medicine</h3>
+          <div class="rx-field-grid">
+            <label class="rx-field wide">Medicine name<input id="rxMedicineName" maxlength="160" placeholder="Generic or brand name" required /></label>
+            <label class="rx-field">Strength<input id="rxMedicineStrength" maxlength="80" placeholder="e.g. 500 mg" required /></label>
+            <label class="rx-field">Dosage form<select id="rxMedicineForm" required><option value="">Select form</option><option>Tablet</option><option>Capsule</option><option>Syrup</option><option>Injection</option><option>Cream</option><option>Drops</option><option>Inhaler</option><option>Other</option></select></label>
+          </div>
+        </section>
+        <section class="rx-dialog-group">
+          <h3>Directions</h3>
+          <div class="rx-field-grid">
+            <label class="rx-field">Dose<input id="rxMedicineDose" maxlength="80" placeholder="e.g. 1 tablet" required /></label>
+            <label class="rx-field">Route<input id="rxMedicineRoute" maxlength="80" placeholder="e.g. Oral" required /></label>
+            <label class="rx-field">Frequency<input id="rxMedicineFrequency" maxlength="80" placeholder="e.g. Twice daily" required /></label>
+            <label class="rx-field">Timing / food instructions<input id="rxMedicineTiming" maxlength="160" placeholder="e.g. After meals" /></label>
+          </div>
+        </section>
+        <section class="rx-dialog-group">
+          <h3>Course</h3>
+          <div class="rx-field-grid">
+            <label class="rx-field">Duration<input id="rxMedicineDuration" maxlength="80" placeholder="e.g. 5 days" required /></label>
+            <label class="rx-field">Quantity<input id="rxMedicineQuantity" maxlength="40" placeholder="e.g. 10" required /></label>
+            <label class="rx-field">Refills<input id="rxMedicineRefills" maxlength="20" inputmode="numeric" placeholder="e.g. 0" /></label>
+          </div>
+        </section>
+      </div>
+      <div class="rx-dialog-actions">
+        <button class="rx-dialog-cancel" id="cancelPrescriptionMedicine" type="button">Cancel</button>
+        <button class="rx-dialog-save" type="submit">Save medicine</button>
+      </div>
+    </form>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"><strong id="toastTitle"></strong><small id="toastText"></small></div>
@@ -5019,47 +5090,70 @@
     const prescriptionEditor = document.getElementById('prescriptionEditor');
     const prescriptionMedicationList = document.getElementById('prescriptionMedicationList');
     const prescriptionDraftStatus = document.getElementById('prescriptionDraftStatus');
-    function prescriptionField(label, field, placeholder = '', type = 'text') {
-      const wrapper = document.createElement('label'); wrapper.className = `rx-field${field === 'name' || field === 'timing' ? ' wide' : ''}`;
-      wrapper.append(document.createTextNode(label));
-      const input = document.createElement(type === 'select' ? 'select' : 'input');
-      input.dataset.rxField = field;
-      if (type === 'select') {
-        ['', 'Tablet', 'Capsule', 'Syrup', 'Injection', 'Cream', 'Drops', 'Inhaler', 'Other'].forEach(value => {
-          input.append(Object.assign(document.createElement('option'), { value, textContent: value || 'Select form' }));
-        });
-      } else { input.type = type; input.placeholder = placeholder; input.maxLength = 160; }
-      wrapper.append(input); return wrapper;
-    }
-    function addPrescriptionMedicine(values = {}) {
-      if (prescriptionMedicationList.children.length >= 12) return void showToast('Medicine limit reached', 'A prescription can contain up to 12 medicines.');
-      const medicine = document.createElement('article'); medicine.className = 'rx-medication';
-      const grid = document.createElement('div'); grid.className = 'rx-field-grid';
-      grid.append(
-        prescriptionField('Medicine name', 'name', 'Generic or brand name'), prescriptionField('Strength', 'strength', 'e.g. 500 mg'),
-        prescriptionField('Dosage form', 'form', '', 'select'), prescriptionField('Dose', 'dose', 'e.g. 1 tablet'),
-        prescriptionField('Route', 'route', 'e.g. Oral'), prescriptionField('Frequency', 'frequency', 'e.g. Twice daily'),
-        prescriptionField('Timing / food instructions', 'timing', 'e.g. After meals'), prescriptionField('Duration', 'duration', 'e.g. 5 days'),
-        prescriptionField('Quantity', 'quantity', 'e.g. 10'), prescriptionField('Refills', 'refills', 'e.g. 0')
-      );
-      Object.entries(values).forEach(([field, value]) => { const input = grid.querySelector(`[data-rx-field="${field}"]`); if (input) input.value = value; });
-      const remove = document.createElement('button'); remove.className = 'rx-remove-medicine'; remove.type = 'button'; remove.textContent = 'Remove medicine';
-      remove.addEventListener('click', () => {
-        if (prescriptionMedicationList.children.length === 1) return void showToast('One medicine required', 'Keep one medicine row in the prescription.');
-        medicine.remove(); updatePrescriptionWordCount();
+    const prescriptionMedicineDialog = document.getElementById('prescriptionMedicineDialog');
+    const prescriptionMedicineForm = document.getElementById('prescriptionMedicineForm');
+    const prescriptionMedicineFields = {
+      name: document.getElementById('rxMedicineName'), strength: document.getElementById('rxMedicineStrength'),
+      form: document.getElementById('rxMedicineForm'), dose: document.getElementById('rxMedicineDose'),
+      route: document.getElementById('rxMedicineRoute'), frequency: document.getElementById('rxMedicineFrequency'),
+      timing: document.getElementById('rxMedicineTiming'), duration: document.getElementById('rxMedicineDuration'),
+      quantity: document.getElementById('rxMedicineQuantity'), refills: document.getElementById('rxMedicineRefills')
+    };
+    let prescriptionMedicines = [];
+    let editingPrescriptionMedicineIndex = -1;
+    function setPrescriptionTab(tabName, focus = false) {
+      document.querySelectorAll('[data-rx-tab]').forEach(tab => {
+        const selected = tab.dataset.rxTab === tabName;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        if (selected && focus) tab.focus();
       });
-      medicine.append(grid, remove); prescriptionMedicationList.append(medicine);
+      document.querySelectorAll('[data-rx-panel]').forEach(panel => { panel.hidden = panel.dataset.rxPanel !== tabName; });
+    }
+    function closePrescriptionMedicineDialog() {
+      if (prescriptionMedicineDialog?.open) prescriptionMedicineDialog.close();
+    }
+    function openPrescriptionMedicine(index = -1) {
+      if (index < 0 && prescriptionMedicines.length >= 12) return void showToast('Medicine limit reached', 'A prescription can contain up to 12 medicines.');
+      editingPrescriptionMedicineIndex = index;
+      const values = index >= 0 ? prescriptionMedicines[index] : {};
+      Object.entries(prescriptionMedicineFields).forEach(([field, input]) => { input.value = values?.[field] || ''; });
+      document.getElementById('rxMedicineDialogTitle').textContent = index >= 0 ? 'Edit medicine' : 'Add medicine';
+      setPrescriptionTab('medicines');
+      prescriptionMedicineDialog.showModal();
+      requestAnimationFrame(() => prescriptionMedicineFields.name.focus());
+    }
+    function renderPrescriptionMedicines() {
+      prescriptionMedicationList.replaceChildren();
+      document.getElementById('rxMedicineCount').textContent = String(prescriptionMedicines.length);
+      if (!prescriptionMedicines.length) {
+        const empty = document.createElement('p'); empty.className = 'rx-medication-empty';
+        empty.textContent = 'No medicines added yet. Add a medicine to define its dose, schedule and course.';
+        prescriptionMedicationList.append(empty);
+        return;
+      }
+      prescriptionMedicines.forEach((medicine, index) => {
+        const row = document.createElement('article'); row.className = 'rx-medication';
+        const copy = document.createElement('div'); copy.className = 'rx-medication-copy';
+        const title = document.createElement('strong'); title.textContent = [medicine.name, medicine.strength].filter(Boolean).join(' · ');
+        const directions = document.createElement('span');
+        directions.textContent = [medicine.form, medicine.dose, medicine.route, medicine.frequency, medicine.timing, medicine.duration, `Qty ${medicine.quantity}`, medicine.refills ? `${medicine.refills} refill${medicine.refills === '1' ? '' : 's'}` : 'No refills'].filter(Boolean).join(' · ');
+        copy.append(title, directions);
+        const actions = document.createElement('div'); actions.className = 'rx-medication-actions';
+        const edit = document.createElement('button'); edit.type = 'button'; edit.textContent = 'Edit'; edit.addEventListener('click', () => openPrescriptionMedicine(index));
+        const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'rx-remove-medicine'; remove.textContent = 'Remove';
+        remove.addEventListener('click', () => { prescriptionMedicines.splice(index, 1); renderPrescriptionMedicines(); updatePrescriptionWordCount(); });
+        actions.append(edit, remove); row.append(copy, actions); prescriptionMedicationList.append(row);
+      });
     }
     function updatePrescriptionWordCount() {
-      const count = [...prescriptionEditor.querySelectorAll('input, textarea, select')]
-        .map(field => field.value).join(' ').trim().split(/\s+/).filter(Boolean).length;
+      const editorText = [...prescriptionEditor.querySelectorAll('input, textarea, select')].map(field => field.value);
+      const medicineText = prescriptionMedicines.flatMap(medicine => Object.values(medicine));
+      const count = [...editorText, ...medicineText].join(' ').trim().split(/\s+/).filter(Boolean).length;
       document.getElementById('prescriptionWordCount').textContent = `${count} ${count === 1 ? 'word' : 'words'}`;
       if (!prescriptionDraftStatus.textContent.startsWith('Uploaded')) prescriptionDraftStatus.textContent = 'Draft · not uploaded';
     }
     function prescriptionPayload() {
-      const medications = [...prescriptionMedicationList.querySelectorAll('.rx-medication')].map(row =>
-        Object.fromEntries([...row.querySelectorAll('[data-rx-field]')].map(field => [field.dataset.rxField, field.value.trim()]))
-      ).filter(medicine => medicine.name);
       return {
         doctorId: activeDoctor?.id,
         patientId: selectedClinicalPatient?.sourcePatientId,
@@ -5068,7 +5162,7 @@
           diagnosis: document.getElementById('rxDiagnosis').value.trim(),
           allergies: document.getElementById('rxAllergies').value.trim()
         },
-        medications,
+        medications: prescriptionMedicines.map(medicine => ({ ...medicine })),
         instructions: {
           investigations: document.getElementById('rxInvestigations').value.trim(),
           lifestyle: document.getElementById('rxLifestyle').value.trim(),
@@ -5084,19 +5178,46 @@
       const allergies = document.getElementById('rxAllergies');
       if (complaint) complaint.value = patient?.summary || '';
       if (allergies) allergies.value = patient?.allergies && patient.allergies !== 'None reported' ? patient.allergies : '';
-      prescriptionMedicationList?.replaceChildren();
-      addPrescriptionMedicine();
+      prescriptionMedicines = [];
+      renderPrescriptionMedicines();
+      setPrescriptionTab('clinical');
       prescriptionDraftStatus.textContent = 'Draft · not uploaded';
       updatePrescriptionWordCount();
     }
-    addPrescriptionMedicine();
-    document.getElementById('addPrescriptionMedicine')?.addEventListener('click', () => addPrescriptionMedicine());
+    renderPrescriptionMedicines();
+    setPrescriptionTab('clinical');
+    document.querySelectorAll('[data-rx-tab]').forEach(tab => {
+      tab.addEventListener('click', () => setPrescriptionTab(tab.dataset.rxTab));
+      tab.addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        const tabs = [...document.querySelectorAll('[data-rx-tab]')];
+        const direction = event.key === 'ArrowRight' ? 1 : -1;
+        const next = tabs[(tabs.indexOf(tab) + direction + tabs.length) % tabs.length];
+        setPrescriptionTab(next.dataset.rxTab, true);
+      });
+    });
+    document.getElementById('addPrescriptionMedicine')?.addEventListener('click', () => openPrescriptionMedicine());
+    document.getElementById('closePrescriptionMedicineDialog')?.addEventListener('click', closePrescriptionMedicineDialog);
+    document.getElementById('cancelPrescriptionMedicine')?.addEventListener('click', closePrescriptionMedicineDialog);
+    prescriptionMedicineDialog?.addEventListener('click', event => { if (event.target === prescriptionMedicineDialog) closePrescriptionMedicineDialog(); });
+    prescriptionMedicineForm?.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!prescriptionMedicineForm.reportValidity()) return;
+      const medicine = Object.fromEntries(Object.entries(prescriptionMedicineFields).map(([field, input]) => [field, input.value.trim()]));
+      if (editingPrescriptionMedicineIndex >= 0) prescriptionMedicines[editingPrescriptionMedicineIndex] = medicine;
+      else prescriptionMedicines.push(medicine);
+      renderPrescriptionMedicines();
+      updatePrescriptionWordCount();
+      closePrescriptionMedicineDialog();
+    });
     prescriptionEditor?.addEventListener('input', updatePrescriptionWordCount);
     prescriptionEditor?.addEventListener('change', updatePrescriptionWordCount);
     document.getElementById('publishPrescription')?.addEventListener('click', async event => {
       if (!selectedClinicalPatient) return void showToast('Select a patient', 'Search for a hospital patient before uploading a prescription.');
       const payload = prescriptionPayload();
       if (!payload.clinical.chiefComplaint || !payload.clinical.diagnosis || !payload.medications.length) {
+        setPrescriptionTab(!payload.clinical.chiefComplaint || !payload.clinical.diagnosis ? 'clinical' : 'medicines');
         return void showToast('Complete required fields', 'Add the chief complaint, clinical impression and at least one medicine.');
       }
       const button = event.currentTarget; button.disabled = true; button.textContent = 'Generating secure PDF…';
