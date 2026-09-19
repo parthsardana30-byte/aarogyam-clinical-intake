@@ -142,7 +142,7 @@
         if (result.status === 'authorized') {
           clearInterval(clockTimer);
           setStatus('Device authorized. Opening Arogyam…', 'ready');
-          setTimeout(() => location.replace('/#/roles'), 900);
+          setTimeout(() => location.replace('/#/login/device-patient'), 900);
           return;
         }
         if (result.status === 'rejected') {
@@ -189,7 +189,7 @@
             ? `Temporary testing access expires ${new Date(result.expiresAt).toLocaleString()}.`
             : '';
           setStatus('Device authorized. Opening Arogyam…', 'ready');
-          setTimeout(() => location.replace('/#/roles'), 700);
+          setTimeout(() => location.replace('/#/login/device-patient'), 700);
           return;
         }
         enrollmentId = result.enrollmentId || enrollmentId;

@@ -119,6 +119,8 @@
       background: rgba(235,241,238,.82); box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
     }
     .app-shell.doctor-session .doctor-top-tabs { display: inline-flex; }
+    .app-shell.doctor-session .topbar { display: grid; grid-template-columns: auto minmax(220px, 1fr) auto; gap: 16px; }
+    .app-shell.doctor-session .doctor-top-tabs { position: static; width: min(430px, 100%); transform: none; justify-self: center; }
     .patient-top-tab {
       min-height: 38px; padding: 0 15px; border: 0; border-radius: 10px;
       background: transparent; color: #536a64; font: inherit; font-size: .82rem; font-weight: 760;
@@ -135,6 +137,14 @@
     .doctor-top-tab:hover { color: var(--ink); background: rgba(255,255,255,.68); }
     .doctor-top-tab[aria-selected="true"] { color: #fff; background: var(--ink); box-shadow: 0 7px 18px rgba(16,43,39,.16); }
     .doctor-top-tab:focus-visible { outline: 3px solid rgba(14,102,85,.2); outline-offset: 2px; }
+    .doctor-patient-searchbar {
+      width: min(430px, 42vw); min-height: 42px; display: flex; align-items: center; gap: 10px;
+      padding: 0 13px; border: 1px solid rgba(16,43,39,.12); border-radius: 11px;
+      background: rgba(255,255,255,.92); box-shadow: 0 8px 22px rgba(16,43,39,.06);
+    }
+    .doctor-patient-searchbar svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--teal); }
+    .doctor-patient-searchbar input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: .82rem; }
+    .doctor-patient-searchbar input::placeholder { color: #788a85; }
     .doctor-availability-control {
       position: relative; display: none; align-items: center; gap: 7px; margin-right: 6px; padding: 5px;
       border: 1px solid rgba(16,43,39,.11); border-radius: 14px;
@@ -356,7 +366,15 @@
     .patient-table th { color: #687d78; font-size: .77rem; text-transform: uppercase; letter-spacing: .06em; }
     .patient-table tbody tr:last-child td { border-bottom: 0; }
     .staff-patients-card { width: 100%; }
-    .staff-patient-table-head { align-items: center; }
+    .staff-patient-table-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 18px 20px;
+    }
+    .staff-patient-table-head h2 { flex: 0 0 auto; }
+    .staff-patient-table-head .staff-patient-search { margin-left: auto; }
     .staff-patient-search { width: min(360px, 100%); min-height: 44px; display: flex; align-items: center; gap: 9px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 13px; background: #f8faf9; color: #627972; }
     .staff-patient-search:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14,102,85,.11); }
     .staff-patient-search svg { width: 18px; height: 18px; flex: 0 0 auto; }
@@ -446,6 +464,8 @@
     .doctor-workspace { display: block; }
     .app-shell.doctor-session .doctor-workspace { min-height: calc(100dvh - 160px); }
     .portal-workspace { display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 22px; align-items: start; transition: grid-template-columns .24s ease; }
+    .app-shell.staff-session #reception .portal-workspace { grid-template-columns: minmax(0, 1fr); }
+    .app-shell.staff-session #reception .portal-main { grid-column: 1; width: 100%; }
     .doctor-sidebar {
       position: fixed; z-index: 20; top: 108px; left: max(16px, calc((100vw - 1480px) / 2 + 16px));
       width: 244px; height: calc(100vh - 128px); min-height: 420px; padding: 20px; overflow: hidden;
@@ -962,6 +982,102 @@
     .previous-patient-history-button:hover { border-color: var(--teal); background: var(--mint); }
     .previous-patients-empty { display: none; padding: 28px; color: var(--ink-soft); text-align: center; }
     .previous-patients-empty.visible { display: block; }
+    .doctor-clinical-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+    .doctor-patient-banner { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .doctor-patient-avatar { width: 46px; height: 46px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 14px; background: linear-gradient(145deg, #dff3eb, #c8e5da); color: var(--teal-dark); font-size: .78rem; font-weight: 850; }
+    .doctor-patient-banner strong, .doctor-patient-banner small { display: block; }
+    .doctor-patient-banner strong { font-size: 1rem; }
+    .doctor-patient-banner small { margin-top: 3px; color: var(--ink-soft); font-size: .76rem; }
+    .patient-verified-chip { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid #bddccb; border-radius: 999px; background: #eff9f4; color: #176548; font-size: .69rem; font-weight: 820; white-space: nowrap; }
+    .patient-verified-chip[hidden] { display: none; }
+    .patient-verified-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #2fa36f; box-shadow: 0 0 0 3px rgba(47,163,111,.13); }
+    .doctor-clinical-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,2fr) minmax(0,1fr); gap: 14px; align-items: stretch; }
+    .clinical-work-card { min-width: 0; min-height: 590px; display: flex; flex-direction: column; }
+    .clinical-work-head { min-height: 78px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 17px 18px 14px; border-bottom: 1px solid var(--line); }
+    .clinical-work-head span { display: block; margin-bottom: 4px; color: var(--teal); font-size: .63rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+    .clinical-work-head h2 { margin: 0; font-size: 1rem; }
+    .clinical-work-body { flex: 1; min-height: 0; padding: 17px 18px; }
+    .clinical-card-action { min-height: 35px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 9px; background: #fff; color: var(--teal-dark); font: inherit; font-size: .68rem; font-weight: 820; cursor: pointer; white-space: nowrap; }
+    .clinical-card-action:hover { border-color: var(--teal); background: var(--mint); }
+    .mini-visit-list { display: grid; gap: 0; }
+    .mini-visit { padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .mini-visit:last-child { border-bottom: 0; }
+    .mini-visit time, .mini-visit strong, .mini-visit small { display: block; }
+    .mini-visit time { margin-bottom: 5px; color: var(--teal); font-size: .66rem; font-weight: 820; }
+    .mini-visit strong { font-size: .79rem; line-height: 1.35; }
+    .mini-visit small { margin-top: 5px; color: var(--ink-soft); font-size: .7rem; line-height: 1.45; }
+    .current-status-card { border-color: rgba(14,102,85,.2); box-shadow: 0 26px 70px rgba(16,43,39,.11); }
+    .current-status-card .clinical-work-head { background: linear-gradient(135deg, #eef9f5, #fffdf7); }
+    .summary-source { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 11px; color: #617873; font-size: .68rem; font-weight: 750; }
+    .summary-source::before { content: "AI"; display: grid; place-items: center; width: 25px; height: 25px; border-radius: 8px; background: var(--ink); color: #fff; font-size: .58rem; letter-spacing: .04em; }
+    .current-summary-text { margin: 0; padding-left: 1.1rem; color: #29433d; font-size: .83rem; line-height: 1.55; }
+    .current-summary-text li + li { margin-top: 7px; }
+    .clinical-document { cursor: pointer; border-radius: 10px; transition: background .18s ease, transform .18s ease; }
+    .clinical-document:hover, .clinical-document:focus-visible { background: #edf8f4; transform: translateX(2px); outline: none; }
+    .clinical-empty { margin: 8px 0; color: var(--ink-soft); font-size: .76rem; line-height: 1.5; }
+    .patient-context-line { margin-top: 4px; color: var(--ink-soft); font-size: .7rem; }
+    .current-summary-facts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 15px 0; }
+    .current-summary-fact { padding: 10px; border: 1px solid var(--line); border-radius: 11px; background: rgba(247,250,248,.9); }
+    .current-summary-fact span, .current-summary-fact strong { display: block; }
+    .current-summary-fact span { color: var(--ink-soft); font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; }
+    .current-summary-fact strong { margin-top: 4px; font-size: .78rem; }
+    .clinical-review-note { padding: 11px 12px; border-radius: 11px; background: #fff4e8; color: #71421e; font-size: .72rem; line-height: 1.48; }
+    .ask-ai-panel { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .ask-ai-panel strong { display: block; margin-bottom: 8px; font-size: .78rem; }
+    .ask-ai-form { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 7px; }
+    .ask-ai-form input { min-width: 0; min-height: 39px; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 9px; background: #fff; color: var(--ink); font: inherit; font-size: .74rem; }
+    .ask-ai-form button { min-height: 39px; padding: 0 12px; border: 0; border-radius: 9px; background: var(--ink); color: #fff; font: inherit; font-size: .72rem; font-weight: 820; cursor: pointer; }
+    .ask-ai-answer { margin: 9px 0 0; padding: 10px 11px; border-left: 3px solid var(--teal); border-radius: 8px; background: var(--mint-2); color: var(--ink-soft); font-size: .7rem; line-height: 1.48; }
+    .prescription-card { background: linear-gradient(180deg, #fffefb 0%, #fbfdfb 100%); }
+    .prescription-card .clinical-work-body { padding: 0; overflow: hidden; }
+    .prescription-auto-note { display: flex; gap: 8px; align-items: flex-start; margin: 14px 14px 0; padding: 10px 11px; border: 1px solid #cfe1d9; border-radius: 10px; background: #eff8f4; color: #47645c; font-size: .67rem; line-height: 1.45; }
+    .prescription-auto-note::before { content: "✓"; width: 18px; height: 18px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: var(--teal); color: #fff; font-size: .62rem; font-weight: 900; }
+    .prescription-sheet { display: grid; gap: 0; }
+    .rx-section { padding: 15px 14px; border-bottom: 1px solid var(--line); }
+    .rx-section:last-child { border-bottom: 0; }
+    .rx-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+    .rx-section-heading h3 { margin: 0; color: var(--ink); font-size: .78rem; }
+    .rx-section-heading span { color: var(--ink-soft); font-size: .61rem; font-weight: 760; }
+    .rx-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .rx-field { display: grid; gap: 4px; min-width: 0; color: #587069; font-size: .6rem; font-weight: 820; letter-spacing: .025em; }
+    .rx-field.wide { grid-column: 1 / -1; }
+    .rx-field input, .rx-field textarea, .rx-field select { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #d4dfdb; border-radius: 8px; background: rgba(255,255,255,.94); color: var(--ink); font: inherit; font-size: .7rem; font-weight: 520; letter-spacing: 0; outline: none; }
+    .rx-field input, .rx-field select { min-height: 35px; padding: 7px 8px; }
+    .rx-field textarea { min-height: 58px; padding: 8px; resize: vertical; line-height: 1.42; }
+    .rx-field input:focus, .rx-field textarea:focus, .rx-field select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14,102,85,.09); }
+    .rx-medication-list { display: grid; gap: 9px; }
+    .rx-medication { position: relative; padding: 10px; border: 1px solid #d8e3df; border-radius: 11px; background: #f7faf8; }
+    .rx-medication::before { content: "Rx"; position: absolute; top: 10px; right: 10px; color: #9db5ad; font: 800 .68rem Georgia, serif; }
+    .rx-medication .rx-field-grid { padding-right: 22px; }
+    .rx-remove-medicine { margin-top: 8px; padding: 0; border: 0; background: transparent; color: #a74c3e; font: inherit; font-size: .62rem; font-weight: 800; cursor: pointer; }
+    .rx-add-medicine { min-height: 34px; padding: 0 10px; border: 1px dashed #8bbbae; border-radius: 9px; background: #eef8f4; color: var(--teal-dark); font: inherit; font-size: .66rem; font-weight: 830; cursor: pointer; }
+    .prescription-meta { display: flex; justify-content: space-between; gap: 8px; margin: 10px 14px 14px; color: var(--ink-soft); font-size: .65rem; }
+    .prescription-actions { display: grid; gap: 8px; padding: 14px 18px 18px; border-top: 1px solid var(--line); }
+    .prescription-actions button { min-height: 39px; border-radius: 10px; font: inherit; font-size: .71rem; font-weight: 820; cursor: pointer; }
+    .prescription-secondary { border: 1px solid var(--line-strong); background: #fff; color: var(--teal-dark); }
+    .prescription-upload { border: 0; background: var(--teal); color: #fff; box-shadow: 0 10px 22px rgba(14,102,85,.16); }
+    .prescription-upload:disabled { cursor: wait; opacity: .62; box-shadow: none; }
+    @media (max-width: 900px) {
+      .app-shell.doctor-session .topbar { grid-template-columns: auto minmax(180px, 1fr) auto; gap: 10px; padding-inline: 14px; }
+      .app-shell.doctor-session .doctor-availability-label { display: none; }
+      .doctor-patient-searchbar { width: 100%; }
+      .clinical-work-head, .clinical-work-body { padding-inline: 13px; }
+      .prescription-actions { padding-inline: 13px; }
+    }
+    @media (max-width: 780px) {
+      .doctor-clinical-grid { grid-template-columns: 1fr; }
+      .clinical-work-card { min-height: 0; }
+      .patient-verified-chip { align-self: flex-start; }
+      .patient-context-line { display: block; }
+    }
+    @media (max-width: 620px) {
+      .doctor-clinical-header { align-items: flex-start; flex-direction: column; }
+      .doctor-clinical-grid { grid-template-columns: 1fr; }
+      .prescription-card { grid-column: auto; }
+      .clinical-work-card { min-height: 0; }
+      .current-summary-facts { grid-template-columns: 1fr; }
+      .doctor-patient-searchbar { width: 100%; }
+    }
     .history-detail-heading { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 13px; margin-bottom: 16px; }
     .history-detail-heading h1 { margin: 3px 0 3px; font-size: 1.35rem; }
     .history-detail-heading p { margin: 0; color: var(--ink-soft); font-size: .8rem; }
@@ -1025,6 +1141,15 @@
       .history-patient-bar, .dated-record-head { align-items: flex-start; flex-direction: column; }
     }
     @media (max-width: 560px) {
+    }
+
+    @media (max-width: 900px) {
+      .app-shell.doctor-session .topbar { display: grid; grid-template-columns: auto minmax(180px,1fr) auto; gap: 10px; }
+      .app-shell.doctor-session .doctor-top-tabs { position: static; order: 0; width: 100%; transform: none; overflow: visible; }
+      .app-shell.doctor-session .top-actions { grid-column: 3; margin-left: 0; }
+      .app-shell.doctor-session .doctor-availability-label { display: none; }
+      .history-card .clinical-work-head { display: block; }
+      .history-card .clinical-card-action { width: 100%; margin-top: 10px; }
     }
 
     .toast { position: fixed; z-index: 10; right: 24px; bottom: 24px; width: min(360px, calc(100% - 48px)); background: var(--ink); color: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 20px 60px rgba(0,0,0,.22); transform: translateY(120%); opacity: 0; transition: .25s ease; }
@@ -1103,7 +1228,7 @@
     .staff-summary-card p { margin: 0; color: var(--ink); line-height: 1.65; white-space: pre-wrap; }
     @media (max-width: 680px) {
       .staff-patient-table-head { align-items: stretch; flex-direction: column; }
-      .staff-patient-search { width: 100%; }
+      .staff-patient-table-head .staff-patient-search { width: 100%; margin-left: 0; }
       .staff-vitals-grid { grid-template-columns: 1fr; }
     }
     .staff-profile-page { max-width: 1040px; margin: 0 auto; }
@@ -1962,7 +2087,12 @@
         <button class="patient-top-tab" type="button" role="tab" aria-selected="false" data-toast="Access and consent|Your record access preferences are available here.">Access &amp; consent</button>
       </nav>
       <nav class="doctor-top-tabs" aria-label="Doctor pages" role="tablist">
-        <button class="doctor-top-tab" type="button" role="tab" data-doctor-panel="previous" aria-selected="true">Patient records</button>
+        <label class="doctor-patient-searchbar">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="sr-only">Search by UHID, OPD number, patient name or masked phone</span>
+          <input id="doctorPatientSearch" type="search" list="doctorPatientOptions" maxlength="100" placeholder="Search by UHID, OPD number, name or phone" autocomplete="off" />
+          <datalist id="doctorPatientOptions"></datalist>
+        </label>
       </nav>
       <div class="top-actions">
         <div class="doctor-availability-control" aria-label="Doctor availability" data-current-status="active">
@@ -1983,9 +2113,9 @@
           </button>
           <div class="settings-menu" id="settingsMenu" hidden>
             <div class="settings-menu-head"><strong>Settings</strong><small>Workspace preferences</small></div>
-            <button class="settings-profile" id="staffProfileButton" type="button" hidden>
+            <button class="settings-profile" id="accountProfileButton" type="button" hidden>
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c.5-4 3-6 7-6s6.5 2 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              <span>View staff profile</span>
+              <span id="accountProfileLabel">View profile</span>
             </button>
             <div class="settings-field">
               <span>Language</span>
@@ -2019,27 +2149,6 @@
     <main class="workspace">
       <section class="view" id="reception" aria-labelledby="receptionTitle">
         <div class="portal-workspace">
-          <aside class="card doctor-sidebar portal-sidebar" aria-label="Hospital staff navigation">
-            <div class="doctor-profile">
-              <div class="doctor-profile-mark" id="staffSidebarMark" role="img" aria-label="Staff account">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 20c.7-4 2.9-6 6.5-6s5.8 2 6.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              </div>
-              <div class="doctor-profile-copy">
-                <strong id="staffSidebarName">Simran Kaur</strong>
-                <small id="staffSidebarHospital">Reception staff</small>
-              </div>
-            </div>
-            <nav class="doctor-nav">
-              <button class="doctor-nav-button" type="button" data-patient-route="start" aria-selected="true">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="20" cy="18" r="2" fill="currentColor"/></svg>
-                <span class="nav-label">Patients</span>
-              </button>
-              <button class="doctor-nav-button" id="addAuthorizedDevice" type="button" aria-selected="false" data-authorize-device>
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M9 7h6M12 11v6M9 14h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                <span class="nav-label">Add authorized device</span>
-              </button>
-            </nav>
-          </aside>
           <div class="portal-main">
         <section class="staff-action-grid" aria-label="Reception actions">
           <button class="staff-action-card" type="button" data-start-intake>
@@ -2101,6 +2210,37 @@
             </div>
           </article>
           <p class="staff-profile-status" id="staffProfileStatus" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="view" id="doctorProfile" aria-labelledby="doctorProfileTitle">
+        <div class="staff-profile-page">
+          <div class="page-heading">
+            <div><span class="eyebrow">Clinician account</span><h1 id="doctorProfileTitle">Doctor profile</h1><p class="heading-copy">Your verified professional and hospital information.</p></div>
+            <button class="staff-profile-back" id="backToDoctorPatients" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to patient records</button>
+          </div>
+          <article class="card staff-profile-card">
+            <header class="staff-profile-identity">
+              <div class="staff-profile-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 4v5a4 4 0 0 0 8 0V4M8 6H6m10 0h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 13v2a4 4 0 0 0 4 4h1" stroke="currentColor" stroke-width="1.7"/><circle cx="19" cy="19" r="2" stroke="currentColor" stroke-width="1.7"/></svg></div>
+              <div><h2 id="doctorProfileName">Doctor</h2><p id="doctorProfileHospital">Civil Hospital</p></div>
+              <span class="staff-profile-verified">Verified clinician</span>
+            </header>
+            <div class="staff-profile-grid">
+              <div class="staff-profile-field"><span>Full name</span><strong id="doctorProfileFullName">—</strong></div>
+              <div class="staff-profile-field"><span>Doctor ID</span><strong id="doctorProfileDoctorId">—</strong></div>
+              <div class="staff-profile-field"><span>Qualification</span><strong id="doctorProfileDegree">—</strong></div>
+              <div class="staff-profile-field"><span>Specialty</span><strong id="doctorProfileSpecialty">—</strong></div>
+              <div class="staff-profile-field"><span>Medical registration</span><strong id="doctorProfileRegistration">—</strong></div>
+              <div class="staff-profile-field"><span>Experience</span><strong id="doctorProfileExperience">—</strong></div>
+              <div class="staff-profile-field"><span>Room</span><strong id="doctorProfileRoom">—</strong></div>
+              <div class="staff-profile-field"><span>Mobile number</span><strong id="doctorProfilePhone">—</strong></div>
+              <div class="staff-profile-field"><span>Professional email</span><strong id="doctorProfileEmail">—</strong></div>
+              <div class="staff-profile-field"><span>Hospital branch</span><strong id="doctorProfileBranch">—</strong></div>
+              <div class="staff-profile-field"><span>Location</span><strong id="doctorProfileLocation">—</strong></div>
+              <div class="staff-profile-field"><span>Account created</span><strong id="doctorProfileCreated">—</strong></div>
+            </div>
+          </article>
+          <p class="staff-profile-status" id="doctorProfileStatus" role="status" aria-live="polite"></p>
         </div>
       </section>
 
@@ -2245,9 +2385,63 @@
         <div class="doctor-workspace">
           <div class="doctor-main">
             <div class="doctor-panel active" data-doctor-panel-content="previous">
-              <div class="previous-patients-heading"><div><div class="eyebrow">Completed consultations</div><h1>Previous patients</h1><p>Find a patient and open their complete medical history.</p></div><label class="previous-patient-search"><span class="sr-only">Search previous patients</span><input id="previousPatientsSearch" type="search" maxlength="100" placeholder="Search by name, patient ID or concern"></label></div>
-              <div class="previous-patients-list" id="previousPatientsList" aria-live="polite"></div>
-              <div class="card previous-patients-empty" id="previousPatientsEmpty">No previous patients match this search.</div>
+              <div class="doctor-clinical-header">
+                <div class="doctor-patient-banner"><div class="doctor-patient-avatar" id="clinicalPatientInitials">—</div><div><strong id="clinicalPatientName">Select a patient</strong><small id="clinicalPatientMeta">Search by this hospital’s UHID or OPD number</small></div></div>
+                <span class="patient-verified-chip" id="clinicalPatientVerified" hidden>Hospital UHID verified</span>
+              </div>
+              <div class="doctor-clinical-grid">
+                <article class="card clinical-work-card history-card">
+                  <header class="clinical-work-head"><div><span>Prior evidence</span><h2>Patient documents</h2></div><button class="clinical-card-action" id="viewAllPatientHistory" type="button">View all</button></header>
+                  <div class="clinical-work-body"><div class="mini-visit-list" id="clinicalHistoryPreview"><p class="clinical-empty">Select a patient to review hospital documents.</p></div></div>
+                </article>
+
+                <article class="card clinical-work-card current-status-card">
+                  <header class="clinical-work-head"><div><span>Current encounter</span><h2>AI summary and patient status</h2></div><span class="source-tag">Patient reported</span></header>
+                  <div class="clinical-work-body">
+                    <div class="summary-source" id="clinicalSummarySource">AI-assisted intake</div>
+                    <ul class="current-summary-text" id="clinicalAiSummary"><li>Select a patient to view their completed intake.</li></ul>
+                    <div class="current-summary-facts" aria-label="Latest patient vitals">
+                      <div class="current-summary-fact"><span>Blood pressure</span><strong>124/82 mmHg</strong></div>
+                      <div class="current-summary-fact"><span>Pulse</span><strong>78 bpm</strong></div>
+                      <div class="current-summary-fact"><span>SpO₂</span><strong>98%</strong></div>
+                    </div>
+                    <div class="clinical-review-note"><strong>Review before prescribing:</strong> Uploaded prescription lists metformin, while the intake says no regular medicines. Confirm medication history with the patient.</div>
+                    <div class="ask-ai-panel"><strong>Ask AI about this encounter</strong><form class="ask-ai-form" id="clinicalAskAiForm"><input id="clinicalAskAiInput" maxlength="300" placeholder="e.g. What should I clarify first?"/><button type="submit">Ask AI</button></form><p class="ask-ai-answer" id="clinicalAskAiAnswer">Ask about onset, relation to meals, bowel changes, hydration, medication use and red-flag symptoms. AI suggestions are not a diagnosis.</p></div>
+                  </div>
+                </article>
+
+                <article class="card clinical-work-card prescription-card">
+                  <header class="clinical-work-head"><div><span>Current encounter</span><h2>Prescription</h2></div></header>
+                  <div class="clinical-work-body">
+                    <div class="prescription-auto-note">Doctor, hospital, patient, date, registration and authentication details are added automatically to the PDF.</div>
+                    <div class="prescription-sheet" id="prescriptionEditor">
+                      <section class="rx-section">
+                        <div class="rx-section-heading"><h3>Clinical information</h3><span>Required</span></div>
+                        <div class="rx-field-grid">
+                          <label class="rx-field wide">Chief complaint / symptoms<textarea id="rxChiefComplaint" maxlength="1200" placeholder="Symptoms, onset, duration and severity" required></textarea></label>
+                          <label class="rx-field wide">Diagnosis / clinical impression<textarea id="rxDiagnosis" maxlength="1200" placeholder="Working diagnosis or clinical impression" required></textarea></label>
+                          <label class="rx-field wide">Relevant allergies<textarea id="rxAllergies" maxlength="500" placeholder="Drug allergies and reactions"></textarea></label>
+                        </div>
+                      </section>
+                      <section class="rx-section">
+                        <div class="rx-section-heading"><h3>Medication details</h3><button class="rx-add-medicine" id="addPrescriptionMedicine" type="button">+ Add medicine</button></div>
+                        <div class="rx-medication-list" id="prescriptionMedicationList"></div>
+                      </section>
+                      <section class="rx-section">
+                        <div class="rx-section-heading"><h3>Other instructions</h3><span>As applicable</span></div>
+                        <div class="rx-field-grid">
+                          <label class="rx-field wide">Investigations / tests<textarea id="rxInvestigations" maxlength="1200" placeholder="Tests to be completed"></textarea></label>
+                          <label class="rx-field wide">Lifestyle / dietary advice<textarea id="rxLifestyle" maxlength="1200" placeholder="Diet, activity and hydration advice"></textarea></label>
+                          <label class="rx-field wide">Precautions / warnings<textarea id="rxPrecautions" maxlength="1200" placeholder="Red flags, medicine warnings or precautions"></textarea></label>
+                          <label class="rx-field wide">Follow-up / review date<input id="rxFollowUpDate" type="date" /></label>
+                        </div>
+                      </section>
+                    </div>
+                    <div class="prescription-meta"><span id="prescriptionDraftStatus">Draft · not uploaded</span><span id="prescriptionWordCount">0 words</span></div>
+                  </div>
+                  <div class="prescription-actions"><button class="prescription-secondary" id="viewPreviousPrescriptions" type="button">View previous prescriptions</button><button class="prescription-upload" id="publishPrescription" type="button">Upload to patient portal</button></div>
+                </article>
+              </div>
             </div>
 
             <div class="doctor-panel" data-doctor-panel-content="history">
@@ -2443,8 +2637,10 @@
     const patientConditionInputs = [...document.querySelectorAll('input[name="patientCondition"]')];
     const changeSignupMethod = document.getElementById('changeSignupMethod');
     const appShell = document.getElementById('appShell');
-    const staffProfileButton = document.getElementById('staffProfileButton');
+    const accountProfileButton = document.getElementById('accountProfileButton');
+    const accountProfileLabel = document.getElementById('accountProfileLabel');
     const staffProfileStatus = document.getElementById('staffProfileStatus');
+    const doctorProfileStatus = document.getElementById('doctorProfileStatus');
     let selectedLoginRole = 'patient';
     let selectedAuthMode = 'login';
     let patientLoginContext = 'normal';
@@ -2466,6 +2662,8 @@
     let activePatient = null;
     const archivedDoctorPatients = [];
     const doctorPatientHistories = {};
+    const clinicalPatientCases = [];
+    let selectedClinicalPatient = null;
     let activeDoctor = null;
     let intakeTranscript = [];
     let signupOtpProvider = null;
@@ -2473,6 +2671,7 @@
     let hospitalBranchesReady = null;
     let authorizedPatientDevice = false;
     let patientLoggedInThisSession = false;
+    let activePatientSessionToken = '';
     patientDateOfBirth.max = new Date().toISOString().slice(0, 10);
 
     function keepDigits(input, maximumLength) {
@@ -3170,7 +3369,7 @@
       const search = staffPatientSearch.value.trim().toLowerCase();
       const documentActionLabel = structuredMessages['staff.table.uploadDocuments'] || 'Upload documents';
       const vitalsActionLabel = structuredMessages['staff.table.uploadVitals'] || 'Upload vitals';
-      const visiblePatients = patients.filter(patient => `${patient.fullName} ${patient.uhid}`.toLowerCase().includes(search));
+      const visiblePatients = patients.filter(patient => `${patient.fullName} ${patient.uhid} ${patient.encounterNumber || ''}`.toLowerCase().includes(search));
       if (!visiblePatients.length) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
@@ -3189,7 +3388,10 @@
         summaryAction.type = 'button'; summaryAction.className = 'patient-summary-action';
         summaryAction.dataset.patientSummaries = patient.id;
         summaryAction.textContent = `View ${summaryCount} AI summar${summaryCount === 1 ? 'y' : 'ies'}`;
-        identity.append(name, document.createElement('br'), summaryAction);
+        const encounterMeta = document.createElement('small');
+        encounterMeta.className = 'patient-context-line';
+        encounterMeta.textContent = `${patient.encounterNumber || 'Encounter pending'} · ${String(patient.intakeSource || 'authorized-device').replace('-', ' ')}`;
+        identity.append(name, encounterMeta, summaryAction);
         const uhid = document.createElement('td');
         const uhidValue = document.createElement('strong'); uhidValue.textContent = patient.uhid;
         uhid.append(uhidValue);
@@ -3198,6 +3400,7 @@
         const documentButton = document.createElement('button');
         documentButton.className = 'patient-row-action'; documentButton.type = 'button';
         documentButton.dataset.patientDocument = patient.id; documentButton.dataset.patientName = patient.fullName;
+        documentButton.dataset.patientUhid = patient.uhid; documentButton.dataset.patientIntake = patient.latestIntakeId || '';
         documentButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         documentButton.append(documentActionLabel);
         const documentCount = document.createElement('small');
@@ -3208,6 +3411,7 @@
         const vitalsButton = document.createElement('button');
         vitalsButton.className = 'patient-row-action vitals'; vitalsButton.type = 'button';
         vitalsButton.dataset.patientVitals = patient.id; vitalsButton.dataset.patientName = patient.fullName;
+        vitalsButton.dataset.patientUhid = patient.uhid; vitalsButton.dataset.patientIntake = patient.latestIntakeId || '';
         vitalsButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         vitalsButton.append(vitalsActionLabel);
         const vitalsMeta = document.createElement('small');
@@ -3242,9 +3446,9 @@
       const documentButton = event.target.closest('[data-patient-document]');
       if (documentButton) {
         stopStaffDocumentSession();
-        staffDocumentPatient = { id: documentButton.dataset.patientDocument, name: documentButton.dataset.patientName };
+        staffDocumentPatient = { id: documentButton.dataset.patientDocument, name: documentButton.dataset.patientName, uhid: documentButton.dataset.patientUhid, intakeId: documentButton.dataset.patientIntake };
         staffDocumentPatientName.textContent = staffDocumentPatient.name;
-        staffDocumentPatientId.textContent = `UHID · ${staffDocumentPatient.id}`;
+        staffDocumentPatientId.textContent = `UHID · ${staffDocumentPatient.uhid}`;
         staffDocumentDialog.showModal();
         void ensureStaffDocumentSession().catch(error => setStaffDocumentStatus(error.message, true));
         return;
@@ -3271,11 +3475,11 @@
       const vitalsButton = event.target.closest('[data-patient-vitals]');
       if (!vitalsButton) return;
       const patient = staffPatientRecords.find(item => item.id === vitalsButton.dataset.patientVitals);
-      staffVitalsPatient = { id: vitalsButton.dataset.patientVitals, name: vitalsButton.dataset.patientName };
+      staffVitalsPatient = { id: vitalsButton.dataset.patientVitals, name: vitalsButton.dataset.patientName, uhid: vitalsButton.dataset.patientUhid, intakeId: vitalsButton.dataset.patientIntake };
       staffVitalsForm.reset();
       staffVitalsStatus.textContent = '';
       staffVitalsPatientName.textContent = staffVitalsPatient.name;
-      staffVitalsPatientUhid.textContent = `UHID · ${staffVitalsPatient.id}`;
+      staffVitalsPatientUhid.textContent = `UHID · ${staffVitalsPatient.uhid}`;
       if (patient?.latestVitals) {
         staffHeartRate.value = patient.latestVitals.heartRate;
         staffOxygenSaturation.value = patient.latestVitals.oxygenSaturation;
@@ -3306,6 +3510,7 @@
             staffId: storedStaff?.id || '',
             patientId: staffDocumentPatient.id,
             patientName: staffDocumentPatient.name,
+            intakeId: staffDocumentPatient.intakeId,
             documentSessionId: staffDocumentSession.id,
             documentSessionToken: staffDocumentSession.token
           })
@@ -3356,7 +3561,7 @@
         const response = await fetch('/api/staff-patient-vitals', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            staffId: storedStaff?.id || '', patientId: staffVitalsPatient.id,
+            staffId: storedStaff?.id || '', patientId: staffVitalsPatient.id, intakeId: staffVitalsPatient.intakeId,
             heartRate: Number(staffHeartRate.value), oxygenSaturation: Number(staffOxygenSaturation.value),
             systolic, diastolic
           })
@@ -3405,7 +3610,10 @@
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not create account');
-        try { localStorage.setItem('arogPatientId', data.patient.id); localStorage.setItem('arogPatientName', data.patient.fullName); } catch (_) {}
+        if (!authorizedPatientDevice) {
+          try { localStorage.setItem('arogPatientId', data.patient.id); localStorage.setItem('arogPatientName', data.patient.fullName); localStorage.setItem('arogPatientSessionToken', data.sessionToken); } catch (_) {}
+        }
+        activePatientSessionToken = data.sessionToken || '';
         activePatient = data.patient;
         applyPatientIdentity(data.patient);
         patientRegistrationPassword = '';
@@ -3641,7 +3849,6 @@
     let localeRequest = 0;
     const localeBindings = [
       ['.settings-menu-head strong', 'settings.title'], ['.settings-menu-head small', 'settings.subtitle'], ['.settings-field > span', 'settings.language'], ['#logoutButton span', 'settings.logout'],
-      ['#reception .doctor-nav-button:nth-child(1) .nav-label', 'staff.nav.patients'], ['#addAuthorizedDevice .nav-label', 'staff.nav.authorizeDevice'],
       ['#receptionTitle', 'staff.title'],
       ['#reception th:nth-child(1)', 'staff.table.patient'], ['#reception th:nth-child(2)', 'staff.table.uhid'],
       ['#reception th:nth-child(3)', 'staff.table.uploadDocuments'], ['#reception th:nth-child(4)', 'staff.table.uploadVitals'],
@@ -3849,6 +4056,7 @@
       doctorChoiceStep.hidden = true;
       patientRecords.hidden = false;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'records')));
+      void loadPatientRecordDocuments();
       if (focus) document.getElementById('patientRecordsTitle').focus({ preventScroll: true });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -4187,6 +4395,67 @@
       document.getElementById('doctorHistoryEmpty')?.classList.remove('visible');
     }
 
+    function renderClinicalPatient(patient) {
+      const summaryList = document.getElementById('clinicalAiSummary');
+      const preview = document.getElementById('clinicalHistoryPreview');
+      const facts = document.querySelectorAll('.current-summary-fact strong');
+      const review = document.querySelector('.clinical-review-note');
+      if (!patient) {
+        selectedClinicalPatient = null;
+        document.getElementById('clinicalPatientVerified').hidden = true;
+        document.getElementById('clinicalPatientInitials').textContent = '—';
+        document.getElementById('clinicalPatientName').textContent = 'No hospital patient selected';
+        document.getElementById('clinicalPatientMeta').textContent = 'Search by UHID, OPD number, name or masked phone';
+        document.getElementById('clinicalSummarySource').textContent = 'AI-assisted intake';
+        summaryList.replaceChildren(Object.assign(document.createElement('li'), { textContent: 'No completed intake is available for this hospital.' }));
+        ['Not recorded', 'Not recorded', 'Not recorded'].forEach((value, index) => { if (facts[index]) facts[index].textContent = value; });
+        if (review) review.innerHTML = '<strong>Previous-document review:</strong> Select a patient to compare current information with prior evidence.';
+        preview.innerHTML = '<p class="clinical-empty">No hospital documents are available.</p>';
+        return;
+      }
+      const previousPatientId = selectedClinicalPatient?.sourcePatientId;
+      selectedClinicalPatient = patient;
+      document.getElementById('clinicalPatientVerified').hidden = false;
+      document.getElementById('clinicalPatientInitials').textContent = patient.initials;
+      document.getElementById('clinicalPatientName').textContent = patient.fullName;
+      document.getElementById('clinicalPatientMeta').textContent = `${patient.opd} · UHID ${patient.id} · ${patient.age} years · ${patient.sex} · ${patient.phoneMasked}`;
+      document.getElementById('clinicalSummarySource').textContent = `AI-assisted intake · ${patient.language} · ${new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(patient.createdAt))}`;
+      const summaryPoints = (patient.summary.match(/[^.!?]+[.!?]?/g) || [patient.summary]).map(point => point.trim()).filter(Boolean).slice(0, 8);
+      summaryList.replaceChildren(...summaryPoints.map(point => Object.assign(document.createElement('li'), { textContent: point })));
+      patient.vitals.forEach((value, index) => { if (facts[index]) facts[index].textContent = value; });
+      if (review) {
+        review.replaceChildren();
+        const label = document.createElement('strong'); label.textContent = 'Previous-document review: ';
+        review.append(label, patient.review);
+      }
+      if (patient.documents.length) {
+        preview.replaceChildren(...patient.documents.slice(0, 4).map(documentRecord => {
+          const item = document.createElement('article');
+          item.className = 'mini-visit clinical-document'; item.tabIndex = 0; item.setAttribute('role', 'link');
+          const time = document.createElement('time');
+          time.textContent = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(documentRecord.createdAt));
+          const name = document.createElement('strong'); name.textContent = documentRecord.name;
+          const meta = document.createElement('small'); meta.textContent = `${documentRecord.type.includes('pdf') ? 'PDF' : 'Image'} · Open document`;
+          const open = () => window.open(documentRecord.previewUrl, '_blank', 'noopener');
+          item.addEventListener('click', open);
+          item.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });
+          item.append(time, name, meta); return item;
+        }));
+      } else preview.innerHTML = '<p class="clinical-empty">No documents have been uploaded at this hospital.</p>';
+      const search = document.getElementById('doctorPatientSearch');
+      if (search && search.value !== patient.fullName) search.value = patient.fullName;
+      document.getElementById('clinicalAskAiAnswer').textContent = 'Ask about onset, severity, relevant medicines, allergies and red-flag symptoms. AI suggestions are not a diagnosis.';
+      if (previousPatientId !== patient.sourcePatientId) resetPrescriptionForPatient(patient);
+    }
+
+    function openSelectedClinicalHistory(filter = 'all') {
+      renderPreviousPatientHistory(selectedClinicalPatient);
+      navigateRoute('doctor/history');
+      activeDoctorHistoryFilter = filter;
+      doctorHistoryFilters.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.historyFilter === filter)));
+      updateDoctorHistory();
+    }
+
     function getPreviousDoctorPatients() {
       return [...archivedDoctorPatients];
     }
@@ -4297,7 +4566,8 @@
       appShell.hidden = false;
       appShell.classList.remove('doctor-session', 'patient-session', 'staff-session', 'checkup-active', 'voice-mode');
       appShell.classList.add(`${role}-session`);
-      staffProfileButton.hidden = role !== 'staff';
+      accountProfileButton.hidden = role !== 'staff' && role !== 'doctor';
+      accountProfileLabel.textContent = role === 'doctor' ? 'View doctor profile' : 'View staff profile';
       openView(view);
     }
 
@@ -4329,10 +4599,15 @@
     function applyStaffIdentity(staff) {
       if (!staff?.id) return;
       const displayName = staff.fullName || `Staff ${staff.id}`;
-      document.getElementById('staffSidebarName').textContent = displayName;
-      document.getElementById('staffSidebarHospital').textContent = `${staff.hospitalName} · ${staff.hospitalLocation}`;
-      document.getElementById('staffSidebarHospital').title = `${staff.hospitalName} · ${staff.hospitalLocation}`;
-      document.getElementById('staffSidebarMark').setAttribute('aria-label', `${displayName} account`);
+      const sidebarName = document.getElementById('staffSidebarName');
+      const sidebarHospital = document.getElementById('staffSidebarHospital');
+      const sidebarMark = document.getElementById('staffSidebarMark');
+      if (sidebarName) sidebarName.textContent = displayName;
+      if (sidebarHospital) {
+        sidebarHospital.textContent = `${staff.hospitalName} · ${staff.hospitalLocation}`;
+        sidebarHospital.title = `${staff.hospitalName} · ${staff.hospitalLocation}`;
+      }
+      if (sidebarMark) sidebarMark.setAttribute('aria-label', `${displayName} account`);
     }
 
     function renderStaffProfile(staff) {
@@ -4369,13 +4644,114 @@
       }
     }
 
+    function clinicalPatientFromApi(patient) {
+      const recordedVitals = patient.vitals;
+      const visitHistory = patient.history.map(item => ({
+        date: new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(item.createdAt)),
+        iso: item.createdAt.slice(0, 10), kind: 'visit', type: 'AI intake',
+        title: item.encounterNumber || 'Hospital encounter', summary: item.summary
+      }));
+      const documentHistory = patient.documents.map(item => ({
+        date: new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(item.createdAt)),
+        iso: item.createdAt.slice(0, 10), kind: item.type.includes('pdf') ? 'prescription' : 'lab', type: 'Document',
+        title: item.name, summary: 'Document uploaded by the hospital care team.'
+      }));
+      return {
+        ...patient,
+        id: patient.uhid,
+        sourcePatientId: patient.patientId,
+        opd: patient.encounterNumber,
+        sex: patient.gender,
+        initials: patient.fullName.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase(),
+        review: patient.evidenceReview,
+        vitals: recordedVitals
+          ? [`${recordedVitals.systolic}/${recordedVitals.diastolic} mmHg`, `${recordedVitals.heartRate} bpm`, `${recordedVitals.oxygenSaturation}%`]
+          : ['Not recorded', 'Not recorded', 'Not recorded'],
+        history: [...visitHistory, ...documentHistory].sort((a, b) => b.iso.localeCompare(a.iso)),
+        documents: patient.documents || [],
+        concern: patient.summary,
+        meta: `${patient.encounterNumber} · UHID ${patient.uhid}`
+      };
+    }
+
+    async function loadDoctorPatients() {
+      if (!activeDoctor?.id) {
+        clinicalPatientCases.splice(0);
+        renderClinicalPatient(null);
+        return;
+      }
+      try {
+        const response = await fetch(`/api/doctor-patients?doctorId=${encodeURIComponent(activeDoctor.id)}`, { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not load hospital patients');
+        clinicalPatientCases.splice(0, clinicalPatientCases.length, ...data.patients.map(clinicalPatientFromApi));
+        const options = document.getElementById('doctorPatientOptions');
+        options.replaceChildren(...clinicalPatientCases.flatMap(patient => [
+          Object.assign(document.createElement('option'), { value: patient.id, label: `${patient.fullName} · ${patient.opd}` }),
+          Object.assign(document.createElement('option'), { value: patient.opd, label: `${patient.fullName} · UHID ${patient.id}` }),
+          Object.assign(document.createElement('option'), { value: patient.fullName, label: `${patient.id} · ${patient.opd}` })
+        ]));
+        Object.keys(doctorPatientHistories).forEach(key => delete doctorPatientHistories[key]);
+        clinicalPatientCases.forEach(patient => { doctorPatientHistories[patient.id] = patient.history; });
+        const retained = clinicalPatientCases.find(patient => patient.sourcePatientId === selectedClinicalPatient?.sourcePatientId);
+        renderClinicalPatient(retained || clinicalPatientCases[0] || null);
+      } catch (error) {
+        renderClinicalPatient(null);
+        showToast('Patients unavailable', error.message || 'Could not load hospital patients.');
+      }
+    }
+
+    function renderDoctorProfile(doctor) {
+      document.getElementById('doctorProfileName').textContent = doctor.fullName || `Doctor ${doctor.id}`;
+      document.getElementById('doctorProfileHospital').textContent = `${doctor.hospitalName} · ${doctor.hospitalLocation}`;
+      document.getElementById('doctorProfileFullName').textContent = doctor.fullName || 'Not available';
+      document.getElementById('doctorProfileDoctorId').textContent = doctor.id;
+      document.getElementById('doctorProfileDegree').textContent = doctor.degree || 'Not available';
+      document.getElementById('doctorProfileSpecialty').textContent = doctor.specialty || 'Not available';
+      document.getElementById('doctorProfileRegistration').textContent = doctor.medicalRegistrationNumber || 'Not available';
+      document.getElementById('doctorProfileExperience').textContent = Number.isFinite(Number(doctor.yearsExperience)) ? `${doctor.yearsExperience} years` : 'Not available';
+      document.getElementById('doctorProfileRoom').textContent = doctor.roomNumber || 'Not assigned';
+      document.getElementById('doctorProfilePhone').textContent = doctor.phone ? `+91 ${doctor.phone}` : 'Not available';
+      document.getElementById('doctorProfileEmail').textContent = doctor.email || 'Not available';
+      document.getElementById('doctorProfileBranch').textContent = doctor.hospitalName || 'Not available';
+      document.getElementById('doctorProfileLocation').textContent = doctor.hospitalLocation || 'Not available';
+      document.getElementById('doctorProfileCreated').textContent = doctor.createdAt
+        ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date(doctor.createdAt))
+        : 'Not available';
+      doctorProfileStatus.textContent = '';
+    }
+
+    async function loadDoctorProfile() {
+      doctorProfileStatus.textContent = 'Loading doctor profile…';
+      let storedDoctor = null;
+      try { storedDoctor = JSON.parse(localStorage.getItem('arogDoctor') || 'null'); } catch (_) {}
+      if (!storedDoctor?.id) {
+        doctorProfileStatus.textContent = 'Sign in as a doctor to view this profile.';
+        return;
+      }
+      try {
+        const response = await fetch(`/api/doctor-profile?doctorId=${encodeURIComponent(storedDoctor.id)}`, { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not load doctor profile');
+        renderDoctorProfile(data.doctor);
+        applyDoctorIdentity(data.doctor);
+      } catch (error) {
+        doctorProfileStatus.textContent = error.message || 'Could not load doctor profile.';
+      }
+    }
+
     function applyStaffIdentity(staff) {
       if (!staff?.id) return;
       const displayName = staff.fullName || `Staff ${staff.id}`;
-      document.getElementById('staffSidebarName').textContent = displayName;
-      document.getElementById('staffSidebarHospital').textContent = `${staff.hospitalName} · ${staff.hospitalLocation}`;
-      document.getElementById('staffSidebarHospital').title = `${staff.hospitalName} · ${staff.hospitalLocation}`;
-      document.getElementById('staffSidebarMark').setAttribute('aria-label', `${displayName} account`);
+      const sidebarName = document.getElementById('staffSidebarName');
+      const sidebarHospital = document.getElementById('staffSidebarHospital');
+      const sidebarMark = document.getElementById('staffSidebarMark');
+      if (sidebarName) sidebarName.textContent = displayName;
+      if (sidebarHospital) {
+        sidebarHospital.textContent = `${staff.hospitalName} · ${staff.hospitalLocation}`;
+        sidebarHospital.title = `${staff.hospitalName} · ${staff.hospitalLocation}`;
+      }
+      if (sidebarMark) sidebarMark.setAttribute('aria-label', `${displayName} account`);
     }
 
     function renderStaffProfile(staff) {
@@ -4415,6 +4791,7 @@
     try {
       const storedPatientName = localStorage.getItem('arogPatientName');
       const storedPatientId = localStorage.getItem('arogPatientId');
+      activePatientSessionToken = localStorage.getItem('arogPatientSessionToken') || '';
       if (storedPatientName && storedPatientId) {
         applyPatientIdentity({ fullName: storedPatientName, id: storedPatientId });
         patientLoggedInThisSession = true;
@@ -4507,11 +4884,16 @@
         route = 'doctor/previous';
         history.replaceState({ route }, '', '#/doctor/previous');
       }
+      if (route === 'doctor/profile') {
+        showSession('doctor', 'doctorProfile');
+        void loadDoctorProfile();
+        return;
+      }
       const doctorMatch = route.match(/^doctor\/(previous|history)$/);
       if (doctorMatch) {
         showSession('doctor', 'doctor');
         openDoctorPanel(doctorMatch[1]);
-        if (doctorMatch[1] === 'previous') void loadDoctorRecords();
+        if (doctorMatch[1] === 'previous') void loadDoctorPatients();
         return;
       }
 
@@ -4596,6 +4978,137 @@
     }));
     doctorHistorySearch?.addEventListener('input', updateDoctorHistory);
 
+    const doctorPatientSearch = document.getElementById('doctorPatientSearch');
+    function selectClinicalPatientFromSearch() {
+      const query = doctorPatientSearch.value.trim().toLowerCase();
+      if (!query) return;
+      const patient = clinicalPatientCases.find(item =>
+        item.fullName.toLowerCase() === query || item.id.toLowerCase() === query || item.opd.toLowerCase() === query
+        || item.fullName.toLowerCase().includes(query) || item.phoneMasked.toLowerCase().includes(query)
+      );
+      if (patient) {
+        renderClinicalPatient(patient);
+        navigateRoute('doctor/previous');
+      }
+    }
+    doctorPatientSearch?.addEventListener('change', selectClinicalPatientFromSearch);
+    doctorPatientSearch?.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); selectClinicalPatientFromSearch(); } });
+    document.getElementById('viewAllPatientHistory')?.addEventListener('click', () => {
+      if (selectedClinicalPatient) openSelectedClinicalHistory('all');
+      else showToast('Select a patient', 'Search for a hospital patient before opening documents.');
+    });
+    document.getElementById('viewPreviousPrescriptions')?.addEventListener('click', () => {
+      if (selectedClinicalPatient) openSelectedClinicalHistory('prescription');
+      else showToast('Select a patient', 'Search for a hospital patient before opening prescriptions.');
+    });
+    document.getElementById('clinicalAskAiForm')?.addEventListener('submit', event => {
+      event.preventDefault();
+      const question = document.getElementById('clinicalAskAiInput').value.trim();
+      const answer = document.getElementById('clinicalAskAiAnswer');
+      answer.textContent = question && selectedClinicalPatient
+        ? `For ${selectedClinicalPatient.fullName}, clarify symptom timing, severity, medicines, allergies and red flags relevant to “${question}”. Confirm all findings directly with the patient.`
+        : 'Enter a focused clinical question about this encounter.';
+    });
+    const prescriptionEditor = document.getElementById('prescriptionEditor');
+    const prescriptionMedicationList = document.getElementById('prescriptionMedicationList');
+    const prescriptionDraftStatus = document.getElementById('prescriptionDraftStatus');
+    function prescriptionField(label, field, placeholder = '', type = 'text') {
+      const wrapper = document.createElement('label'); wrapper.className = `rx-field${field === 'name' || field === 'timing' ? ' wide' : ''}`;
+      wrapper.append(document.createTextNode(label));
+      const input = document.createElement(type === 'select' ? 'select' : 'input');
+      input.dataset.rxField = field;
+      if (type === 'select') {
+        ['', 'Tablet', 'Capsule', 'Syrup', 'Injection', 'Cream', 'Drops', 'Inhaler', 'Other'].forEach(value => {
+          input.append(Object.assign(document.createElement('option'), { value, textContent: value || 'Select form' }));
+        });
+      } else { input.type = type; input.placeholder = placeholder; input.maxLength = 160; }
+      wrapper.append(input); return wrapper;
+    }
+    function addPrescriptionMedicine(values = {}) {
+      if (prescriptionMedicationList.children.length >= 12) return void showToast('Medicine limit reached', 'A prescription can contain up to 12 medicines.');
+      const medicine = document.createElement('article'); medicine.className = 'rx-medication';
+      const grid = document.createElement('div'); grid.className = 'rx-field-grid';
+      grid.append(
+        prescriptionField('Medicine name', 'name', 'Generic or brand name'), prescriptionField('Strength', 'strength', 'e.g. 500 mg'),
+        prescriptionField('Dosage form', 'form', '', 'select'), prescriptionField('Dose', 'dose', 'e.g. 1 tablet'),
+        prescriptionField('Route', 'route', 'e.g. Oral'), prescriptionField('Frequency', 'frequency', 'e.g. Twice daily'),
+        prescriptionField('Timing / food instructions', 'timing', 'e.g. After meals'), prescriptionField('Duration', 'duration', 'e.g. 5 days'),
+        prescriptionField('Quantity', 'quantity', 'e.g. 10'), prescriptionField('Refills', 'refills', 'e.g. 0')
+      );
+      Object.entries(values).forEach(([field, value]) => { const input = grid.querySelector(`[data-rx-field="${field}"]`); if (input) input.value = value; });
+      const remove = document.createElement('button'); remove.className = 'rx-remove-medicine'; remove.type = 'button'; remove.textContent = 'Remove medicine';
+      remove.addEventListener('click', () => {
+        if (prescriptionMedicationList.children.length === 1) return void showToast('One medicine required', 'Keep one medicine row in the prescription.');
+        medicine.remove(); updatePrescriptionWordCount();
+      });
+      medicine.append(grid, remove); prescriptionMedicationList.append(medicine);
+    }
+    function updatePrescriptionWordCount() {
+      const count = [...prescriptionEditor.querySelectorAll('input, textarea, select')]
+        .map(field => field.value).join(' ').trim().split(/\s+/).filter(Boolean).length;
+      document.getElementById('prescriptionWordCount').textContent = `${count} ${count === 1 ? 'word' : 'words'}`;
+      if (!prescriptionDraftStatus.textContent.startsWith('Uploaded')) prescriptionDraftStatus.textContent = 'Draft · not uploaded';
+    }
+    function prescriptionPayload() {
+      const medications = [...prescriptionMedicationList.querySelectorAll('.rx-medication')].map(row =>
+        Object.fromEntries([...row.querySelectorAll('[data-rx-field]')].map(field => [field.dataset.rxField, field.value.trim()]))
+      ).filter(medicine => medicine.name);
+      return {
+        doctorId: activeDoctor?.id,
+        patientId: selectedClinicalPatient?.sourcePatientId,
+        clinical: {
+          chiefComplaint: document.getElementById('rxChiefComplaint').value.trim(),
+          diagnosis: document.getElementById('rxDiagnosis').value.trim(),
+          allergies: document.getElementById('rxAllergies').value.trim()
+        },
+        medications,
+        instructions: {
+          investigations: document.getElementById('rxInvestigations').value.trim(),
+          lifestyle: document.getElementById('rxLifestyle').value.trim(),
+          precautions: document.getElementById('rxPrecautions').value.trim(),
+          followUpDate: document.getElementById('rxFollowUpDate').value
+        }
+      };
+    }
+    function resetPrescriptionForPatient(patient) {
+      const fields = ['rxDiagnosis', 'rxInvestigations', 'rxLifestyle', 'rxPrecautions', 'rxFollowUpDate'];
+      fields.forEach(id => { const field = document.getElementById(id); if (field) field.value = ''; });
+      const complaint = document.getElementById('rxChiefComplaint');
+      const allergies = document.getElementById('rxAllergies');
+      if (complaint) complaint.value = patient?.summary || '';
+      if (allergies) allergies.value = patient?.allergies && patient.allergies !== 'None reported' ? patient.allergies : '';
+      prescriptionMedicationList?.replaceChildren();
+      addPrescriptionMedicine();
+      prescriptionDraftStatus.textContent = 'Draft · not uploaded';
+      updatePrescriptionWordCount();
+    }
+    addPrescriptionMedicine();
+    document.getElementById('addPrescriptionMedicine')?.addEventListener('click', () => addPrescriptionMedicine());
+    prescriptionEditor?.addEventListener('input', updatePrescriptionWordCount);
+    prescriptionEditor?.addEventListener('change', updatePrescriptionWordCount);
+    document.getElementById('publishPrescription')?.addEventListener('click', async event => {
+      if (!selectedClinicalPatient) return void showToast('Select a patient', 'Search for a hospital patient before uploading a prescription.');
+      const payload = prescriptionPayload();
+      if (!payload.clinical.chiefComplaint || !payload.clinical.diagnosis || !payload.medications.length) {
+        return void showToast('Complete required fields', 'Add the chief complaint, clinical impression and at least one medicine.');
+      }
+      const button = event.currentTarget; button.disabled = true; button.textContent = 'Generating secure PDF…';
+      try {
+        const response = await fetch('/api/doctor-prescriptions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not upload prescription');
+        prescriptionDraftStatus.textContent = `Uploaded · ${data.prescriptionId}`;
+        await loadDoctorPatients();
+        showToast('Prescription uploaded', `${data.prescriptionId} is now available in ${selectedClinicalPatient?.fullName || 'the patient'}’s records.`);
+      } catch (error) {
+        showToast('Upload failed', error.message || 'Could not upload the prescription.');
+      } finally {
+        button.disabled = false; button.textContent = 'Upload to patient portal';
+      }
+    });
+
     const patientRecordData = {
       digestive: { meta: '02 May 2026 · Consultation', title: 'Digestive discomfort', doctor: 'Dr. Aarav Mehta · General Surgeon', summary: 'Abdominal heaviness and reduced appetite for 2–3 days, especially after meals.', plan: 'Light meals, regular hydration and a follow-up consultation if symptoms continue.', files: [['Visit summary', 'PDF'], ['Prescription', 'PDF']] },
       joints: { meta: '12 Jan 2026 · Consultation', title: 'Joint stiffness review', doctor: 'Dr. Nisha Rao · AYUSH Physician', summary: 'Morning stiffness in both knees with improvement after gentle movement.', plan: 'Continue the prescribed mobility routine and review again if swelling or pain increases.', files: [['Consultation note', 'PDF']] },
@@ -4606,6 +5119,58 @@
     const patientRecordSearch = document.getElementById('patientRecordSearch');
     const patientRecordFilter = document.getElementById('patientRecordFilter');
     const patientRecordsEmpty = document.getElementById('patientRecordsEmpty');
+
+    function bindPatientRecordItem(item) {
+      if (item.dataset.bound === 'true') return;
+      item.dataset.bound = 'true';
+      item.addEventListener('click', () => selectPatientRecord(item.dataset.recordId));
+    }
+
+    async function openPatientDocument(record) {
+      const token = activePatientSessionToken || localStorage.getItem('arogPatientSessionToken') || '';
+      const response = await fetch(record.previewUrl, { headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) return void showToast('Document unavailable', 'Sign in again to open this secure document.');
+      const url = URL.createObjectURL(await response.blob());
+      window.open(url, '_blank', 'noopener');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    }
+
+    async function loadPatientRecordDocuments() {
+      if (!activePatient?.id) return;
+      const token = activePatientSessionToken || localStorage.getItem('arogPatientSessionToken') || '';
+      if (!token) return;
+      try {
+        const response = await fetch(`/api/patients/${encodeURIComponent(activePatient.id)}/dashboard`, {
+          cache: 'no-store', headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not load patient records');
+        const list = document.getElementById('patientRecordList');
+        for (const documentRecord of data.documents || []) {
+          const id = `document-${documentRecord.id}`;
+          patientRecordData[id] = {
+            meta: `${new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(documentRecord.createdAt))} · Document`,
+            title: documentRecord.name,
+            doctor: documentRecord.name.startsWith('Prescription RX-') ? 'Prescription issued by your treating doctor' : 'Uploaded to your secure patient record',
+            summary: documentRecord.name.startsWith('Prescription RX-') ? 'This prescription includes your clinician’s instructions, medicines and follow-up plan.' : 'This health document is available to you and your care team.',
+            plan: 'Open the PDF to review the complete authenticated document.',
+            files: [[documentRecord.name, documentRecord.type.includes('pdf') ? 'PDF' : 'Document']],
+            previewUrl: documentRecord.previewUrl
+          };
+          if (patientRecordItems.some(item => item.dataset.recordId === id)) continue;
+          const item = document.createElement('button'); item.className = 'patient-record-item'; item.type = 'button';
+          item.dataset.recordId = id; item.dataset.recordType = 'document'; item.setAttribute('aria-selected', 'false');
+          item.innerHTML = `<span class="record-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18H6V3Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="record-copy"><strong></strong><small></small></span><span class="record-status">Document</span>`;
+          item.querySelector('strong').textContent = documentRecord.name;
+          item.querySelector('small').textContent = `Added ${new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(documentRecord.createdAt))} · PDF`;
+          list.insertBefore(item, patientRecordsEmpty); patientRecordItems.push(item); bindPatientRecordItem(item);
+        }
+        const summaryCards = document.querySelectorAll('#patientRecords .records-summary-card strong');
+        if (summaryCards[0]) summaryCards[0].textContent = `${data.summary?.consultationCount || 0} visits`;
+        if (summaryCards[1]) summaryCards[1].textContent = `${data.summary?.documentCount || 0} files`;
+        filterPatientRecords();
+      } catch (error) { showToast('Records unavailable', error.message || 'Could not load your records.'); }
+    }
 
     async function selectPatientRecord(id) {
       const record = patientRecordData[id];
@@ -4623,6 +5188,12 @@
       document.getElementById('recordDetailSummary').textContent = summary;
       document.getElementById('recordDetailPlan').textContent = plan;
       document.getElementById('recordDetailFiles').innerHTML = record.files.map((_, index) => `<div class="record-file"><span>${fileParts[index * 2]}</span><small>${fileParts[index * 2 + 1]}</small></div>`).join('');
+      if (record.previewUrl) {
+        const file = document.getElementById('recordDetailFiles').querySelector('.record-file');
+        file.tabIndex = 0; file.setAttribute('role', 'button'); file.title = 'Open secure document';
+        file.addEventListener('click', () => openPatientDocument(record));
+        file.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPatientDocument(record); } });
+      }
     }
 
     function filterPatientRecords() {
@@ -4639,7 +5210,7 @@
       if (visible.length && (!selected || selected.hidden)) selectPatientRecord(visible[0].dataset.recordId);
     }
 
-    patientRecordItems.forEach(item => item.addEventListener('click', () => selectPatientRecord(item.dataset.recordId)));
+    patientRecordItems.forEach(bindPatientRecordItem);
     patientRecordSearch.addEventListener('input', filterPatientRecords);
     patientRecordFilter.addEventListener('change', filterPatientRecords);
 
@@ -4683,7 +5254,10 @@
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || 'Could not sign in');
-          try { localStorage.setItem('arogPatientId', data.patient.id); localStorage.setItem('arogPatientName', data.patient.fullName); } catch (_) {}
+          if (!authorizedPatientDevice) {
+            try { localStorage.setItem('arogPatientId', data.patient.id); localStorage.setItem('arogPatientName', data.patient.fullName); localStorage.setItem('arogPatientSessionToken', data.sessionToken); } catch (_) {}
+          }
+          activePatientSessionToken = data.sessionToken || '';
           applyPatientIdentity(data.patient);
         } catch (error) {
           loginStatus.textContent = error.message || 'Could not sign in.';
@@ -4882,11 +5456,12 @@
       }
     });
 
-    staffProfileButton.addEventListener('click', () => {
+    accountProfileButton.addEventListener('click', () => {
       setSettingsOpen(false);
-      navigateRoute('staff/profile', false, true);
+      navigateRoute(appShell.classList.contains('doctor-session') ? 'doctor/profile' : 'staff/profile', false, true);
     });
     document.getElementById('backToStaffPatients').addEventListener('click', () => navigateRoute('staff/patients', false, true));
+    document.getElementById('backToDoctorPatients').addEventListener('click', () => navigateRoute('doctor/previous', false, true));
 
     document.getElementById('logoutButton').addEventListener('click', () => {
       setSettingsOpen(false);
@@ -5543,8 +6118,11 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.intake) throw new Error(data.error || 'Could not save the intake summary');
         pendingSummarySave = null;
-        button.textContent = 'Done';
+        button.textContent = authorizedPatientDevice ? 'Finish and sign out' : 'Done';
         doctorChoiceStatus.textContent = '';
+        doctorChoiceCompletion.hidden = false;
+        doctorChoiceCompletion.querySelector('span').textContent = data.intake.uhidCreated ? 'Hospital UHID created' : 'Hospital UHID confirmed';
+        doctorChoiceCompletionMessage.textContent = `${data.intake.hospitalName} · UHID ${data.intake.uhid} · ${data.intake.encounterNumber}`;
       } catch (error) {
         button.textContent = 'Retry save';
         doctorChoiceStatus.textContent = `Your summary is shown here, but saving failed: ${error.message || 'Please ask reception to help.'}`;
@@ -5553,11 +6131,25 @@
       }
     }
 
+    function finishAuthorizedPatientSession() {
+      try {
+        localStorage.removeItem('arogPatientId');
+        localStorage.removeItem('arogPatientName');
+        localStorage.removeItem('arogPatientSessionToken');
+      } catch (_) {}
+      activePatient = null;
+      patientLoggedInThisSession = false;
+      summaryPatientId = '';
+      resetCheckup();
+      navigateRoute('login/device-patient', true, true);
+    }
+
     document.getElementById('backToVoiceCheckup').addEventListener('click', () => navigateRoute('patient/voice'));
     document.getElementById('finishIntakeSummary').addEventListener('click', () => {
       if (pendingSummarySave) return void saveIntakeSummary();
+      if (authorizedPatientDevice) return finishAuthorizedPatientSession();
       resetCheckup();
-      navigateRoute(authorizedPatientDevice ? 'patient/language' : 'patient/start');
+      navigateRoute('patient/start');
     });
 
     async function completeCurrentCheckup() {
@@ -5654,7 +6246,19 @@
       loginScreen.classList.toggle('device-patient-only', authorizedPatientDevice);
       appShell.classList.toggle('authorized-patient-device', authorizedPatientDevice);
       document.getElementById('exitDeviceMode').hidden = !authorizedPatientDevice;
-      const initialRoute = routeFromLocation();
+      let initialRoute = routeFromLocation();
+      if (authorizedPatientDevice) {
+        try {
+          localStorage.removeItem('arogPatientId');
+          localStorage.removeItem('arogPatientName');
+          localStorage.removeItem('arogPatientSessionToken');
+        } catch (_) {}
+        activePatient = null;
+        patientLoggedInThisSession = false;
+        if (initialRoute === 'roles' || initialRoute === 'login/patient' || /^(?:doctor|staff)\//.test(initialRoute)) {
+          initialRoute = 'login/device-patient';
+        }
+      }
       history.replaceState({ route: initialRoute }, '', `#/${initialRoute}`);
       applyRoute(initialRoute);
     }

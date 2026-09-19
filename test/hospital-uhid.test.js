@@ -1,0 +1,209 @@
+import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawn } from 'node:child_process';
+import { after, before, test } from 'node:test';
+
+const port = 43174;
+const origin = `http://127.0.0.1:${port}`;
+let dataDir;
+let server;
+
+async function json(path, options = {}) {
+  const response = await fetch(origin + path, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+  });
+  const payload = await response.json();
+  return { response, payload };
+}
+
+async function waitForServer() {
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    try {
+      if ((await fetch(`${origin}/api/signup-otp/config`)).ok) return;
+    } catch { /* Server is still starting. */ }
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  throw new Error('Test server did not start');
+}
+
+async function registerPatient() {
+  const phone = '9876543211';
+  const otp = await json('/api/signup-otp/request', { method: 'POST', body: JSON.stringify({ phone }) });
+  const verification = await json('/api/signup-otp/verify', {
+    method: 'POST', body: JSON.stringify({ phone, id: otp.payload.id, otp: otp.payload.demoOtp }),
+  });
+  const registration = await json('/api/patient-registrations', {
+    method: 'POST', body: JSON.stringify({
+      phone, otpRequestId: otp.payload.id, otpVerificationToken: verification.payload.verificationToken,
+      identityMethod: 'aadhaar', identityNumber: '800123456780', password: 'Test@123',
+      fullName: 'Hospital Identity Patient', dateOfBirth: '1990-04-12', gender: 'Male',
+      heightCm: 172, weightKg: 70, bloodGroup: 'B+', conditions: ['none'], allergies: 'None',
+    }),
+  });
+  assert.equal(registration.response.status, 201);
+  return registration.payload.patient;
+}
+
+async function authorizeDevice(staffId, name) {
+  const invitation = await json('/api/device-enrollments', { method: 'POST', body: JSON.stringify({ staffId }) });
+  assert.equal(invitation.response.status, 201);
+  const request = await json('/api/device-enrollment-requests', {
+    method: 'POST', body: JSON.stringify({ name, code: invitation.payload.code, platform: 'Integration test' }),
+  });
+  assert.equal(request.response.status, 201);
+  const decision = await json(`/api/device-enrollments/${invitation.payload.id}/decision`, {
+    method: 'POST', body: JSON.stringify({ creatorToken: invitation.payload.creatorToken, decision: 'approve' }),
+  });
+  assert.equal(decision.response.status, 201);
+  const status = await fetch(`${origin}/api/device-enrollments/${invitation.payload.id}/status?requestToken=${encodeURIComponent(request.payload.requestToken)}`);
+  assert.equal(status.status, 200);
+  const cookie = status.headers.get('set-cookie')?.split(';')[0];
+  assert.match(cookie || '', /^arog_device=/);
+  return cookie;
+}
+
+before(async () => {
+  dataDir = await mkdtemp(join(tmpdir(), 'aarogyam-uhid-test-'));
+  server = spawn(process.execPath, ['server.js'], {
+    cwd: process.cwd(),
+    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', DATA_DIR: dataDir, OTP_DEMO_MODE: '1' },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  await waitForServer();
+});
+
+after(async () => {
+  if (server && server.exitCode === null) {
+    server.kill();
+    await new Promise(resolve => server.once('exit', resolve));
+  }
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test('UHIDs are stable per hospital and clinical data reaches that hospital', async () => {
+  const staffA = await json('/api/staff-registrations', {
+    method: 'POST', body: JSON.stringify({
+      hospitalId: 'civil-ahmedabad', employeeId: 'STAFF-A', password: 'Password@1',
+      fullName: 'Ahmedabad Staff', phone: '9000000101', email: 'staff-a@example.test',
+    }),
+  });
+  const staffB = await json('/api/staff-registrations', {
+    method: 'POST', body: JSON.stringify({
+      hospitalId: 'civil-gurugram', employeeId: 'STAFF-B', password: 'Password@1',
+      fullName: 'Gurugram Staff', phone: '9000000102', email: 'staff-b@example.test',
+    }),
+  });
+  assert.equal(staffA.response.status, 201);
+  assert.equal(staffB.response.status, 201);
+  const [cookieA, cookieB, patient] = await Promise.all([
+    authorizeDevice('STAFF-A', 'Ahmedabad kiosk'),
+    authorizeDevice('STAFF-B', 'Gurugram kiosk'),
+    registerPatient(),
+  ]);
+
+  const patientLogin = await json('/api/patient-login', {
+    method: 'POST', headers: { Cookie: cookieA },
+    body: JSON.stringify({ identityMethod: 'aadhaar', identityNumber: '800123456780', password: 'Test@123' }),
+  });
+  assert.equal(patientLogin.response.status, 200);
+  assert.equal(patientLogin.payload.patient.id, patient.id);
+
+  const firstA = await json('/api/patient-intakes', {
+    method: 'POST', headers: { Cookie: cookieA },
+    body: JSON.stringify({ patientId: patient.id, conversationId: 'conversation-a-1', language: 'English', summary: 'Headache for two days. No fever reported.' }),
+  });
+  assert.equal(firstA.response.status, 201);
+  assert.match(firstA.payload.intake.uhid, /^CHA-\d{6}$/);
+  assert.equal(firstA.payload.intake.uhidCreated, true);
+
+  const retryA = await json('/api/patient-intakes', {
+    method: 'POST', headers: { Cookie: cookieA },
+    body: JSON.stringify({ patientId: patient.id, conversationId: 'conversation-a-1', language: 'English', summary: 'Headache for two days. No fever reported.' }),
+  });
+  assert.equal(retryA.payload.intake.uhid, firstA.payload.intake.uhid);
+  assert.equal(retryA.payload.intake.encounterNumber, firstA.payload.intake.encounterNumber);
+
+  const secondA = await json('/api/patient-intakes', {
+    method: 'POST', headers: { Cookie: cookieA },
+    body: JSON.stringify({ patientId: patient.id, conversationId: 'conversation-a-2', language: 'Hindi', summary: 'Follow-up intake completed.' }),
+  });
+  assert.equal(secondA.payload.intake.uhid, firstA.payload.intake.uhid);
+  assert.notEqual(secondA.payload.intake.encounterNumber, firstA.payload.intake.encounterNumber);
+
+  const firstB = await json('/api/patient-intakes', {
+    method: 'POST', headers: { Cookie: cookieB },
+    body: JSON.stringify({ patientId: patient.id, conversationId: 'conversation-b-1', language: 'English', summary: 'First Gurugram intake completed.' }),
+  });
+  assert.match(firstB.payload.intake.uhid, /^CHG-\d{6}$/);
+  assert.notEqual(firstB.payload.intake.uhid, firstA.payload.intake.uhid);
+
+  const vitals = await json('/api/staff-patient-vitals', {
+    method: 'POST', body: JSON.stringify({
+      staffId: 'STAFF-A', patientId: patient.id, intakeId: secondA.payload.intake.id,
+      heartRate: 78, oxygenSaturation: 98, systolic: 122, diastolic: 80,
+    }),
+  });
+  assert.equal(vitals.response.status, 201);
+
+  const documentSession = await json('/api/document-upload-sessions', { method: 'POST', body: '{}' });
+  const documentUpload = await json(`/api/document-upload-sessions/${documentSession.payload.id}/files`, {
+    method: 'POST', body: JSON.stringify({
+      token: documentSession.payload.token, name: 'previous-prescription.png', type: 'image/png',
+      data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    }),
+  });
+  assert.equal(documentUpload.response.status, 201);
+  const completedDocument = await json('/api/staff-patient-documents', {
+    method: 'POST', body: JSON.stringify({
+      staffId: 'STAFF-A', patientId: patient.id, patientName: patient.fullName,
+      intakeId: secondA.payload.intake.id,
+      documentSessionId: documentSession.payload.id, documentSessionToken: documentSession.payload.token,
+    }),
+  });
+  assert.equal(completedDocument.response.status, 200);
+
+  const queueA = await json('/api/staff-patients?staffId=STAFF-A');
+  const queueB = await json('/api/staff-patients?staffId=STAFF-B');
+  assert.equal(queueA.payload.patients[0].uhid, firstA.payload.intake.uhid);
+  assert.equal(queueA.payload.patients[0].latestVitals.heartRate, 78);
+  assert.equal(queueB.payload.patients[0].uhid, firstB.payload.intake.uhid);
+
+  const doctor = await json('/api/doctor-patients?doctorId=CHA-GEN-1001');
+  assert.equal(doctor.response.status, 200);
+  assert.equal(doctor.payload.patients[0].uhid, firstA.payload.intake.uhid);
+  assert.equal(doctor.payload.patients[0].vitals.oxygenSaturation, 98);
+  assert.equal(doctor.payload.patients[0].documents[0].name, 'previous-prescription.png');
+  assert.equal(doctor.payload.patients.some(record => record.uhid === firstB.payload.intake.uhid), false);
+
+  const prescription = await json('/api/doctor-prescriptions', {
+    method: 'POST', body: JSON.stringify({
+      doctorId: 'CHA-GEN-1001', patientId: patient.id,
+      clinical: { chiefComplaint: 'Headache for two days', diagnosis: 'Tension-type headache', allergies: 'Penicillin' },
+      medications: [{
+        name: 'Paracetamol', strength: '500 mg', form: 'Tablet', dose: '1 tablet', route: 'Oral',
+        frequency: 'Twice daily', timing: 'After food', duration: '3 days', quantity: '6', refills: '0',
+      }],
+      instructions: {
+        investigations: 'Check blood pressure', lifestyle: 'Hydration and rest',
+        precautions: 'Return for severe headache or weakness', followUpDate: '2026-09-25',
+      },
+    }),
+  });
+  assert.equal(prescription.response.status, 201);
+  assert.match(prescription.payload.prescriptionId, /^RX-\d{4}-\d{6}$/);
+
+  const dashboard = await json(`/api/patients/${patient.id}/dashboard`, {
+    headers: { Authorization: `Bearer ${patientLogin.payload.sessionToken}` },
+  });
+  assert.equal(dashboard.response.status, 200);
+  const prescriptionDocument = dashboard.payload.documents.find(item => item.name.includes(prescription.payload.prescriptionId));
+  assert.equal(prescriptionDocument.type, 'application/pdf');
+  const pdf = await fetch(`${origin}${prescriptionDocument.previewUrl}`, {
+    headers: { Authorization: `Bearer ${patientLogin.payload.sessionToken}` },
+  });
+  assert.equal(pdf.status, 200);
+  assert.equal((await pdf.text()).startsWith('%PDF-1.4'), true);
+});

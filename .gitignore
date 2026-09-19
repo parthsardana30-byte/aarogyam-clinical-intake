@@ -1,4 +1,5 @@
 tmp/
+.codex-work/
 .docx-review/
 .sites-runtime/
 *.log
@@ -12,5 +13,11 @@ data/patients.json.tmp
 data/patients.sqlite
 data/patients.sqlite-shm
 data/patients.sqlite-wal
+data/patient-uploads/
 .env
+
+# Android build and machine-local files
+aarogyam-patient-android/.gradle/
+aarogyam-patient-android/**/build/
+aarogyam-patient-android/local.properties
 

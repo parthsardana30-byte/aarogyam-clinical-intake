@@ -26,13 +26,14 @@ const manualDeviceCodeMaxAttempts = 10;
 const enrollments = new Map();
 const signupOtps = new Map();
 const signupOtpLastSent = new Map();
+const patientSessions = new Map();
 const manualDeviceCodeAttempts = new Map();
 const hospitalBranches = new Map([
-  ['civil-ahmedabad', { id: 'civil-ahmedabad', name: 'Civil Hospital', location: 'Ahmedabad, Gujarat', issuedDoctorIds: new Set(['CHA-DR-2187']) }],
-  ['civil-gurugram', { id: 'civil-gurugram', name: 'Civil Hospital', location: 'Gurugram, Haryana', issuedDoctorIds: new Set(['CHG-DR-3304']) }],
-  ['civil-ludhiana', { id: 'civil-ludhiana', name: 'Civil Hospital', location: 'Ludhiana, Punjab', issuedDoctorIds: new Set(['CHL-DR-4419']) }],
-  ['civil-nashik', { id: 'civil-nashik', name: 'Civil Hospital', location: 'Nashik, Maharashtra', issuedDoctorIds: new Set(['CHN-DR-5576']) }],
-  ['civil-rajkot', { id: 'civil-rajkot', name: 'Civil Hospital', location: 'Rajkot, Gujarat', issuedDoctorIds: new Set(['CHR-DR-6631']) }]
+  ['civil-ahmedabad', { id: 'civil-ahmedabad', name: 'Civil Hospital', location: 'Ahmedabad, Gujarat', uhidPrefix: 'CHA', issuedDoctorIds: new Set(['CHA-DR-2187']) }],
+  ['civil-gurugram', { id: 'civil-gurugram', name: 'Civil Hospital', location: 'Gurugram, Haryana', uhidPrefix: 'CHG', issuedDoctorIds: new Set(['CHG-DR-3304']) }],
+  ['civil-ludhiana', { id: 'civil-ludhiana', name: 'Civil Hospital', location: 'Ludhiana, Punjab', uhidPrefix: 'CHL', issuedDoctorIds: new Set(['CHL-DR-4419']) }],
+  ['civil-nashik', { id: 'civil-nashik', name: 'Civil Hospital', location: 'Nashik, Maharashtra', uhidPrefix: 'CHN', issuedDoctorIds: new Set(['CHN-DR-5576']) }],
+  ['civil-rajkot', { id: 'civil-rajkot', name: 'Civil Hospital', location: 'Rajkot, Gujarat', uhidPrefix: 'CHR', issuedDoctorIds: new Set(['CHR-DR-6631']) }]
 ]);
 const testDoctorPassword = 'Aarogyam@2026';
 const testDoctorAccounts = [
@@ -156,6 +157,18 @@ async function loadPatients() {
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS staff_hospital_idx ON staff(hospital_id);
+    CREATE TABLE IF NOT EXISTS patient_hospital_identities (
+      id TEXT PRIMARY KEY,
+      patient_id TEXT NOT NULL,
+      hospital_id TEXT NOT NULL,
+      uhid TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      last_visited_at TEXT NOT NULL,
+      UNIQUE(patient_id, hospital_id),
+      UNIQUE(hospital_id, uhid),
+      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS patient_hospital_uhid_idx ON patient_hospital_identities(hospital_id, uhid);
     CREATE TABLE IF NOT EXISTS patient_document_sessions (
       id TEXT PRIMARY KEY,
       token_hash TEXT NOT NULL,
@@ -241,17 +254,28 @@ async function loadPatients() {
   `);
   const patientDocumentColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_documents)').all().map(column => column.name));
   const patientDocumentMigrations = [
-    ['patient_reference', 'TEXT'], ['patient_name', 'TEXT'], ['uploaded_by_staff_id', 'TEXT']
+    ['patient_reference', 'TEXT'], ['patient_name', 'TEXT'], ['uploaded_by_staff_id', 'TEXT'],
+    ['hospital_id', 'TEXT'], ['intake_id', 'TEXT']
   ];
   for (const [column, type] of patientDocumentMigrations) {
     if (!patientDocumentColumns.has(column)) patientsDb.exec(`ALTER TABLE patient_documents ADD COLUMN ${column} ${type}`);
   }
   const patientIntakeColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_intakes)').all().map(column => column.name));
-  const patientIntakeMigrations = [['device_id', 'TEXT'], ['staff_id', 'TEXT']];
+  const patientIntakeMigrations = [
+    ['device_id', 'TEXT'], ['staff_id', 'TEXT'], ['hospital_id', 'TEXT'], ['hospital_uhid', 'TEXT'],
+    ['encounter_number', 'TEXT'], ['intake_source', "TEXT NOT NULL DEFAULT 'authorized-device'"]
+  ];
   for (const [column, type] of patientIntakeMigrations) {
     if (!patientIntakeColumns.has(column)) patientsDb.exec(`ALTER TABLE patient_intakes ADD COLUMN ${column} ${type}`);
   }
   patientsDb.exec('CREATE INDEX IF NOT EXISTS patient_intakes_staff_idx ON patient_intakes(staff_id, created_at DESC)');
+  patientsDb.exec('CREATE INDEX IF NOT EXISTS patient_intakes_hospital_idx ON patient_intakes(hospital_id, created_at DESC)');
+  patientsDb.exec('CREATE UNIQUE INDEX IF NOT EXISTS patient_intakes_encounter_idx ON patient_intakes(hospital_id, encounter_number) WHERE encounter_number IS NOT NULL');
+  const patientVitalsColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_vitals)').all().map(column => column.name));
+  for (const [column, type] of [['hospital_id', 'TEXT'], ['intake_id', 'TEXT']]) {
+    if (!patientVitalsColumns.has(column)) patientsDb.exec(`ALTER TABLE patient_vitals ADD COLUMN ${column} ${type}`);
+  }
+  patientsDb.exec('CREATE INDEX IF NOT EXISTS patient_vitals_hospital_idx ON patient_vitals(hospital_id, patient_id, recorded_at DESC)');
   const doctorColumns = new Set(patientsDb.prepare('PRAGMA table_info(doctors)').all().map(column => column.name));
   const doctorMigrations = [
     ['full_name', 'TEXT'], ['degree', 'TEXT'], ['specialty', 'TEXT'],
@@ -355,6 +379,36 @@ function secureCookie(request) {
 function sendJson(response, status, payload, headers = {}) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...headers });
   response.end(JSON.stringify(payload));
+}
+
+function createPatientSession(patientId) {
+  const token = randomBytes(32).toString('base64url');
+  patientSessions.set(hash(token), { patientId, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 });
+  return token;
+}
+
+function authorizePatient(request, response, patientId) {
+  const authorization = String(request.headers.authorization || '');
+  const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : '';
+  const session = token ? patientSessions.get(hash(token)) : null;
+  if (!session || session.patientId !== patientId || session.expiresAt < Date.now()) {
+    if (session?.expiresAt < Date.now()) patientSessions.delete(hash(token));
+    sendJson(response, 401, { error: 'Your patient session is invalid or expired' });
+    return false;
+  }
+  return true;
+}
+
+function publicPatientProfile(patient) {
+  return {
+    id: patient.id,
+    phone: patient.phone,
+    identity: patient.identity,
+    profile: patient.profile,
+    health: patient.health,
+    abhaLinkStatus: patient.abhaLinkStatus,
+    createdAt: patient.createdAt
+  };
 }
 
 async function readJson(request, maxBytes = 20_000) {
@@ -499,20 +553,28 @@ async function completeStaffDocumentUpload(request, response) {
   const patientReference = String(body.patientId || '').trim().slice(0, 40);
   const patientName = String(body.patientName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
   const staffId = normalizeStaffId(body.staffId);
+  const requestedIntakeId = String(body.intakeId || '').trim();
   const session = documentSession(sessionId, sessionToken);
   if (!session) return sendJson(response, 400, { error: 'The document upload session is invalid or expired' });
   if (!patientReference || !patientName) return sendJson(response, 400, { error: 'Select a patient before saving documents' });
-  if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
+  const staff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(staffId);
+  if (!staff) {
     return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
   }
   const documentCount = Number(patientsDb.prepare('SELECT COUNT(*) AS count FROM patient_documents WHERE upload_session_id = ?').get(sessionId).count);
   if (!documentCount) return sendJson(response, 400, { error: 'Upload at least one prescription or document' });
   const patient = patientsDb.prepare('SELECT id FROM patients WHERE id = ?').get(patientReference);
+  const identity = patient ? hospitalIdentity(patient.id, staff.hospital_id) : null;
+  if (!patient || !identity) return sendJson(response, 404, { error: 'This patient is not enrolled at your hospital' });
+  const intake = requestedIntakeId
+    ? patientsDb.prepare('SELECT id FROM patient_intakes WHERE id = ? AND patient_id = ? AND hospital_id = ?').get(requestedIntakeId, patient.id, staff.hospital_id)
+    : patientsDb.prepare('SELECT id FROM patient_intakes WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patient.id, staff.hospital_id);
+  if (!intake) return sendJson(response, 404, { error: 'No hospital intake was found for this patient' });
   patientsDb.prepare(`
     UPDATE patient_documents
-    SET patient_id = ?, patient_reference = ?, patient_name = ?, uploaded_by_staff_id = ?
+    SET patient_id = ?, patient_reference = ?, patient_name = ?, uploaded_by_staff_id = ?, hospital_id = ?, intake_id = ?
     WHERE upload_session_id = ?
-  `).run(patient?.id || null, patientReference, patientName, staffId, sessionId);
+  `).run(patient.id, patientReference, patientName, staffId, staff.hospital_id, intake.id, sessionId);
   patientsDb.prepare("UPDATE patient_document_sessions SET status = 'completed' WHERE id = ?").run(sessionId);
   sendJson(response, 200, { saved: true, patientId: patientReference, documentCount });
 }
@@ -765,7 +827,10 @@ async function createPatientRegistration(request, response) {
   const documentCount = pendingDocumentSession
     ? Number(patientsDb.prepare('SELECT COUNT(*) AS count FROM patient_documents WHERE patient_id = ?').get(patient.id).count)
     : 0;
-  sendJson(response, 201, { patient: { id: patient.id, fullName: patient.profile.fullName, documentCount } });
+  sendJson(response, 201, {
+    patient: { id: patient.id, fullName: patient.profile.fullName, documentCount },
+    sessionToken: createPatientSession(patient.id)
+  });
 }
 
 async function loginPatient(request, response) {
@@ -790,7 +855,81 @@ async function loginPatient(request, response) {
   if (stored.length !== candidate.length || !timingSafeEqual(stored, candidate)) {
     return sendJson(response, 401, { error: 'Identity number or password is incorrect' });
   }
-  sendJson(response, 200, { patient: { id: patient.id, fullName: patient.profile.fullName } });
+  sendJson(response, 200, {
+    patient: { id: patient.id, fullName: patient.profile.fullName },
+    sessionToken: createPatientSession(patient.id)
+  });
+}
+
+function publicDashboardDocument(row) {
+  return {
+    id: row.id,
+    name: row.original_name,
+    type: row.mime_type,
+    size: row.size_bytes,
+    createdAt: row.created_at,
+    previewUrl: `/api/patients/${encodeURIComponent(row.patient_id)}/documents/${encodeURIComponent(row.id)}`
+  };
+}
+
+function getPatientDashboard(request, response, patientId) {
+  if (!authorizePatient(request, response, patientId)) return;
+  const patient = patients.find(item => item.id === patientId);
+  if (!patient) return sendJson(response, 404, { error: 'Patient account was not found' });
+  const checkups = patientsDb.prepare('SELECT * FROM patient_checkups WHERE patient_id = ? ORDER BY datetime(created_at) DESC').all(patientId);
+  const documents = patientsDb.prepare('SELECT * FROM patient_documents WHERE patient_id = ? ORDER BY datetime(created_at) DESC').all(patientId);
+  sendJson(response, 200, {
+    patient: publicPatientProfile(patient),
+    summary: { consultationCount: checkups.length, documentCount: documents.length },
+    checkups: checkups.map(publicCheckup),
+    documents: documents.map(publicDashboardDocument)
+  });
+}
+
+async function uploadPatientDashboardDocument(request, response, patientId) {
+  if (!authorizePatient(request, response, patientId)) return;
+  if (!patientsDb.prepare('SELECT 1 FROM patients WHERE id = ?').get(patientId)) {
+    return sendJson(response, 404, { error: 'Patient account was not found' });
+  }
+  const body = await readJson(request, maxDocumentBytes * 2);
+  const mimeType = String(body.type || '').toLowerCase();
+  const extension = uploadTypes.get(mimeType);
+  if (!extension) return sendJson(response, 400, { error: 'Upload a JPG, PNG, WebP or PDF file' });
+  const originalName = String(body.name || 'Health document').trim().replace(/[\u0000-\u001f]/g, '').slice(0, 120) || 'Health document';
+  const raw = String(body.data || '').replace(/^data:[^;]+;base64,/, '');
+  let file;
+  try { file = Buffer.from(raw, 'base64'); } catch { return sendJson(response, 400, { error: 'Document data is invalid' }); }
+  if (!file.length || file.length > maxDocumentBytes) return sendJson(response, 400, { error: 'Each document must be smaller than 8 MB' });
+  const uploadSessionId = randomUUID();
+  const documentId = randomUUID();
+  const createdAt = new Date().toISOString();
+  const storedName = `${uploadSessionId}-${documentId}${extension}`;
+  await mkdir(patientUploadsRoot, { recursive: true });
+  await writeFile(join(patientUploadsRoot, storedName), file, { flag: 'wx' });
+  patientsDb.prepare(`INSERT INTO patient_document_sessions (id, token_hash, status, expires_at, created_at) VALUES (?, ?, 'completed', ?, ?)`)
+    .run(uploadSessionId, hash(randomBytes(32).toString('base64url')), createdAt, createdAt);
+  patientsDb.prepare(`
+    INSERT INTO patient_documents (id, upload_session_id, patient_id, patient_reference, patient_name, original_name, mime_type, size_bytes, stored_name, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(documentId, uploadSessionId, patientId, patientId, patients.find(item => item.id === patientId)?.profile.fullName || '', originalName, mimeType, file.length, storedName, createdAt);
+  const row = patientsDb.prepare('SELECT * FROM patient_documents WHERE id = ?').get(documentId);
+  sendJson(response, 201, { document: publicDashboardDocument(row) });
+}
+
+async function servePatientDashboardDocument(request, response, patientId, documentId) {
+  if (!authorizePatient(request, response, patientId)) return;
+  const row = patientsDb.prepare('SELECT * FROM patient_documents WHERE id = ? AND patient_id = ?').get(documentId, patientId);
+  if (!row) return sendJson(response, 404, { error: 'Document not found' });
+  try {
+    const body = await readFile(join(patientUploadsRoot, row.stored_name));
+    response.writeHead(200, {
+      'Content-Type': row.mime_type,
+      'Content-Length': body.length,
+      'Content-Disposition': `inline; filename="${row.original_name.replace(/["\\]/g, '')}"`,
+      'Cache-Control': 'private, no-store'
+    });
+    response.end(body);
+  } catch { sendJson(response, 404, { error: 'Document file is unavailable' }); }
 }
 
 function normalizeDoctorId(value) {
@@ -819,7 +958,8 @@ function publicDoctor(row) {
     email: row.email,
     hospitalId: row.hospital_id,
     hospitalName: row.hospital_name,
-    hospitalLocation: row.hospital_location
+    hospitalLocation: row.hospital_location,
+    createdAt: row.created_at
   };
 }
 
@@ -828,13 +968,71 @@ function publicHospital(branch) {
     id: branch.id,
     name: branch.name,
     location: branch.location,
+    uhidPrefix: branch.uhidPrefix,
     demoDoctorId: [...branch.issuedDoctorIds][0],
     backgroundImage: `/assets/hospitals/${branch.id}.png`
   };
 }
 
+function publicCheckup(row) {
+  return {
+    id: row.id,
+    language: row.language,
+    hospitalId: row.hospital_id,
+    hospitalName: row.hospital_name,
+    hospitalLocation: row.hospital_location,
+    doctorId: row.doctor_id,
+    doctorName: row.doctor_name,
+    doctorSpecialty: row.doctor_specialty,
+    roomNumber: row.room_number,
+    opdNumber: row.opd_number,
+    patientNumber: row.patient_number,
+    summary: row.summary,
+    specialtyRequested: row.specialty_requested,
+    status: row.status,
+    createdAt: row.created_at,
+    startedAt: row.started_at,
+    completedAt: row.completed_at
+  };
+}
+
 function listHospitalBranches(_request, response) {
   sendJson(response, 200, { hospitals: [...hospitalBranches.values()].map(publicHospital) });
+}
+
+function hospitalIdentity(patientId, hospitalId) {
+  return patientsDb.prepare(`
+    SELECT id, patient_id, hospital_id, uhid, created_at, last_visited_at
+    FROM patient_hospital_identities
+    WHERE patient_id = ? AND hospital_id = ?
+  `).get(patientId, hospitalId) || null;
+}
+
+function getOrCreateHospitalIdentity(patientId, hospitalId, visitedAt = new Date().toISOString()) {
+  const branch = hospitalBranches.get(hospitalId);
+  if (!branch) throw new Error('The authorized device is not linked to a valid hospital');
+  let identity = hospitalIdentity(patientId, hospitalId);
+  if (identity) {
+    patientsDb.prepare('UPDATE patient_hospital_identities SET last_visited_at = ? WHERE id = ?').run(visitedAt, identity.id);
+    return { ...identity, last_visited_at: visitedAt, created: false };
+  }
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const uhid = `${branch.uhidPrefix}-${String(randomInt(0, 1_000_000)).padStart(6, '0')}`;
+    patientsDb.prepare(`
+      INSERT OR IGNORE INTO patient_hospital_identities
+        (id, patient_id, hospital_id, uhid, created_at, last_visited_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(randomUUID(), patientId, hospitalId, uhid, visitedAt, visitedAt);
+    identity = hospitalIdentity(patientId, hospitalId);
+    if (identity) return { ...identity, created: identity.uhid === uhid && identity.created_at === visitedAt };
+  }
+  throw new Error('Could not allocate a hospital UHID');
+}
+
+function nextEncounterNumber(hospitalId) {
+  const branch = hospitalBranches.get(hospitalId);
+  const year = String(new Date().getUTCFullYear()).slice(-2);
+  return `${branch?.uhidPrefix || 'OPD'}-${year}-${String(randomInt(0, 1_000_000)).padStart(6, '0')}`;
 }
 
 async function createDoctorRegistration(request, response) {
@@ -979,31 +1177,38 @@ async function loginStaff(request, response) {
 
 function listStaffPatients(request, response, url) {
   const staffId = normalizeStaffId(url.searchParams.get('staffId'));
-  if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
+  const staff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(staffId);
+  if (!staff) {
     return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
   }
   const rows = patientsDb.prepare(`
-    SELECT p.id, p.full_name, p.created_at,
-      (SELECT COUNT(*) FROM patient_documents pd WHERE pd.patient_id = p.id) AS document_count,
+    SELECT p.id, p.full_name, p.created_at, h.uhid,
+      (SELECT COUNT(*) FROM patient_documents pd WHERE pd.patient_id = p.id AND pd.hospital_id = i.hospital_id) AS document_count,
       v.heart_rate, v.oxygen_saturation, v.systolic_bp, v.diastolic_bp, v.recorded_at,
-      i.id AS intake_id, i.summary, i.created_at AS intake_created_at, i.device_id
+      i.id AS intake_id, i.summary, i.created_at AS intake_created_at, i.device_id,
+      i.encounter_number, i.intake_source, i.hospital_id
     FROM patient_intakes i
     JOIN patients p ON p.id = i.patient_id
+    JOIN patient_hospital_identities h ON h.patient_id = p.id AND h.hospital_id = i.hospital_id
     LEFT JOIN patient_vitals v ON v.id = (
       SELECT latest.id FROM patient_vitals latest
-      WHERE latest.patient_id = p.id
+      WHERE latest.patient_id = p.id AND latest.hospital_id = i.hospital_id
       ORDER BY datetime(latest.recorded_at) DESC LIMIT 1
     )
-    WHERE i.staff_id = ?
+    WHERE i.hospital_id = ?
     ORDER BY datetime(i.created_at) DESC
-  `).all(staffId);
+  `).all(staff.hospital_id);
   const patientMap = new Map();
   for (const row of rows) {
     if (!patientMap.has(row.id)) {
       patientMap.set(row.id, {
         id: row.id,
-        uhid: row.id,
+        uhid: row.uhid,
         fullName: row.full_name,
+        hospitalId: row.hospital_id,
+        latestIntakeId: row.intake_id,
+        encounterNumber: row.encounter_number,
+        intakeSource: row.intake_source,
         documentCount: Number(row.document_count || 0),
         latestVitals: row.recorded_at ? {
           heartRate: row.heart_rate,
@@ -1014,11 +1219,13 @@ function listStaffPatients(request, response, url) {
         intakeSummaries: []
       });
     }
-    const device = devices.find(item => item.id === row.device_id && item.staffId === staffId);
+    const device = devices.find(item => item.id === row.device_id);
     patientMap.get(row.id).intakeSummaries.push({
       id: row.intake_id,
       summary: row.summary,
       createdAt: row.intake_created_at,
+      encounterNumber: row.encounter_number,
+      intakeSource: row.intake_source,
       deviceId: row.device_id,
       deviceName: device?.name || 'Authorized patient device'
     });
@@ -1031,16 +1238,24 @@ async function createStaffPatientVitals(request, response) {
   const body = await readJson(request);
   const staffId = normalizeStaffId(body.staffId);
   const patientId = String(body.patientId || '').trim();
+  const requestedIntakeId = String(body.intakeId || '').trim();
   const heartRate = Number(body.heartRate);
   const oxygenSaturation = Number(body.oxygenSaturation);
   const systolic = Number(body.systolic);
   const diastolic = Number(body.diastolic);
-  if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
+  const staff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(staffId);
+  if (!staff) {
     return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
   }
   if (!patientsDb.prepare('SELECT id FROM patients WHERE id = ?').get(patientId)) {
     return sendJson(response, 404, { error: 'Patient record was not found' });
   }
+  const identity = hospitalIdentity(patientId, staff.hospital_id);
+  if (!identity) return sendJson(response, 404, { error: 'This patient is not enrolled at your hospital' });
+  const intake = requestedIntakeId
+    ? patientsDb.prepare('SELECT id FROM patient_intakes WHERE id = ? AND patient_id = ? AND hospital_id = ?').get(requestedIntakeId, patientId, staff.hospital_id)
+    : patientsDb.prepare('SELECT id FROM patient_intakes WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patientId, staff.hospital_id);
+  if (!intake) return sendJson(response, 404, { error: 'No hospital intake was found for this patient' });
   if (!Number.isInteger(heartRate) || heartRate < 30 || heartRate > 250) {
     return sendJson(response, 400, { error: 'Heart rate must be between 30 and 250 bpm' });
   }
@@ -1054,19 +1269,44 @@ async function createStaffPatientVitals(request, response) {
     return sendJson(response, 400, { error: 'Enter a valid diastolic pressure lower than the systolic pressure' });
   }
   const vitals = {
-    id: randomUUID(), patientId, staffId, heartRate, oxygenSaturation,
+    id: randomUUID(), patientId, staffId, hospitalId: staff.hospital_id, intakeId: intake.id, heartRate, oxygenSaturation,
     systolic, diastolic, recordedAt: new Date().toISOString()
   };
   patientsDb.prepare(`
     INSERT INTO patient_vitals (
-      id, patient_id, recorded_by_staff_id, heart_rate, oxygen_saturation,
+      id, patient_id, recorded_by_staff_id, hospital_id, intake_id, heart_rate, oxygen_saturation,
       systolic_bp, diastolic_bp, recorded_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    vitals.id, vitals.patientId, vitals.staffId, vitals.heartRate,
+    vitals.id, vitals.patientId, vitals.staffId, vitals.hospitalId, vitals.intakeId, vitals.heartRate,
     vitals.oxygenSaturation, vitals.systolic, vitals.diastolic, vitals.recordedAt
   );
   sendJson(response, 201, { vitals });
+}
+
+function publicPatientIntake(row, uhidCreated = false) {
+  const branch = hospitalBranches.get(row.hospital_id);
+  return {
+    id: row.id,
+    patientId: row.patient_id,
+    conversationId: row.conversation_id,
+    language: row.language,
+    summary: row.summary,
+    hospitalId: row.hospital_id,
+    hospitalName: branch?.name || 'Hospital',
+    hospitalLocation: branch?.location || '',
+    uhid: row.hospital_uhid,
+    uhidCreated,
+    encounterNumber: row.encounter_number,
+    intakeSource: row.intake_source || 'authorized-device',
+    createdAt: row.created_at
+  };
+}
+
+function intakeSourceForDevice(device, requestedSource) {
+  const allowed = new Set(['app-qr', 'kiosk', 'staff-assisted', 'authorized-device']);
+  if (allowed.has(requestedSource)) return requestedSource;
+  return /kiosk/i.test(device.name || '') ? 'kiosk' : 'app-qr';
 }
 
 async function createPatientIntake(request, response) {
@@ -1085,30 +1325,82 @@ async function createPatientIntake(request, response) {
   if (!conversationId || !summary) {
     return sendJson(response, 400, { error: 'Complete the AI intake before saving its summary' });
   }
-  const linkedStaffId = patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(normalizeStaffId(device.staffId))?.employee_id || null;
-  const existing = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? AND conversation_id = ?').get(patientId, conversationId);
-  if (existing) {
-    if ((!existing.device_id || !existing.staff_id) && linkedStaffId) {
-      patientsDb.prepare('UPDATE patient_intakes SET device_id = ?, staff_id = ? WHERE id = ?')
-        .run(device.id, linkedStaffId, existing.id);
-    }
-    return sendJson(response, 200, { intake: patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ?').get(existing.id) });
+  const linkedStaff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(normalizeStaffId(device.staffId));
+  const linkedStaffId = linkedStaff?.employee_id || null;
+  const hospitalId = device.hospitalId || linkedStaff?.hospital_id || '';
+  if (!hospitalBranches.has(hospitalId)) {
+    return sendJson(response, 409, { error: 'This authorized device is not linked to a hospital. Ask staff to authorize it again.' });
   }
-  const id = randomUUID();
-  patientsDb.prepare('INSERT INTO patient_intakes (id, patient_id, conversation_id, language, summary, device_id, staff_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(id, patientId, conversationId, language, summary, device.id, linkedStaffId, new Date().toISOString());
-  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ?').get(id);
-  sendJson(response, 201, { intake });
+  const requestedSource = String(body.intakeSource || '').trim();
+  const intakeSource = intakeSourceForDevice(device, requestedSource);
+  const existing = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? AND conversation_id = ?').get(patientId, conversationId);
+  if (existing?.hospital_id && existing?.hospital_uhid && existing?.encounter_number) {
+    return sendJson(response, 200, { intake: publicPatientIntake(existing, false) });
+  }
+  const createdAt = new Date().toISOString();
+  let intake;
+  let uhidCreated = false;
+  patientsDb.exec('BEGIN IMMEDIATE');
+  try {
+    const duplicate = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? AND conversation_id = ?').get(patientId, conversationId);
+    const identity = getOrCreateHospitalIdentity(patientId, hospitalId, createdAt);
+    uhidCreated = identity.created;
+    if (duplicate) {
+      let encounterNumber = duplicate.encounter_number;
+      if (!encounterNumber) encounterNumber = nextEncounterNumber(hospitalId);
+      patientsDb.prepare(`
+        UPDATE patient_intakes
+        SET device_id = ?, staff_id = ?, hospital_id = ?, hospital_uhid = ?, encounter_number = ?, intake_source = ?
+        WHERE id = ?
+      `).run(device.id, linkedStaffId, hospitalId, identity.uhid, encounterNumber, intakeSource, duplicate.id);
+      intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ?').get(duplicate.id);
+    } else {
+      const id = randomUUID();
+      let inserted = false;
+      for (let attempt = 0; attempt < 20 && !inserted; attempt += 1) {
+        const encounterNumber = nextEncounterNumber(hospitalId);
+        try {
+          patientsDb.prepare(`
+            INSERT INTO patient_intakes (
+              id, patient_id, conversation_id, language, summary, device_id, staff_id,
+              hospital_id, hospital_uhid, encounter_number, intake_source, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(
+            id, patientId, conversationId, language, summary, device.id, linkedStaffId,
+            hospitalId, identity.uhid, encounterNumber, intakeSource, createdAt
+          );
+          inserted = true;
+        } catch (error) {
+          if (!String(error.message).includes('patient_intakes.hospital_id')) throw error;
+        }
+      }
+      if (!inserted) throw new Error('Could not allocate an encounter number');
+      intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ?').get(id);
+    }
+    patientsDb.prepare(`
+      UPDATE patient_documents
+      SET hospital_id = ?, intake_id = ?
+      WHERE patient_id = ? AND hospital_id IS NULL
+    `).run(hospitalId, intake.id, patientId);
+    patientsDb.exec('COMMIT');
+  } catch (error) {
+    patientsDb.exec('ROLLBACK');
+    throw error;
+  }
+  sendJson(response, existing ? 200 : 201, { intake: publicPatientIntake(intake, uhidCreated) });
 }
 
 function getLatestPatientIntake(request, response, url) {
-  if (!authorizedDeviceForRequest(request)) {
+  const device = authorizedDeviceForRequest(request);
+  if (!device) {
     return sendJson(response, 403, { error: 'AI check-up is available only on an authorized device' });
   }
   const patientId = String(url.searchParams.get('patientId') || '').trim();
-  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patientId);
+  const linkedStaff = patientsDb.prepare('SELECT hospital_id FROM staff WHERE employee_id = ?').get(normalizeStaffId(device.staffId));
+  const hospitalId = device.hospitalId || linkedStaff?.hospital_id || '';
+  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patientId, hospitalId);
   if (!intake) return sendJson(response, 404, { error: 'No completed intake summary is available yet' });
-  sendJson(response, 200, { intake });
+  sendJson(response, 200, { intake: publicPatientIntake(intake, false) });
 }
 
 
@@ -1157,12 +1449,296 @@ function listDoctorRecords(_request, response, url) {
   sendJson(response, 200, { doctor: publicDoctor(doctor), records: rows });
 }
 
+function maskedPhone(phone) {
+  const normalized = String(phone || '').replace(/\D/g, '');
+  return normalized.length >= 4 ? `••••••${normalized.slice(-4)}` : 'Not available';
+}
+
+function listDoctorPatients(_request, response, url) {
+  const doctorId = normalizeDoctorId(url.searchParams.get('doctorId'));
+  const doctor = patientsDb.prepare('SELECT * FROM doctors WHERE doctor_id = ?').get(doctorId);
+  if (!doctor) return sendJson(response, 404, { error: 'Doctor account was not found' });
+  const rows = patientsDb.prepare(`
+    SELECT p.*, h.uhid, h.hospital_id, i.id AS intake_id, i.language, i.summary,
+      i.encounter_number, i.intake_source, i.created_at AS intake_created_at
+    FROM patient_hospital_identities h
+    JOIN patients p ON p.id = h.patient_id
+    JOIN patient_intakes i ON i.id = (
+      SELECT latest.id FROM patient_intakes latest
+      WHERE latest.patient_id = p.id AND latest.hospital_id = h.hospital_id
+      ORDER BY datetime(latest.created_at) DESC LIMIT 1
+    )
+    WHERE h.hospital_id = ?
+    ORDER BY datetime(i.created_at) DESC
+  `).all(doctor.hospital_id);
+  const patientRecords = rows.map(row => {
+    const vitals = patientsDb.prepare(`
+      SELECT * FROM patient_vitals
+      WHERE patient_id = ? AND hospital_id = ?
+      ORDER BY datetime(recorded_at) DESC LIMIT 1
+    `).get(row.id, doctor.hospital_id);
+    const documents = patientsDb.prepare(`
+      SELECT * FROM patient_documents
+      WHERE patient_id = ? AND hospital_id = ?
+      ORDER BY datetime(created_at) DESC
+    `).all(row.id, doctor.hospital_id);
+    const history = patientsDb.prepare(`
+      SELECT id, summary, language, encounter_number, intake_source, created_at
+      FROM patient_intakes
+      WHERE patient_id = ? AND hospital_id = ?
+      ORDER BY datetime(created_at) DESC
+    `).all(row.id, doctor.hospital_id);
+    const latestDocument = documents[0];
+    const evidenceReview = documents.length
+      ? `Review the current intake alongside ${documents.length} hospital document${documents.length === 1 ? '' : 's'}, beginning with ${latestDocument.original_name}. Confirm medicines, allergies and any change from the prior record directly with the patient.`
+      : 'No previous hospital document is available for comparison. Confirm medicines, allergies and relevant prior treatment directly with the patient.';
+    return {
+      patientId: row.id,
+      uhid: row.uhid,
+      encounterNumber: row.encounter_number,
+      fullName: row.full_name,
+      age: patientAge(row.date_of_birth),
+      dateOfBirth: row.date_of_birth,
+      gender: row.gender,
+      phoneMasked: maskedPhone(row.phone),
+      bloodGroup: row.blood_group,
+      conditions: JSON.parse(row.conditions_json || '[]'),
+      allergies: row.allergies || 'None reported',
+      language: row.language,
+      summary: row.summary,
+      evidenceReview,
+      intakeSource: row.intake_source,
+      createdAt: row.intake_created_at,
+      vitals: vitals ? {
+        heartRate: vitals.heart_rate,
+        oxygenSaturation: vitals.oxygen_saturation,
+        systolic: vitals.systolic_bp,
+        diastolic: vitals.diastolic_bp,
+        recordedAt: vitals.recorded_at
+      } : null,
+      documents: documents.map(document => ({
+        id: document.id,
+        name: document.original_name,
+        type: document.mime_type,
+        size: document.size_bytes,
+        createdAt: document.created_at,
+        previewUrl: `/api/doctor-documents/${encodeURIComponent(document.id)}?doctorId=${encodeURIComponent(doctorId)}`
+      })),
+      history: history.map(item => ({
+        id: item.id,
+        encounterNumber: item.encounter_number,
+        summary: item.summary,
+        language: item.language,
+        intakeSource: item.intake_source,
+        createdAt: item.created_at
+      }))
+    };
+  });
+  sendJson(response, 200, { doctor: publicDoctor(doctor), patients: patientRecords });
+}
+
+function cleanPrescriptionText(value, limit = 1000) {
+  return String(value || '').trim().replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').slice(0, limit);
+}
+
+function pdfText(value) {
+  return String(value || '').replace(/[^\x20-\x7e]/g, ' ').replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+
+function wrapPdfText(value, width = 88) {
+  const words = cleanPrescriptionText(value, 6000).split(' ').filter(Boolean);
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    if (!line) line = word;
+    else if (`${line} ${word}`.length <= width) line += ` ${word}`;
+    else { lines.push(line); line = word; }
+  }
+  if (line) lines.push(line);
+  return lines.length ? lines : ['Not provided'];
+}
+
+function createPrescriptionPdf(sections) {
+  const commands = [];
+  const add = (text, options = {}) => commands.push({ text, size: options.size || 9.5, bold: Boolean(options.bold), gap: options.gap ?? 14 });
+  add('AROGYAM CLINICAL PRESCRIPTION', { size: 17, bold: true, gap: 23 });
+  for (const section of sections) {
+    add(section.title.toUpperCase(), { size: 10.5, bold: true, gap: 17 });
+    for (const item of section.items) {
+      const prefix = item.label ? `${item.label}: ` : '';
+      const wrapped = wrapPdfText(`${prefix}${item.value}`, item.width || 88);
+      wrapped.forEach((line, index) => add(index ? `  ${line}` : line, { size: 9.5, gap: 13 }));
+    }
+    commands.push({ spacer: 6 });
+  }
+
+  const pages = [];
+  let page = [];
+  let y = 800;
+  for (const command of commands) {
+    if (command.spacer) { y -= command.spacer; continue; }
+    if (y < 56) { pages.push(page); page = []; y = 800; }
+    page.push({ ...command, y });
+    y -= command.gap;
+  }
+  if (page.length) pages.push(page);
+
+  const objects = [null, null, null, null];
+  const pageRefs = [];
+  for (const lines of pages) {
+    const stream = [
+      '0.055 0.20 0.17 rg',
+      '42 818 511 1 re f',
+      ...lines.map(line => `BT /${line.bold ? 'F2' : 'F1'} ${line.size} Tf 0.08 0.18 0.16 rg 46 ${line.y} Td (${pdfText(line.text)}) Tj ET`),
+      'BT /F1 8 Tf 0.35 0.43 0.40 rg 46 28 Td (Generated securely by Arogyam) Tj ET'
+    ].join('\n');
+    const pageNumber = objects.length + 1;
+    const streamNumber = pageNumber + 1;
+    pageRefs.push(`${pageNumber} 0 R`);
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${streamNumber} 0 R >>`);
+    objects.push(`<< /Length ${Buffer.byteLength(stream, 'latin1')} >>\nstream\n${stream}\nendstream`);
+  }
+  objects[0] = '<< /Type /Catalog /Pages 2 0 R >>';
+  objects[1] = `<< /Type /Pages /Kids [${pageRefs.join(' ')}] /Count ${pageRefs.length} >>`;
+  objects[2] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+  objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
+
+  let output = '%PDF-1.4\n';
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(Buffer.byteLength(output, 'latin1'));
+    output += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefOffset = Buffer.byteLength(output, 'latin1');
+  output += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.slice(1).forEach(offset => { output += `${String(offset).padStart(10, '0')} 00000 n \n`; });
+  output += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return Buffer.from(output, 'latin1');
+}
+
+async function createDoctorPrescription(request, response) {
+  const body = await readJson(request, 120_000);
+  const doctorId = normalizeDoctorId(body.doctorId);
+  const patientId = String(body.patientId || '').trim();
+  const doctor = patientsDb.prepare('SELECT * FROM doctors WHERE doctor_id = ?').get(doctorId);
+  const patient = patientsDb.prepare('SELECT * FROM patients WHERE id = ?').get(patientId);
+  if (!doctor) return sendJson(response, 403, { error: 'A registered doctor account is required' });
+  if (!patient) return sendJson(response, 404, { error: 'Patient account was not found' });
+  const identity = hospitalIdentity(patientId, doctor.hospital_id);
+  if (!identity) return sendJson(response, 404, { error: 'This patient is not enrolled at your hospital' });
+  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patientId, doctor.hospital_id);
+  if (!intake) return sendJson(response, 404, { error: 'No hospital encounter was found for this patient' });
+
+  const clinical = body.clinical || {};
+  const instructions = body.instructions || {};
+  const chiefComplaint = cleanPrescriptionText(clinical.chiefComplaint, 1200);
+  const diagnosis = cleanPrescriptionText(clinical.diagnosis, 1200);
+  const allergies = cleanPrescriptionText(clinical.allergies, 500);
+  const medications = Array.isArray(body.medications) ? body.medications.slice(0, 12).map(item => ({
+    name: cleanPrescriptionText(item.name, 120), strength: cleanPrescriptionText(item.strength, 60),
+    form: cleanPrescriptionText(item.form, 60), dose: cleanPrescriptionText(item.dose, 60),
+    route: cleanPrescriptionText(item.route, 60), frequency: cleanPrescriptionText(item.frequency, 100),
+    timing: cleanPrescriptionText(item.timing, 160), duration: cleanPrescriptionText(item.duration, 80),
+    quantity: cleanPrescriptionText(item.quantity, 60), refills: cleanPrescriptionText(item.refills, 40)
+  })).filter(item => item.name) : [];
+  if (!chiefComplaint || !diagnosis) return sendJson(response, 400, { error: 'Enter the chief complaint and clinical impression' });
+  if (!medications.length) return sendJson(response, 400, { error: 'Add at least one medicine' });
+
+  const prescriptionId = `RX-${new Date().getUTCFullYear()}-${randomInt(100000, 1000000)}`;
+  const issuedAt = new Date();
+  const dateLabel = new Intl.DateTimeFormat('en-IN', { dateStyle: 'long', timeZone: 'Asia/Kolkata' }).format(issuedAt);
+  const medicationItems = medications.flatMap((medicine, index) => [
+    { label: `Rx ${index + 1}`, value: `${medicine.name} ${medicine.strength} ${medicine.form}` },
+    { label: 'Directions', value: [medicine.dose, medicine.route, medicine.frequency, medicine.timing].filter(Boolean).join(' | ') || 'As directed' },
+    { label: 'Course', value: [`Duration ${medicine.duration || 'Not specified'}`, `Quantity ${medicine.quantity || 'Not specified'}`, `Refills ${medicine.refills || '0'}`].join(' | ') }
+  ]);
+  const pdf = createPrescriptionPdf([
+    { title: 'Doctor details', items: [
+      { label: 'Doctor', value: doctor.full_name }, { label: 'Qualification and specialization', value: `${doctor.degree} | ${doctor.specialty}` },
+      { label: 'Medical registration', value: doctor.medical_registration_number }, { label: 'Doctor ID', value: doctor.doctor_id },
+      { label: 'Hospital', value: `${doctor.hospital_name}, ${doctor.hospital_location}` }, { label: 'Contact', value: `${doctor.phone} | ${doctor.email}` }
+    ] },
+    { title: 'Prescription details', items: [
+      { label: 'Date', value: dateLabel }, { label: 'Prescription ID', value: prescriptionId }, { label: 'Encounter', value: intake.encounter_number }
+    ] },
+    { title: 'Patient details', items: [
+      { label: 'Name', value: patient.full_name }, { label: 'UHID', value: identity.uhid }, { label: 'Patient ID', value: patient.id },
+      { label: 'Age / Sex', value: `${patientAge(patient.date_of_birth)} years / ${patient.gender}` }, { label: 'Weight', value: `${patient.weight_kg} kg` }
+    ] },
+    { title: 'Clinical information', items: [
+      { label: 'Chief complaint / symptoms', value: chiefComplaint }, { label: 'Diagnosis / clinical impression', value: diagnosis },
+      { label: 'Relevant allergies', value: allergies || patient.allergies || 'None reported' }
+    ] },
+    { title: 'Medication details', items: medicationItems },
+    { title: 'Other instructions', items: [
+      { label: 'Investigations / tests', value: cleanPrescriptionText(instructions.investigations, 1200) || 'None specified' },
+      { label: 'Lifestyle / dietary advice', value: cleanPrescriptionText(instructions.lifestyle, 1200) || 'None specified' },
+      { label: 'Precautions / warnings', value: cleanPrescriptionText(instructions.precautions, 1200) || 'None specified' },
+      { label: 'Follow-up / review date', value: cleanPrescriptionText(instructions.followUpDate, 80) || 'As advised' }
+    ] },
+    { title: 'Authentication', items: [
+      { label: 'Digitally issued by', value: doctor.full_name }, { label: 'Registration / stamp', value: doctor.medical_registration_number },
+      { label: 'Authentication', value: `Electronically authenticated through doctor account ${doctor.doctor_id}` }
+    ] }
+  ]);
+
+  const uploadSessionId = randomUUID();
+  const documentId = randomUUID();
+  const storedName = `${uploadSessionId}-${documentId}.pdf`;
+  const createdAt = issuedAt.toISOString();
+  await mkdir(patientUploadsRoot, { recursive: true });
+  await writeFile(join(patientUploadsRoot, storedName), pdf, { flag: 'wx' });
+  patientsDb.exec('BEGIN IMMEDIATE');
+  try {
+    patientsDb.prepare(`INSERT INTO patient_document_sessions (id, token_hash, status, expires_at, created_at) VALUES (?, ?, 'completed', ?, ?)`)
+      .run(uploadSessionId, hash(randomBytes(32).toString('base64url')), createdAt, createdAt);
+    patientsDb.prepare(`
+      INSERT INTO patient_documents (
+        id, upload_session_id, patient_id, patient_reference, patient_name, original_name, mime_type,
+        size_bytes, stored_name, created_at, hospital_id, intake_id
+      ) VALUES (?, ?, ?, ?, ?, ?, 'application/pdf', ?, ?, ?, ?, ?)
+    `).run(documentId, uploadSessionId, patient.id, identity.uhid, patient.full_name,
+      `Prescription ${prescriptionId}.pdf`, pdf.length, storedName, createdAt, doctor.hospital_id, intake.id);
+    patientsDb.exec('COMMIT');
+  } catch (error) {
+    patientsDb.exec('ROLLBACK');
+    throw error;
+  }
+  const document = patientsDb.prepare('SELECT * FROM patient_documents WHERE id = ?').get(documentId);
+  sendJson(response, 201, { prescriptionId, document: publicDashboardDocument(document) });
+}
+
+async function serveDoctorDocument(_request, response, documentId, url) {
+  const doctorId = normalizeDoctorId(url.searchParams.get('doctorId'));
+  const doctor = patientsDb.prepare('SELECT hospital_id FROM doctors WHERE doctor_id = ?').get(doctorId);
+  if (!doctor) return sendJson(response, 403, { error: 'A registered doctor account is required' });
+  const row = patientsDb.prepare('SELECT * FROM patient_documents WHERE id = ? AND hospital_id = ?').get(documentId, doctor.hospital_id);
+  if (!row) return sendJson(response, 404, { error: 'Document not found for this hospital' });
+  try {
+    const body = await readFile(join(patientUploadsRoot, row.stored_name));
+    response.writeHead(200, {
+      'Content-Type': row.mime_type,
+      'Content-Length': body.length,
+      'Content-Disposition': `inline; filename="${row.original_name.replace(/["\\]/g, '')}"`,
+      'Cache-Control': 'private, no-store'
+    });
+    response.end(body);
+  } catch { sendJson(response, 404, { error: 'Document file is unavailable' }); }
+}
+
 
 function getStaffProfile(request, response, url) {
   const staffId = normalizeStaffId(url.searchParams.get('staffId'));
   const staff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(staffId);
   if (!staff) return sendJson(response, 404, { error: 'Staff profile was not found' });
   sendJson(response, 200, { staff: publicStaff(staff) });
+}
+
+function getDoctorProfile(request, response, url) {
+  const doctorId = normalizeDoctorId(url.searchParams.get('doctorId'));
+  const doctor = patientsDb.prepare('SELECT * FROM doctors WHERE doctor_id = ?').get(doctorId);
+  if (!doctor) return sendJson(response, 404, { error: 'Doctor profile was not found' });
+  sendJson(response, 200, { doctor: publicDoctor(doctor) });
 }
 
 async function createEnrollment(request, response) {
@@ -1366,7 +1942,46 @@ async function serveStatic(request, response) {
   }
 }
 
+function backfillHospitalScopedRecords() {
+  const legacyIntakes = patientsDb.prepare(`
+    SELECT i.*, s.hospital_id AS staff_hospital_id
+    FROM patient_intakes i
+    LEFT JOIN staff s ON s.employee_id = i.staff_id
+    WHERE i.hospital_id IS NULL OR i.hospital_uhid IS NULL OR i.encounter_number IS NULL
+  `).all();
+  for (const intake of legacyIntakes) {
+    const deviceHospitalId = devices.find(device => device.id === intake.device_id)?.hospitalId;
+    const hospitalId = intake.hospital_id || intake.staff_hospital_id || deviceHospitalId;
+    if (!hospitalBranches.has(hospitalId)) continue;
+    const identity = getOrCreateHospitalIdentity(intake.patient_id, hospitalId, intake.created_at);
+    let encounterNumber = intake.encounter_number;
+    if (!encounterNumber) {
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        const candidate = nextEncounterNumber(hospitalId);
+        const collision = patientsDb.prepare('SELECT 1 FROM patient_intakes WHERE hospital_id = ? AND encounter_number = ?').get(hospitalId, candidate);
+        if (!collision) { encounterNumber = candidate; break; }
+      }
+    }
+    patientsDb.prepare(`
+      UPDATE patient_intakes
+      SET hospital_id = ?, hospital_uhid = ?, encounter_number = ?, intake_source = COALESCE(intake_source, 'authorized-device')
+      WHERE id = ?
+    `).run(hospitalId, identity.uhid, encounterNumber, intake.id);
+  }
+  patientsDb.prepare(`
+    UPDATE patient_documents
+    SET hospital_id = (SELECT s.hospital_id FROM staff s WHERE s.employee_id = patient_documents.uploaded_by_staff_id)
+    WHERE hospital_id IS NULL AND uploaded_by_staff_id IS NOT NULL
+  `).run();
+  patientsDb.prepare(`
+    UPDATE patient_vitals
+    SET hospital_id = (SELECT s.hospital_id FROM staff s WHERE s.employee_id = patient_vitals.recorded_by_staff_id)
+    WHERE hospital_id IS NULL
+  `).run();
+}
+
 await Promise.all([loadDevices(), loadPatients()]);
+backfillHospitalScopedRecords();
 const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
@@ -1385,12 +2000,25 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-registrations') return await createPatientRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-login') return await loginPatient(request, response);
+    const patientDashboardMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/dashboard$/);
+    if (request.method === 'GET' && patientDashboardMatch) return getPatientDashboard(request, response, decodeURIComponent(patientDashboardMatch[1]));
+    const patientDashboardUploadMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/documents$/);
+    if (request.method === 'POST' && patientDashboardUploadMatch) return await uploadPatientDashboardDocument(request, response, decodeURIComponent(patientDashboardUploadMatch[1]));
+    const patientDashboardDocumentMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/documents\/([0-9a-f-]+)$/i);
+    if (request.method === 'GET' && patientDashboardDocumentMatch) {
+      return await servePatientDashboardDocument(request, response, decodeURIComponent(patientDashboardDocumentMatch[1]), patientDashboardDocumentMatch[2]);
+    }
     if (request.method === 'POST' && url.pathname === '/api/patient-intakes') return await createPatientIntake(request, response);
     if (request.method === 'GET' && url.pathname === '/api/patient-intakes/latest') return getLatestPatientIntake(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/hospital-branches') return listHospitalBranches(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-registrations') return await createDoctorRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-login') return await loginDoctor(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/doctor-profile') return getDoctorProfile(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/doctor-records') return listDoctorRecords(request, response, url);
+    if (request.method === 'GET' && url.pathname === '/api/doctor-patients') return listDoctorPatients(request, response, url);
+    if (request.method === 'POST' && url.pathname === '/api/doctor-prescriptions') return await createDoctorPrescription(request, response);
+    const doctorDocumentMatch = url.pathname.match(/^\/api\/doctor-documents\/([0-9a-f-]+)$/i);
+    if (request.method === 'GET' && doctorDocumentMatch) return await serveDoctorDocument(request, response, doctorDocumentMatch[1], url);
     if (request.method === 'POST' && url.pathname === '/api/staff-registrations') return await createStaffRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/staff-login') return await loginStaff(request, response);
     if (request.method === 'GET' && url.pathname === '/api/staff-patients') return listStaffPatients(request, response, url);
