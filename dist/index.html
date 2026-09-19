@@ -532,6 +532,10 @@
     .doctor-choice-card { width: min(980px, 100%); padding: clamp(26px, 4vw, 44px); border: 1px solid rgba(16,43,39,.11); border-radius: 28px; background: rgba(255,255,255,.95); box-shadow: 0 28px 80px rgba(16,43,39,.12); }
     .doctor-choice-card h1 { margin: 5px 0 8px; font-size: clamp(2rem, 4vw, 3.2rem); }
     .doctor-choice-card > p { margin: 0 0 24px; color: var(--ink-soft); }
+    .doctor-choice-completion { margin: 0 0 14px; padding: 18px 20px; border: 1px solid #bcd8cb; border-radius: 17px; background: linear-gradient(145deg, #e7f5ee, #f5fbf8); }
+    .doctor-choice-completion[hidden] { display: none; }
+    .doctor-choice-completion span { display: block; color: #17614e; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .doctor-choice-completion p { margin: 8px 0 0; color: #183e33; line-height: 1.6; }
     .doctor-choice-summary { margin: 0 0 24px; padding: 17px 19px; border: 1px solid #d8e5df; border-radius: 17px; background: #f4f9f6; }
     .doctor-choice-summary span { display: block; color: #55746a; font-size: .7rem; font-weight: 780; letter-spacing: .09em; text-transform: uppercase; }
     .doctor-choice-summary p { max-height: 170px; overflow-y: auto; margin: 8px 0 0; color: #29493f; line-height: 1.55; white-space: pre-line; }
@@ -2175,6 +2179,10 @@
             <div class="eyebrow">Choose your care team</div>
             <h1 id="doctorChoiceTitle" tabindex="-1">Which specialist would you like to see?</h1>
             <p>Select a department. Arogyam will assign the available doctor with the shortest queue.</p>
+            <div class="doctor-choice-completion" id="doctorChoiceCompletion" hidden>
+              <span>Check-up complete</span>
+              <p id="doctorChoiceCompletionMessage"></p>
+            </div>
             <div class="doctor-choice-summary">
               <span>AI intake summary</span>
               <p id="doctorChoiceSummary">Complete the conversation to generate a summary.</p>
@@ -5063,6 +5071,8 @@
     const checkupDoctorRoom = document.getElementById('checkupDoctorRoom');
     const checkupIntakeSummary = document.getElementById('checkupIntakeSummary');
     const doctorChoiceSummary = document.getElementById('doctorChoiceSummary');
+    const doctorChoiceCompletion = document.getElementById('doctorChoiceCompletion');
+    const doctorChoiceCompletionMessage = document.getElementById('doctorChoiceCompletionMessage');
     let recognition = null;
     let voiceGeneration = 0;
     let replyPending = false;
@@ -5085,6 +5095,11 @@
     let agentAudioFallbackTimer = null;
     let speechPlaybackRetryTimer = null;
     let speechFallbackActive = false;
+    let finalAgentMessage = '';
+    let pendingAutoComplete = false;
+    let autoCompleteTimer = null;
+    let agentSpokeDuringCompletion = false;
+    let checkupCompletionInProgress = false;
     const seenElevenMessages = new Set();
 
     function setVoiceHint(text, error = false) {
@@ -5107,6 +5122,9 @@
       clearTimeout(voiceTimer);
       clearTimeout(agentAudioFallbackTimer);
       clearTimeout(speechPlaybackRetryTimer);
+      clearTimeout(autoCompleteTimer);
+      pendingAutoComplete = false;
+      agentSpokeDuringCompletion = false;
       speechFallbackActive = false;
       const previous = recognition;
       recognition = null;
@@ -5181,6 +5199,30 @@
       }, elevenTextOnly ? 80 : 2500);
     }
 
+    function isFinalAgentResponse(text) {
+      const normalized = normalizeTranscriptText(text);
+      const detailsRecorded = /(?:recorded|captured|saved).*(?:details|information|responses)/.test(normalized);
+      const doctorReview = /doctor.*(?:review|see|meet)|(?:review|see|meet).*doctor/.test(normalized);
+      const explicitCompletion = /(?:intake|check-up|checkup).*(?:complete|finished)/.test(normalized);
+      return (detailsRecorded && doctorReview) || (explicitCompletion && doctorReview);
+    }
+
+    function finishPendingAutoComplete() {
+      if (!pendingAutoComplete || checkupCompletionInProgress || routeFromLocation() !== 'patient/voice') return;
+      pendingAutoComplete = false;
+      clearTimeout(autoCompleteTimer);
+      autoCompleteTimer = null;
+      void completeCurrentCheckup();
+    }
+
+    function scheduleAutoCompleteTransition(text) {
+      pendingAutoComplete = true;
+      agentSpokeDuringCompletion = false;
+      clearTimeout(autoCompleteTimer);
+      const estimatedSpeechMs = Math.min(14_000, Math.max(4_000, String(text).trim().split(/\s+/).length * 280));
+      autoCompleteTimer = setTimeout(finishPendingAutoComplete, estimatedSpeechMs);
+    }
+
     function handleElevenLabsMessage(payload, sessionGeneration) {
       if (sessionGeneration !== elevenSessionGeneration) return;
       const text = String(payload?.message || '').trim();
@@ -5192,11 +5234,17 @@
       const exactDuplicate = seenElevenMessages.has(eventKey)
         || intakeTranscript.slice(-8).some(item => item.role === role && normalizeTranscriptText(item.text) === normalized);
       const repeatedOpening = isAgent && !hasPatientResponse && intakeTranscript.some(item => item.role === 'assistant');
+      const isFinalResponse = isAgent && isFinalAgentResponse(text);
       seenElevenMessages.add(eventKey);
       if (isAgent) {
         voiceQuestion.textContent = text;
         replyPending = false;
-        if (!exactDuplicate && !repeatedOpening) {
+        if (isFinalResponse && !exactDuplicate) {
+          finalAgentMessage = text;
+          scheduleAgentAudioFallback(text, Date.now(), sessionGeneration);
+          scheduleAutoCompleteTransition(text);
+          setVoiceHint('Check-up complete — opening your summary after this message.');
+        } else if (!exactDuplicate && !repeatedOpening) {
           appendChatMessage(text, 'ai');
           scheduleAgentAudioFallback(text, Date.now(), sessionGeneration);
         }
@@ -5287,6 +5335,11 @@
           if (sessionGeneration !== elevenSessionGeneration || textOnly) return;
           setAgentOrbState(mode === 'speaking' ? 'speaking' : 'listening');
           setVoiceHint(mode === 'speaking' ? 'Arogyam is speaking…' : 'Listening…');
+          if (pendingAutoComplete && mode === 'speaking') agentSpokeDuringCompletion = true;
+          if (pendingAutoComplete && mode === 'listening' && agentSpokeDuringCompletion) {
+            clearTimeout(autoCompleteTimer);
+            autoCompleteTimer = setTimeout(finishPendingAutoComplete, 450);
+          }
         },
         onAudio: () => {
           if (sessionGeneration === elevenSessionGeneration) elevenLastAudioChunkAt = Date.now();
@@ -5413,7 +5466,10 @@
       };
       utterance.onend = () => {
         speechFallbackActive = false;
-        if (generation === voiceGeneration) setVoiceHint('Your turn — tap Talk or type a reply.');
+        if (generation === voiceGeneration) {
+          if (pendingAutoComplete) finishPendingAutoComplete();
+          else setVoiceHint('Your turn — tap Talk or type a reply.');
+        }
       };
       utterance.onerror = event => {
         if (!['canceled', 'interrupted'].includes(event.error)) speechFallbackActive = false;
@@ -5444,6 +5500,14 @@
       currentCheckup = null;
       pendingIntake = null;
       intakeTranscript = [];
+      finalAgentMessage = '';
+      pendingAutoComplete = false;
+      agentSpokeDuringCompletion = false;
+      clearTimeout(autoCompleteTimer);
+      autoCompleteTimer = null;
+      checkupCompletionInProgress = false;
+      doctorChoiceCompletion.hidden = true;
+      doctorChoiceCompletionMessage.textContent = '';
       doctorChoiceSummary.textContent = 'Complete the conversation to generate a summary.';
       seenElevenMessages.clear();
       elevenLastAudioChunkAt = 0;
@@ -5586,6 +5650,7 @@
     }
 
     async function completeCurrentCheckup() {
+      if (checkupCompletionInProgress) return;
       const patientId = activePatient?.id;
       const conversationId = currentConversationId || elevenConversation?.getId?.() || '';
       if (!patientId) {
@@ -5596,15 +5661,25 @@
         showToast('Check-up not started', 'Please use Talk or send at least one response before ending the check-up.');
         return;
       }
+      checkupCompletionInProgress = true;
+      pendingAutoComplete = false;
+      clearTimeout(autoCompleteTimer);
+      autoCompleteTimer = null;
       endVoiceSessionButton.disabled = true;
       setVoiceHint('Finishing your check-up…');
-      await stopElevenLabsSession();
-      const summary = buildIntakeSummary();
-      doctorChoiceSummary.textContent = summary;
-      pendingIntake = { conversationId, language: languageSelect.value, summary };
-      navigateRoute('patient/specialty');
-      void loadDoctorSpecialties();
-      endVoiceSessionButton.disabled = false;
+      try {
+        await stopElevenLabsSession();
+        const summary = buildIntakeSummary();
+        doctorChoiceSummary.textContent = summary;
+        doctorChoiceCompletion.hidden = !finalAgentMessage;
+        doctorChoiceCompletionMessage.textContent = finalAgentMessage;
+        pendingIntake = { conversationId, language: languageSelect.value, summary };
+        navigateRoute('patient/specialty');
+        void loadDoctorSpecialties();
+      } finally {
+        endVoiceSessionButton.disabled = false;
+        checkupCompletionInProgress = false;
+      }
     }
 
     voiceTalkButton.addEventListener('click', async () => {
