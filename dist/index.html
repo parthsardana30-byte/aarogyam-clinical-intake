@@ -5097,10 +5097,10 @@
       };
     }
 
-    async function loadDoctorPatients() {
+    async function loadDoctorPatients({ renderSelection = true } = {}) {
       if (!activeDoctor?.id) {
         clinicalPatientCases.splice(0);
-        renderClinicalPatient(null);
+        if (renderSelection) renderClinicalPatient(null);
         return;
       }
       try {
@@ -5117,10 +5117,12 @@
         ]));
         Object.keys(doctorPatientHistories).forEach(key => delete doctorPatientHistories[key]);
         clinicalPatientCases.forEach(patient => { doctorPatientHistories[patient.id] = patient.history; });
-        const retained = clinicalPatientCases.find(patient => patient.sourcePatientId === selectedClinicalPatient?.sourcePatientId);
-        renderClinicalPatient(retained || clinicalPatientCases[0] || null);
+        if (renderSelection) {
+          const retained = clinicalPatientCases.find(patient => patient.sourcePatientId === selectedClinicalPatient?.sourcePatientId);
+          renderClinicalPatient(retained || clinicalPatientCases[0] || null);
+        }
       } catch (error) {
-        renderClinicalPatient(null);
+        if (renderSelection) renderClinicalPatient(null);
         showToast('Patients unavailable', error.message || 'Could not load hospital patients.');
       }
     }
@@ -5408,7 +5410,9 @@
     async function selectClinicalPatientFromSearch() {
       const query = doctorPatientSearch.value.trim().toLowerCase();
       if (!query) return;
-      if (!clinicalPatientCases.length) await loadDoctorPatients();
+      // Refresh on every search so a UHID that has just appeared in the hospital
+      // staff roster is immediately available to every doctor at that hospital.
+      await loadDoctorPatients({ renderSelection: false });
       const compactQuery = normalizePatientSearch(query);
       const searchableValues = item => [item.sourcePatientId, item.id, item.opd, item.fullName, item.phoneMasked]
         .map(value => ({ raw: String(value || '').toLowerCase(), compact: normalizePatientSearch(value) }));
