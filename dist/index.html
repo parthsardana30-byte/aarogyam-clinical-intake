@@ -1231,8 +1231,10 @@
     .exit-device-mode:hover { background:#0f887f; color:#fff; transform:translateY(-1px); }
     .exit-device-mode:focus-visible { outline:3px solid rgba(15,136,127,.18); outline-offset:3px; }
     .login-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .login-screen.device-patient-only .login-cards { grid-template-columns: minmax(260px, 390px); justify-content: center; }
-    .login-screen.device-patient-only .login-card:not([data-portal-role="patient"]) { display: none; }
+    .login-card[data-portal-role="authorized-patient"] { display: none; }
+    .login-screen.device-patient-only .login-cards { grid-template-columns: minmax(260px, 430px); justify-content: center; }
+    .login-screen.device-patient-only .login-card { display: none; }
+    .login-screen.device-patient-only .login-card[data-portal-role="authorized-patient"] { display: flex; --portal-accent: #0f766e; --portal-accent-rgb: 15, 118, 110; }
     .login-card {
       --portal-accent: #0f887f;
       --portal-accent-rgb: 15, 136, 127;
@@ -1296,6 +1298,7 @@
     .login-screen.device-patient-only .login-card-register { align-self:center; }
     .login-card-register { position:relative; z-index:2; align-self:flex-start; margin-top:26px; padding:10px 18px; border:1px solid rgba(var(--portal-accent-rgb), .32); border-radius:999px; background:rgba(255,255,255,.68); color:var(--portal-accent); font:750 .88rem/1 "Aptos", "Segoe UI", sans-serif; box-shadow:0 8px 22px rgba(var(--portal-accent-rgb), .1); transition:background .22s ease, color .22s ease, transform .22s ease, box-shadow .22s ease; }
     .login-card-register:is(:hover, :focus-visible) { background:var(--portal-accent); color:#fff; transform:translateY(-2px); box-shadow:0 12px 28px rgba(var(--portal-accent-rgb), .26); outline:none; }
+    .authorized-login-note { position:relative; z-index:1; margin:12px 0 0; color:var(--ink-soft); font-size:.86rem; line-height:1.45; }
     .login-card-icon { width: 88px; height: 88px; display: grid; place-items: center; border-radius: 27px; margin-bottom: 31px; color: var(--teal); background: linear-gradient(145deg, #eef8f3, #d9ebe3); box-shadow: inset 0 0 0 1px rgba(14,102,85,.08), 0 12px 28px rgba(14,102,85,.1); }
     .login-card:nth-child(2) .login-card-icon { color: #9b5418; background: linear-gradient(145deg, #fff7ee, #ffe8cf); box-shadow: inset 0 0 0 1px rgba(155,84,24,.08), 0 12px 28px rgba(155,84,24,.1); }
     .login-card:nth-child(3) .login-card-icon { color: #315d70; background: linear-gradient(145deg, #f0f7fa, #dbeaf0); box-shadow: inset 0 0 0 1px rgba(49,93,112,.08), 0 12px 28px rgba(49,93,112,.1); }
@@ -1784,6 +1787,13 @@
             </button>
             <button class="login-card-register" type="button" data-register-role="staff">Register</button>
           </article>
+          <article class="login-card" data-portal-role="authorized-patient">
+            <button class="login-card-main" type="button" data-authorized-patient-login>
+              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><rect pathLength="1" x="17" y="12" width="30" height="40" rx="7" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" d="M25 12V9h14v3M26 31h12M32 25v12" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><path pathLength="1" class="icon-accent" d="m24 43 5 5 11-12" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <h2>Authorized Patient Check-up</h2>
+              <p class="authorized-login-note">For this hospital-authorized device only</p>
+            </button>
+          </article>
         </div>
       </div>
 
@@ -2094,11 +2104,11 @@
         <div class="checkup-launch" id="checkupLaunch">
           <div class="checkup-welcome" id="checkupWelcome">
             <section class="patient-dashboard-hero" aria-labelledby="patientDashboardTitle">
-              <p class="patient-dashboard-kicker">Your patient account</p>
+              <p class="patient-dashboard-kicker">Your health workspace</p>
               <h1 class="checkup-welcome-title" id="patientDashboardTitle">Hello, <span id="patientWelcomeName">Patient</span></h1>
-              <p class="patient-dashboard-copy">Start your AI health assessment, then choose the specialty you need. We will assign a doctor, room and unique queue number for your visit.</p>
+              <p class="patient-dashboard-copy">Review your consultations, health documents and care history from your private patient account.</p>
               <button class="checkup-launch-button" id="startCheckupButton" type="button">
-                Start AI assessment
+                View health records
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
             </section>
@@ -2437,6 +2447,7 @@
     const staffProfileStatus = document.getElementById('staffProfileStatus');
     let selectedLoginRole = 'patient';
     let selectedAuthMode = 'login';
+    let patientLoginContext = 'normal';
     let selectedPatientSignupMethod = null;
     let selectedPatientLoginMethod = null;
     let signupOtpRequestId = null;
@@ -2753,9 +2764,10 @@
       }
     }
 
-    function selectLoginRole(role, focus = true, mode = 'login') {
+    function selectLoginRole(role, focus = true, mode = 'login', context = 'normal') {
       selectedLoginRole = role;
       selectedAuthMode = mode;
+      patientLoginContext = role === 'patient' ? context : 'normal';
       const config = loginRoles[role];
       const currentLanguage = (() => { try { return localStorage.getItem('arogSevakLanguage') || 'English'; } catch (_) { return 'English'; } })();
       const hindiLogin = {
@@ -2767,6 +2779,9 @@
         ? { patient: 'रोगी पंजीकरण', doctor: 'चिकित्सक पंजीकरण', staff: 'स्टाफ पंजीकरण' }
         : { patient: 'Create patient account', doctor: 'Register as a clinician', staff: 'Register hospital staff' };
       const localized = currentLanguage === 'Hindi' ? hindiLogin[role] : [config.title, config.label, config.placeholder];
+      if (role === 'patient' && mode === 'login' && patientLoginContext === 'authorized') {
+        localized[0] = currentLanguage === 'Hindi' ? 'अधिकृत रोगी चेक-इन' : 'Authorized patient check-in';
+      }
       if (mode === 'register') localized[0] = registrationTitles[role];
       document.getElementById('formTitle').textContent = localized[0];
       const isPatientRegistration = role === 'patient' && mode === 'register';
@@ -3340,6 +3355,7 @@
     });
 
     document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => navigateRoute(`login/${card.dataset.loginRole}`, false, true)));
+    document.querySelectorAll('[data-authorized-patient-login]').forEach(card => card.addEventListener('click', () => navigateRoute('login/device-patient', false, true)));
     document.querySelectorAll('[data-enroll-device]').forEach(button => button.addEventListener('click', () => { location.href = '/device-enroll.html'; }));
     document.querySelectorAll('[data-register-role]').forEach(button => button.addEventListener('click', () => navigateRoute(`register/${button.dataset.registerRole}`, false, true)));
     document.querySelectorAll('[data-patient-signup]').forEach(button => button.addEventListener('click', () => choosePatientSignupMethod(button.dataset.patientSignup)));
@@ -3801,10 +3817,7 @@
       }
     }
 
-    startCheckupButton.addEventListener('click', () => {
-      resetCheckup();
-      navigateRoute('patient/language', false, true);
-    });
+    startCheckupButton.addEventListener('click', () => navigateRoute('patient/records', false, true));
 
     languageOptions.addEventListener('change', () => {
       confirmLanguage.disabled = !languageForm.elements.checkupLanguage.value;
@@ -4330,7 +4343,7 @@
       loginForm.reset();
       loginFormShell.hidden = true;
       rolePicker.hidden = false;
-      if (authorizedPatientDevice) document.getElementById('loginTitle').textContent = 'Patient device access';
+      document.getElementById('loginTitle').textContent = authorizedPatientDevice ? 'Authorized patient check-up' : 'Choose your care portal';
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
 
@@ -4430,19 +4443,31 @@
     function applyRoute(route, focus = false) {
       if (cancelLoginMotion) cancelLoginMotion();
       if (authorizedPatientDevice) {
-        const blockedRoleRoute = /^(?:doctor\/|staff\/|(?:login|register)\/(?:doctor|staff))/.test(route);
+        if (route === 'login/patient') {
+          route = 'login/device-patient';
+          history.replaceState({ route }, '', '#/login/device-patient');
+        }
+        const blockedRoleRoute = /^(?:doctor\/|staff\/|register\/|login\/(?:doctor|staff))/.test(route);
         const protectedPatientRoute = /^patient\//.test(route) && !patientLoggedInThisSession;
         if (blockedRoleRoute || protectedPatientRoute) {
-          route = protectedPatientRoute ? 'login/patient' : 'roles';
+          route = protectedPatientRoute ? 'login/device-patient' : 'roles';
           history.replaceState({ route }, '', `#/${route}`);
         } else if (patientLoggedInThisSession && /^patient\/(?:start|records)$/.test(route)) {
           route = 'patient/language';
           history.replaceState({ route }, '', '#/patient/language');
         }
       }
-      if (!authorizedPatientDevice && !patientLoggedInThisSession && /^patient\/(?:language|voice|specialty|summary)$/.test(route)) {
-        route = 'patient/records';
-        history.replaceState({ route }, '', '#/patient/records');
+      if (!authorizedPatientDevice) {
+        if (route === 'login/device-patient') {
+          route = 'login/patient';
+          history.replaceState({ route }, '', '#/login/patient');
+        } else if (/^patient\/(?:language|voice|specialty|summary)$/.test(route)) {
+          route = patientLoggedInThisSession ? 'patient/start' : 'login/patient';
+          history.replaceState({ route }, '', `#/${route}`);
+        } else if (!patientLoggedInThisSession && /^patient\/(?:start|records)$/.test(route)) {
+          route = 'login/patient';
+          history.replaceState({ route }, '', '#/login/patient');
+        }
       }
       if (route === 'patient/intake') {
         route = 'patient/voice';
@@ -4461,6 +4486,11 @@
       const loginMatch = route.match(/^login\/(patient|doctor|staff)$/);
       if (loginMatch) {
         selectLoginRole(loginMatch[1], focus, 'login');
+        return;
+      }
+
+      if (route === 'login/device-patient') {
+        selectLoginRole('patient', focus, 'login', 'authorized');
         return;
       }
 
@@ -4901,7 +4931,10 @@
           patientLoggedInThisSession = true;
           resetCheckup();
         }
-        navigateRoute(role === 'patient' ? 'patient/start' : role === 'doctor' ? 'doctor/current' : 'staff/queue');
+        const patientDestination = patientLoginContext === 'authorized' && authorizedPatientDevice
+          ? 'patient/language'
+          : 'patient/start';
+        navigateRoute(role === 'patient' ? patientDestination : role === 'doctor' ? 'doctor/current' : 'staff/queue');
       } catch (error) {
         if (!cancelled) console.error('Login transition failed', error);
       } finally {

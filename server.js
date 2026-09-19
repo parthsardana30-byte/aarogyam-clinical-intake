@@ -286,6 +286,11 @@ function cookies(request) {
   return Object.fromEntries((request.headers.cookie || '').split(';').map(item => item.trim().split('=').map(decodeURIComponent)).filter(parts => parts.length === 2));
 }
 
+function authorizedDeviceForRequest(request) {
+  const token = cookies(request).arog_device;
+  return token ? devices.find(item => item.tokenHash === hash(token)) || null : null;
+}
+
 function secureCookie(request) {
   return request.socket.encrypted || request.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
 }
@@ -309,6 +314,9 @@ function requestIp(request) {
 }
 
 async function createElevenLabsSignedUrl(request, response) {
+  if (!authorizedDeviceForRequest(request)) {
+    return sendJson(response, 403, { configured: true, error: 'Voice check-up is available only on an authorized device' });
+  }
   const apiKey = String(process.env.ELEVENLABS_API_KEY || '').trim();
   const agentId = String(process.env.ELEVENLABS_AGENT_ID || '').trim();
   if (!apiKey || !/^agent_[a-zA-Z0-9]+$/.test(agentId)) {
@@ -1056,6 +1064,8 @@ async function updateDoctorQueueStatus(request, response, checkupId) {
 }
 
 async function createPatientCheckup(request, response) {
+  const device = authorizedDeviceForRequest(request);
+  if (!device) return sendJson(response, 403, { error: 'AI check-up is available only on an authorized device' });
   const body = await readJson(request);
   const patientId = String(body.patientId || '').trim();
   const conversationId = String(body.conversationId || '').trim().slice(0, 180);
@@ -1070,8 +1080,6 @@ async function createPatientCheckup(request, response) {
   const existing = patientsDb.prepare('SELECT * FROM patient_checkups WHERE patient_id = ? AND conversation_id = ?').get(patientId, conversationId);
   if (existing) return sendJson(response, 200, { checkup: publicCheckup(existing) });
 
-  const token = cookies(request).arog_device;
-  const device = token && devices.find(item => item.tokenHash === hash(token));
   let hospitalId = device?.hospitalId || null;
   let hospitalName = device?.hospitalName || null;
   let hospitalLocation = device?.hospitalLocation || null;
@@ -1272,8 +1280,7 @@ async function revokeDevice(_request, response, id) {
 }
 
 async function deviceSession(request, response) {
-  const token = cookies(request).arog_device;
-  const device = token && devices.find(item => item.tokenHash === hash(token));
+  const device = authorizedDeviceForRequest(request);
   if (!device) return sendJson(response, 200, { authorized: false });
   device.lastSeenAt = new Date().toISOString();
   void saveDevices();
