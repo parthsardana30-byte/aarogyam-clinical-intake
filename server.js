@@ -204,6 +204,24 @@ async function loadPatients() {
     );
     CREATE INDEX IF NOT EXISTS patient_checkups_patient_idx ON patient_checkups(patient_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS patient_checkups_created_idx ON patient_checkups(created_at DESC);
+    CREATE TABLE IF NOT EXISTS patient_intakes (
+      id TEXT PRIMARY KEY,
+      patient_id TEXT NOT NULL,
+      conversation_id TEXT NOT NULL,
+      language TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      UNIQUE(patient_id, conversation_id),
+      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS patient_intakes_patient_idx ON patient_intakes(patient_id, created_at DESC);
+  `);
+  // Preserve summaries from visits created by the retired OPD queue flow.
+  patientsDb.exec(`
+    INSERT OR IGNORE INTO patient_intakes (id, patient_id, conversation_id, language, summary, created_at)
+    SELECT id, patient_id, conversation_id, language, summary, created_at
+    FROM patient_checkups
+    WHERE TRIM(conversation_id) <> '' AND TRIM(summary) <> ''
   `);
   const patientDocumentColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_documents)').all().map(column => column.name));
   const patientDocumentMigrations = [
@@ -231,7 +249,6 @@ async function loadPatients() {
   for (const [column, type] of checkupMigrations) {
     if (!checkupColumns.has(column)) patientsDb.exec(`ALTER TABLE patient_checkups ADD COLUMN ${column} ${type}`);
   }
-  patientsDb.exec('CREATE INDEX IF NOT EXISTS patient_checkups_doctor_queue_idx ON patient_checkups(doctor_id, status, created_at)');
   const seedDoctor = patientsDb.prepare(`
     INSERT OR IGNORE INTO doctors (
       doctor_id, hospital_id, hospital_name, hospital_location, full_name, degree, specialty,
@@ -828,7 +845,7 @@ async function createDoctorRegistration(request, response) {
   if (!Number.isInteger(yearsExperience) || yearsExperience < 0 || yearsExperience > 70) {
     return sendJson(response, 400, { error: 'Years of experience must be between 0 and 70' });
   }
-  if (!/^[A-Z0-9 -]{1,20}$/.test(roomNumber)) return sendJson(response, 400, { error: 'Enter a valid room or OPD number' });
+  if (!/^[A-Z0-9 -]{1,20}$/.test(roomNumber)) return sendJson(response, 400, { error: 'Enter a valid room number' });
   if (!phone) return sendJson(response, 400, { error: 'Enter a valid 10-digit Indian mobile number' });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return sendJson(response, 400, { error: 'Enter a valid professional email address' });
   if (patientsDb.prepare('SELECT doctor_id FROM doctors WHERE doctor_id = ?').get(doctorId)) {
@@ -938,18 +955,17 @@ async function loginStaff(request, response) {
   sendJson(response, 200, { staff: publicStaff(row) });
 }
 
-function listStaffPatientQueue(request, response, url) {
+function listStaffPatients(request, response, url) {
   const staffId = normalizeStaffId(url.searchParams.get('staffId'));
   if (!patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ?').get(staffId)) {
     return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
   }
-  const queue = patientsDb.prepare(`
+  const patients = patientsDb.prepare(`
     SELECT p.id, p.full_name, p.created_at,
-      c.language, c.doctor_name, c.doctor_specialty, c.room_number,
-      c.opd_number, c.patient_number, c.hospital_name, c.hospital_location
+      i.language, i.created_at AS intake_created_at
     FROM patients p
-    LEFT JOIN patient_checkups c ON c.id = (
-      SELECT latest.id FROM patient_checkups latest
+    LEFT JOIN patient_intakes i ON i.id = (
+      SELECT latest.id FROM patient_intakes latest
       WHERE latest.patient_id = p.id
       ORDER BY datetime(latest.created_at) DESC LIMIT 1
     )
@@ -958,46 +974,45 @@ function listStaffPatientQueue(request, response, url) {
     id: row.id,
     fullName: row.full_name,
     language: row.language || null,
-    doctor: row.doctor_name ? {
-      name: row.doctor_name,
-      specialty: row.doctor_specialty,
-      roomNumber: row.room_number
-    } : null,
-    opdNumber: row.opd_number || null,
-    patientNumber: row.patient_number || null,
-    hospitalName: row.hospital_name || null,
-    hospitalLocation: row.hospital_location || null
+    intakeCompletedAt: row.intake_created_at || null
   }));
-  sendJson(response, 200, { patients: queue });
+  sendJson(response, 200, { patients });
 }
 
-function publicCheckup(row) {
-  return {
-    id: row.id,
-    patientId: row.patient_id,
-    conversationId: row.conversation_id,
-    language: row.language,
-    hospital: {
-      id: row.hospital_id || null,
-      name: row.hospital_name,
-      location: row.hospital_location || null
-    },
-    doctor: {
-      id: row.doctor_id || null,
-      name: row.doctor_name,
-      specialty: row.doctor_specialty,
-      roomNumber: row.room_number
-    },
-    opdNumber: row.opd_number,
-    patientNumber: row.patient_number,
-    summary: row.summary,
-    requestedSpecialty: row.specialty_requested || row.doctor_specialty,
-    status: row.status,
-    createdAt: row.created_at,
-    startedAt: row.started_at || null,
-    completedAt: row.completed_at || null
-  };
+async function createPatientIntake(request, response) {
+  if (!authorizedDeviceForRequest(request)) {
+    return sendJson(response, 403, { error: 'AI check-up is available only on an authorized device' });
+  }
+  const body = await readJson(request);
+  const patientId = String(body.patientId || '').trim();
+  const conversationId = String(body.conversationId || '').trim().slice(0, 180);
+  const language = String(body.language || 'English').trim().slice(0, 40) || 'English';
+  const summary = String(body.summary || '').trim().replace(/\s+/g, ' ').slice(0, 6000);
+  if (!patientsDb.prepare('SELECT id FROM patients WHERE id = ?').get(patientId)) {
+    return sendJson(response, 404, { error: 'Patient account was not found' });
+  }
+  if (!conversationId || !summary) {
+    return sendJson(response, 400, { error: 'Complete the AI intake before saving its summary' });
+  }
+  const existing = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? AND conversation_id = ?').get(patientId, conversationId);
+  if (existing) return sendJson(response, 200, { intake: existing });
+  const id = randomUUID();
+  patientsDb.prepare('INSERT INTO patient_intakes (id, patient_id, conversation_id, language, summary, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(id, patientId, conversationId, language, summary, new Date().toISOString());
+  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ?').get(id);
+  sendJson(response, 201, { intake });
 }
+
+function getLatestPatientIntake(request, response, url) {
+  if (!authorizedDeviceForRequest(request)) {
+    return sendJson(response, 403, { error: 'AI check-up is available only on an authorized device' });
+  }
+  const patientId = String(url.searchParams.get('patientId') || '').trim();
+  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patientId);
+  if (!intake) return sendJson(response, 404, { error: 'No completed intake summary is available yet' });
+  sendJson(response, 200, { intake });
+}
+
 
 function patientAge(dateOfBirth) {
   const birth = new Date(`${dateOfBirth}T00:00:00Z`);
@@ -1009,12 +1024,9 @@ function patientAge(dateOfBirth) {
   return Math.max(0, age);
 }
 
-function publicDoctorQueueRow(row) {
+function publicDoctorRecord(row) {
   return {
-    checkupId: row.id,
     patientId: row.patient_id,
-    patientNumber: row.patient_number,
-    opdNumber: row.opd_number,
     fullName: row.full_name,
     age: patientAge(row.date_of_birth),
     gender: row.gender,
@@ -1025,41 +1037,13 @@ function publicDoctorQueueRow(row) {
     allergies: row.allergies || 'None reported',
     language: row.language,
     summary: row.summary,
-    requestedSpecialty: row.specialty_requested || row.doctor_specialty,
-    status: row.status,
     documentCount: Number(row.document_count || 0),
-    createdAt: row.created_at,
-    startedAt: row.started_at || null,
-    completedAt: row.completed_at || null
+    createdAt: row.created_at
   };
 }
 
-function listDoctorSpecialties(_request, response, url) {
-  const hospitalId = String(url.searchParams.get('hospitalId') || '').trim();
-  const rows = patientsDb.prepare(`
-    SELECT d.*,
-      (SELECT COUNT(*) FROM patient_checkups c
-       WHERE c.doctor_id = d.doctor_id AND c.status IN ('waiting', 'in_consultation')) AS queue_count
-    FROM doctors d
-    WHERE (? = '' OR d.hospital_id = ?)
-    ORDER BY d.specialty, d.full_name
-  `).all(hospitalId, hospitalId);
-  const preferredRows = rows.length ? rows : patientsDb.prepare(`
-    SELECT d.*,
-      (SELECT COUNT(*) FROM patient_checkups c
-       WHERE c.doctor_id = d.doctor_id AND c.status IN ('waiting', 'in_consultation')) AS queue_count
-    FROM doctors d ORDER BY d.specialty, d.full_name
-  `).all();
-  sendJson(response, 200, {
-    specialties: preferredRows.map(row => ({
-      specialty: row.specialty,
-      doctor: publicDoctor(row),
-      patientsWaiting: Number(row.queue_count || 0)
-    }))
-  });
-}
 
-function listDoctorQueue(_request, response, url) {
+function listDoctorRecords(_request, response, url) {
   const doctorId = normalizeDoctorId(url.searchParams.get('doctorId'));
   const doctor = patientsDb.prepare('SELECT * FROM doctors WHERE doctor_id = ?').get(doctorId);
   if (!doctor) return sendJson(response, 404, { error: 'Doctor account was not found' });
@@ -1069,115 +1053,12 @@ function listDoctorQueue(_request, response, url) {
       (SELECT COUNT(*) FROM patient_documents pd WHERE pd.patient_id = p.id) AS document_count
     FROM patient_checkups c
     JOIN patients p ON p.id = c.patient_id
-    WHERE c.doctor_id = ?
-    ORDER BY CASE c.status WHEN 'in_consultation' THEN 0 WHEN 'waiting' THEN 1 ELSE 2 END,
-      datetime(c.created_at) ASC
-  `).all(doctorId).map(publicDoctorQueueRow);
-  sendJson(response, 200, {
-    doctor: publicDoctor(doctor),
-    queue: rows.filter(row => row.status !== 'completed'),
-    completed: rows.filter(row => row.status === 'completed').reverse()
-  });
+    WHERE c.doctor_id = ? AND c.status = 'completed'
+    ORDER BY datetime(c.created_at) DESC
+  `).all(doctorId).map(publicDoctorRecord);
+  sendJson(response, 200, { doctor: publicDoctor(doctor), records: rows });
 }
 
-async function updateDoctorQueueStatus(request, response, checkupId) {
-  const body = await readJson(request);
-  const doctorId = normalizeDoctorId(body.doctorId);
-  const status = String(body.status || '');
-  if (!new Set(['waiting', 'in_consultation', 'completed']).has(status)) {
-    return sendJson(response, 400, { error: 'Select a valid queue status' });
-  }
-  const existing = patientsDb.prepare('SELECT id FROM patient_checkups WHERE id = ? AND doctor_id = ?').get(checkupId, doctorId);
-  if (!existing) return sendJson(response, 404, { error: 'Queue entry was not found for this doctor' });
-  const now = new Date().toISOString();
-  patientsDb.prepare(`
-    UPDATE patient_checkups SET status = ?,
-      started_at = CASE WHEN ? = 'in_consultation' THEN COALESCE(started_at, ?) ELSE started_at END,
-      completed_at = CASE WHEN ? = 'completed' THEN ? ELSE NULL END
-    WHERE id = ? AND doctor_id = ?
-  `).run(status, status, now, status, now, checkupId, doctorId);
-  sendJson(response, 200, { updated: true, status });
-}
-
-async function createPatientCheckup(request, response) {
-  const device = authorizedDeviceForRequest(request);
-  if (!device) return sendJson(response, 403, { error: 'AI check-up is available only on an authorized device' });
-  const body = await readJson(request);
-  const patientId = String(body.patientId || '').trim();
-  const conversationId = String(body.conversationId || '').trim().slice(0, 180);
-  const language = String(body.language || 'English').trim().slice(0, 40) || 'English';
-  const requestedSpecialty = String(body.specialty || '').trim();
-  const specialty = allowedDoctorSpecialties.has(requestedSpecialty) ? requestedSpecialty : 'General Medicine';
-  const suppliedSummary = String(body.summary || '').trim().replace(/\s+/g, ' ').slice(0, 6000);
-  const patient = patientsDb.prepare('SELECT id FROM patients WHERE id = ?').get(patientId);
-  if (!patient) return sendJson(response, 404, { error: 'Patient account was not found' });
-  if (!conversationId) return sendJson(response, 400, { error: 'Complete the AI intake before creating an OPD visit' });
-  const existing = patientsDb.prepare('SELECT * FROM patient_checkups WHERE patient_id = ? AND conversation_id = ?').get(patientId, conversationId);
-  if (existing) return sendJson(response, 200, { checkup: publicCheckup(existing) });
-
-  let hospitalId = device?.hospitalId || null;
-  let hospitalName = device?.hospitalName || null;
-  let hospitalLocation = device?.hospitalLocation || null;
-  const selectDoctor = (filterByHospital = true) => patientsDb.prepare(`
-    SELECT d.*,
-      (SELECT COUNT(*) FROM patient_checkups c
-       WHERE c.doctor_id = d.doctor_id AND c.status IN ('waiting', 'in_consultation')) AS queue_count
-    FROM doctors d
-    WHERE d.specialty = ? ${filterByHospital ? 'AND d.hospital_id = ?' : ''}
-    ORDER BY queue_count, datetime(d.created_at), d.doctor_id LIMIT 1
-  `).get(...(filterByHospital ? [specialty, hospitalId] : [specialty]));
-  const doctor = hospitalId ? (selectDoctor(true) || selectDoctor(false)) : selectDoctor(false);
-  if (!doctor) return sendJson(response, 503, { error: 'No doctor is currently configured for this specialty' });
-  if (doctor) {
-    hospitalId = doctor.hospital_id;
-    hospitalName = doctor.hospital_name;
-    hospitalLocation = doctor.hospital_location;
-  }
-  const fallbackHospital = hospitalBranches.get(hospitalId) || hospitalBranches.values().next().value;
-  hospitalId ||= fallbackHospital.id;
-  hospitalName ||= fallbackHospital.name;
-  hospitalLocation ||= fallbackHospital.location;
-
-  const createdAt = new Date().toISOString();
-  const dateKey = createdAt.slice(0, 10).replaceAll('-', '');
-  const visitCount = Number(patientsDb.prepare("SELECT COUNT(*) AS count FROM patient_checkups WHERE date(created_at) = date(?)").get(createdAt).count) + 1;
-  const sequence = String(visitCount).padStart(3, '0');
-  const id = randomUUID();
-  const opdNumber = `OPD-${dateKey}-${sequence}`;
-  const patientNumber = `Q-${dateKey}-${sequence}`;
-  const doctorName = doctor.full_name;
-  const doctorSpecialty = doctor.specialty;
-  const roomNumber = doctor.room_number;
-  const summary = suppliedSummary || `AI-assisted intake completed in ${language}. The patient requested ${specialty} and is ready for clinical review.`;
-
-  patientsDb.prepare(`
-    INSERT INTO patient_checkups (
-      id, patient_id, conversation_id, language, hospital_id, hospital_name, hospital_location,
-      doctor_id, doctor_name, doctor_specialty, room_number, opd_number, patient_number,
-      summary, specialty_requested, status, created_at, started_at, completed_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'waiting', ?, NULL, NULL)
-  `).run(
-    id, patientId, conversationId, language, hospitalId, hospitalName, hospitalLocation,
-    doctor.doctor_id, doctorName, doctorSpecialty, roomNumber, opdNumber, patientNumber,
-    summary, specialty, createdAt
-  );
-  const checkup = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ?').get(id);
-  sendJson(response, 201, { checkup: publicCheckup(checkup) });
-}
-
-function getPatientCheckup(_request, response, id, url) {
-  const patientId = String(url.searchParams.get('patientId') || '').trim();
-  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE id = ? AND patient_id = ?').get(id, patientId);
-  if (!row) return sendJson(response, 404, { error: 'OPD visit was not found' });
-  sendJson(response, 200, { checkup: publicCheckup(row) });
-}
-
-function getLatestPatientCheckup(_request, response, url) {
-  const patientId = String(url.searchParams.get('patientId') || '').trim();
-  const row = patientsDb.prepare('SELECT * FROM patient_checkups WHERE patient_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patientId);
-  if (!row) return sendJson(response, 404, { error: 'No completed OPD visit is available yet' });
-  sendJson(response, 200, { checkup: publicCheckup(row) });
-}
 
 function getStaffProfile(request, response, url) {
   const staffId = normalizeStaffId(url.searchParams.get('staffId'));
@@ -1396,20 +1277,15 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-registrations') return await createPatientRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-login') return await loginPatient(request, response);
-    if (request.method === 'POST' && url.pathname === '/api/patient-checkups') return await createPatientCheckup(request, response);
-    if (request.method === 'GET' && url.pathname === '/api/patient-checkups/latest') return getLatestPatientCheckup(request, response, url);
-    const checkupMatch = url.pathname.match(/^\/api\/patient-checkups\/([0-9a-f-]+)$/i);
-    if (request.method === 'GET' && checkupMatch) return getPatientCheckup(request, response, checkupMatch[1], url);
+    if (request.method === 'POST' && url.pathname === '/api/patient-intakes') return await createPatientIntake(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/patient-intakes/latest') return getLatestPatientIntake(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/hospital-branches') return listHospitalBranches(request, response);
-    if (request.method === 'GET' && url.pathname === '/api/doctor-specialties') return listDoctorSpecialties(request, response, url);
     if (request.method === 'POST' && url.pathname === '/api/doctor-registrations') return await createDoctorRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-login') return await loginDoctor(request, response);
-    if (request.method === 'GET' && url.pathname === '/api/doctor-queue') return listDoctorQueue(request, response, url);
-    const doctorQueueStatusMatch = url.pathname.match(/^\/api\/doctor-queue\/([0-9a-f-]+)\/status$/i);
-    if (request.method === 'POST' && doctorQueueStatusMatch) return await updateDoctorQueueStatus(request, response, doctorQueueStatusMatch[1]);
+    if (request.method === 'GET' && url.pathname === '/api/doctor-records') return listDoctorRecords(request, response, url);
     if (request.method === 'POST' && url.pathname === '/api/staff-registrations') return await createStaffRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/staff-login') return await loginStaff(request, response);
-    if (request.method === 'GET' && url.pathname === '/api/staff-patient-queue') return listStaffPatientQueue(request, response, url);
+    if (request.method === 'GET' && url.pathname === '/api/staff-patients') return listStaffPatients(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/staff-profile') return getStaffProfile(request, response, url);
     const statusMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/status$/i);
     if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1], url);

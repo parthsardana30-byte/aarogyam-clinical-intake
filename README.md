@@ -42,7 +42,9 @@ staff can use the six-digit manual code until TLS is configured.
 
 The current prototype uses synthetic demonstration records only. It must not be used to store real patient information.
 
-## Queue workflow test doctor accounts
+## Patient intake and test doctor accounts
+
+On an authorized device, a patient completes the AI conversation and sees a saved intake summary with the instruction **Please proceed to reception**. The app no longer assigns a doctor, generates an OPD/token number, or manages a consultation queue. Reception can see registered patients and whether an AI intake is complete. Existing completed doctor consultations remain available as read-only historical records; older queued records are retained in storage but are no longer processed by this flow.
 
 The local server seeds one doctor for every selectable specialty at Civil Hospital Ahmedabad. All accounts use the password `Aarogyam@2026`.
 

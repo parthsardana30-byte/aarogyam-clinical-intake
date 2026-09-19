@@ -351,11 +351,11 @@
     .alert-note { margin-top: 14px; background: var(--orange-soft); color: #744015; border-radius: 12px; padding: 11px 12px; font-size: .79rem; }
 
     .dashboard-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 18px; }
-    .queue-table { width: 100%; border-collapse: collapse; }
-    .queue-table th, .queue-table td { padding: 13px 14px; text-align: left; border-bottom: 1px solid var(--line); }
-    .queue-table th { color: #687d78; font-size: .77rem; text-transform: uppercase; letter-spacing: .06em; }
-    .queue-table tbody tr:last-child td { border-bottom: 0; }
-    .staff-queue-card { width: 100%; }
+    .patient-table { width: 100%; border-collapse: collapse; }
+    .patient-table th, .patient-table td { padding: 13px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+    .patient-table th { color: #687d78; font-size: .77rem; text-transform: uppercase; letter-spacing: .06em; }
+    .patient-table tbody tr:last-child td { border-bottom: 0; }
+    .staff-patients-card { width: 100%; }
     .staff-action-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 30px; }
     .staff-action-card {
       --action-accent: 15, 136, 127;
@@ -379,7 +379,7 @@
     .staff-action-card:is(:hover, :focus-visible) .staff-action-icon { transform: translateY(-5px) scale(1.055) rotate(-4deg); box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 18px 38px rgba(var(--action-accent),.35), 0 0 0 9px rgba(var(--action-accent),.09); }
     .staff-action-card:is(:hover, :focus-visible) .staff-action-icon svg [stroke] { animation: icon-line-draw .72s cubic-bezier(.65,0,.25,1) both; }
     .staff-action-card:is(:hover, :focus-visible) .staff-action-arrow { opacity: 1; transform: translateX(0); }
-    .staff-queue-heading { margin-bottom: 16px; }
+    .staff-patients-heading { margin-bottom: 16px; }
     @media (max-width: 900px) { .staff-action-grid { grid-template-columns: 1fr; } }
     @media (max-width: 560px) {
       .staff-action-card { min-height: 190px; grid-template-columns: 66px 1fr; padding: 22px; }
@@ -392,14 +392,14 @@
       .staff-action-card:is(:hover, :focus-visible), .staff-action-card:is(:hover, :focus-visible) .staff-action-icon { transform: none; }
       .staff-action-icon svg [stroke] { animation: none !important; stroke-dashoffset: 0 !important; }
     }
-    #reception .queue-table th:nth-child(1), #reception .queue-table td:nth-child(1) { width: 29%; }
-    #reception .queue-table th:nth-child(2), #reception .queue-table td:nth-child(2) { width: 16%; }
-    #reception .queue-table th:nth-child(3), #reception .queue-table td:nth-child(3) { width: 31%; }
-    #reception .queue-table th:nth-child(4), #reception .queue-table td:nth-child(4) { width: 24%; }
+    #reception .patient-table th:nth-child(1), #reception .patient-table td:nth-child(1) { width: 29%; }
+    #reception .patient-table th:nth-child(2), #reception .patient-table td:nth-child(2) { width: 16%; }
+    #reception .patient-table th:nth-child(3), #reception .patient-table td:nth-child(3) { width: 31%; }
+    #reception .patient-table th:nth-child(4), #reception .patient-table td:nth-child(4) { width: 24%; }
     .requested-specialist { color: var(--teal-dark); font-weight: 750; }
-    .queue-document-action { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 11px; background: #f5faf8; color: var(--teal-dark); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
-    .queue-document-action svg { width: 17px; height: 17px; flex: 0 0 17px; }
-    .queue-document-action:is(:hover, :focus-visible) { border-color: var(--teal); background: var(--mint); outline: none; transform: translateY(-1px); }
+    .patient-document-action { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 11px; background: #f5faf8; color: var(--teal-dark); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+    .patient-document-action svg { width: 17px; height: 17px; flex: 0 0 17px; }
+    .patient-document-action:is(:hover, :focus-visible) { border-color: var(--teal); background: var(--mint); outline: none; transform: translateY(-1px); }
     .status-pill { display: inline-flex; padding: 5px 9px; border-radius: 999px; background: var(--mint); color: var(--teal-dark); font-size: .76rem; font-weight: 750; }
     .status-pill.waiting { background: #f0eee7; color: #625d4e; }
     .status-pill.review { background: var(--orange-soft); color: #8b4b15; }
@@ -506,27 +506,6 @@
     .language-back { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
     .language-continue { min-width: 180px; border: 0; background: var(--ink); color: #fff; }
     .language-continue:disabled { cursor: not-allowed; opacity: .42; }
-    .checkup-result { min-height: calc(100dvh - 24px); display: grid; place-items: center; padding: 24px; }
-    .checkup-result[hidden] { display: none; }
-    .checkup-result-card { width: min(880px, 100%); overflow: hidden; border: 1px solid rgba(16,43,39,.11); border-radius: 30px; background: rgba(255,255,255,.94); box-shadow: 0 28px 80px rgba(16,43,39,.13); }
-    .checkup-result-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; padding: clamp(28px, 5vw, 48px); background: linear-gradient(145deg, #153e35, #0c2924); color: #fff; }
-    .checkup-result-head h1 { margin: 0; color: #fff; font-size: clamp(2rem, 5vw, 3.6rem); }
-    .visit-ticket-stack { display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); gap: 10px; }
-    .opd-ticket { min-width: 0; padding: 18px 20px; border: 1px solid rgba(255,255,255,.2); border-radius: 18px; background: rgba(255,255,255,.1); }
-    .opd-ticket span, .result-doctor span { display: block; color: #a9c7bd; font-size: .72rem; font-weight: 760; letter-spacing: .09em; text-transform: uppercase; }
-    .opd-ticket strong { display: block; margin-top: 6px; font-size: 1.18rem; letter-spacing: .02em; }
-    .checkup-result-body { padding: clamp(26px, 4vw, 42px); }
-    .result-doctor { display: grid; grid-template-columns: 1fr auto auto; gap: 16px; align-items: center; margin-bottom: 26px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
-    .result-doctor strong { display: block; margin-top: 5px; color: var(--ink); font-size: 1.35rem; }
-    .result-doctor-badge { padding: 8px 12px; border-radius: 999px; background: var(--mint); color: var(--teal-dark); font-size: .78rem; font-weight: 750; }
-    .result-room { min-width: 118px; padding: 11px 14px; border-radius: 14px; background: #f2f7f5; text-align: center; }
-    .result-room span { color: #688079; }
-    .result-room strong { margin-top: 3px; font-size: 1rem; }
-    .result-summary { padding: 20px 22px; border: 1px solid #d7e4dd; border-radius: 18px; background: linear-gradient(145deg, #f5faf7, #edf5f1); }
-    .result-summary span { display: block; color: #56736a; font-size: .72rem; font-weight: 780; letter-spacing: .09em; text-transform: uppercase; }
-    .result-summary p { margin: 9px 0 0; color: #28483f; line-height: 1.65; white-space: pre-line; }
-    .checkup-result-actions { display: flex; justify-content: flex-end; margin-top: 30px; }
-    .checkup-result-done { min-height: 52px; padding: 0 25px; border: 0; border-radius: 15px; background: var(--ink); color: #fff; font: inherit; font-weight: 760; cursor: pointer; }
     .doctor-choice-step { min-height: calc(100dvh - 24px); display: grid; place-items: center; padding: 24px; }
     .doctor-choice-step[hidden] { display: none; }
     .doctor-choice-card { width: min(780px, 100%); padding: clamp(28px, 5vw, 52px); border: 1px solid rgba(16,43,39,.11); border-radius: 28px; background: rgba(255,255,255,.95); box-shadow: 0 28px 80px rgba(16,43,39,.12); }
@@ -535,13 +514,13 @@
     .doctor-choice-completion[hidden] { display: none; }
     .doctor-choice-completion span { display: block; color: #17614e; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
     .doctor-choice-completion p { margin: 8px 0 0; color: #183e33; line-height: 1.6; }
+    .reception-direction { display: flex; align-items: center; gap: 14px; margin: 0 0 18px; padding: 20px 22px; border-radius: 18px; background: #153e35; color: #fff; font-size: clamp(1.05rem, 2.4vw, 1.4rem); font-weight: 760; line-height: 1.4; }
+    .reception-direction::before { content: '→'; display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; background: #c7f1df; color: #153e35; font-size: 1.2rem; }
     .doctor-choice-summary { margin: 0; padding: clamp(20px, 3vw, 28px); border: 1px solid #d8e5df; border-radius: 20px; background: linear-gradient(145deg, #f1f8f4, #fbfdfc); }
     .doctor-choice-summary span { display: block; color: #55746a; font-size: .7rem; font-weight: 780; letter-spacing: .09em; text-transform: uppercase; }
     .doctor-choice-summary p { margin: 10px 0 0; color: #29493f; font-size: clamp(1rem, 2vw, 1.15rem); line-height: 1.7; }
     .doctor-choice-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
     .doctor-choice-status { min-height: 22px; margin-top: 12px; color: #a14343; font-weight: 700; }
-    .doctor-queue-empty { padding: 54px 24px; text-align: center; color: var(--ink-soft); }
-    .doctor-queue-empty strong { display: block; margin-bottom: 7px; color: var(--ink); font-size: 1.2rem; }
     /* Patient conversation: a single viewport with a scrollable transcript. */
     .app-shell.patient-session.voice-mode .workspace { width: 100%; max-width: none; padding: 12px 0 0; }
     .app-shell.patient-session:not(.authorized-patient-device):not(.checkup-active) .workspace { width: min(1280px, 100%); }
@@ -1667,13 +1646,7 @@
       .language-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .language-actions { align-items: stretch; flex-direction: column-reverse; }
       .language-back, .language-continue { width: 100%; }
-      .checkup-result { padding: 8px; }
       .doctor-choice-step { padding: 8px; }
-      .checkup-result-head { grid-template-columns: 1fr; }
-      .visit-ticket-stack { grid-template-columns: 1fr; }
-      .opd-ticket { min-width: 0; }
-      .result-doctor { grid-template-columns: 1fr; }
-      .result-room { text-align: left; }
       .voice-session { padding: 0; }
       .voice-experience { height: max(440px, calc(100dvh - 145px)); }
       .voice-orb { width: 180px; }
@@ -1871,7 +1844,7 @@
               <div class="field-group"><label for="doctorSpecialty">Specialty</label><select id="doctorSpecialty"><option value="">Select specialty</option><option>General Medicine</option><option>Gynaecology</option><option>Orthopaedics</option><option>Paediatrics</option><option>General Surgery</option><option>Cardiology</option><option>Dermatology</option><option>ENT</option><option>Ophthalmology</option><option>Psychiatry</option><option>AYUSH Medicine</option><option>Other</option></select></div>
               <div class="field-group"><label for="doctorMedicalRegistration">Medical registration no.</label><input id="doctorMedicalRegistration" maxlength="30" autocomplete="off" placeholder="e.g. G-48219" /></div>
               <div class="field-group"><label for="doctorExperience">Years of experience</label><input id="doctorExperience" type="number" min="0" max="70" step="1" placeholder="e.g. 8" /></div>
-              <div class="field-group"><label for="doctorRoom">Room / OPD no.</label><input id="doctorRoom" maxlength="20" placeholder="e.g. OPD-204" /></div>
+              <div class="field-group"><label for="doctorRoom">Room number</label><input id="doctorRoom" maxlength="20" placeholder="e.g. A-109" /></div>
               <div class="field-group"><label for="doctorPhone">Mobile number</label><input id="doctorPhone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="10-digit mobile number" /></div>
               <div class="field-group is-wide"><label for="doctorEmail">Professional email</label><input id="doctorEmail" type="email" autocomplete="email" maxlength="120" placeholder="doctor@hospital.in" /></div>
             </div>
@@ -1962,8 +1935,7 @@
         <button class="patient-top-tab" type="button" role="tab" aria-selected="false" data-toast="Access and consent|Your record access preferences are available here.">Access &amp; consent</button>
       </nav>
       <nav class="doctor-top-tabs" aria-label="Doctor pages" role="tablist">
-        <button class="doctor-top-tab" type="button" role="tab" data-doctor-panel="current" aria-selected="true">Current patient</button>
-        <button class="doctor-top-tab" type="button" role="tab" data-doctor-panel="previous" aria-selected="false">Previous patients</button>
+        <button class="doctor-top-tab" type="button" role="tab" data-doctor-panel="previous" aria-selected="true">Patient records</button>
       </nav>
       <div class="top-actions">
         <div class="doctor-availability-control" aria-label="Doctor availability" data-current-status="active">
@@ -2010,7 +1982,7 @@
 
     <nav class="rolebar" aria-label="Workspace roles">
       <div class="role-tabs" role="tablist">
-        <button class="role-tab" data-view="reception" role="tab" aria-selected="false">Reception <span>queue</span></button>
+        <button class="role-tab" data-view="reception" role="tab" aria-selected="false">Reception <span>records</span></button>
         <button class="role-tab" data-view="patient" role="tab" aria-selected="true">Patient <span>intake</span></button>
         <button class="role-tab" data-view="doctor" role="tab" aria-selected="false">Doctor <span>review</span></button>
       </div>
@@ -2027,13 +1999,13 @@
               </div>
               <div class="doctor-profile-copy">
                 <strong id="staffSidebarName">Simran Kaur</strong>
-                <small id="staffSidebarHospital">OPD Coordinator</small>
+                <small id="staffSidebarHospital">Reception staff</small>
               </div>
             </div>
             <nav class="doctor-nav">
               <button class="doctor-nav-button" type="button" data-patient-route="start" aria-selected="true">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="20" cy="18" r="2" fill="currentColor"/></svg>
-                <span class="nav-label">Patient queue</span>
+                <span class="nav-label">Patients</span>
               </button>
               <button class="doctor-nav-button" id="addAuthorizedDevice" type="button" aria-selected="false" data-authorize-device>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M9 7h6M12 11v6M9 14h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -2054,16 +2026,16 @@
             <span class="staff-action-arrow" aria-hidden="true">→</span>
           </button>
         </section>
-        <div class="page-heading staff-queue-heading">
-          <div><h1 id="receptionTitle">Today’s intake queue</h1></div>
+        <div class="page-heading staff-patients-heading">
+          <div><h1 id="receptionTitle">Patient records</h1></div>
         </div>
-        <article class="card staff-queue-card">
-          <div class="card-header"><h2>Patient queue</h2></div>
+        <article class="card staff-patients-card">
+          <div class="card-header"><h2>Registered patients</h2></div>
           <div style="overflow-x:auto">
-            <table class="queue-table">
-              <thead><tr><th>Patient / token</th><th>Doctor / room</th><th>OPD</th><th>Language</th><th>Documents</th></tr></thead>
-              <tbody id="staffPatientQueueBody">
-                <tr><td colspan="5"><small>Loading registered patients…</small></td></tr>
+            <table class="patient-table">
+              <thead><tr><th>Patient</th><th>AI intake</th><th>Language</th><th>Documents</th></tr></thead>
+              <tbody id="staffPatientsBody">
+                <tr><td colspan="4"><small>Loading registered patients…</small></td></tr>
               </tbody>
             </table>
           </div>
@@ -2076,7 +2048,7 @@
         <div class="staff-profile-page">
           <div class="page-heading">
             <div><span class="eyebrow">Hospital staff account</span><h1 id="staffProfileTitle">Staff profile</h1><p class="heading-copy">Your verified employment and contact information.</p></div>
-            <button class="staff-profile-back" id="backToStaffQueue" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to queue</button>
+            <button class="staff-profile-back" id="backToStaffPatients" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to patients</button>
           </div>
           <article class="card staff-profile-card">
             <header class="staff-profile-identity">
@@ -2165,12 +2137,13 @@
           </section>
         </div>
         <section class="doctor-choice-step" id="doctorChoiceStep" aria-labelledby="doctorChoiceTitle" hidden>
-          <form class="doctor-choice-card" id="doctorChoiceForm">
+          <div class="doctor-choice-card" id="doctorChoiceForm">
             <h1 id="doctorChoiceTitle" tabindex="-1">Your check-up summary</h1>
             <div class="doctor-choice-completion" id="doctorChoiceCompletion" hidden>
               <span>Check-up complete</span>
               <p id="doctorChoiceCompletionMessage"></p>
             </div>
+            <p class="reception-direction">Please proceed to reception</p>
             <div class="doctor-choice-summary">
               <span>AI intake summary</span>
               <p id="doctorChoiceSummary">Complete the conversation to generate a summary.</p>
@@ -2178,32 +2151,9 @@
             <p class="doctor-choice-status" id="doctorChoiceStatus" role="status" aria-live="polite"></p>
             <div class="doctor-choice-actions">
               <button class="secondary-button" id="backToVoiceCheckup" type="button">Back to intake</button>
-              <button class="primary-button" id="confirmDoctorChoice" type="submit">Get OPD number</button>
+              <button class="primary-button" id="finishIntakeSummary" type="button">Done</button>
             </div>
-          </form>
-        </section>
-        <section class="checkup-result" id="checkupResult" aria-labelledby="checkupResultTitle" hidden>
-          <article class="checkup-result-card">
-            <header class="checkup-result-head">
-              <div><h1 id="checkupResultTitle" tabindex="-1">Your OPD visit is ready</h1></div>
-              <div class="visit-ticket-stack">
-                <div class="opd-ticket"><span>OPD number</span><strong id="checkupOpdNumber">Generating…</strong></div>
-                <div class="opd-ticket"><span>Patient number</span><strong id="checkupPatientNumber">Generating…</strong></div>
-              </div>
-            </header>
-            <div class="checkup-result-body">
-              <div class="result-doctor">
-                <div><span>Assigned doctor</span><strong id="checkupDoctorName">Assigning doctor…</strong></div>
-                <div class="result-doctor-badge" id="checkupDoctorSpecialty">Outpatient care</div>
-                <div class="result-room"><span>Room number</span><strong id="checkupDoctorRoom">Assigning…</strong></div>
-              </div>
-              <div class="result-summary">
-                <span>AI intake summary</span>
-                <p id="checkupIntakeSummary">Your conversation summary will appear here.</p>
-              </div>
-              <div class="checkup-result-actions"><button class="checkup-result-done" id="finishCheckupResult" type="button">Done</button></div>
-            </div>
-          </article>
+          </div>
         </section>
         <section class="patient-records" id="patientRecords" aria-labelledby="patientRecordsTitle" hidden>
           <div class="records-heading">
@@ -2260,49 +2210,7 @@
       <section class="view" id="doctor" aria-label="Doctor workspace">
         <div class="doctor-workspace">
           <div class="doctor-main">
-            <div class="doctor-panel active" data-doctor-panel-content="current">
-              <div class="doctor-carousel" aria-label="Patient navigator">
-              <section class="card doctor-focus" aria-label="Current patient workspace">
-                <header class="focus-header">
-                  <div class="focus-patient"><div class="patient-avatar" id="doctorCurrentPatientAvatar">—</div><div><strong id="doctorCurrentPatientName">No patient selected</strong><small id="doctorCurrentPatientMeta">Waiting for the next assigned patient</small></div></div>
-                  <div class="vitals-inline" aria-label="Patient details"><div class="vital-inline"><small>Height</small><strong id="doctorPatientHeight">—</strong></div><div class="vital-inline"><small>Weight</small><strong id="doctorPatientWeight">—</strong></div><div class="vital-inline"><small>Blood</small><strong id="doctorPatientBlood">—</strong></div></div>
-                  <button class="primary-button" id="doctorQueueAction" type="button" disabled>Begin consultation</button>
-                </header>
-                <div class="focus-grid">
-                  <article class="focus-summary">
-                    <header class="focus-summary-head"><div><span class="ai-spark">AI intake summary</span></div><span class="review-badge">Review required</span></header>
-                    <section class="summary-block"><h3>AI intake summary</h3><ul class="clinical-bullets" id="doctorAiSummary"><li><strong>No assigned patient is waiting.</strong></li></ul></section>
-                    <section class="summary-block"><h3>Patient-reported context</h3><div class="summary-facts" id="doctorPatientFacts"></div></section>
-                    <section class="summary-block"><h3>Conditions and allergies</h3><ul class="clinical-bullets" id="doctorHealthContext"><li>No patient selected.</li></ul></section>
-                  </article>
-                  <aside class="focus-rail">
-                    <section class="focus-rail-section"><div class="compact-alert"><span><strong>Queue token:</strong> <span id="doctorQueueToken">Waiting for assignment</span></span></div></section>
-                    <section class="focus-rail-section"><div class="focus-rail-title"><h3>Visit details</h3><button type="button" data-open-inline-history>View history →</button></div><div class="compact-records"><div class="compact-record"><time>OPD</time><div><strong id="doctorOpdNumber">—</strong><small id="doctorRequestedSpecialty">No specialty selected</small></div></div><div class="compact-record"><time>Files</time><div><strong id="doctorDocumentCount">0 documents</strong><small>Uploaded health records</small></div></div></div></section>
-                    <section class="focus-rail-section"><details class="record-assist-panel"><summary>Ask AI about records</summary><p class="record-assist-copy">Search prior consultations, prescriptions and documents with dated evidence.</p><form class="compact-assistant-form" id="doctorRecordAssistant"><input class="assistant-input" id="doctorRecordQuery" type="search" autocomplete="off" maxlength="500" placeholder="Ask about medicines, labs…" aria-label="Ask a question about patient records"><button class="primary-button" type="submit">Ask</button></form><div class="compact-suggestions" aria-label="Suggested questions"><button class="assistant-chip" type="button" data-record-question="Which medicines were previously prescribed?">Medicines</button><button class="assistant-chip" type="button" data-record-question="Has this complaint happened before?">Similar complaints</button><button class="assistant-chip" type="button" data-record-question="Show the latest lab result">Latest lab</button></div><div class="compact-assistant-answer" id="doctorAssistantAnswer" aria-live="polite"><strong>Ask a question</strong> to find dated evidence in this patient’s records.</div></details></section>
-                  </aside>
-                </div>
-                <footer class="focus-footer"><span><span aria-hidden="true">ⓘ</span> AI-generated content supports review and does not replace clinical assessment.</span><span class="prototype-label" id="doctorQueueStatusLabel">Live queue</span></footer>
-                <section class="previous-record-panel" aria-labelledby="previousRecordTitle">
-                  <header class="previous-record-head"><div><div class="eyebrow">Previous patient record</div><h3 id="previousRecordTitle">Kavita Rao</h3><p id="previousRecordMeta">PT-005 · Most recent completed consultation</p></div><button type="button" data-view-previous-history>View full history →</button></header>
-                  <div class="previous-record-list" id="previousRecordList"></div>
-                </section>
-              </section>
-              <section class="card inline-history" data-inline-history aria-label="Patient history">
-                <header class="inline-history-head"><h2>Ananya Sharma’s patient history</h2><button class="inline-history-back" type="button" data-close-inline-history>← Back to patient</button></header>
-                <div class="inline-history-list">
-                  <article class="inline-history-item"><time>14 Jun 2026</time><div><strong>Prescription uploaded</strong><p>Metformin 500 mg listed. Current medication status needs confirmation.</p></div></article>
-                  <article class="inline-history-item"><time>02 May 2026</time><div><strong>OPD consultation · Digestive discomfort</strong><p>Post-meal heaviness, bloating and reduced appetite were recorded.</p></div></article>
-                  <article class="inline-history-item"><time>18 Nov 2025</time><div><strong>HbA1c laboratory panel</strong><p>HbA1c result: 6.8% from a verified laboratory report.</p></div></article>
-                </div>
-              </section>
-                <div class="next-patient-nav">
-                  <button class="patient-nav-button next" type="button" data-next-patient aria-label="Next patient"><span>Next</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9.5 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                  <div class="next-patient-confirm" id="nextPatientConfirmation" hidden aria-live="polite"><strong>Open next patient?</strong><small id="nextPatientConfirmationName">Rohan Mehta will become the current patient.</small><div class="next-patient-confirm-actions"><button class="next-patient-cancel" id="cancelNextPatient" type="button">Cancel</button><button class="next-patient-approve" id="confirmNextPatient" type="button">Continue</button></div></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="doctor-panel" data-doctor-panel-content="previous">
+            <div class="doctor-panel active" data-doctor-panel-content="previous">
               <div class="previous-patients-heading"><div><div class="eyebrow">Completed consultations</div><h1>Previous patients</h1><p>Find a patient and open their complete medical history.</p></div><label class="previous-patient-search"><span class="sr-only">Search previous patients</span><input id="previousPatientsSearch" type="search" maxlength="100" placeholder="Search by name, patient ID or concern"></label></div>
               <div class="previous-patients-list" id="previousPatientsList" aria-live="polite"></div>
               <div class="card previous-patients-empty" id="previousPatientsEmpty">No previous patients match this search.</div>
@@ -2448,7 +2356,7 @@
     const staffDocumentList = document.getElementById('staffDocumentList');
     const staffDocumentStatus = document.getElementById('staffDocumentStatus');
     const saveStaffDocuments = document.getElementById('saveStaffDocuments');
-    const staffPatientQueueBody = document.getElementById('staffPatientQueueBody');
+    const staffPatientsBody = document.getElementById('staffPatientsBody');
     const patientConditionInputs = [...document.querySelectorAll('input[name="patientCondition"]')];
     const changeSignupMethod = document.getElementById('changeSignupMethod');
     const appShell = document.getElementById('appShell');
@@ -2471,61 +2379,9 @@
     let staffDocumentPatient = null;
     let pendingPatientHealth = { conditions: [], allergies: '' };
     let activePatient = null;
-    const demoDoctorPatients = [
-      { id: 'PT-005', fullName: 'Kavita Rao', age: 47, sex: 'Female', language: 'Marathi', status: 'Completed', initials: 'KR', vitals: ['124/80', '76 bpm', '98%'], concern: 'Seasonal allergies and recurring sinus pressure.', meta: 'Previous consultation completed and available for reference.' },
-      { id: 'PT-001', fullName: 'Ananya Sharma', age: 42, sex: 'Female', language: 'Hindi', status: 'In consultation', initials: 'AS', vitals: ['128/82', '78 bpm', '98%'], concern: 'Abdominal heaviness and reduced appetite for 2–3 days.', meta: 'More noticeable after meals with bloating. No vomiting or fever reported.' },
-      { id: 'PT-002', fullName: 'Rohan Mehta', age: 35, sex: 'Male', language: 'Gujarati', status: 'Waiting', initials: 'RM', vitals: ['134/86', '82 bpm', '97%'], concern: 'Intermittent chest discomfort and fatigue.', meta: 'Registered for a focused symptom review and consultation.' },
-      { id: 'PT-003', fullName: 'Meera Iyer', age: 51, sex: 'Female', language: 'English', status: 'Waiting', initials: 'MI', vitals: ['122/78', '74 bpm', '99%'], concern: 'Recurring knee stiffness and morning discomfort.', meta: 'Previous consultation records are available for review.' },
-      { id: 'PT-004', fullName: 'Vikram Singh', age: 29, sex: 'Male', language: 'Punjabi', status: 'Waiting', initials: 'VS', vitals: ['126/80', '76 bpm', '98%'], concern: 'Persistent cough and throat irritation.', meta: 'Patient has been marked ready by reception.' }
-    ];
-    const archivedDoctorPatients = [
-      { id: 'PT-006', fullName: 'Arjun Patel', age: 58, sex: 'Male', language: 'Gujarati', status: 'Completed', initials: 'AP', concern: 'Blood pressure follow-up and medicine review.' },
-      { id: 'PT-007', fullName: 'Sunita Verma', age: 63, sex: 'Female', language: 'Hindi', status: 'Completed', initials: 'SV', concern: 'Diabetes follow-up and glucose report review.' }
-    ];
-    const doctorPatientHistories = {
-      'PT-005': [
-        { date: '12 Sep 2026', iso: '2026-09-12', kind: 'visit', type: 'Consultation', title: 'Allergic rhinitis review', summary: 'Seasonal nasal congestion and sinus pressure reviewed. Steam inhalation and allergen avoidance were advised.' },
-        { date: '04 Mar 2026', iso: '2026-03-04', kind: 'prescription', type: 'Prescription', title: 'Allergy prescription', summary: 'Cetirizine 10 mg was documented for short-term symptom relief.' },
-        { date: '18 Dec 2025', iso: '2025-12-18', kind: 'lab', type: 'Lab result', title: 'Absolute eosinophil count', summary: 'AEC result recorded as 520 cells/µL in the verified laboratory report.' }
-      ],
-      'PT-001': [
-        { date: '14 Jun 2026', iso: '2026-06-14', kind: 'prescription', type: 'Prescription', title: 'Prescription uploaded', summary: 'Metformin 500 mg appears in the uploaded prescription; current use still requires confirmation.' },
-        { date: '02 May 2026', iso: '2026-05-02', kind: 'visit', type: 'Consultation', title: 'Digestive discomfort', summary: 'Post-meal heaviness, bloating and reduced appetite were documented during the OPD consultation.' },
-        { date: '18 Nov 2025', iso: '2025-11-18', kind: 'lab', type: 'Lab result', title: 'HbA1c laboratory panel', summary: 'HbA1c was recorded as 6.8% in a verified laboratory report.' }
-      ],
-      'PT-002': [
-        { date: '09 Aug 2026', iso: '2026-08-09', kind: 'visit', type: 'Consultation', title: 'Fatigue assessment', summary: 'Intermittent fatigue was reviewed; hydration, sleep and symptom monitoring were discussed.' },
-        { date: '22 Apr 2026', iso: '2026-04-22', kind: 'lab', type: 'Lab result', title: 'Complete blood count', summary: 'CBC values were within the laboratory reference ranges.' },
-        { date: '11 Jan 2026', iso: '2026-01-11', kind: 'prescription', type: 'Prescription', title: 'Supportive care prescription', summary: 'A short supportive care plan was recorded after the consultation.' }
-      ],
-      'PT-003': [
-        { date: '28 Jul 2026', iso: '2026-07-28', kind: 'visit', type: 'Consultation', title: 'Knee stiffness review', summary: 'Morning knee stiffness and mobility limitations were assessed.' },
-        { date: '17 Feb 2026', iso: '2026-02-17', kind: 'lab', type: 'Lab result', title: 'Vitamin D panel', summary: 'Vitamin D result was recorded as 24 ng/mL.' },
-        { date: '06 Oct 2025', iso: '2025-10-06', kind: 'prescription', type: 'Prescription', title: 'Pain management plan', summary: 'Topical pain relief and gentle mobility exercises were documented.' }
-      ],
-      'PT-004': [
-        { date: '03 Sep 2026', iso: '2026-09-03', kind: 'visit', type: 'Consultation', title: 'Respiratory review', summary: 'Persistent cough and throat irritation were reviewed with no urgent red flags documented.' },
-        { date: '14 May 2026', iso: '2026-05-14', kind: 'prescription', type: 'Prescription', title: 'Cough relief prescription', summary: 'A short symptomatic care prescription was recorded.' },
-        { date: '21 Jan 2026', iso: '2026-01-21', kind: 'lab', type: 'Lab result', title: 'Chest screening report', summary: 'Screening report was uploaded and marked for clinician review.' }
-      ],
-      'PT-006': [
-        { date: '30 Aug 2026', iso: '2026-08-30', kind: 'visit', type: 'Consultation', title: 'Hypertension follow-up', summary: 'Home blood-pressure readings and adherence to the current treatment plan were reviewed.' },
-        { date: '12 Jun 2026', iso: '2026-06-12', kind: 'prescription', type: 'Prescription', title: 'Blood pressure prescription', summary: 'The ongoing antihypertensive medicine plan was documented for continued use.' },
-        { date: '08 Feb 2026', iso: '2026-02-08', kind: 'lab', type: 'Lab result', title: 'Kidney function panel', summary: 'Creatinine and electrolyte results were recorded within the laboratory reference ranges.' }
-      ],
-      'PT-007': [
-        { date: '18 Aug 2026', iso: '2026-08-18', kind: 'visit', type: 'Consultation', title: 'Diabetes follow-up', summary: 'Glucose trends, diet and the current medicine schedule were reviewed.' },
-        { date: '02 Aug 2026', iso: '2026-08-02', kind: 'lab', type: 'Lab result', title: 'HbA1c panel', summary: 'HbA1c was recorded as 7.1% in the verified laboratory report.' },
-        { date: '15 Mar 2026', iso: '2026-03-15', kind: 'prescription', type: 'Prescription', title: 'Diabetes prescription', summary: 'The existing oral medicine plan was renewed after clinical review.' }
-      ]
-    };
-    demoDoctorPatients.length = 0;
-    archivedDoctorPatients.length = 0;
-    Object.keys(doctorPatientHistories).forEach(key => delete doctorPatientHistories[key]);
-    let activeDoctorPatientIndex = 0;
+    const archivedDoctorPatients = [];
+    const doctorPatientHistories = {};
     let activeDoctor = null;
-    let doctorQueuePoll = null;
-    let pendingIntake = null;
     let intakeTranscript = [];
     let signupOtpProvider = null;
     let msg91WidgetReady = null;
@@ -3220,54 +3076,51 @@
       if (staffDocumentDialog.open) staffDocumentDialog.close();
     }
 
-    function renderStaffPatientQueue(queue = [], message = '') {
-      const mergedQueue = [...demoDoctorPatients, ...queue.filter(patient => !demoDoctorPatients.some(demo => demo.id === patient.id))];
-      staffPatientQueueBody.innerHTML = '';
-      if (!mergedQueue.length) {
+    function renderStaffPatients(patients = [], message = '') {
+      staffPatientsBody.innerHTML = '';
+      if (!patients.length) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 5;
+        cell.colSpan = 4;
         const copy = document.createElement('small');
         copy.textContent = message || 'No registered patients are available yet.';
-        cell.append(copy); row.append(cell); staffPatientQueueBody.append(row);
+        cell.append(copy); row.append(cell); staffPatientsBody.append(row);
         return;
       }
-      mergedQueue.forEach(patient => {
+      patients.forEach(patient => {
         const row = document.createElement('tr');
         const identity = document.createElement('td');
         const name = document.createElement('strong'); name.textContent = patient.fullName;
-        const id = document.createElement('small'); id.textContent = patient.patientNumber ? `${patient.patientNumber} · ${patient.id}` : patient.id;
+        const id = document.createElement('small'); id.textContent = patient.id;
         identity.append(name, document.createElement('br'), id);
-        const doctor = document.createElement('td');
-        const doctorName = document.createElement('strong'); doctorName.textContent = patient.doctor?.name || 'Not assigned';
-        const doctorRoom = document.createElement('small'); doctorRoom.textContent = patient.doctor ? `${patient.doctor.specialty} · ${patient.doctor.roomNumber}` : 'Waiting for AI intake';
-        doctor.append(doctorName, document.createElement('br'), doctorRoom);
-        const opd = document.createElement('td'); opd.textContent = patient.opdNumber || 'Pending';
+        const intake = document.createElement('td');
+        intake.textContent = patient.intakeCompletedAt
+          ? `Completed · ${new Date(patient.intakeCompletedAt).toLocaleDateString('en-IN')}` : 'Not started';
         const language = document.createElement('td'); language.textContent = patient.language || 'Not recorded';
         const documents = document.createElement('td');
         const button = document.createElement('button');
-        button.className = 'queue-document-action'; button.type = 'button';
+        button.className = 'patient-document-action'; button.type = 'button';
         button.dataset.patientDocument = patient.id; button.dataset.patientName = patient.fullName;
         button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Upload documents';
-        documents.append(button); row.append(identity, doctor, opd, language, documents); staffPatientQueueBody.append(row);
+        documents.append(button); row.append(identity, intake, language, documents); staffPatientsBody.append(row);
       });
     }
 
-    async function loadStaffPatientQueue() {
+    async function loadStaffPatients() {
       let storedStaff = null;
       try { storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null'); } catch (_) {}
-      if (!storedStaff?.id) return renderStaffPatientQueue([], 'Sign in as hospital staff to view registered patients.');
+      if (!storedStaff?.id) return renderStaffPatients([], 'Sign in as hospital staff to view registered patients.');
       try {
-        const response = await fetch(`/api/staff-patient-queue?staffId=${encodeURIComponent(storedStaff.id)}`, { cache: 'no-store' });
+        const response = await fetch(`/api/staff-patients?staffId=${encodeURIComponent(storedStaff.id)}`, { cache: 'no-store' });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not load registered patients');
-        renderStaffPatientQueue(data.patients);
+        renderStaffPatients(data.patients);
       } catch (error) {
-        renderStaffPatientQueue([], error.message || 'Could not load registered patients.');
+        renderStaffPatients([], error.message || 'Could not load registered patients.');
       }
     }
 
-    staffPatientQueueBody.addEventListener('click', event => {
+    staffPatientsBody.addEventListener('click', event => {
       const button = event.target.closest('[data-patient-document]');
       if (!button) return;
       stopStaffDocumentSession();
@@ -3277,7 +3130,7 @@
       staffDocumentDialog.showModal();
       void ensureStaffDocumentSession().catch(error => setStaffDocumentStatus(error.message, true));
     });
-    void loadStaffPatientQueue();
+    void loadStaffPatients();
     document.getElementById('continueStaffDocumentOnDevice').addEventListener('click', () => staffDocumentInput.click());
     staffDocumentInput.addEventListener('change', () => uploadStaffPatientFiles([...staffDocumentInput.files]).catch(error => setStaffDocumentStatus(error.message, true)));
     document.getElementById('closeStaffDocumentDialog').addEventListener('click', closeStaffDocumentUpload);
@@ -3380,11 +3233,8 @@
     const patientView = document.getElementById('patient');
     const checkupLaunch = document.getElementById('checkupLaunch');
     const checkupFlow = document.getElementById('checkupFlow');
-    const checkupResult = document.getElementById('checkupResult');
     const doctorChoiceStep = document.getElementById('doctorChoiceStep');
-    const doctorChoiceForm = document.getElementById('doctorChoiceForm');
     const doctorChoiceStatus = document.getElementById('doctorChoiceStatus');
-    const confirmDoctorChoice = document.getElementById('confirmDoctorChoice');
     const patientRecords = document.getElementById('patientRecords');
     const checkupWelcome = document.getElementById('checkupWelcome');
     const languageStep = document.getElementById('languageStep');
@@ -3489,7 +3339,7 @@
         'Reception': 'रिसेप्शन', 'queue': 'कतार', 'Patient': 'रोगी', 'intake': 'इनटेक', 'Doctor': 'डॉक्टर', 'review': 'समीक्षा',
         'Prototype services available': 'प्रोटोटाइप सेवाएँ उपलब्ध हैं', 'OPD Coordinator': 'ओपीडी समन्वयक',
         'Workspace preferences': 'वर्कस्पेस प्राथमिकताएँ',
-        'Today’s intake queue': 'आज की इनटेक कतार',
+        'Patient records': 'रोगी रिकॉर्ड',
         '+ Start new intake': '+ नया इनटेक शुरू करें',
         'Patients registered today': 'आज पंजीकृत रोगी',
         'Average intake time': 'औसत इनटेक समय',
@@ -3544,13 +3394,13 @@
         'Follow-up due': 'फॉलो-अप बाकी', 'Reviewed': 'समीक्षित', 'Closed': 'बंद'
       },
       Punjabi: {
-        'Workspace preferences': 'ਵਰਕਸਪੇਸ ਤਰਜੀਹਾਂ', 'Today’s intake queue': 'ਅੱਜ ਦੀ ਇਨਟੇਕ ਕਤਾਰ', '+ Start new intake': '+ ਨਵੀਂ ਇਨਟੇਕ ਸ਼ੁਰੂ ਕਰੋ',
+        'Workspace preferences': 'ਵਰਕਸਪੇਸ ਤਰਜੀਹਾਂ', 'Patient records': 'ਮਰੀਜ਼ਾਂ ਦੇ ਰਿਕਾਰਡ', '+ Start new intake': '+ ਨਵੀਂ ਇਨਟੇਕ ਸ਼ੁਰੂ ਕਰੋ',
         'Patients registered today': 'ਅੱਜ ਰਜਿਸਟਰ ਹੋਏ ਮਰੀਜ਼', 'Average intake time': 'ਔਸਤ ਇਨਟੇਕ ਸਮਾਂ', 'Cases ready for doctors': 'ਡਾਕਟਰਾਂ ਲਈ ਤਿਆਰ ਕੇਸ',
         'Patient': 'ਮਰੀਜ਼', 'Status': 'ਸਥਿਤੀ', 'LANGUAGE': 'ਭਾਸ਼ਾ', 'Wait': 'ਉਡੀਕ', 'Reception actions': 'ਰਿਸੈਪਸ਼ਨ ਕਾਰਵਾਈਆਂ',
         'Add authorized device': 'ਅਧਿਕਾਰਤ ਡਿਵਾਈਸ ਜੋੜੋ', 'Hello,': 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ,', 'Completed': 'ਪੂਰਾ', 'Document': 'ਦਸਤਾਵੇਜ਼'
       },
       Marathi: {
-        'Workspace preferences': 'वर्कस्पेस प्राधान्ये', 'Today’s intake queue': 'आजची इनटेक रांग', '+ Start new intake': '+ नवीन इनटेक सुरू करा',
+        'Workspace preferences': 'वर्कस्पेस प्राधान्ये', 'Patient records': 'रुग्ण नोंदी', '+ Start new intake': '+ नवीन इनटेक सुरू करा',
         'Patients registered today': 'आज नोंदणीकृत रुग्ण', 'Average intake time': 'सरासरी इनटेक वेळ', 'Cases ready for doctors': 'डॉक्टरांसाठी तयार प्रकरणे',
         'Patient': 'रुग्ण', 'Status': 'स्थिती', 'LANGUAGE': 'भाषा', 'Wait': 'प्रतीक्षा', 'Reception actions': 'रिसेप्शन कृती',
         'Add authorized device': 'अधिकृत डिव्हाइस जोडा', 'Hello,': 'नमस्कार,', 'Completed': 'पूर्ण', 'Document': 'कागदपत्र'
@@ -3583,10 +3433,10 @@
     let localeRequest = 0;
     const localeBindings = [
       ['.settings-menu-head strong', 'settings.title'], ['.settings-menu-head small', 'settings.subtitle'], ['.settings-field > span', 'settings.language'], ['#logoutButton span', 'settings.logout'],
-      ['#reception .doctor-nav-button:nth-child(1) .nav-label', 'staff.nav.queue'], ['#addAuthorizedDevice .nav-label', 'staff.nav.authorizeDevice'],
+      ['#reception .doctor-nav-button:nth-child(1) .nav-label', 'staff.nav.patients'], ['#addAuthorizedDevice .nav-label', 'staff.nav.authorizeDevice'],
       ['#receptionTitle', 'staff.title'],
-      ['#reception th:nth-child(1)', 'staff.table.patientToken'], ['#reception th:nth-child(2)', 'staff.table.doctorRoom'],
-      ['#reception th:nth-child(3)', 'staff.table.opd'], ['#reception th:nth-child(4)', 'staff.table.language'], ['#reception th:nth-child(5)', 'staff.table.documents'],
+      ['#reception th:nth-child(1)', 'staff.table.patient'], ['#reception th:nth-child(2)', 'staff.table.aiIntake'],
+      ['#reception th:nth-child(3)', 'staff.table.language'], ['#reception th:nth-child(4)', 'staff.table.documents'],
       ['#patient .doctor-nav-button:nth-child(1) .nav-label', 'patient.nav.start'], ['#patient .doctor-nav-button:nth-child(2) .nav-label', 'patient.nav.records'], ['#patient .doctor-nav-button:nth-child(3) .nav-label', 'patient.nav.consent'],
       ['#languageForm h1', 'patient.chooseLanguage'], ['#backToCheckupWelcome', 'common.back'], ['#confirmLanguage', 'common.continue'],
       ['#voiceStatus', 'patient.voice.ready'], ['#voiceQuestion', 'patient.voice.question'], ['#autoMicText', 'patient.voice.connecting'], ['#endVoiceSession', 'patient.voice.end'],
@@ -3594,7 +3444,7 @@
       ['#patientRecordsTitle', 'records.title'], ['#patientRecords .records-heading p', 'records.subtitle'], ['#patientRecords .records-summary-card:nth-child(1) span', 'records.consultations'], ['#patientRecords .records-summary-card:nth-child(2) span', 'records.documents'], ['#patientRecords .records-summary-card:nth-child(3) span', 'records.followup'],
       ['#patientRecordFilter option[value="all"]', 'records.filter.all'], ['#patientRecordFilter option[value="visit"]', 'records.filter.visits'], ['#patientRecordFilter option[value="document"]', 'records.filter.documents'], ['#patientRecordsEmpty', 'records.empty'],
       ['#patientRecords .record-detail-row:nth-child(1) > span', 'records.clinician'], ['#patientRecords .record-detail-row:nth-child(2) > span', 'records.summary'], ['#patientRecords .record-detail-row:nth-child(3) > span', 'records.plan'],
-      ['.doctor-top-tabs .doctor-top-tab:nth-child(1)', 'doctor.nav.current'], ['.doctor-top-tabs .doctor-top-tab:nth-child(2)', 'doctor.nav.previous'],
+      ['.doctor-top-tabs .doctor-top-tab:nth-child(1)', 'doctor.nav.records'],
       ['#doctor .summary-section:nth-child(1) h3', 'doctor.chiefConcern'], ['#doctor .summary-section:nth-child(2) h3', 'doctor.context'], ['#doctor .summary-section:nth-child(3) h3', 'doctor.ayurvedic'], ['#doctor .summary-section:nth-child(4) h3', 'doctor.flags'],
       ['#doctor .doctor-actions .primary-button', 'doctor.approve'], ['#doctor .doctor-actions .secondary-button:nth-child(2)', 'doctor.edit'], ['#doctor .doctor-actions .secondary-button:nth-child(3)', 'doctor.evidence'], ['#doctor .doctor-layout aside .card-header h2', 'doctor.timeline'], ['#doctor .doctor-layout aside .secondary-button', 'doctor.completeHistory'],
       ['[data-doctor-panel-content="history"] .heading-copy', 'history.subtitle'],
@@ -3762,11 +3612,10 @@
       const isStart = stage === 'start';
       const isLanguage = stage === 'language';
       const isVoice = stage === 'voice';
-      const isSpecialty = stage === 'specialty';
-      checkupLaunch.hidden = isVoice || isSpecialty;
+      const isIntakeSummary = stage === 'intake-summary';
+      checkupLaunch.hidden = isVoice || isIntakeSummary;
       checkupFlow.hidden = !isVoice;
-      doctorChoiceStep.hidden = !isSpecialty;
-      checkupResult.hidden = true;
+      doctorChoiceStep.hidden = !isIntakeSummary;
       patientRecords.hidden = true;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'start')));
       checkupWelcome.hidden = !isStart;
@@ -3776,9 +3625,10 @@
         stopMicrophone();
       }
       if (isVoice) startVoiceSession(languageSelect.value);
+      if (isIntakeSummary && summaryPatientId !== activePatient?.id) void loadLatestIntakeSummary();
       if (focus && isStart) startCheckupButton.focus();
       if (focus && isLanguage) languageOptions.querySelector('input').focus();
-      if (focus && isSpecialty) document.getElementById('doctorChoiceTitle').focus({ preventScroll: true });
+      if (focus && isIntakeSummary) document.getElementById('doctorChoiceTitle').focus({ preventScroll: true });
     }
 
     function showPatientRecords(focus = false) {
@@ -3787,7 +3637,6 @@
       checkupLaunch.hidden = true;
       checkupFlow.hidden = true;
       doctorChoiceStep.hidden = true;
-      checkupResult.hidden = true;
       patientRecords.hidden = false;
       patientNavButtons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.patientRoute === 'records')));
       if (focus) document.getElementById('patientRecordsTitle').focus({ preventScroll: true });
@@ -3798,33 +3647,10 @@
       checkupLaunch.hidden = false;
       checkupFlow.hidden = true;
       doctorChoiceStep.hidden = true;
-      checkupResult.hidden = true;
       checkupWelcome.hidden = false;
       languageStep.hidden = true;
       languageForm.reset();
       confirmLanguage.disabled = false;
-      const summary = document.getElementById('checkupIntakeSummary');
-      if (summary) summary.textContent = 'Your conversation summary will appear here.';
-    }
-
-    async function showCheckupResult() {
-      checkupLaunch.hidden = true;
-      checkupFlow.hidden = true;
-      doctorChoiceStep.hidden = true;
-      patientRecords.hidden = true;
-      checkupResult.hidden = false;
-      patientNavButtons.forEach(button => button.setAttribute('aria-selected', 'false'));
-      document.getElementById('checkupResultTitle').focus?.({ preventScroll: true });
-      if (!currentCheckup && activePatient?.id) {
-        try {
-          const response = await fetch(`/api/patient-checkups/latest?patientId=${encodeURIComponent(activePatient.id)}`, { cache: 'no-store' });
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok || !data.checkup) throw new Error(data.error || 'Could not load the latest OPD visit');
-          renderCompletedCheckup(data.checkup);
-        } catch (error) {
-          showToast('OPD visit unavailable', error.message || 'Complete the AI intake to receive an assignment.');
-        }
-      }
     }
 
     startCheckupButton.addEventListener('click', () => navigateRoute('patient/records', false, true));
@@ -4128,26 +3954,17 @@
 
     function renderPreviousPatientHistory(patient) {
       const records = patient ? (doctorPatientHistories[patient.id] || []) : [];
-      const previousTitle = document.getElementById('previousRecordTitle');
-      const previousMeta = document.getElementById('previousRecordMeta');
-      const previousList = document.getElementById('previousRecordList');
       const historyTitle = document.getElementById('doctorHistoryTitle');
       const historyPatient = document.getElementById('doctorHistoryPatient');
       const historyMeta = document.getElementById('doctorHistoryMeta');
       const historyList = document.getElementById('datedPatientHistory');
       if (!patient) {
-        previousTitle.textContent = 'No previous patient';
-        previousMeta.textContent = 'Complete the current consultation to create history.';
-        previousList.replaceChildren();
         historyTitle.textContent = 'No previous patient history';
         historyPatient.textContent = 'No previous patient';
         historyMeta.textContent = 'No records available';
         historyList.replaceChildren();
         return;
       }
-      previousTitle.textContent = patient.fullName;
-      previousMeta.textContent = `${patient.id} · ${patient.age} years · ${patient.sex} · ${records.length} records`;
-      previousList.replaceChildren(...records.slice(0, 3).map(record => createHistoryRecord(record, true)));
       historyTitle.textContent = `${patient.fullName}’s medical history`;
       historyPatient.textContent = `${patient.fullName} · ${patient.id}`;
       historyMeta.textContent = `${patient.age} years · ${patient.sex} · ${records.length} records available`;
@@ -4205,138 +4022,45 @@
       empty.classList.toggle('visible', rows.length === 0);
     }
 
-    function renderDoctorPatientNavigator() {
-      const current = demoDoctorPatients[activeDoctorPatientIndex];
-      const next = demoDoctorPatients[activeDoctorPatientIndex + 1];
-      const nextButton = document.querySelector('[data-next-patient]');
-      if (nextButton) {
-        nextButton.disabled = !next;
-        nextButton.title = next ? `Next: ${next.fullName}` : 'No next patient';
-        nextButton.setAttribute('aria-label', next ? `Next patient: ${next.fullName}` : 'No next patient');
-      }
-      const focusPatient = document.querySelector('.focus-patient');
-      const queueAction = document.getElementById('doctorQueueAction');
-      if (!current) {
-        if (focusPatient) {
-          focusPatient.querySelector('.patient-avatar').textContent = '—';
-          focusPatient.querySelector('strong').textContent = 'No patients waiting';
-          focusPatient.querySelector('small').textContent = 'New specialty assignments will appear here automatically.';
-        }
-        ['doctorPatientHeight', 'doctorPatientWeight', 'doctorPatientBlood'].forEach(id => { document.getElementById(id).textContent = '—'; });
-        document.getElementById('doctorAiSummary').replaceChildren(Object.assign(document.createElement('li'), { textContent: 'The queue is currently clear.' }));
-        document.getElementById('doctorPatientFacts').replaceChildren();
-        document.getElementById('doctorHealthContext').replaceChildren(Object.assign(document.createElement('li'), { textContent: 'No patient selected.' }));
-        document.getElementById('doctorQueueToken').textContent = 'No active token';
-        document.getElementById('doctorOpdNumber').textContent = '—';
-        document.getElementById('doctorRequestedSpecialty').textContent = activeDoctor?.specialty || 'Specialty queue';
-        document.getElementById('doctorDocumentCount').textContent = '0 documents';
-        document.getElementById('doctorQueueStatusLabel').textContent = 'Queue clear';
-        if (queueAction) { queueAction.disabled = true; queueAction.textContent = 'Begin consultation'; }
-        renderPreviousPatientHistory(archivedDoctorPatients[0]);
-        renderPreviousPatients();
-        return;
-      }
-      if (focusPatient) {
-        focusPatient.querySelector('.patient-avatar').textContent = current.initials;
-        focusPatient.querySelector('strong').textContent = current.fullName;
-        focusPatient.querySelector('small').textContent = `${current.age} years · ${current.sex} · ${current.id} · ${current.language} intake`;
-      }
-      document.querySelectorAll('.vital-inline strong').forEach((node, index) => { node.textContent = current.vitals[index] || '—'; });
-      const concern = document.querySelector('.focus-summary .summary-block:first-of-type .clinical-bullets');
-      if (concern) {
-        const summary = document.createElement('li');
-        const strong = document.createElement('strong');
-        strong.textContent = current.concern;
-        summary.append(strong);
-        const specialty = document.createElement('li');
-        specialty.textContent = `Requested department: ${current.requestedSpecialty}`;
-        concern.replaceChildren(summary, specialty);
-      }
-      const facts = document.getElementById('doctorPatientFacts');
-      facts.replaceChildren(...[
-        ['Language', current.language], ['Blood group', current.bloodGroup],
-        ['Height', `${current.heightCm} cm`], ['Weight', `${current.weightKg} kg`]
-      ].map(([label, value]) => {
-        const fact = document.createElement('div'); fact.className = 'summary-fact';
-        const small = document.createElement('small'); small.textContent = label;
-        const strong = document.createElement('strong'); strong.textContent = value;
-        fact.append(small, strong); return fact;
-      }));
-      const health = document.getElementById('doctorHealthContext');
-      const conditions = document.createElement('li');
-      conditions.textContent = `Conditions: ${current.conditions.length && !current.conditions.includes('none') ? current.conditions.join(', ') : 'None reported'}`;
-      const allergies = document.createElement('li');
-      allergies.textContent = `Allergies: ${current.allergies}`;
-      health.replaceChildren(conditions, allergies);
-      document.getElementById('doctorQueueToken').textContent = current.id;
-      document.getElementById('doctorOpdNumber').textContent = current.opdNumber;
-      document.getElementById('doctorRequestedSpecialty').textContent = current.requestedSpecialty;
-      document.getElementById('doctorDocumentCount').textContent = `${current.documentCount} document${current.documentCount === 1 ? '' : 's'}`;
-      document.getElementById('doctorQueueStatusLabel').textContent = current.status === 'in_consultation' ? 'In consultation' : 'Waiting';
-      if (queueAction) {
-        queueAction.disabled = false;
-        queueAction.textContent = current.status === 'in_consultation' ? 'Complete consultation' : 'Begin consultation';
-      }
-      renderPreviousPatientHistory(archivedDoctorPatients[0]);
-      renderPreviousPatients();
-    }
 
-    function queuePatientFromApi(patient) {
+    function recordPatientFromApi(patient) {
       return {
         ...patient,
-        id: patient.patientNumber,
+        id: patient.patientId,
         sourcePatientId: patient.patientId,
         fullName: patient.fullName,
         sex: patient.gender,
         initials: patient.fullName.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase(),
         vitals: [`${patient.heightCm} cm`, `${patient.weightKg} kg`, patient.bloodGroup],
         concern: patient.summary,
-        meta: `${patient.requestedSpecialty} · ${patient.opdNumber}`
+        meta: `Past consultation · ${patient.createdAt.slice(0, 10)}`
       };
     }
 
-    async function loadDoctorQueue() {
+    async function loadDoctorRecords() {
       if (!activeDoctor?.id) {
-        demoDoctorPatients.splice(0);
-        renderDoctorPatientNavigator();
+        archivedDoctorPatients.splice(0);
+        renderPreviousPatients();
         return;
       }
       try {
-        const currentCheckupId = demoDoctorPatients[activeDoctorPatientIndex]?.checkupId;
-        const response = await fetch(`/api/doctor-queue?doctorId=${encodeURIComponent(activeDoctor.id)}`, { cache: 'no-store' });
+        const response = await fetch(`/api/doctor-records?doctorId=${encodeURIComponent(activeDoctor.id)}`, { cache: 'no-store' });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Could not load the doctor queue');
-        demoDoctorPatients.splice(0, demoDoctorPatients.length, ...data.queue.map(queuePatientFromApi));
-        archivedDoctorPatients.splice(0, archivedDoctorPatients.length, ...data.completed.map(queuePatientFromApi));
+        if (!response.ok) throw new Error(data.error || 'Could not load patient records');
+        archivedDoctorPatients.splice(0, archivedDoctorPatients.length, ...data.records.map(recordPatientFromApi));
         Object.keys(doctorPatientHistories).forEach(key => delete doctorPatientHistories[key]);
-        [...demoDoctorPatients, ...archivedDoctorPatients].forEach(patient => {
+        archivedDoctorPatients.forEach(patient => {
           doctorPatientHistories[patient.id] = [{
             date: new Date(patient.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
             iso: patient.createdAt.slice(0, 10), kind: 'visit', type: 'AI intake',
-            title: `${patient.requestedSpecialty} intake`, summary: patient.summary
+            title: 'Past consultation', summary: patient.summary
           }];
         });
-        const preservedIndex = demoDoctorPatients.findIndex(patient => patient.checkupId === currentCheckupId);
-        const consultationIndex = demoDoctorPatients.findIndex(patient => patient.status === 'in_consultation');
-        activeDoctorPatientIndex = preservedIndex >= 0 ? preservedIndex : consultationIndex >= 0 ? consultationIndex : 0;
-        renderDoctorPatientNavigator();
+        renderPreviousPatientHistory(archivedDoctorPatients[0]);
+        renderPreviousPatients();
       } catch (error) {
-        showToast('Queue unavailable', error.message || 'Could not load assigned patients.');
+        showToast('Records unavailable', error.message || 'Could not load patient records.');
       }
-    }
-
-    async function updateCurrentDoctorQueueStatus() {
-      const current = demoDoctorPatients[activeDoctorPatientIndex];
-      if (!current || !activeDoctor?.id) return;
-      const nextStatus = current.status === 'in_consultation' ? 'completed' : 'in_consultation';
-      const response = await fetch(`/api/doctor-queue/${encodeURIComponent(current.checkupId)}/status`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doctorId: activeDoctor.id, status: nextStatus })
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) return showToast('Queue update failed', data.error || 'Please try again.');
-      showToast(nextStatus === 'completed' ? 'Consultation completed' : 'Consultation started', `${current.fullName} · ${current.id}`);
-      await loadDoctorQueue();
     }
 
     function routeFromLocation() {
@@ -4344,8 +4068,6 @@
     }
 
     function showRolePicker() {
-      if (doctorQueuePoll) window.clearInterval(doctorQueuePoll);
-      doctorQueuePoll = null;
       appShell.hidden = true;
       appShell.classList.remove('doctor-session', 'patient-session', 'staff-session', 'checkup-active', 'voice-mode');
       loginScreen.hidden = false;
@@ -4390,7 +4112,6 @@
         doctorSidebarHospital.title = `${doctor.hospitalName} · ${doctor.hospitalLocation}`;
       }
       if (doctorProfileMark) doctorProfileMark.textContent = displayName.replace(/^Dr\.?\s*/i, '').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || doctor.id.slice(0, 2);
-      void loadDoctorQueue();
     }
 
     function applyStaffIdentity(staff) {
@@ -4471,7 +4192,7 @@
         if (route === 'login/device-patient') {
           route = 'login/patient';
           history.replaceState({ route }, '', '#/login/patient');
-        } else if (/^patient\/(?:language|voice|specialty|summary)$/.test(route)) {
+        } else if (/^patient\/(?:language|voice|intake-summary|specialty|summary)$/.test(route)) {
           route = patientLoggedInThisSession ? 'patient/start' : 'login/patient';
           history.replaceState({ route }, '', `#/${route}`);
         } else if (!patientLoggedInThisSession && /^patient\/(?:start|records)$/.test(route)) {
@@ -4482,6 +4203,10 @@
       if (route === 'patient/intake') {
         route = 'patient/voice';
         history.replaceState({ route }, '', '#/patient/voice');
+      }
+      if (route === 'patient/specialty' || route === 'patient/summary') {
+        route = 'patient/intake-summary';
+        history.replaceState({ route }, '', '#/patient/intake-summary');
       }
       if (route !== 'patient/voice') {
         clearTimeout(voiceTimer);
@@ -4510,31 +4235,36 @@
         return;
       }
 
-      const patientMatch = route.match(/^patient\/(start|language|voice|specialty|summary|records)$/);
+      const patientMatch = route.match(/^patient\/(start|language|voice|intake-summary|records)$/);
       if (patientMatch) {
         showSession('patient', 'patient');
         const isVoiceRoute = patientMatch[1] === 'voice';
-        const isSummaryRoute = patientMatch[1] === 'summary';
-        const isCheckupActive = patientMatch[1] === 'language' || patientMatch[1] === 'specialty' || isVoiceRoute || isSummaryRoute;
+        const isCheckupActive = patientMatch[1] === 'language' || patientMatch[1] === 'intake-summary' || isVoiceRoute;
         patientView.classList.toggle('voice-route', isVoiceRoute);
         appShell.classList.toggle('voice-mode', isVoiceRoute);
         appShell.classList.toggle('checkup-active', isCheckupActive);
         if (patientMatch[1] === 'records') showPatientRecords(focus);
-        else if (isSummaryRoute) showCheckupResult();
         else setCheckupStage(patientMatch[1], focus);
         return;
       }
 
-      const doctorMatch = route.match(/^doctor\/(current|previous|history)$/);
+      if (route === 'doctor/current') {
+        route = 'doctor/previous';
+        history.replaceState({ route }, '', '#/doctor/previous');
+      }
+      const doctorMatch = route.match(/^doctor\/(previous|history)$/);
       if (doctorMatch) {
         showSession('doctor', 'doctor');
         openDoctorPanel(doctorMatch[1]);
-        void loadDoctorQueue();
-        if (!doctorQueuePoll) doctorQueuePoll = window.setInterval(() => void loadDoctorQueue(), 5000);
+        if (doctorMatch[1] === 'previous') void loadDoctorRecords();
         return;
       }
 
       if (route === 'staff/queue') {
+        route = 'staff/patients';
+        history.replaceState({ route }, '', '#/staff/patients');
+      }
+      if (route === 'staff/patients') {
         showSession('staff', 'reception');
         return;
       }
@@ -4557,56 +4287,9 @@
     }
 
     document.querySelectorAll('[data-doctor-panel]').forEach(button => button.addEventListener('click', () => navigateRoute(`doctor/${button.dataset.doctorPanel}`)));
-    document.querySelector('[data-view-previous-history]')?.addEventListener('click', () => {
-      const previous = demoDoctorPatients[activeDoctorPatientIndex - 1];
-      renderPreviousPatientHistory(previous);
-      navigateRoute('doctor/history');
-    });
     document.getElementById('previousPatientsSearch')?.addEventListener('input', renderPreviousPatients);
-    const inlineHistory = document.querySelector('[data-inline-history]');
-    const currentDoctorCard = document.querySelector('.doctor-focus');
-    document.querySelectorAll('[data-open-inline-history]').forEach(button => button.addEventListener('click', () => {
-      inlineHistory?.classList.add('active');
-      if (currentDoctorCard) currentDoctorCard.hidden = true;
-    }));
-    document.querySelector('[data-close-inline-history]')?.addEventListener('click', () => {
-      inlineHistory?.classList.remove('active');
-      if (currentDoctorCard) currentDoctorCard.hidden = false;
-    });
-    const nextPatientButton = document.querySelector('[data-next-patient]');
-    document.getElementById('doctorQueueAction')?.addEventListener('click', () => void updateCurrentDoctorQueueStatus());
-    const nextPatientConfirmation = document.getElementById('nextPatientConfirmation');
-    const nextPatientConfirmationName = document.getElementById('nextPatientConfirmationName');
-    function closeNextPatientConfirmation() { nextPatientConfirmation.hidden = true; }
-    nextPatientButton?.addEventListener('click', () => {
-      const next = demoDoctorPatients[activeDoctorPatientIndex + 1];
-      if (!next) return;
-      nextPatientConfirmationName.textContent = `${next.fullName} will become the current patient.`;
-      nextPatientConfirmation.hidden = false;
-      document.getElementById('confirmNextPatient').focus();
-    });
-    document.getElementById('cancelNextPatient')?.addEventListener('click', closeNextPatientConfirmation);
-    document.getElementById('confirmNextPatient')?.addEventListener('click', () => {
-      const nextIndex = activeDoctorPatientIndex + 1;
-      if (!demoDoctorPatients[nextIndex]) return closeNextPatientConfirmation();
-      closeNextPatientConfirmation();
-      const carousel = document.querySelector('.doctor-carousel');
-      carousel?.classList.add('is-shifting-next');
-      window.setTimeout(() => {
-        activeDoctorPatientIndex = nextIndex;
-        renderDoctorPatientNavigator();
-        updateDoctorHistory();
-        navigateRoute('doctor/current');
-        window.requestAnimationFrame(() => carousel?.classList.remove('is-shifting-next'));
-      }, 140);
-    });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape' && !nextPatientConfirmation.hidden) closeNextPatientConfirmation(); });
     patientNavButtons.forEach(button => button.addEventListener('click', () => navigateRoute(`patient/${button.dataset.patientRoute}`, false, true)));
-    renderDoctorPatientNavigator();
 
-    const doctorRecordAssistant = document.getElementById('doctorRecordAssistant');
-    const doctorRecordQuery = document.getElementById('doctorRecordQuery');
-    const doctorAssistantAnswer = document.getElementById('doctorAssistantAnswer');
     const doctorStatusButtons = [...document.querySelectorAll('.doctor-availability-option')];
     const doctorHistorySearch = document.getElementById('doctorHistorySearch');
     const doctorHistoryFilters = [...document.querySelectorAll('[data-history-filter]')];
@@ -4639,37 +4322,6 @@
     });
     document.getElementById('cancelAvailabilityChange').addEventListener('click', closeAvailabilityConfirmation);
     document.addEventListener('keydown', event => { if (event.key === 'Escape' && !availabilityConfirmation.hidden) closeAvailabilityConfirmation(); });
-
-    function answerDoctorRecordQuestion(question) {
-      const query = question.trim().toLowerCase();
-      let answer = '<strong>Relevant evidence found:</strong> ';
-      if (!query) {
-        doctorAssistantAnswer.innerHTML = '<strong>Enter a question first.</strong> Ask about medicines, allergies, earlier complaints or lab results.';
-        doctorRecordQuery.focus();
-        return;
-      }
-      if (/medicine|medication|prescri|metformin/.test(query)) {
-        answer += 'Metformin 500 mg appears in a patient-uploaded prescription. Its current use is not confirmed, so medication reconciliation is recommended. <strong>Source:</strong> Prescription · 14 Jun 2026.';
-      } else if (/complaint|happen|similar|digest|abdominal|bloat/.test(query)) {
-        answer += 'A similar episode of post-meal heaviness, bloating and reduced appetite was documented previously. <strong>Source:</strong> OPD consultation · 02 May 2026.';
-      } else if (/lab|hba1c|glucose|test|result/.test(query)) {
-        answer += 'The latest available laboratory document reports HbA1c at 6.8%. <strong>Source:</strong> Verified lab report · 18 Nov 2025.';
-      } else if (/allerg|reaction/.test(query)) {
-        answer += 'No known drug allergy was recorded in the available history. No adverse medicine reaction was documented at the February follow-up. <strong>Sources:</strong> Wellness assessment · 29 Aug 2025; Follow-up · 12 Feb 2026.';
-      } else {
-        answer += 'No direct match was found in the five prototype records. Try asking about previous medicines, similar digestive complaints, allergies or the latest lab result.';
-      }
-      doctorAssistantAnswer.innerHTML = answer;
-    }
-
-    doctorRecordAssistant?.addEventListener('submit', event => {
-      event.preventDefault();
-      answerDoctorRecordQuestion(doctorRecordQuery.value);
-    });
-    document.querySelectorAll('[data-record-question]').forEach(button => button.addEventListener('click', () => {
-      doctorRecordQuery.value = button.dataset.recordQuestion;
-      answerDoctorRecordQuestion(button.dataset.recordQuestion);
-    }));
 
     function updateDoctorHistory() {
       const search = (doctorHistorySearch?.value || '').trim().toLowerCase();
@@ -4849,7 +4501,7 @@
             const savedStaff = Object.fromEntries(['id', 'fullName', 'hospitalName', 'hospitalLocation'].map(key => [key, data.staff[key]]));
             localStorage.setItem('arogStaff', JSON.stringify(savedStaff));
           } catch (_) {}
-          void loadStaffPatientQueue();
+          void loadStaffPatients();
           loginStatus.textContent = '';
         } catch (error) {
           loginStatus.textContent = error.message || 'Could not verify staff account.';
@@ -4944,7 +4596,7 @@
         const patientDestination = patientLoginContext === 'authorized' && authorizedPatientDevice
           ? 'patient/language'
           : 'patient/start';
-        navigateRoute(role === 'patient' ? patientDestination : role === 'doctor' ? 'doctor/current' : 'staff/queue');
+        navigateRoute(role === 'patient' ? patientDestination : role === 'doctor' ? 'doctor/previous' : 'staff/patients');
       } catch (error) {
         if (!cancelled) console.error('Login transition failed', error);
       } finally {
@@ -4979,7 +4631,7 @@
       setSettingsOpen(false);
       navigateRoute('staff/profile', false, true);
     });
-    document.getElementById('backToStaffQueue').addEventListener('click', () => navigateRoute('staff/queue', false, true));
+    document.getElementById('backToStaffPatients').addEventListener('click', () => navigateRoute('staff/patients', false, true));
 
     document.getElementById('logoutButton').addEventListener('click', () => {
       setSettingsOpen(false);
@@ -4994,7 +4646,7 @@
     });
 
     tabs.forEach(tab => tab.addEventListener('click', () => {
-      const destination = tab.dataset.view === 'patient' ? 'patient/records' : tab.dataset.view === 'doctor' ? 'doctor/current' : 'staff/queue';
+      const destination = tab.dataset.view === 'patient' ? 'patient/records' : tab.dataset.view === 'doctor' ? 'doctor/previous' : 'staff/patients';
       navigateRoute(destination);
     }));
     document.querySelectorAll('[data-start-intake]').forEach(button => button.addEventListener('click', () => {
@@ -5050,12 +4702,6 @@
     const voiceAudioToggle = document.getElementById('voiceAudioToggle');
     const voiceSendButton = voiceChatForm.querySelector('[type="submit"]');
     const endVoiceSessionButton = document.getElementById('endVoiceSession');
-    const checkupOpdNumber = document.getElementById('checkupOpdNumber');
-    const checkupPatientNumber = document.getElementById('checkupPatientNumber');
-    const checkupDoctorName = document.getElementById('checkupDoctorName');
-    const checkupDoctorSpecialty = document.getElementById('checkupDoctorSpecialty');
-    const checkupDoctorRoom = document.getElementById('checkupDoctorRoom');
-    const checkupIntakeSummary = document.getElementById('checkupIntakeSummary');
     const doctorChoiceSummary = document.getElementById('doctorChoiceSummary');
     const doctorChoiceCompletion = document.getElementById('doctorChoiceCompletion');
     const doctorChoiceCompletionMessage = document.getElementById('doctorChoiceCompletionMessage');
@@ -5070,8 +4716,6 @@
     let elevenStartPromise = null;
     let currentConversationId = '';
     let hasPatientResponse = false;
-    let currentCheckup = null;
-    let checkupSummaryPoll = null;
     let elevenSessionGeneration = 0;
     let elevenSignedUrlCache = null;
     let elevenSignedUrlPromise = null;
@@ -5082,6 +4726,8 @@
     let speechPlaybackRetryTimer = null;
     let speechFallbackActive = false;
     let finalAgentMessage = '';
+    let summaryPatientId = null;
+    let pendingSummarySave = null;
     let pendingAutoComplete = false;
     let autoCompleteTimer = null;
     let agentSpokeDuringCompletion = false;
@@ -5483,8 +5129,6 @@
       voiceChatMessages.replaceChildren();
       currentConversationId = '';
       hasPatientResponse = false;
-      currentCheckup = null;
-      pendingIntake = null;
       intakeTranscript = [];
       finalAgentMessage = '';
       pendingAutoComplete = false;
@@ -5495,11 +5139,15 @@
       doctorChoiceCompletion.hidden = true;
       doctorChoiceCompletionMessage.textContent = '';
       doctorChoiceSummary.textContent = 'Complete the conversation to generate a summary.';
+      summaryPatientId = null;
+      pendingSummarySave = null;
+      doctorChoiceStatus.textContent = '';
+      const finishSummaryButton = document.getElementById('finishIntakeSummary');
+      finishSummaryButton.textContent = 'Done';
+      finishSummaryButton.disabled = false;
       seenElevenMessages.clear();
       elevenLastAudioChunkAt = 0;
       elevenLastAudibleOutputAt = 0;
-      if (checkupSummaryPoll) clearTimeout(checkupSummaryPoll);
-      checkupSummaryPoll = null;
       setVoiceHint('Tap Talk to start the live AI voice session.');
       syncVoiceControls();
       void prefetchElevenLabsSignedUrl().catch(() => {});
@@ -5529,16 +5177,6 @@
       replyPending = true;
       syncVoiceControls();
       setVoiceHint('Arogyam is thinking…');
-    }
-
-    function renderCompletedCheckup(checkup) {
-      currentCheckup = checkup;
-      checkupOpdNumber.textContent = checkup.opdNumber || 'Pending';
-      checkupPatientNumber.textContent = checkup.patientNumber || 'Pending';
-      checkupDoctorName.textContent = checkup.doctor?.name || 'Doctor assignment pending';
-      checkupDoctorSpecialty.textContent = checkup.doctor?.specialty || 'Outpatient care';
-      checkupDoctorRoom.textContent = checkup.doctor?.roomNumber || 'Pending';
-      checkupIntakeSummary.textContent = checkup.summary || 'The intake was completed and shared with the assigned doctor.';
     }
 
     function cleanGeneratedIntakeSummary(text) {
@@ -5616,46 +5254,56 @@
       return fragments.join(' ').slice(0, 6000);
     }
 
-    doctorChoiceForm.addEventListener('submit', async event => {
-      event.preventDefault();
-      if (!pendingIntake || !activePatient?.id) {
-        doctorChoiceStatus.textContent = 'Complete the AI intake before generating an OPD number.';
-        return;
-      }
-      confirmDoctorChoice.disabled = true;
-      doctorChoiceStatus.textContent = 'Assigning the available doctor with the shortest queue…';
+    async function loadLatestIntakeSummary() {
+      if (!activePatient?.id) return;
+      const patientId = activePatient.id;
+      doctorChoiceSummary.textContent = 'Loading your latest intake summary…';
+      doctorChoiceStatus.textContent = '';
       try {
-        const response = await fetch('/api/patient-checkups', {
+        const response = await fetch(`/api/patient-intakes/latest?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (activePatient?.id !== patientId || routeFromLocation() !== 'patient/intake-summary') return;
+        if (!response.ok || !data.intake) throw new Error(data.error || 'No saved summary is available.');
+        doctorChoiceSummary.textContent = data.intake.summary;
+        doctorChoiceCompletion.hidden = true;
+        doctorChoiceStatus.textContent = '';
+        summaryPatientId = patientId;
+      } catch (error) {
+        if (activePatient?.id === patientId && routeFromLocation() === 'patient/intake-summary') {
+          doctorChoiceStatus.textContent = error.message || 'No saved summary is available.';
+        }
+      }
+    }
+
+    async function saveIntakeSummary() {
+      if (!pendingSummarySave) return;
+      const button = document.getElementById('finishIntakeSummary');
+      button.disabled = true;
+      doctorChoiceStatus.textContent = 'Saving your intake summary…';
+      try {
+        const response = await fetch('/api/patient-intakes', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            patientId: activePatient.id, conversationId: pendingIntake.conversationId,
-            language: pendingIntake.language, summary: pendingIntake.summary
-          })
+          body: JSON.stringify(pendingSummarySave)
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.checkup) throw new Error(data.error || 'Could not join the doctor queue');
-        renderCompletedCheckup(data.checkup);
-        pendingIntake = null;
-        navigateRoute('patient/summary');
+        if (!response.ok || !data.intake) throw new Error(data.error || 'Could not save the intake summary');
+        pendingSummarySave = null;
+        button.textContent = 'Done';
+        doctorChoiceStatus.textContent = '';
       } catch (error) {
-        doctorChoiceStatus.textContent = error.message || 'Could not join the queue. Please try again.';
-        confirmDoctorChoice.disabled = false;
+        button.textContent = 'Retry save';
+        doctorChoiceStatus.textContent = `Your summary is shown here, but saving failed: ${error.message || 'Please ask reception to help.'}`;
+      } finally {
+        button.disabled = false;
       }
-    });
+    }
 
     document.getElementById('backToVoiceCheckup').addEventListener('click', () => navigateRoute('patient/voice'));
-
-    async function pollCheckupSummary(checkupId, patientId, attempt = 0) {
-      if (!checkupId || attempt >= 30) return;
-      try {
-        const response = await fetch(`/api/patient-checkups/${encodeURIComponent(checkupId)}?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Could not load the summary');
-        renderCompletedCheckup(data.checkup);
-        if (data.checkup.status === 'completed') return;
-      } catch (_) {}
-      checkupSummaryPoll = setTimeout(() => void pollCheckupSummary(checkupId, patientId, attempt + 1), 1500);
-    }
+    document.getElementById('finishIntakeSummary').addEventListener('click', () => {
+      if (pendingSummarySave) return void saveIntakeSummary();
+      resetCheckup();
+      navigateRoute(authorizedPatientDevice ? 'patient/language' : 'patient/start');
+    });
 
     async function completeCurrentCheckup() {
       if (checkupCompletionInProgress) return;
@@ -5681,8 +5329,10 @@
         doctorChoiceSummary.textContent = summary;
         doctorChoiceCompletion.hidden = !finalAgentMessage;
         doctorChoiceCompletionMessage.textContent = finalAgentMessage;
-        pendingIntake = { conversationId, language: languageSelect.value, summary };
-        navigateRoute('patient/specialty');
+        summaryPatientId = patientId;
+        pendingSummarySave = { patientId, conversationId, language: languageSelect.value, summary };
+        navigateRoute('patient/intake-summary');
+        await saveIntakeSummary();
       } finally {
         endVoiceSessionButton.disabled = false;
         checkupCompletionInProgress = false;
@@ -5728,13 +5378,6 @@
     });
 
     endVoiceSessionButton.addEventListener('click', () => void completeCurrentCheckup());
-
-    document.getElementById('finishCheckupResult').addEventListener('click', () => {
-      if (checkupSummaryPoll) clearTimeout(checkupSummaryPoll);
-      checkupSummaryPoll = null;
-      resetCheckup();
-      navigateRoute(authorizedPatientDevice ? 'patient/language' : 'patient/start');
-    });
 
     languageSelect.addEventListener('change', event => {
       setPreferredLanguage(event.target.value);
