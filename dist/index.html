@@ -1065,7 +1065,6 @@
     .prescription-meta { display: flex; justify-content: space-between; gap: 8px; margin: 10px 14px 14px; color: var(--ink-soft); font-size: .65rem; }
     .prescription-actions { display: grid; gap: 8px; padding: 14px 18px 18px; border-top: 1px solid var(--line); }
     .prescription-actions button { min-height: 39px; border-radius: 10px; font: inherit; font-size: .71rem; font-weight: 820; cursor: pointer; }
-    .prescription-secondary { border: 1px solid var(--line-strong); background: #fff; color: var(--teal-dark); }
     .prescription-upload { border: 0; background: var(--teal); color: #fff; box-shadow: 0 10px 22px rgba(14,102,85,.16); }
     .prescription-upload:disabled { cursor: wait; opacity: .62; box-shadow: none; }
     .rx-medicine-dialog { width: min(650px, calc(100vw - 28px)); max-height: min(760px, calc(100vh - 28px)); padding: 0; border: 0; border-radius: 19px; background: #fff; color: var(--ink); box-shadow: 0 30px 80px rgba(13,44,40,.28); }
@@ -2470,7 +2469,7 @@
                     </div>
                     <div class="prescription-meta"><span id="prescriptionDraftStatus">Draft · not uploaded</span><span id="prescriptionWordCount">0 words</span></div>
                   </div>
-                  <div class="prescription-actions"><button class="prescription-secondary" id="viewPreviousPrescriptions" type="button">View previous prescriptions</button><button class="prescription-upload" id="publishPrescription" type="button">Upload to patient portal</button></div>
+                  <div class="prescription-actions"><button class="prescription-upload" id="publishPrescription" type="button">Upload to patient portal</button></div>
                 </article>
               </div>
             </div>
@@ -5074,10 +5073,6 @@
     document.getElementById('viewAllPatientHistory')?.addEventListener('click', () => {
       if (selectedClinicalPatient) openSelectedClinicalHistory('all');
       else showToast('Select a patient', 'Search for a hospital patient before opening documents.');
-    });
-    document.getElementById('viewPreviousPrescriptions')?.addEventListener('click', () => {
-      if (selectedClinicalPatient) openSelectedClinicalHistory('prescription');
-      else showToast('Select a patient', 'Search for a hospital patient before opening prescriptions.');
     });
     document.getElementById('clinicalAskAiForm')?.addEventListener('submit', event => {
       event.preventDefault();
