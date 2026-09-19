@@ -249,6 +249,17 @@ async function loadPatients() {
       FOREIGN KEY(recorded_by_staff_id) REFERENCES staff(employee_id)
     );
     CREATE INDEX IF NOT EXISTS patient_vitals_patient_idx ON patient_vitals(patient_id, recorded_at DESC);
+    CREATE TABLE IF NOT EXISTS patient_data_access_log (
+      id TEXT PRIMARY KEY,
+      patient_id TEXT NOT NULL,
+      doctor_id TEXT NOT NULL,
+      hospital_id TEXT NOT NULL,
+      access_type TEXT NOT NULL,
+      accessed_at TEXT NOT NULL,
+      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+      FOREIGN KEY(doctor_id) REFERENCES doctors(doctor_id)
+    );
+    CREATE INDEX IF NOT EXISTS patient_data_access_patient_idx ON patient_data_access_log(patient_id, accessed_at DESC);
   `);
   // Preserve summaries from visits created by the retired OPD queue flow.
   patientsDb.exec(`
@@ -696,19 +707,25 @@ async function requestSignupOtp(request, response) {
   purgeExpiredSignupOtps();
   const body = await readJson(request);
   const phone = normalizeIndianPhone(body.phone);
+  const purpose = body.purpose === 'login' || body.purpose === 'reset' ? body.purpose : 'register';
   if (!phone) return sendJson(response, 400, { error: 'Enter a valid 10-digit Indian mobile number' });
-  if (patients.some(patient => patient.phone === phone)) {
+  const patientExists = patients.some(patient => patient.phone === phone);
+  if (purpose === 'register' && patientExists) {
     return sendJson(response, 409, { error: 'An account already exists for this phone number. Sign in instead.' });
   }
-  const lastSent = signupOtpLastSent.get(phone) || 0;
+  if (purpose !== 'register' && !patientExists) {
+    return sendJson(response, 404, { error: 'No patient account is linked to this mobile number' });
+  }
+  const cooldownKey = `${purpose}:${phone}`;
+  const lastSent = signupOtpLastSent.get(cooldownKey) || 0;
   const retryAfter = Math.ceil((signupOtpCooldownMs - (Date.now() - lastSent)) / 1000);
   if (retryAfter > 0) return sendJson(response, 429, { error: `Please wait ${retryAfter}s before requesting another OTP`, retryAfter });
   const otp = String(randomInt(0, 1_000_000)).padStart(6, '0');
   const id = randomUUID();
   const expiresAt = Date.now() + signupOtpTtlMs;
   const delivery = await deliverSignupOtp(phone, otp);
-  signupOtps.set(id, { id, phone, otpHash: hash(otp), expiresAt, attempts: 0, verifiedTokenHash: null, consumed: false });
-  signupOtpLastSent.set(phone, Date.now());
+  signupOtps.set(id, { id, phone, purpose, otpHash: hash(otp), expiresAt, attempts: 0, verifiedTokenHash: null, consumed: false });
+  signupOtpLastSent.set(cooldownKey, Date.now());
   sendJson(response, 201, { id, expiresAt, delivery: delivery.mode, ...(delivery.mode === 'demo' ? { demoOtp: otp } : {}) });
 }
 
@@ -716,7 +733,11 @@ async function verifySignupOtp(request, response) {
   purgeExpiredSignupOtps();
   const body = await readJson(request);
   const phone = normalizeIndianPhone(body.phone);
+  const purpose = body.purpose === 'login' || body.purpose === 'reset' ? body.purpose : 'register';
   const accessToken = String(body.accessToken || '').trim();
+  if (phone && purpose !== 'register' && !patients.some(patient => patient.phone === phone)) {
+    return sendJson(response, 404, { error: 'No account found for this mobile number. Please register first.' });
+  }
   if (accessToken) {
     if (!phone) return sendJson(response, 400, { error: 'Enter a valid 10-digit Indian mobile number' });
     if (accessToken.length > 4096) return sendJson(response, 400, { error: 'Invalid OTP access token' });
@@ -729,7 +750,7 @@ async function verifySignupOtp(request, response) {
     const id = randomUUID();
     const verificationToken = randomBytes(32).toString('base64url');
     signupOtps.set(id, {
-      id, phone, otpHash: null, expiresAt: Date.now() + 30 * 60 * 1000,
+      id, phone, purpose, otpHash: null, expiresAt: Date.now() + 30 * 60 * 1000,
       attempts: 0, verifiedTokenHash: hash(verificationToken), consumed: false
     });
     return sendJson(response, 200, { verified: true, id, verificationToken });
@@ -737,6 +758,7 @@ async function verifySignupOtp(request, response) {
   const entry = signupOtps.get(String(body.id || ''));
   const otp = String(body.otp || '').trim();
   if (!entry || !phone || entry.phone !== phone) return sendJson(response, 404, { error: 'OTP request is invalid or expired' });
+  if ((entry.purpose || 'register') !== purpose) return sendJson(response, 400, { error: 'OTP request purpose does not match' });
   if (entry.attempts >= 5) return sendJson(response, 429, { error: 'Too many incorrect attempts. Request a new OTP.' });
   entry.attempts += 1;
   if (!/^\d{6}$/.test(otp) || hash(otp) !== entry.otpHash) return sendJson(response, 400, { error: 'Incorrect OTP' });
@@ -744,6 +766,52 @@ async function verifySignupOtp(request, response) {
   entry.verifiedTokenHash = hash(verificationToken);
   entry.expiresAt = Date.now() + 30 * 60 * 1000;
   sendJson(response, 200, { verified: true, verificationToken });
+}
+
+function verifiedPatientOtp(body, purpose) {
+  purgeExpiredSignupOtps();
+  const phone = normalizeIndianPhone(body.phone);
+  const entry = signupOtps.get(String(body.otpRequestId || ''));
+  const verificationToken = String(body.otpVerificationToken || '');
+  if (!entry || !phone || entry.phone !== phone || entry.purpose !== purpose || entry.consumed ||
+      !entry.verifiedTokenHash || hash(verificationToken) !== entry.verifiedTokenHash) return null;
+  const patient = patients.find(item => item.phone === phone);
+  return patient ? { entry, patient } : null;
+}
+
+async function loginPatientWithOtp(request, response) {
+  const body = await readJson(request);
+  const phone = normalizeIndianPhone(body.phone);
+  if (phone && !patients.some(patient => patient.phone === phone)) {
+    return sendJson(response, 404, { error: 'No account found for this mobile number. Please register first.' });
+  }
+  const verified = verifiedPatientOtp(body, 'login');
+  if (!verified) return sendJson(response, 401, { error: 'OTP verification is invalid or expired' });
+  verified.entry.consumed = true;
+  sendJson(response, 200, {
+    patient: { id: verified.patient.id, fullName: verified.patient.profile.fullName },
+    sessionToken: createPatientSession(verified.patient.id)
+  });
+}
+
+async function resetPatientPassword(request, response) {
+  const body = await readJson(request);
+  const password = String(body.password || '');
+  if (password.length < 6 || password.length > 128) {
+    return sendJson(response, 400, { error: 'Password must contain at least 6 characters' });
+  }
+  const verified = verifiedPatientOtp(body, 'reset');
+  if (!verified) return sendJson(response, 401, { error: 'OTP verification is invalid or expired' });
+  const passwordSalt = randomBytes(16).toString('hex');
+  const passwordHash = scryptSync(password, passwordSalt, 64).toString('hex');
+  patientsDb.prepare('UPDATE patients SET password_salt = ?, password_hash = ? WHERE id = ?')
+    .run(passwordSalt, passwordHash, verified.patient.id);
+  verified.patient.password = { salt: passwordSalt, hash: passwordHash };
+  verified.entry.consumed = true;
+  sendJson(response, 200, {
+    patient: { id: verified.patient.id, fullName: verified.patient.profile.fullName },
+    sessionToken: createPatientSession(verified.patient.id)
+  });
 }
 
 const allowedBloodGroups = new Set(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']);
@@ -771,9 +839,12 @@ async function createPatientRegistration(request, response) {
     return sendJson(response, 400, { error: 'The document upload session expired. Return to the document step and try again.' });
   }
 
-  const identityMethod = body.identityMethod === 'abha' ? 'abha' : body.identityMethod === 'aadhaar' ? 'aadhaar' : null;
-  const identityNumber = String(body.identityNumber || '').replace(/\D/g, '');
-  const identityValid = identityMethod === 'abha' ? /^\d{14}$/.test(identityNumber) : identityMethod === 'aadhaar' && /^\d{12}$/.test(identityNumber);
+  const requestedIdentityMethod = body.identityMethod === 'abha' ? 'abha' : body.identityMethod === 'aadhaar' ? 'aadhaar' : 'phone';
+  const requestedIdentityNumber = String(body.identityNumber || '').replace(/\D/g, '');
+  const identityMethod = requestedIdentityMethod;
+  const identityNumber = identityMethod === 'phone' ? phone : requestedIdentityNumber;
+  const identityValid = identityMethod === 'phone' ? Boolean(phone)
+    : identityMethod === 'abha' ? /^\d{14}$/.test(identityNumber) : /^\d{12}$/.test(identityNumber);
   const fullName = String(body.fullName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
   const dateOfBirth = String(body.dateOfBirth || '');
   const date = new Date(`${dateOfBirth}T00:00:00Z`);
@@ -810,7 +881,7 @@ async function createPatientRegistration(request, response) {
     password: { salt: passwordSalt, hash: scryptSync(password, passwordSalt, 64).toString('hex') },
     profile: { fullName, dateOfBirth, gender, heightCm, weightKg, bloodGroup },
     health: { conditions, allergies: allergies || null },
-    abhaLinkStatus: identityMethod === 'abha' ? 'pending_verification' : 'unlinked',
+    abhaLinkStatus: identityMethod === 'abha' ? 'linked' : 'unlinked',
     createdAt: new Date().toISOString()
   };
   patientsDb.prepare(`
@@ -843,9 +914,26 @@ async function createPatientRegistration(request, response) {
 
 async function loginPatient(request, response) {
   const body = await readJson(request);
+  const phone = normalizeIndianPhone(body.phone || body.identifier);
+  const password = String(body.password || '');
+  if (phone) {
+    const row = patientsDb.prepare('SELECT * FROM patients WHERE phone = ?').get(phone);
+    const patient = row ? patients.find(item => item.id === row.id) : null;
+    if (!patient || !password || !patient.password?.salt || !patient.password?.hash) {
+      return sendJson(response, 401, { error: 'Mobile number or password is incorrect' });
+    }
+    const candidate = scryptSync(password, patient.password.salt, 64);
+    const stored = Buffer.from(patient.password.hash, 'hex');
+    if (stored.length !== candidate.length || !timingSafeEqual(stored, candidate)) {
+      return sendJson(response, 401, { error: 'Mobile number or password is incorrect' });
+    }
+    return sendJson(response, 200, {
+      patient: { id: patient.id, fullName: patient.profile.fullName },
+      sessionToken: createPatientSession(patient.id)
+    });
+  }
   const identityMethod = body.identityMethod === 'abha' ? 'abha' : body.identityMethod === 'aadhaar' ? 'aadhaar' : null;
   const identityNumber = String(body.identityNumber || body.identifier || '').replace(/\D/g, '');
-  const password = String(body.password || '');
   const identityValid = identityMethod === 'abha' ? /^\d{14}$/.test(identityNumber) : identityMethod === 'aadhaar' && /^\d{12}$/.test(identityNumber);
   if (!identityMethod || !identityValid) return sendJson(response, 400, { error: 'Enter a valid ABHA ID or Aadhaar number' });
   const candidates = patientsDb.prepare(`
@@ -891,6 +979,64 @@ function getPatientDashboard(request, response, patientId) {
     summary: { consultationCount: checkups.length, documentCount: documents.length },
     checkups: checkups.map(publicCheckup),
     documents: documents.map(publicDashboardDocument)
+  });
+}
+
+async function linkPatientAbha(request, response, patientId) {
+  if (!authorizePatient(request, response, patientId)) return;
+  const body = await readJson(request);
+  const abhaNumber = String(body.abhaNumber || '').replace(/\D/g, '');
+  if (!/^\d{14}$/.test(abhaNumber)) return sendJson(response, 400, { error: 'Enter a valid 14-digit ABHA ID' });
+  const duplicate = patientsDb.prepare('SELECT id FROM patients WHERE identity_method = ? AND identity_last4 = ? AND id <> ?')
+    .all('abha', abhaNumber.slice(-4)).find(candidate => {
+      const row = patientsDb.prepare('SELECT * FROM patients WHERE id = ?').get(candidate.id);
+      try { return decryptIdentityNumber(row) === abhaNumber; } catch { return false; }
+    });
+  if (duplicate) return sendJson(response, 409, { error: 'This ABHA ID is already linked to another account' });
+  const encrypted = encryptIdentityNumber(abhaNumber);
+  patientsDb.prepare(`UPDATE patients SET identity_method = 'abha', identity_ciphertext = ?, identity_iv = ?,
+    identity_tag = ?, identity_last4 = ?, abha_link_status = 'linked' WHERE id = ?`)
+    .run(encrypted.ciphertext, encrypted.iv, encrypted.tag, abhaNumber.slice(-4), patientId);
+  const patient = patients.find(item => item.id === patientId);
+  patient.identity = { method: 'abha', last4: abhaNumber.slice(-4) };
+  patient.abhaLinkStatus = 'linked';
+  sendJson(response, 200, { linked: true, last4: abhaNumber.slice(-4) });
+}
+
+function patientAccessHistory(request, response, patientId) {
+  if (!authorizePatient(request, response, patientId)) return;
+  const rows = patientsDb.prepare(`
+    SELECT l.id, l.access_type, l.accessed_at, d.full_name, d.specialty,
+      d.hospital_name, d.hospital_location
+    FROM patient_data_access_log l
+    JOIN doctors d ON d.doctor_id = l.doctor_id
+    WHERE l.patient_id = ?
+    ORDER BY datetime(l.accessed_at) DESC LIMIT 100
+  `).all(patientId);
+  sendJson(response, 200, { accessHistory: rows.map(row => ({
+    id: row.id, doctorName: row.full_name, specialty: row.specialty,
+    hospitalName: row.hospital_name, hospitalLocation: row.hospital_location,
+    accessType: row.access_type, accessedAt: row.accessed_at
+  })) });
+}
+
+function recordDoctorPatientAccess(request, response) {
+  const bodyPromise = readJson(request);
+  return bodyPromise.then(body => {
+    const doctorId = normalizeDoctorId(body.doctorId);
+    const patientId = String(body.patientId || '').trim();
+    const doctor = patientsDb.prepare('SELECT * FROM doctors WHERE doctor_id = ?').get(doctorId);
+    if (!doctor) return sendJson(response, 403, { error: 'A registered doctor account is required' });
+    const identity = hospitalIdentity(patientId, doctor.hospital_id);
+    if (!identity) return sendJson(response, 404, { error: 'This patient is not enrolled at your hospital' });
+    const accessedAt = new Date().toISOString();
+    const recent = patientsDb.prepare(`SELECT id FROM patient_data_access_log WHERE patient_id = ? AND doctor_id = ?
+      AND access_type = 'record-view' AND datetime(accessed_at) >= datetime(?, '-2 minutes') LIMIT 1`)
+      .get(patientId, doctorId, accessedAt);
+    if (!recent) patientsDb.prepare(`INSERT INTO patient_data_access_log
+      (id, patient_id, doctor_id, hospital_id, access_type, accessed_at) VALUES (?, ?, ?, ?, 'record-view', ?)`)
+      .run(randomUUID(), patientId, doctorId, doctor.hospital_id, accessedAt);
+    sendJson(response, 201, { recorded: true });
   });
 }
 
@@ -2082,8 +2228,14 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/signup-otp/verify') return await verifySignupOtp(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-registrations') return await createPatientRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/patient-login') return await loginPatient(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/patient-login-otp') return await loginPatientWithOtp(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/patient-password-reset') return await resetPatientPassword(request, response);
     const patientDashboardMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/dashboard$/);
     if (request.method === 'GET' && patientDashboardMatch) return getPatientDashboard(request, response, decodeURIComponent(patientDashboardMatch[1]));
+    const patientAbhaMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/link-abha$/);
+    if (request.method === 'POST' && patientAbhaMatch) return await linkPatientAbha(request, response, decodeURIComponent(patientAbhaMatch[1]));
+    const patientAccessHistoryMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/access-history$/);
+    if (request.method === 'GET' && patientAccessHistoryMatch) return patientAccessHistory(request, response, decodeURIComponent(patientAccessHistoryMatch[1]));
     const patientDashboardUploadMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/documents$/);
     if (request.method === 'POST' && patientDashboardUploadMatch) return await uploadPatientDashboardDocument(request, response, decodeURIComponent(patientDashboardUploadMatch[1]));
     const patientDashboardDocumentMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/documents\/([0-9a-f-]+)$/i);
@@ -2098,6 +2250,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === '/api/doctor-profile') return getDoctorProfile(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/doctor-records') return listDoctorRecords(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/doctor-patients') return listDoctorPatients(request, response, url);
+    if (request.method === 'POST' && url.pathname === '/api/doctor-patient-access') return await recordDoctorPatientAccess(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-clinical-assistant') return await answerDoctorClinicalQuestion(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-prescriptions') return await createDoctorPrescription(request, response);
     const doctorDocumentMatch = url.pathname.match(/^\/api\/doctor-documents\/([0-9a-f-]+)$/i);

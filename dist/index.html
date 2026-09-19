@@ -1632,6 +1632,35 @@
     .signup-otp-status { min-height: 18px; margin: 8px 2px 0; color: var(--ink-soft); font-size: .75rem; }
     .signup-otp-status.is-error { color: #a33c32; }
     .signup-otp-status.is-success { color: #08745f; font-weight: 720; }
+    .patient-create-account { margin: 6px 0 0; padding: 0; border: 0; background: transparent; color: var(--teal); font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .patient-create-account[hidden] { display: none; }
+    .patient-login-actions { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; }
+    .patient-login-actions[hidden], #loginPasswordGroup[hidden], #loginRememberRow[hidden], .login-submit[hidden] { display:none !important; }
+    .patient-login-action { border:0; background:transparent; color:var(--teal); padding:6px 8px; font:inherit; font-size:.82rem; font-weight:800; cursor:pointer; }
+    .patient-login-action + .patient-login-action { border-left:1px solid var(--line); padding-left:18px; }
+    .patient-login-action:hover { color:var(--ink); }
+    .patient-login-action:focus-visible { outline:3px solid rgba(14,102,85,.16); border-radius:8px; }
+    .patient-reset-password { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:9px; margin-top:10px; }
+    .patient-reset-password[hidden] { display:none; }
+    .patient-reset-password input { min-width:0; min-height:44px; border:1px solid var(--line-strong); border-radius:12px; padding:10px 13px; font:inherit; }
+    .patient-reset-password button { border:0; border-radius:12px; padding:10px 15px; background:var(--ink); color:white; font:inherit; font-weight:800; cursor:pointer; }
+    .patient-identity-action { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px; padding:12px 13px; border:1px solid var(--line); border-radius:12px; background:#f6faf8; color:var(--ink); font:inherit; font-weight:800; cursor:pointer; }
+    .patient-identity-action[hidden] { display:none; }
+    .patient-dialog { width:min(620px, calc(100vw - 32px)); max-height:min(760px, calc(100vh - 32px)); overflow:auto; border:0; border-radius:24px; padding:0; color:var(--ink); box-shadow:0 30px 80px rgba(13,49,43,.28); }
+    .patient-dialog::backdrop { background:rgba(8,31,28,.5); backdrop-filter:blur(5px); }
+    .patient-dialog-inner { padding:26px; }
+    .patient-dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px; }
+    .patient-dialog-head h2 { margin:0 0 5px; font-size:1.45rem; }
+    .patient-dialog-head p { margin:0; color:var(--ink-soft); }
+    .patient-dialog-close { border:1px solid var(--line); border-radius:11px; background:#fff; width:40px; height:40px; font-size:1.25rem; cursor:pointer; }
+    .patient-dialog-form { display:grid; gap:12px; }
+    .patient-dialog-form input { width:100%; border:1px solid var(--line-strong); border-radius:13px; padding:13px 14px; font:inherit; }
+    .patient-dialog-primary { border:0; border-radius:13px; padding:13px 16px; background:var(--teal); color:#fff; font:inherit; font-weight:850; cursor:pointer; }
+    .access-history-list { display:grid; gap:10px; }
+    .access-history-item { padding:15px; border:1px solid var(--line); border-radius:15px; background:#f7faf9; }
+    .access-history-item strong,.access-history-item span,.access-history-item time { display:block; }
+    .access-history-item span { margin-top:4px; color:var(--ink-soft); font-size:.84rem; }
+    .access-history-item time { margin-top:8px; color:var(--teal); font-size:.78rem; font-weight:800; }
     .login-submit:disabled { cursor: not-allowed; opacity: .56; box-shadow: none; }
     .login-status { min-height: 18px; margin: -12px 2px 10px; color: #a33c32; font-size: .78rem; }
     .patient-registration-step[hidden] { display: none; }
@@ -1974,18 +2003,6 @@
               </button>
             </div>
           </section>
-          <section class="patient-signup-methods" id="patientLoginMethods" aria-label="Patient login method" hidden>
-            <div class="patient-signup-grid">
-              <button class="patient-signup-option" type="button" data-patient-login="abha">
-                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/abha-card-ui.png" alt="" decoding="async" /></span>
-                <span><strong>Login using ABHA ID</strong></span>
-              </button>
-              <button class="patient-signup-option" type="button" data-patient-login="aadhaar">
-                <span class="patient-document-visual" aria-hidden="true"><img src="/assets/aadhaar-card-ui.png" alt="" decoding="async" /></span>
-                <span><strong>Login using Aadhaar card</strong></span>
-              </button>
-            </div>
-          </section>
           <form id="loginForm">
             <button class="signup-method-back" id="changeSignupMethod" type="button" hidden>← Change verification method</button>
             <div class="patient-login-documents" id="patientLoginDocuments" aria-label="Supported patient identity cards" hidden>
@@ -2039,14 +2056,24 @@
                 <input id="signupOtpCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]{4,8}" aria-label="OTP code" placeholder="Enter OTP" />
                 <button id="verifySignupOtp" type="button">Verify OTP</button>
               </div>
+              <div class="patient-reset-password" id="patientResetPasswordGroup" hidden>
+                <input id="patientNewPassword" type="password" minlength="6" maxlength="128" autocomplete="new-password" placeholder="Create a new password" />
+                <button id="savePatientNewPassword" type="button">Reset password</button>
+              </div>
               <p class="signup-otp-status" id="signupOtpStatus" role="status" aria-live="polite"></p>
+              <button class="patient-create-account" id="patientCreateAccount" type="button" hidden>Register now</button>
+              <button class="patient-login-action" id="patientUsePassword" type="button" hidden>← Use password instead</button>
             </div>
-            <div class="field-group"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" maxlength="128" required placeholder="Enter password" /></div>
+            <div class="field-group" id="loginPasswordGroup"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" maxlength="128" required placeholder="Enter password" /></div>
             <div class="login-row" id="loginRememberRow"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label></div>
             <p class="login-status" id="loginStatus" role="status" aria-live="polite"></p>
             <button class="primary-button login-submit" type="submit" aria-label="Continue securely">
               <span class="login-submit-label">Continue securely</span>
             </button>
+            <div class="patient-login-actions" id="patientLoginActions" hidden>
+              <button class="patient-login-action" id="patientOtpLogin" type="button">Login with OTP</button>
+              <button class="patient-login-action" id="patientForgotPassword" type="button">Forgot password?</button>
+            </div>
           </form>
           <form class="patient-registration-step" id="patientDetailsForm" hidden>
             <div class="registration-progress" aria-label="Registration step 2 of 4"><span class="is-complete"></span><span class="is-current"></span><span></span><span></span></div>
@@ -2109,7 +2136,7 @@
       </a>
       <nav class="patient-top-tabs" aria-label="Patient pages" role="tablist">
         <button class="patient-top-tab" type="button" role="tab" data-patient-route="records" aria-selected="true">My records</button>
-        <button class="patient-top-tab" type="button" role="tab" aria-selected="false" data-toast="Access and consent|Your record access preferences are available here.">Access &amp; consent</button>
+        <button class="patient-top-tab" id="patientConsentButton" type="button" role="tab" aria-selected="false">Access &amp; consent</button>
       </nav>
       <nav class="doctor-top-tabs" aria-label="Doctor pages" role="tablist">
         <label class="doctor-patient-searchbar">
@@ -2141,6 +2168,9 @@
             <button class="settings-profile" id="accountProfileButton" type="button" hidden>
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c.5-4 3-6 7-6s6.5 2 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
               <span id="accountProfileLabel">View profile</span>
+            </button>
+            <button class="patient-identity-action" id="linkAbhaButton" type="button" hidden>
+              <span>Link ABHA ID</span><span aria-hidden="true">→</span>
             </button>
             <div class="settings-field">
               <span>Language</span>
@@ -2612,6 +2642,18 @@
     </form>
   </dialog>
 
+  <dialog class="patient-dialog" id="linkAbhaDialog">
+    <div class="patient-dialog-inner">
+      <header class="patient-dialog-head"><div><h2>Link ABHA ID</h2><p>Your mobile number remains your login ID. ABHA is linked only to your health profile.</p></div><button class="patient-dialog-close" type="button" data-close-dialog="linkAbhaDialog" aria-label="Close">×</button></header>
+      <form class="patient-dialog-form" id="linkAbhaForm"><label class="field-group">14-digit ABHA ID<input id="linkAbhaNumber" inputmode="numeric" maxlength="14" pattern="[0-9]{14}" required placeholder="Enter your ABHA ID" /></label><button class="patient-dialog-primary" type="submit">Link ABHA securely</button><p class="login-status" id="linkAbhaStatus" role="status"></p></form>
+    </div>
+  </dialog>
+  <dialog class="patient-dialog" id="patientConsentDialog">
+    <div class="patient-dialog-inner">
+      <header class="patient-dialog-head"><div><h2>Data access history</h2><p>Doctors who accessed your Arogyam health record are listed here.</p></div><button class="patient-dialog-close" type="button" data-close-dialog="patientConsentDialog" aria-label="Close">×</button></header>
+      <div class="access-history-list" id="patientAccessHistory"><p class="clinical-empty">Loading access history…</p></div>
+    </div>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"><strong id="toastTitle"></strong><small id="toastText"></small></div>
 
   <script src="/vendor/elevenlabs-client.js?v=1.1.0"></script>
@@ -2634,10 +2676,19 @@
     const signupOtpCode = document.getElementById('signupOtpCode');
     const verifySignupOtp = document.getElementById('verifySignupOtp');
     const signupOtpStatus = document.getElementById('signupOtpStatus');
+    const patientLoginActions = document.getElementById('patientLoginActions');
+    const patientOtpLogin = document.getElementById('patientOtpLogin');
+    const patientForgotPassword = document.getElementById('patientForgotPassword');
+    const patientResetPasswordGroup = document.getElementById('patientResetPasswordGroup');
+    const patientNewPassword = document.getElementById('patientNewPassword');
+    const savePatientNewPassword = document.getElementById('savePatientNewPassword');
+    const patientUsePassword = document.getElementById('patientUsePassword');
+    const patientCreateAccount = document.getElementById('patientCreateAccount');
     const loginSubmitButton = document.querySelector('.login-submit');
     const loginRememberRow = document.getElementById('loginRememberRow');
     const loginStatus = document.getElementById('loginStatus');
     const loginPassword = document.getElementById('loginPassword');
+    const loginPasswordGroup = document.getElementById('loginPasswordGroup');
     const doctorHospitalGroup = document.getElementById('doctorHospitalGroup');
     const doctorHospitalSelect = document.getElementById('doctorHospital');
     const doctorHospitalHelp = document.getElementById('doctorHospitalHelp');
@@ -2709,6 +2760,14 @@
     const appShell = document.getElementById('appShell');
     const accountProfileButton = document.getElementById('accountProfileButton');
     const accountProfileLabel = document.getElementById('accountProfileLabel');
+    const linkAbhaButton = document.getElementById('linkAbhaButton');
+    const linkAbhaDialog = document.getElementById('linkAbhaDialog');
+    const linkAbhaForm = document.getElementById('linkAbhaForm');
+    const linkAbhaNumber = document.getElementById('linkAbhaNumber');
+    const linkAbhaStatus = document.getElementById('linkAbhaStatus');
+    const patientConsentButton = document.getElementById('patientConsentButton');
+    const patientConsentDialog = document.getElementById('patientConsentDialog');
+    const patientAccessHistory = document.getElementById('patientAccessHistory');
     const staffProfileStatus = document.getElementById('staffProfileStatus');
     const doctorProfileStatus = document.getElementById('doctorProfileStatus');
     let selectedLoginRole = 'patient';
@@ -2716,8 +2775,10 @@
     let patientLoginContext = 'normal';
     let selectedPatientSignupMethod = null;
     let selectedPatientLoginMethod = null;
+    let patientAccessMode = null;
     let signupOtpRequestId = null;
     let signupOtpVerificationToken = null;
+    let msg91PendingAccessToken = null;
     let signupOtpPhone = null;
     let signupOtpCountdown = null;
     let patientRegistrationPassword = '';
@@ -2855,7 +2916,14 @@
       return digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
     }
 
+    function currentOtpPurpose() {
+      if (patientAccessMode === 'login' || patientAccessMode === 'reset') return patientAccessMode;
+      if (selectedLoginRole === 'patient' && selectedAuthMode === 'login') return 'login';
+      return 'register';
+    }
+
     function patientSignupIdentityIsValid() {
+      if (selectedPatientSignupMethod === 'phone') return true;
       const digits = patientIdentityNumber.value.replace(/\D/g, '');
       return selectedPatientSignupMethod === 'abha' ? digits.length === 14
         : selectedPatientSignupMethod === 'aadhaar' && digits.length === 12;
@@ -2888,15 +2956,21 @@
       signupOtpCountdown = null;
       signupOtpRequestId = null;
       signupOtpVerificationToken = null;
+      msg91PendingAccessToken = null;
       signupOtpPhone = null;
       signupOtpCode.value = '';
       signupOtpCode.disabled = false;
       loginIdentifier.readOnly = false;
       signupOtpVerify.hidden = true;
+      patientResetPasswordGroup.hidden = true;
+      patientNewPassword.value = '';
+      patientUsePassword.hidden = true;
+      patientCreateAccount.hidden = true;
       signupOtpPanel.hidden = hide;
       sendSignupOtp.disabled = false;
       sendSignupOtp.textContent = 'Send OTP';
       verifySignupOtp.disabled = false;
+      verifySignupOtp.textContent = 'Verify OTP';
       setSignupOtpStatus();
       updatePatientSignupContinueState();
     }
@@ -2960,6 +3034,37 @@
       return error?.message || error?.error || error?.data?.message || fallback;
     }
 
+    function withOtpTimeout(promise, milliseconds, message) {
+      let timeoutId;
+      const timeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(message)), milliseconds);
+      });
+      return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+    }
+
+    function runMsg91Action(action, args, fallbackMessage, timeoutMessage) {
+      const operation = new Promise((resolve, reject) => {
+        let settled = false;
+        const succeed = value => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+        const fail = error => {
+          if (settled) return;
+          settled = true;
+          reject(new Error(msg91Error(error, fallbackMessage)));
+        };
+        try {
+          const returned = action(...args, succeed, fail);
+          if (returned && typeof returned.then === 'function') returned.then(succeed, fail);
+        } catch (error) {
+          fail(error);
+        }
+      });
+      return withOtpTimeout(operation, 20000, timeoutMessage);
+    }
+
     function extractMsg91AccessToken(value) {
       if (typeof value === 'string') return value.length > 20 ? value : '';
       if (!value || typeof value !== 'object') return '';
@@ -3016,31 +3121,36 @@
         loginScreen.style.removeProperty('--doctor-hospital-background');
         hospitalBackdropIdentity.hidden = true;
       }
-      document.getElementById('identifierLabel').textContent = isPatientRegistration
+      const isPatientLogin = role === 'patient' && mode === 'login';
+      document.getElementById('identifierLabel').textContent = isPatientRegistration || isPatientLogin
         ? (currentLanguage === 'Hindi' ? 'मोबाइल नंबर' : 'Mobile number')
         : isDoctorRegistration ? 'Hospital-issued doctor ID' : localized[1];
-      document.getElementById('loginIdentifier').placeholder = isPatientRegistration
+      document.getElementById('loginIdentifier').placeholder = isPatientRegistration || isPatientLogin
         ? (currentLanguage === 'Hindi' ? 'मोबाइल नंबर दर्ज करें' : 'Enter mobile number')
         : isDoctorRegistration ? 'Enter the ID issued by your hospital' : localized[2];
-      document.getElementById('loginIdentifier').setAttribute('inputmode', isPatientRegistration ? 'numeric' : 'text');
+      document.getElementById('loginIdentifier').setAttribute('inputmode', isPatientRegistration || isPatientLogin ? 'numeric' : 'text');
       loginIdentifier.removeAttribute('pattern');
-      loginIdentifier.maxLength = isPatientRegistration ? 10 : 30;
-      if (isPatientRegistration) loginIdentifier.pattern = '[6-9][0-9]{9}';
-      loginIdentifier.setAttribute('autocomplete', isPatientRegistration ? 'tel' : 'username');
+      loginIdentifier.maxLength = isPatientRegistration || isPatientLogin ? 10 : 30;
+      if (isPatientRegistration || isPatientLogin) loginIdentifier.pattern = '[6-9][0-9]{9}';
+      loginIdentifier.setAttribute('autocomplete', isPatientRegistration || isPatientLogin ? 'tel' : 'username');
       loginIdentifierGroup.hidden = isStaffRegistration;
       loginIdentifier.required = !isStaffRegistration;
       loginPassword.autocomplete = isAccountRegistration ? 'new-password' : 'current-password';
       loginPassword.minLength = isDoctorRegistration || isStaffRegistration ? 8 : isPatientRegistration ? 6 : 0;
+      loginPasswordGroup.hidden = false;
+      loginPassword.required = true;
+      loginSubmitButton.hidden = false;
       const submitLabel = document.querySelector('.login-submit-label');
       submitLabel.textContent = mode === 'register' ? (currentLanguage === 'Hindi' ? 'खाता बनाएँ' : 'Create account') : (currentLanguage === 'Hindi' ? 'सुरक्षित रूप से जारी रखें' : 'Continue securely');
       submitLabel.closest('button').setAttribute('aria-label', submitLabel.textContent);
-      selectedPatientSignupMethod = null;
+      selectedPatientSignupMethod = isPatientRegistration ? 'phone' : null;
       selectedPatientLoginMethod = null;
+      patientAccessMode = null;
       patientRegistrationPassword = '';
-      patientSignupMethods.hidden = !isPatientRegistration;
-      const isPatientLogin = role === 'patient' && mode === 'login';
-      patientLoginMethods.hidden = !isPatientLogin;
-      loginForm.hidden = isPatientRegistration || isPatientLogin;
+      patientSignupMethods.hidden = true;
+      if (patientLoginMethods) patientLoginMethods.hidden = true;
+      loginForm.hidden = false;
+      patientLoginActions.hidden = !isPatientLogin;
       doctorHospitalGroup.hidden = !isDoctorRegistration;
       doctorHospitalSelect.required = isDoctorRegistration;
       doctorProfileFields.hidden = !isDoctorRegistration;
@@ -3073,7 +3183,12 @@
       loginStatus.textContent = '';
       patientLoginDocuments.hidden = true;
       loginRememberRow.hidden = isAccountRegistration;
-      resetSignupOtp(true);
+      resetSignupOtp(!isPatientRegistration);
+      if (isPatientRegistration) {
+        signupOtpPanel.hidden = false;
+        sendSignupOtp.textContent = 'Send registration OTP';
+        setSignupOtpStatus('Verify your mobile number to enable Create account.');
+      }
       loginSubmitButton.disabled = isPatientRegistration;
       patientIdentityGroup.hidden = true;
       changeSignupMethod.hidden = true;
@@ -3132,6 +3247,110 @@
       if (focus) loginIdentifier.focus();
     }
 
+    function beginPatientAccess(mode) {
+      const phone = normalizedSignupPhone();
+      if (!/^[6-9]\d{9}$/.test(phone)) {
+        loginStatus.textContent = 'Enter your 10-digit mobile number first.';
+        loginIdentifier.focus();
+        return;
+      }
+      resetSignupOtp(false);
+      patientAccessMode = mode;
+      patientCreateAccount.hidden = true;
+      loginStatus.textContent = '';
+      loginPasswordGroup.hidden = true;
+      loginPassword.required = false;
+      loginPassword.value = '';
+      loginRememberRow.hidden = true;
+      loginSubmitButton.hidden = true;
+      patientLoginActions.hidden = true;
+      patientUsePassword.hidden = false;
+      signupOtpPanel.hidden = false;
+      sendSignupOtp.textContent = mode === 'login' ? 'Send login OTP' : 'Send password reset OTP';
+      setSignupOtpStatus(mode === 'login'
+        ? 'We will verify your mobile number and sign you in.'
+        : 'Verify your mobile number before creating a new password.');
+      signupOtpPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    patientUsePassword.addEventListener('click', () => {
+      resetSignupOtp(true);
+      if (isPatientRegistration) signupOtpPanel.hidden = false;
+      patientAccessMode = null;
+      loginStatus.textContent = '';
+      loginPasswordGroup.hidden = false;
+      loginPassword.required = true;
+      loginRememberRow.hidden = false;
+      loginSubmitButton.hidden = false;
+      patientLoginActions.hidden = false;
+      loginPassword.focus();
+    });
+
+    async function completeOtpPatientLogin(data) {
+      if (!authorizedPatientDevice) {
+        try {
+          localStorage.setItem('arogPatientId', data.patient.id);
+          localStorage.setItem('arogPatientName', data.patient.fullName);
+          localStorage.setItem('arogPatientSessionToken', data.sessionToken);
+        } catch (_) {}
+      }
+      activePatientSessionToken = data.sessionToken || '';
+      applyPatientIdentity(data.patient);
+      patientLoggedInThisSession = true;
+      resetCheckup();
+      const destination = patientLoginContext === 'authorized' && authorizedPatientDevice
+        ? 'patient/language' : 'patient/start';
+      navigateRoute(destination);
+    }
+
+    async function finishVerifiedPatientAccess() {
+      if (currentOtpPurpose() === 'reset') {
+        patientResetPasswordGroup.hidden = false;
+        patientNewPassword.focus();
+        setSignupOtpStatus('Mobile number verified. Create your new password.', 'success');
+        return;
+      }
+      if (currentOtpPurpose() !== 'login') return;
+      const response = await fetch('/api/patient-login-otp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: signupOtpPhone, otpRequestId: signupOtpRequestId, otpVerificationToken: signupOtpVerificationToken })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not sign in with OTP');
+      await completeOtpPatientLogin(data);
+    }
+
+    patientOtpLogin.addEventListener('click', () => beginPatientAccess('login'));
+    patientForgotPassword.addEventListener('click', () => beginPatientAccess('reset'));
+    patientCreateAccount.addEventListener('click', () => {
+      const phone = normalizedSignupPhone();
+      navigateRoute('register/patient', false, true);
+      loginIdentifier.value = phone;
+      loginIdentifier.focus();
+    });
+    savePatientNewPassword.addEventListener('click', async () => {
+      if (patientNewPassword.value.length < 6) {
+        setSignupOtpStatus('Password must contain at least 6 characters.', 'error');
+        patientNewPassword.focus();
+        return;
+      }
+      savePatientNewPassword.disabled = true;
+      setSignupOtpStatus('Updating password…');
+      try {
+        const response = await fetch('/api/patient-password-reset', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: signupOtpPhone, otpRequestId: signupOtpRequestId,
+            otpVerificationToken: signupOtpVerificationToken, password: patientNewPassword.value })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not reset password');
+        await completeOtpPatientLogin(data);
+      } catch (error) {
+        setSignupOtpStatus(error.message || 'Could not reset password.', 'error');
+        savePatientNewPassword.disabled = false;
+      }
+    });
+
     sendSignupOtp.addEventListener('click', async () => {
       const phone = normalizedSignupPhone();
       if (!/^[6-9]\d{9}$/.test(phone)) {
@@ -3146,17 +3365,30 @@
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone })
         });
         const availability = await availabilityResponse.json();
-        if (!availabilityResponse.ok || !availability.available) {
-          throw new Error(availability.error || 'This mobile number cannot be used for a new account');
+        if (currentOtpPurpose() === 'register') {
+          if (!availabilityResponse.ok || !availability.available) {
+            throw new Error(availability.error || 'This mobile number cannot be used for a new account');
+          }
+        } else if (availabilityResponse.ok && availability.available) {
+          patientCreateAccount.hidden = false;
+          throw new Error('No account found for this mobile number. Please register first.');
+        } else if (availabilityResponse.status !== 409 || availability.available !== false) {
+          throw new Error(availability.error || 'Could not check your account. Please try again.');
         }
         setSignupOtpStatus('Sending OTP…');
         const provider = await ensureSignupOtpProvider();
         if (provider.provider === 'msg91') {
           if (typeof window.sendOtp !== 'function') throw new Error('MSG91 is still loading. Please try again.');
-          await new Promise((resolve, reject) => window.sendOtp(`91${phone}`, resolve, error => reject(new Error(msg91Error(error, 'Could not send OTP')))));
+          await runMsg91Action(
+            window.sendOtp,
+            [`91${phone}`],
+            'Could not send OTP',
+            'OTP service timed out. Please complete the CAPTCHA again and retry.'
+          );
           signupOtpRequestId = 'msg91-pending';
           signupOtpPhone = phone;
           signupOtpVerificationToken = null;
+          msg91PendingAccessToken = null;
           signupOtpCode.value = '';
           signupOtpVerify.hidden = false;
           loginSubmitButton.disabled = true;
@@ -3166,13 +3398,15 @@
           return;
         }
         const response = await fetch('/api/signup-otp/request', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone })
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, purpose: currentOtpPurpose() })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not send OTP');
         signupOtpRequestId = data.id;
         signupOtpPhone = phone;
         signupOtpVerificationToken = null;
+        msg91PendingAccessToken = null;
         signupOtpCode.value = '';
         signupOtpVerify.hidden = false;
         loginSubmitButton.disabled = true;
@@ -3181,11 +3415,23 @@
         signupOtpCode.focus();
       } catch (error) {
         sendSignupOtp.disabled = false;
+        sendSignupOtp.textContent = 'Try sending OTP again';
         setSignupOtpStatus(error.message || 'Could not send OTP.', 'error');
       }
     });
 
     verifySignupOtp.addEventListener('click', async () => {
+      if (signupOtpVerificationToken && currentOtpPurpose() === 'login') {
+        verifySignupOtp.disabled = true;
+        setSignupOtpStatus('Signing you in…');
+        try {
+          await finishVerifiedPatientAccess();
+        } catch (error) {
+          verifySignupOtp.disabled = false;
+          setSignupOtpStatus(error.message || 'Could not sign in. Please try again.', 'error');
+        }
+        return;
+      }
       const otp = signupOtpCode.value.trim();
       if (!signupOtpRequestId || !/^\d{4,8}$/.test(otp)) {
         setSignupOtpStatus('Enter the OTP sent to your phone.', 'error');
@@ -3198,12 +3444,20 @@
         const provider = await ensureSignupOtpProvider();
         if (provider.provider === 'msg91') {
           if (typeof window.verifyOtp !== 'function') throw new Error('MSG91 verification service is unavailable');
-          const result = await new Promise((resolve, reject) => window.verifyOtp(Number(otp), resolve, error => reject(new Error(msg91Error(error, 'Incorrect OTP')))));
-          const accessToken = extractMsg91AccessToken(result);
+          if (!msg91PendingAccessToken) {
+            const result = await runMsg91Action(
+              window.verifyOtp,
+              [Number(otp)],
+              'Incorrect OTP',
+              'OTP verification timed out. Please try again.'
+            );
+            msg91PendingAccessToken = extractMsg91AccessToken(result);
+          }
+          const accessToken = msg91PendingAccessToken;
           if (!accessToken) throw new Error('MSG91 did not return a verification token');
           const response = await fetch('/api/signup-otp/verify', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: signupOtpPhone, accessToken })
+            body: JSON.stringify({ phone: signupOtpPhone, accessToken, purpose: currentOtpPurpose() })
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || 'OTP verification failed');
@@ -3212,12 +3466,19 @@
           signupOtpCode.disabled = true;
           loginIdentifier.readOnly = true;
           updatePatientSignupContinueState();
-          setSignupOtpStatus('Phone number verified.', 'success');
+          if (currentOtpPurpose() === 'login') {
+            verifySignupOtp.textContent = 'Continue';
+            verifySignupOtp.disabled = false;
+            setSignupOtpStatus('OTP verified. Continue to sign in.', 'success');
+          } else {
+            setSignupOtpStatus('Phone number verified.', 'success');
+            await finishVerifiedPatientAccess();
+          }
           return;
         }
         const response = await fetch('/api/signup-otp/verify', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: signupOtpRequestId, phone: signupOtpPhone, otp })
+          body: JSON.stringify({ id: signupOtpRequestId, phone: signupOtpPhone, otp, purpose: currentOtpPurpose() })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'OTP verification failed');
@@ -3225,7 +3486,14 @@
         signupOtpCode.disabled = true;
         loginIdentifier.readOnly = true;
         updatePatientSignupContinueState();
-        setSignupOtpStatus('Phone number verified.', 'success');
+        if (currentOtpPurpose() === 'login') {
+          verifySignupOtp.textContent = 'Continue';
+          verifySignupOtp.disabled = false;
+          setSignupOtpStatus('OTP verified. Continue to sign in.', 'success');
+        } else {
+          setSignupOtpStatus('Phone number verified.', 'success');
+          await finishVerifiedPatientAccess();
+        }
       } catch (error) {
         verifySignupOtp.disabled = false;
         setSignupOtpStatus(error.message || 'OTP verification failed.', 'error');
@@ -4494,6 +4762,12 @@
       }
       const previousPatientId = selectedClinicalPatient?.sourcePatientId;
       selectedClinicalPatient = patient;
+      if (patient.sourcePatientId && patient.sourcePatientId !== previousPatientId && activeDoctor?.id) {
+        void fetch('/api/doctor-patient-access', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doctorId: activeDoctor.id, patientId: patient.sourcePatientId })
+        }).catch(() => {});
+      }
       patientBanner?.classList.add('has-patient');
       document.getElementById('clinicalPatientVerified').hidden = false;
       document.getElementById('clinicalPatientInitials').textContent = patient.initials;
@@ -4647,9 +4921,73 @@
       appShell.classList.remove('doctor-session', 'patient-session', 'staff-session', 'checkup-active', 'voice-mode');
       appShell.classList.add(`${role}-session`);
       accountProfileButton.hidden = role !== 'staff' && role !== 'doctor';
+      linkAbhaButton.hidden = role !== 'patient';
       accountProfileLabel.textContent = role === 'doctor' ? 'View doctor profile' : 'View staff profile';
       openView(view);
     }
+
+    document.querySelectorAll('[data-close-dialog]').forEach(button => button.addEventListener('click', () => {
+      document.getElementById(button.dataset.closeDialog)?.close();
+    }));
+
+    linkAbhaButton.addEventListener('click', () => {
+      setSettingsOpen(false);
+      linkAbhaStatus.textContent = '';
+      linkAbhaNumber.value = '';
+      linkAbhaDialog.showModal();
+      linkAbhaNumber.focus();
+    });
+
+    linkAbhaNumber.addEventListener('input', () => {
+      linkAbhaNumber.value = linkAbhaNumber.value.replace(/\D/g, '').slice(0, 14);
+    });
+
+    linkAbhaForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!activePatient?.id) return;
+      const token = activePatientSessionToken || localStorage.getItem('arogPatientSessionToken') || '';
+      const button = linkAbhaForm.querySelector('button[type="submit"]');
+      button.disabled = true; linkAbhaStatus.textContent = 'Linking ABHA securely…';
+      try {
+        const response = await fetch(`/api/patients/${encodeURIComponent(activePatient.id)}/link-abha`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ abhaNumber: linkAbhaNumber.value })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not link ABHA ID');
+        linkAbhaButton.querySelector('span').textContent = `ABHA linked · •••• ${data.last4}`;
+        linkAbhaStatus.textContent = 'ABHA ID linked successfully. Your mobile number remains your login ID.';
+        setTimeout(() => linkAbhaDialog.close(), 900);
+      } catch (error) { linkAbhaStatus.textContent = error.message || 'Could not link ABHA ID.'; }
+      finally { button.disabled = false; }
+    });
+
+    patientConsentButton.addEventListener('click', async () => {
+      if (!activePatient?.id) return;
+      patientConsentDialog.showModal();
+      patientAccessHistory.innerHTML = '<p class="clinical-empty">Loading access history…</p>';
+      const token = activePatientSessionToken || localStorage.getItem('arogPatientSessionToken') || '';
+      try {
+        const response = await fetch(`/api/patients/${encodeURIComponent(activePatient.id)}/access-history`, {
+          cache: 'no-store', headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not load access history');
+        if (!data.accessHistory?.length) {
+          patientAccessHistory.innerHTML = '<p class="clinical-empty">No doctor has accessed your health record yet.</p>';
+          return;
+        }
+        patientAccessHistory.replaceChildren(...data.accessHistory.map(access => {
+          const item = document.createElement('article'); item.className = 'access-history-item';
+          const name = document.createElement('strong'); name.textContent = access.doctorName;
+          const details = document.createElement('span'); details.textContent = `${access.specialty} · ${access.hospitalName}, ${access.hospitalLocation}`;
+          const reason = document.createElement('span'); reason.textContent = access.accessType === 'record-view' ? 'Viewed your clinical record' : access.accessType;
+          const time = document.createElement('time'); time.dateTime = access.accessedAt;
+          time.textContent = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(access.accessedAt));
+          item.append(name, details, reason, time); return item;
+        }));
+      } catch (error) { patientAccessHistory.innerHTML = `<p class="clinical-empty">${error.message || 'Could not load access history.'}</p>`; }
+    });
 
     function applyPatientIdentity(patient) {
       if (!patient?.fullName) return;
@@ -5382,8 +5720,10 @@
         return;
       }
       if (role === 'patient' && selectedAuthMode === 'login') {
-        if (!selectedPatientLoginMethod) {
-          loginStatus.textContent = 'Choose ABHA ID or Aadhaar before signing in.';
+        const phone = loginIdentifier.value.replace(/\D/g, '');
+        if (!/^[6-9]\d{9}$/.test(phone)) {
+          loginStatus.textContent = 'Enter a valid 10-digit mobile number.';
+          loginIdentifier.focus();
           return;
         }
         loginStatus.textContent = '';
@@ -5391,7 +5731,7 @@
           const response = await fetch('/api/patient-login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identityMethod: selectedPatientLoginMethod, identityNumber: loginIdentifier.value, password: loginPassword.value })
+            body: JSON.stringify({ phone, password: loginPassword.value })
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || 'Could not sign in');
