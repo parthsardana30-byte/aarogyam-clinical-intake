@@ -178,6 +178,12 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.equal(doctor.payload.patients[0].documents[0].name, 'previous-prescription.png');
   assert.equal(doctor.payload.patients.some(record => record.uhid === firstB.payload.intake.uhid), false);
 
+  const gurugramDoctor = await json('/api/doctor-patients?doctorId=CHG-DEMO-1000');
+  assert.equal(gurugramDoctor.response.status, 200);
+  assert.equal(gurugramDoctor.payload.doctor.hospitalId, 'civil-gurugram');
+  assert.equal(gurugramDoctor.payload.patients.some(record => record.uhid === firstB.payload.intake.uhid), true);
+  assert.equal(gurugramDoctor.payload.patients.some(record => record.uhid === firstA.payload.intake.uhid), false);
+
   const clinicalAnswer = await json('/api/doctor-clinical-assistant', {
     method: 'POST', body: JSON.stringify({
       doctorId: 'CHA-GEN-1001', patientId: patient.id,

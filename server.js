@@ -37,18 +37,23 @@ const hospitalBranches = new Map([
 ]);
 const testDoctorPassword = 'Aarogyam@2026';
 const testDoctorAccounts = [
-  { id: 'CHA-GEN-1001', fullName: 'Dr. Aarav Mehta', degree: 'MBBS, MD', specialty: 'General Medicine', registration: 'GMC-10001', experience: 12, room: 'G-101', phone: '9000001001', email: 'general@aarogyam.test' },
-  { id: 'CHA-GYN-1002', fullName: 'Dr. Meera Kapoor', degree: 'MBBS, MS', specialty: 'Gynaecology', registration: 'GMC-10002', experience: 11, room: 'GY-201', phone: '9000001002', email: 'gynaecology@aarogyam.test' },
-  { id: 'CHA-ORT-1003', fullName: 'Dr. Nisha Rao', degree: 'MBBS, MS', specialty: 'Orthopaedics', registration: 'GMC-10003', experience: 10, room: 'OR-301', phone: '9000001003', email: 'orthopaedics@aarogyam.test' },
-  { id: 'CHA-PED-1004', fullName: 'Dr. Kabir Shah', degree: 'MBBS, MD', specialty: 'Paediatrics', registration: 'GMC-10004', experience: 9, room: 'P-102', phone: '9000001004', email: 'paediatrics@aarogyam.test' },
-  { id: 'CHA-SUR-1005', fullName: 'Dr. Rohan Desai', degree: 'MBBS, MS', specialty: 'General Surgery', registration: 'GMC-10005', experience: 14, room: 'S-204', phone: '9000001005', email: 'surgery@aarogyam.test' },
-  { id: 'CHA-CAR-1006', fullName: 'Dr. Isha Verma', degree: 'MBBS, DM', specialty: 'Cardiology', registration: 'GMC-10006', experience: 13, room: 'C-110', phone: '9000001006', email: 'cardiology@aarogyam.test' },
-  { id: 'CHA-DER-1007', fullName: 'Dr. Neel Joshi', degree: 'MBBS, MD', specialty: 'Dermatology', registration: 'GMC-10007', experience: 8, room: 'D-205', phone: '9000001007', email: 'dermatology@aarogyam.test' },
-  { id: 'CHA-ENT-1008', fullName: 'Dr. Sana Khan', degree: 'MBBS, MS', specialty: 'ENT', registration: 'GMC-10008', experience: 9, room: 'E-106', phone: '9000001008', email: 'ent@aarogyam.test' },
-  { id: 'CHA-OPH-1009', fullName: 'Dr. Arjun Patel', degree: 'MBBS, MS', specialty: 'Ophthalmology', registration: 'GMC-10009', experience: 10, room: 'O-208', phone: '9000001009', email: 'ophthalmology@aarogyam.test' },
-  { id: 'CHA-PSY-1010', fullName: 'Dr. Riya Sen', degree: 'MBBS, MD', specialty: 'Psychiatry', registration: 'GMC-10010', experience: 8, room: 'PS-305', phone: '9000001010', email: 'psychiatry@aarogyam.test' },
-  { id: 'CHA-AYU-1011', fullName: 'Dr. Dev Sharma', degree: 'BAMS, MD', specialty: 'AYUSH Medicine', registration: 'GMC-10011', experience: 15, room: 'A-109', phone: '9000001011', email: 'ayush@aarogyam.test' },
-  { id: 'CHA-OTH-1012', fullName: 'Dr. Tara Nair', degree: 'MBBS, MD', specialty: 'Other', registration: 'GMC-10012', experience: 7, room: 'M-210', phone: '9000001012', email: 'multispecialty@aarogyam.test' }
+  { id: 'CHA-GEN-1001', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Aarav Mehta', degree: 'MBBS, MD', specialty: 'General Medicine', registration: 'GMC-10001', experience: 12, room: 'G-101', phone: '9000001001', email: 'general@aarogyam.test' },
+  { id: 'CHA-GYN-1002', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Meera Kapoor', degree: 'MBBS, MS', specialty: 'Gynaecology', registration: 'GMC-10002', experience: 11, room: 'GY-201', phone: '9000001002', email: 'gynaecology@aarogyam.test' },
+  { id: 'CHA-ORT-1003', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Nisha Rao', degree: 'MBBS, MS', specialty: 'Orthopaedics', registration: 'GMC-10003', experience: 10, room: 'OR-301', phone: '9000001003', email: 'orthopaedics@aarogyam.test' },
+  { id: 'CHA-PED-1004', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Kabir Shah', degree: 'MBBS, MD', specialty: 'Paediatrics', registration: 'GMC-10004', experience: 9, room: 'P-102', phone: '9000001004', email: 'paediatrics@aarogyam.test' },
+  { id: 'CHA-SUR-1005', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Rohan Desai', degree: 'MBBS, MS', specialty: 'General Surgery', registration: 'GMC-10005', experience: 14, room: 'S-204', phone: '9000001005', email: 'surgery@aarogyam.test' },
+  { id: 'CHA-CAR-1006', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Isha Verma', degree: 'MBBS, DM', specialty: 'Cardiology', registration: 'GMC-10006', experience: 13, room: 'C-110', phone: '9000001006', email: 'cardiology@aarogyam.test' },
+  { id: 'CHA-DER-1007', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Neel Joshi', degree: 'MBBS, MD', specialty: 'Dermatology', registration: 'GMC-10007', experience: 8, room: 'D-205', phone: '9000001007', email: 'dermatology@aarogyam.test' },
+  { id: 'CHA-ENT-1008', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Sana Khan', degree: 'MBBS, MS', specialty: 'ENT', registration: 'GMC-10008', experience: 9, room: 'E-106', phone: '9000001008', email: 'ent@aarogyam.test' },
+  { id: 'CHA-OPH-1009', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Arjun Patel', degree: 'MBBS, MS', specialty: 'Ophthalmology', registration: 'GMC-10009', experience: 10, room: 'O-208', phone: '9000001009', email: 'ophthalmology@aarogyam.test' },
+  { id: 'CHA-PSY-1010', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Riya Sen', degree: 'MBBS, MD', specialty: 'Psychiatry', registration: 'GMC-10010', experience: 8, room: 'PS-305', phone: '9000001010', email: 'psychiatry@aarogyam.test' },
+  { id: 'CHA-AYU-1011', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Dev Sharma', degree: 'BAMS, MD', specialty: 'AYUSH Medicine', registration: 'GMC-10011', experience: 15, room: 'A-109', phone: '9000001011', email: 'ayush@aarogyam.test' },
+  { id: 'CHA-OTH-1012', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Tara Nair', degree: 'MBBS, MD', specialty: 'Other', registration: 'GMC-10012', experience: 7, room: 'M-210', phone: '9000001012', email: 'multispecialty@aarogyam.test' },
+  { id: 'CHA-DEMO-1000', hospitalId: 'civil-ahmedabad', fullName: 'Dr. Ananya Shah', degree: 'MBBS, MD', specialty: 'General Medicine', registration: 'DEMO-GMC-1000', experience: 10, room: 'OPD-1', phone: '9000002187', email: 'demo.ahmedabad@aarogyam.test' },
+  { id: 'CHG-DEMO-1000', hospitalId: 'civil-gurugram', fullName: 'Dr. Vikram Sethi', degree: 'MBBS, MD', specialty: 'General Medicine', registration: 'DEMO-HMC-1000', experience: 11, room: 'OPD-1', phone: '9000003304', email: 'demo.gurugram@aarogyam.test' },
+  { id: 'CHL-DEMO-1000', hospitalId: 'civil-ludhiana', fullName: 'Dr. Simran Kaur', degree: 'MBBS, MD', specialty: 'General Medicine', registration: 'DEMO-PMC-1000', experience: 9, room: 'OPD-1', phone: '9000004419', email: 'demo.ludhiana@aarogyam.test' },
+  { id: 'CHN-DEMO-1000', hospitalId: 'civil-nashik', fullName: 'Dr. Aditya Patil', degree: 'MBBS, MD', specialty: 'General Medicine', registration: 'DEMO-MMC-1000', experience: 12, room: 'OPD-1', phone: '9000005576', email: 'demo.nashik@aarogyam.test' },
+  { id: 'CHR-DEMO-1000', hospitalId: 'civil-rajkot', fullName: 'Dr. Riya Mehta', degree: 'MBBS, MD', specialty: 'General Medicine', registration: 'DEMO-GJMC-1000', experience: 8, room: 'OPD-1', phone: '9000006631', email: 'demo.rajkot@aarogyam.test' }
 ];
 const elevenLabsSignedUrlLastIssued = new Map();
 let devices = [];
@@ -300,12 +305,15 @@ async function loadPatients() {
       doctor_id, hospital_id, hospital_name, hospital_location, full_name, degree, specialty,
       medical_registration_number, years_experience, room_number, phone, email,
       password_salt, password_hash, created_at
-    ) VALUES (?, 'civil-ahmedabad', 'Civil Hospital', 'Ahmedabad, Gujarat', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   for (const [index, doctor] of testDoctorAccounts.entries()) {
+    const hospital = hospitalBranches.get(doctor.hospitalId);
+    if (!hospital) throw new Error(`Unknown hospital for seeded doctor ${doctor.id}`);
     const salt = `aarogyam-test-doctor-${String(index + 1).padStart(2, '0')}`;
     seedDoctor.run(
-      doctor.id, doctor.fullName, doctor.degree, doctor.specialty, doctor.registration,
+      doctor.id, hospital.id, hospital.name, hospital.location,
+      doctor.fullName, doctor.degree, doctor.specialty, doctor.registration,
       doctor.experience, doctor.room, doctor.phone, doctor.email, salt,
       scryptSync(testDoctorPassword, salt, 64).toString('hex'), new Date(2026, 8, 1, 9, index).toISOString()
     );

@@ -46,7 +46,15 @@ The current prototype uses synthetic demonstration records only. It must not be 
 
 On an authorized device, a patient completes the AI conversation and sees a saved intake summary with the instruction **Please proceed to reception**. Each saved summary is linked to the authorized device and to the staff account that approved that device. The staff dashboard shows only patients and summaries generated on that staff member's authorized devices, including every saved summary for a patient. The app no longer assigns a doctor, generates an OPD/token number, or manages a consultation queue. Existing completed doctor consultations remain available as read-only historical records; older queued records are retained in storage but are no longer processed by this flow.
 
-The local server seeds one doctor for every selectable specialty at Civil Hospital Ahmedabad. All accounts use the password `Aarogyam@2026`.
+The local server seeds one doctor for every selectable specialty at Civil Hospital Ahmedabad, plus a General Medicine demo doctor for every hospital branch. A doctor sees only patients whose intake belongs to the same hospital. All demo doctor accounts use the password `Aarogyam@2026`.
+
+| Hospital branch | Demo doctor ID |
+| --- | --- |
+| Civil Hospital · Ahmedabad | `CHA-DEMO-1000` |
+| Civil Hospital · Gurugram | `CHG-DEMO-1000` |
+| Civil Hospital · Ludhiana | `CHL-DEMO-1000` |
+| Civil Hospital · Nashik | `CHN-DEMO-1000` |
+| Civil Hospital · Rajkot | `CHR-DEMO-1000` |
 
 | Specialty | Doctor ID | Doctor | Room |
 | --- | --- | --- | --- |
