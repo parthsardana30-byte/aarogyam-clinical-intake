@@ -17,9 +17,16 @@ const documentUploadTtlMs = 30 * 60 * 1000;
 const maxDocumentBytes = 8 * 1024 * 1024;
 const signupOtpTtlMs = 5 * 60 * 1000;
 const signupOtpCooldownMs = 30 * 1000;
+const temporaryTestDeviceEnabled = String(process.env.ALLOW_TEST_DEVICE_CODE || '').trim().toLowerCase() === 'true';
+const temporaryTestDeviceCode = String(process.env.TEST_DEVICE_CODE || '').trim();
+const temporaryTestDeviceSessionHours = Math.min(24, Math.max(1, Number(process.env.TEST_DEVICE_SESSION_HOURS || 24) || 24));
+const temporaryTestDeviceSessionMs = temporaryTestDeviceSessionHours * 60 * 60 * 1000;
+const manualDeviceCodeWindowMs = 15 * 60 * 1000;
+const manualDeviceCodeMaxAttempts = 10;
 const enrollments = new Map();
 const signupOtps = new Map();
 const signupOtpLastSent = new Map();
+const manualDeviceCodeAttempts = new Map();
 const hospitalBranches = new Map([
   ['civil-ahmedabad', { id: 'civil-ahmedabad', name: 'Civil Hospital', location: 'Ahmedabad, Gujarat', issuedDoctorIds: new Set(['CHA-DR-2187']) }],
   ['civil-gurugram', { id: 'civil-gurugram', name: 'Civil Hospital', location: 'Gurugram, Haryana', issuedDoctorIds: new Set(['CHG-DR-3304']) }],
@@ -60,7 +67,9 @@ const publicDevice = device => ({
   authorizedAt: device.authorizedAt,
   lastSeenAt: device.lastSeenAt || null,
   ipAddress: device.ipAddress || null,
-  location: device.location || null
+  location: device.location || null,
+  accessMode: device.accessMode || 'standard',
+  expiresAt: device.expiresAt || null
 });
 
 function deviceNetworkDetails(request) {
@@ -288,7 +297,16 @@ function cookies(request) {
 
 function authorizedDeviceForRequest(request) {
   const token = cookies(request).arog_device;
-  return token ? devices.find(item => item.tokenHash === hash(token)) || null : null;
+  if (!token) return null;
+  const deviceIndex = devices.findIndex(item => item.tokenHash === hash(token));
+  if (deviceIndex < 0) return null;
+  const device = devices[deviceIndex];
+  if (device.expiresAt && new Date(device.expiresAt).getTime() <= Date.now()) {
+    devices.splice(deviceIndex, 1);
+    void saveDevices().catch(() => {});
+    return null;
+  }
+  return device;
 }
 
 function secureCookie(request) {
@@ -311,6 +329,24 @@ async function readJson(request, maxBytes = 20_000) {
 
 function requestIp(request) {
   return String(request.headers['x-forwarded-for'] || request.socket.remoteAddress || 'unknown').split(',')[0].trim();
+}
+
+function allowManualDeviceCodeAttempt(request) {
+  const ip = requestIp(request);
+  const cutoff = Date.now() - manualDeviceCodeWindowMs;
+  const recent = (manualDeviceCodeAttempts.get(ip) || []).filter(timestamp => timestamp > cutoff);
+  if (recent.length >= manualDeviceCodeMaxAttempts) {
+    manualDeviceCodeAttempts.set(ip, recent);
+    return false;
+  }
+  recent.push(Date.now());
+  manualDeviceCodeAttempts.set(ip, recent);
+  return true;
+}
+
+function isTemporaryTestDeviceCode(code) {
+  if (!temporaryTestDeviceEnabled || !/^\d{6}$/.test(temporaryTestDeviceCode) || !/^\d{6}$/.test(code)) return false;
+  return timingSafeEqual(Buffer.from(code), Buffer.from(temporaryTestDeviceCode));
 }
 
 async function createElevenLabsSignedUrl(request, response) {
@@ -1193,10 +1229,42 @@ async function requestDeviceAuthorization(request, response, id) {
   const name = String(body.name || '').trim().slice(0, 60);
   const claimToken = String(body.claimToken || '');
   const code = String(body.code || '').trim();
+  if (!name) return sendJson(response, 400, { error: 'Enter a name for this device' });
+  if (!id && !allowManualDeviceCodeAttempt(request)) {
+    return sendJson(response, 429, { error: 'Too many authorization attempts. Please wait 15 minutes and try again.' });
+  }
+  if (!id && isTemporaryTestDeviceCode(code)) {
+    const deviceToken = randomBytes(32).toString('base64url');
+    const network = deviceNetworkDetails(request);
+    const hospital = hospitalBranches.values().next().value;
+    const authorizedAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + temporaryTestDeviceSessionMs).toISOString();
+    const device = {
+      id: randomUUID(),
+      name,
+      tokenHash: hash(deviceToken),
+      staffId: 'temporary-test-code',
+      hospitalId: hospital.id,
+      hospitalName: hospital.name,
+      hospitalLocation: hospital.location,
+      platform: String(body.platform || request.headers['user-agent'] || 'Unknown device').slice(0, 140),
+      ipAddress: network.ipAddress,
+      location: network.location,
+      authorizedAt,
+      lastSeenAt: null,
+      accessMode: 'test-checkup',
+      expiresAt
+    };
+    devices.push(device);
+    await saveDevices();
+    manualDeviceCodeAttempts.delete(requestIp(request));
+    const maxAge = Math.floor(temporaryTestDeviceSessionMs / 1000);
+    const headers = { 'Set-Cookie': `arog_device=${encodeURIComponent(deviceToken)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${secureCookie(request)}` };
+    return sendJson(response, 201, { status: 'authorized', device: publicDevice(device), expiresAt }, headers);
+  }
   const enrollment = id
     ? enrollments.get(id)
     : [...enrollments.values()].find(item => item.status === 'open' && /^\d{6}$/.test(code) && item.codeHash === hash(code));
-  if (!name) return sendJson(response, 400, { error: 'Enter a name for this device' });
   const validClaim = enrollment && ((id && hash(claimToken) === enrollment.claimHash) || (!id && /^\d{6}$/.test(code)));
   if (!enrollment || enrollment.status !== 'open' || !validClaim) {
     return sendJson(response, 404, { error: 'This invitation is invalid or has expired' });

@@ -181,12 +181,20 @@
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Authorization request failed');
-        enrollmentId = result.enrollmentId || enrollmentId;
-        requestToken = result.requestToken;
-        expiresAt = result.expiresAt;
         waitingName.textContent = name;
         requestFormSection.classList.add('hide');
         waitingCard.classList.add('show');
+        if (result.status === 'authorized') {
+          expiresText.textContent = result.expiresAt
+            ? `Temporary testing access expires ${new Date(result.expiresAt).toLocaleString()}.`
+            : '';
+          setStatus('Device authorized. Opening Arogyam…', 'ready');
+          setTimeout(() => location.replace('/#/roles'), 700);
+          return;
+        }
+        enrollmentId = result.enrollmentId || enrollmentId;
+        requestToken = result.requestToken;
+        expiresAt = result.expiresAt;
         updateCountdown();
         clockTimer = setInterval(updateCountdown, 1000);
         pollStatus();

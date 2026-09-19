@@ -32,6 +32,10 @@ Runtime options:
   by a firewall or reverse proxy.
 - `PORT` defaults to `4173`.
 - `DATA_DIR` defaults to `./data` and stores authorized-device records.
+- `ALLOW_TEST_DEVICE_CODE`, `TEST_DEVICE_CODE`, and
+  `TEST_DEVICE_SESSION_HOURS` can temporarily enable instant device access for
+  controlled testing. The feature is disabled by default, sessions are capped
+  at 24 hours, and the code should be supplied only through the server environment.
 
 Camera-based QR scanning requires HTTPS (or localhost). On a raw HTTP VPS/IP,
 staff can use the six-digit manual code until TLS is configured.
