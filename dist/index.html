@@ -5947,6 +5947,13 @@
     document.getElementById('backToDoctorPatients').addEventListener('click', () => navigateRoute('doctor/previous', false, true));
 
     async function signOutAccount() {
+      await stopMicrophone();
+      clearTimeout(kioskFinishTimer);
+      kioskFinishTimer = null;
+      elevenSignedUrlCache = null;
+      elevenSignedUrlPromise = null;
+      elevenSignedUrlPromiseKey = '';
+      elevenPatientContext = null;
       try {
         await fetch('/api/logout', {
           method: 'POST',
@@ -6055,6 +6062,7 @@
     let elevenSignedUrlCache = null;
     let elevenPatientContext = null;
     let elevenSignedUrlPromise = null;
+    let elevenSignedUrlPromiseKey = '';
     let elevenLastAudioChunkAt = 0;
     let elevenLastAudibleOutputAt = 0;
     let elevenOutputMonitor = null;
@@ -6454,15 +6462,21 @@
     }
 
     async function prefetchElevenLabsSignedUrl() {
-      if (elevenSignedUrlCache && elevenSignedUrlCache.expiresAt > Date.now() + 30_000) return elevenSignedUrlCache;
-      if (elevenSignedUrlPromise) return elevenSignedUrlPromise;
+      const patientId = activePatient?.id || '';
+      const patientToken = activePatientSessionToken;
+      const cacheKey = `${patientId}:${patientToken}`;
+      if (!patientId || !patientToken) throw new Error('Patient sign-in is required');
+      if (elevenSignedUrlCache?.cacheKey === cacheKey && elevenSignedUrlCache.expiresAt > Date.now() + 30_000) return elevenSignedUrlCache;
+      if (elevenSignedUrlPromise && elevenSignedUrlPromiseKey === cacheKey) return elevenSignedUrlPromise;
       const request = (async () => {
         const response = await fetch('/api/elevenlabs/signed-url', {
-          cache: 'no-store', headers: { Authorization: `Bearer ${activePatientSessionToken}` }
+          cache: 'no-store', headers: { Authorization: `Bearer ${patientToken}` }
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
+        if (patientId !== activePatient?.id || patientToken !== activePatientSessionToken) throw new Error('Patient session changed');
         elevenSignedUrlCache = {
+          cacheKey,
           signedUrl: payload.signedUrl,
           patientContext: payload.patientContext || null,
           expiresAt: Date.now() + Math.max(30, Number(payload.expiresIn || 900) - 30) * 1000
@@ -6470,8 +6484,14 @@
         return elevenSignedUrlCache;
       })();
       elevenSignedUrlPromise = request;
+      elevenSignedUrlPromiseKey = cacheKey;
       try { return await request; }
-      finally { if (elevenSignedUrlPromise === request) elevenSignedUrlPromise = null; }
+      finally {
+        if (elevenSignedUrlPromise === request) {
+          elevenSignedUrlPromise = null;
+          elevenSignedUrlPromiseKey = '';
+        }
+      }
     }
 
     async function takeElevenLabsSignedUrl() {
