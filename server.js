@@ -2534,10 +2534,11 @@ function exitDeviceSession(request, response) {
 }
 
 function currentSession(request, response) {
+  const kiosk = Boolean(authorizedDeviceForRequest(request));
   sendJson(response, 200, {
     patientId: patientSessionForRequest(request)?.patientId || null,
-    staffId: roleFromRequest(request, 'staff'),
-    doctorId: roleFromRequest(request, 'doctor')
+    staffId: kiosk ? null : roleFromRequest(request, 'staff'),
+    doctorId: kiosk ? null : roleFromRequest(request, 'doctor')
   });
 }
 
@@ -2617,6 +2618,10 @@ resumePendingDocumentAnalyses();
 const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+    const kioskRestricted = /^\/api\/(?:doctor(?:-|\/)|staff(?:-|\/)|patients\/[^/]+\/(?:dashboard|link-abha|access-history|documents(?:\/|$))|patient-intakes\/latest$|devices(?:\/|$)|device-enrollments(?:\/|$))/.test(url.pathname);
+    if (kioskRestricted && authorizedDeviceForRequest(request)) {
+      return sendJson(response, 403, { error: 'This device is for patient intake only' });
+    }
     if (request.method === 'GET' && url.pathname === '/api/session') return currentSession(request, response);
     if (request.method === 'POST' && url.pathname === '/api/logout') return logout(request, response);
     if (request.method === 'POST' && url.pathname === '/api/device-enrollments') return await createEnrollment(request, response);

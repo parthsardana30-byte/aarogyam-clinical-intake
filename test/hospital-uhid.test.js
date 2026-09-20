@@ -118,6 +118,14 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   });
   assert.equal(patientLogin.response.status, 200);
   assert.equal(patientLogin.payload.patient.id, patient.id);
+  const kioskDashboard = await json(`/api/patients/${patient.id}/dashboard`, {
+    headers: { Cookie: cookieA, Authorization: `Bearer ${patient.sessionToken}` },
+  });
+  assert.equal(kioskDashboard.response.status, 403);
+  const kioskStaff = await json('/api/staff-patients?staffId=STAFF-A', {
+    headers: { Cookie: `${cookieA}; ${staffCookieA}` },
+  });
+  assert.equal(kioskStaff.response.status, 403);
 
   const firstA = await json('/api/patient-intakes', {
     method: 'POST', headers: { Cookie: cookieA, Authorization: `Bearer ${patient.sessionToken}` },
