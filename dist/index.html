@@ -2108,12 +2108,12 @@
                 <button id="verifySignupOtp" type="button">Verify OTP</button>
               </div>
               <div class="patient-reset-password" id="patientResetPasswordGroup" hidden>
-                <input id="patientNewPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" aria-label="New 6-digit E-PIN" placeholder="Create a new 6-digit E-PIN" />
-                <button id="savePatientNewPassword" type="button">Reset E-PIN</button>
+                <input id="patientNewPassword" type="password" minlength="6" maxlength="128" autocomplete="new-password" placeholder="Create a new password" />
+                <button id="savePatientNewPassword" type="button">Reset password</button>
               </div>
               <p class="signup-otp-status" id="signupOtpStatus" role="status" aria-live="polite"></p>
               <button class="patient-create-account" id="patientCreateAccount" type="button" hidden>Register now</button>
-              <button class="patient-login-action" id="patientUsePassword" type="button" hidden>← Use E-PIN instead</button>
+              <button class="patient-login-action" id="patientUsePassword" type="button" hidden>← Use password instead</button>
             </div>
             <div class="field-group" id="loginPasswordGroup"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" maxlength="128" required placeholder="Enter password" /></div>
             <div class="login-row" id="loginRememberRow"><label class="remember-label"><input type="checkbox" /> Keep me signed in on this device</label></div>
@@ -3068,7 +3068,6 @@
       signupOtpVerify.hidden = true;
       patientResetPasswordGroup.hidden = true;
       patientNewPassword.value = '';
-      savePatientNewPassword.disabled = false;
       patientUsePassword.hidden = true;
       patientCreateAccount.hidden = true;
       signupOtpPanel.hidden = hide;
@@ -3395,10 +3394,10 @@
       patientLoginActions.hidden = true;
       patientUsePassword.hidden = false;
       signupOtpPanel.hidden = false;
-      sendSignupOtp.textContent = mode === 'login' ? 'Send login OTP' : 'Send E-PIN reset OTP';
+      sendSignupOtp.textContent = mode === 'login' ? 'Send login OTP' : 'Send password reset OTP';
       setSignupOtpStatus(mode === 'login'
         ? 'We will verify your mobile number and sign you in.'
-        : 'Verify your mobile number before creating a new 6-digit E-PIN.');
+        : 'Verify your mobile number before creating a new password.');
       signupOtpPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -3436,7 +3435,7 @@
       if (currentOtpPurpose() === 'reset') {
         patientResetPasswordGroup.hidden = false;
         patientNewPassword.focus();
-        setSignupOtpStatus('Mobile number verified. Create a new 6-digit E-PIN.', 'success');
+        setSignupOtpStatus('Mobile number verified. Create your new password.', 'success');
         return;
       }
       if (currentOtpPurpose() !== 'login') return;
@@ -3462,8 +3461,8 @@
       loginIdentifier.focus();
     });
     savePatientNewPassword.addEventListener('click', async () => {
-      if (!/^\d{6}$/.test(patientNewPassword.value)) {
-        setSignupOtpStatus('E-PIN must contain exactly 6 digits.', 'error');
+      if (patientNewPassword.value.length < 6) {
+        setSignupOtpStatus('Password must contain at least 6 characters.', 'error');
         patientNewPassword.focus();
         return;
       }
@@ -3473,7 +3472,7 @@
         const response = await fetch('/api/patient-password-reset', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: signupOtpPhone, otpRequestId: signupOtpRequestId,
-            otpVerificationToken: signupOtpVerificationToken, epin: patientNewPassword.value })
+            otpVerificationToken: signupOtpVerificationToken, password: patientNewPassword.value })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not reset password');
