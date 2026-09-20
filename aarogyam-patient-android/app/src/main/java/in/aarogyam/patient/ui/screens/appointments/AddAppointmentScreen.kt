@@ -1,0 +1,122 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
+package `in`.aarogyam.patient.ui.screens.appointments
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import `in`.aarogyam.patient.ui.MainViewModel
+import `in`.aarogyam.patient.ui.components.AarogyamBackdrop
+import `in`.aarogyam.patient.ui.components.InfoBanner
+import `in`.aarogyam.patient.ui.components.PrimaryFlowButton
+import `in`.aarogyam.patient.ui.components.l10n
+import `in`.aarogyam.patient.ui.theme.Canvas
+import `in`.aarogyam.patient.ui.theme.DeepTeal
+import `in`.aarogyam.patient.ui.theme.Muted
+import `in`.aarogyam.patient.ui.theme.SoftWhite
+
+@Composable
+internal fun AddAppointmentScreen(viewModel: MainViewModel, onClose: () -> Unit) {
+    val language = viewModel.state.companion.language
+    var hospital by remember { mutableStateOf("") }
+    var date by remember { mutableStateOf("") }
+    var time by remember { mutableStateOf("") }
+
+    Scaffold(
+        containerColor = Canvas,
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SoftWhite),
+                navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, l10n(language, "Back", "वापस")) } },
+                title = { Text(l10n(language, "Add appointment", "अपॉइंटमेंट जोड़ें"), color = DeepTeal, fontWeight = FontWeight.Bold) },
+            )
+        },
+    ) { padding ->
+        AarogyamBackdrop(Modifier.fillMaxSize().padding(padding)) {
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                item {
+                    Text(l10n(language, "Set a reminder", "रिमाइंडर सेट करें"), color = DeepTeal, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        l10n(language, "Just add the hospital, date and time.", "केवल अस्पताल, तारीख और समय जोड़ें।"),
+                        color = Muted,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        hospital,
+                        { hospital = it },
+                        label = { Text(l10n(language, "Hospital name", "अस्पताल का नाम")) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        date,
+                        { date = it },
+                        label = { Text(l10n(language, "Date (YYYY-MM-DD)", "तारीख (YYYY-MM-DD)")) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        time,
+                        { time = it },
+                        label = { Text(l10n(language, "Time", "समय")) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                item {
+                    InfoBanner(
+                        Icons.Default.NotificationsActive,
+                        l10n(language, "Reminder included", "रिमाइंडर शामिल है"),
+                        l10n(language, "You can turn it off from the appointment card.", "आप इसे अपॉइंटमेंट कार्ड से बंद कर सकते हैं।"),
+                    )
+                }
+                item {
+                    PrimaryFlowButton(
+                        l10n(language, "Save appointment", "अपॉइंटमेंट सहेजें"),
+                        hospital.isNotBlank() && date.isNotBlank() && time.isNotBlank(),
+                    ) {
+                        viewModel.addAppointment(hospital, date, time)
+                        onClose()
+                    }
+                }
+            }
+        }
+    }
+}

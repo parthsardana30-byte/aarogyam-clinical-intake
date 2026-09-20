@@ -1000,8 +1000,8 @@ async function loginPatientWithOtp(request, response) {
 async function resetPatientPassword(request, response) {
   const body = await readJson(request);
   const password = String(body.epin || body.password || '');
-  if (!/^\d{6}$/.test(password)) {
-    return sendJson(response, 400, { error: 'E-PIN must contain exactly 6 digits' });
+  if (body.epin !== undefined ? !/^\d{6}$/.test(password) : password.length < 6 || password.length > 128) {
+    return sendJson(response, 400, { error: body.epin !== undefined ? 'E-PIN must contain exactly 6 digits' : 'Password must contain at least 6 characters' });
   }
   const verified = verifiedPatientOtp(body, 'reset');
   if (!verified) return sendJson(response, 401, { error: 'OTP verification is invalid or expired' });
@@ -1071,7 +1071,9 @@ async function createPatientRegistration(request, response) {
   if (!Number.isFinite(heightCm) || heightCm < 50 || heightCm > 250) return sendJson(response, 400, { error: 'Height must be between 50 and 250 cm' });
   if (!Number.isFinite(weightKg) || weightKg < 2 || weightKg > 350) return sendJson(response, 400, { error: 'Weight must be between 2 and 350 kg' });
   if (!allowedBloodGroups.has(bloodGroup)) return sendJson(response, 400, { error: 'Select a valid blood group' });
-  if (!/^\d{6}$/.test(password)) return sendJson(response, 400, { error: 'E-PIN must contain exactly 6 digits' });
+  if (body.epin !== undefined ? !/^\d{6}$/.test(password) : password.length < 6 || password.length > 128) {
+    return sendJson(response, 400, { error: body.epin !== undefined ? 'E-PIN must contain exactly 6 digits' : 'Password must contain at least 6 characters' });
+  }
 
   const passwordSalt = randomBytes(16).toString('hex');
   let patientId;
