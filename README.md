@@ -40,6 +40,20 @@ Runtime options:
 Camera-based QR scanning requires HTTPS (or localhost). On a raw HTTP VPS/IP,
 staff can use the six-digit manual code until TLS is configured.
 
+## Patient check-up AI providers
+
+The check-up screen offers **Qwen395b** (the existing ElevenLabs voice agent)
+and the self-hosted Aarogyam AI when both are configured. Set
+`ELEVENLABS_API_KEY` and `ELEVENLABS_AGENT_ID` for the existing agent. To enable
+Aarogyam AI, set `AAROGYAM_API_URL` to the HTTPS API origin and
+`AAROGYAM_API_KEY` to its bearer key in the **site server's environment** (or
+Docker Compose `.env`), then restart the site. Never put either key in `dist/`.
+
+Aarogyam text chat and voice use separate sessions from ElevenLabs. Switching
+providers starts a new check-up conversation. Aarogyam voice records each user
+utterance and sends it after a pause; it is turn-based, not a full-duplex call.
+The selected provider's transcript is used for the clinician summary.
+
 The current prototype uses synthetic demonstration records only. It must not be used to store real patient information.
 
 ## Patient intake and test doctor accounts

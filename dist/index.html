@@ -586,6 +586,7 @@
     .voice-experience { position: relative; isolation: isolate; width: 100%; height: max(440px, calc(100dvh - 136px)); }
     .voice-stage { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 0; }
     .voice-orb {
+      pointer-events: auto;
       position: relative; width: clamp(160px, 23vw, 260px); aspect-ratio: 1; border-radius: 50%;
       background: url('/assets/chat-orb.png') center / cover no-repeat;
       opacity: .72; filter: saturate(1.75) brightness(1.18) contrast(1.08) hue-rotate(12deg);
@@ -617,6 +618,7 @@
     .voice-chat-title h1 { font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 650; letter-spacing: -.04em; margin: 0; line-height: 1.2; }
     .voice-chat-title::before { content: "AROGYAM"; display: block; margin-bottom: 7px; font-size: .63rem; letter-spacing: .18em; font-weight: 750; color: #538375; }
     .voice-live-tools { display: flex; align-items: center; gap: 10px; }
+    .voice-provider-select { min-height: 40px; max-width: 155px; border: 1px solid #b7d1c4; border-radius: 10px; background: #fff; color: var(--ink); padding: 8px; font: inherit; font-size: .82rem; font-weight: 650; }
     .voice-language[hidden], .voice-live-copy[hidden] { display: none !important; }
     .voice-question { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .voice-end, .voice-audio-toggle { min-height: 40px; border: 1px solid rgba(34,76,62,.16); border-radius: 10px; background: rgba(255,255,255,.58); color: var(--ink); padding: 9px 14px; font: inherit; font-size: .85rem; font-weight: 650; cursor: pointer; }
@@ -2428,6 +2430,10 @@
                 <div class="voice-chat-head">
                   <div class="voice-chat-title"><div class="voice-language" id="voiceLanguage" hidden>English conversation</div><h1 id="voicePrompt">Hello, Patient</h1></div>
                   <div class="voice-live-tools">
+                    <select class="voice-provider-select" id="voiceProvider" aria-label="Choose AI for this check-up">
+                      <option value="elevenlabs">Qwen395b</option>
+                      <option value="aarogyam">Aarogyam AI</option>
+                    </select>
                     <div class="voice-live-copy" hidden><div class="voice-status" id="voiceStatus" role="status" aria-live="polite">Arogyam is ready</div><div class="auto-mic" id="autoMicStatus"><span class="auto-mic-dot"></span><span id="autoMicText">Connecting microphone…</span></div></div>
                     <button class="voice-audio-toggle" id="voiceAudioToggle" type="button" aria-pressed="false" aria-label="Read replies aloud">
                       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m11 5-5 4H3v6h3l5 4V5ZM15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Read aloud</span>
@@ -5219,7 +5225,7 @@
         iso: item.createdAt.slice(0, 10), createdAt: item.createdAt, kind: item.type.includes('pdf') ? 'prescription' : 'lab', type: 'Document',
         title: item.name,
         summary: item.aiSummary || (item.analysisStatus === 'processing' || item.analysisStatus === 'queued'
-          ? 'Gemini is reading this document.' : 'Document uploaded by the hospital care team.'),
+          ? 'AI is reading this document.' : 'Document uploaded by the hospital care team.'),
         previewUrl: item.previewUrl
       }));
       const vitalsHistory = recordedVitals ? [{
@@ -5312,54 +5318,6 @@
         applyDoctorIdentity(data.doctor);
       } catch (error) {
         doctorProfileStatus.textContent = error.message || 'Could not load doctor profile.';
-      }
-    }
-
-    function applyStaffIdentity(staff) {
-      if (!staff?.id) return;
-      const displayName = staff.fullName || `Staff ${staff.id}`;
-      const sidebarName = document.getElementById('staffSidebarName');
-      const sidebarHospital = document.getElementById('staffSidebarHospital');
-      const sidebarMark = document.getElementById('staffSidebarMark');
-      if (sidebarName) sidebarName.textContent = displayName;
-      if (sidebarHospital) {
-        sidebarHospital.textContent = `${staff.hospitalName} · ${staff.hospitalLocation}`;
-        sidebarHospital.title = `${staff.hospitalName} · ${staff.hospitalLocation}`;
-      }
-      if (sidebarMark) sidebarMark.setAttribute('aria-label', `${displayName} account`);
-    }
-
-    function renderStaffProfile(staff) {
-      document.getElementById('staffProfileName').textContent = staff.fullName;
-      document.getElementById('staffProfileHospital').textContent = `${staff.hospitalName} · ${staff.hospitalLocation}`;
-      document.getElementById('staffProfileFullName').textContent = staff.fullName;
-      document.getElementById('staffProfileEmployeeId').textContent = staff.id;
-      document.getElementById('staffProfilePhone').textContent = staff.phone ? `+91 ${staff.phone}` : 'Not available';
-      document.getElementById('staffProfileEmail').textContent = staff.email || 'Not available';
-      document.getElementById('staffProfileBranch').textContent = staff.hospitalName;
-      document.getElementById('staffProfileLocation').textContent = staff.hospitalLocation;
-      document.getElementById('staffProfileCreated').textContent = staff.createdAt
-        ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date(staff.createdAt))
-        : 'Not available';
-      staffProfileStatus.textContent = '';
-    }
-
-    async function loadStaffProfile() {
-      staffProfileStatus.textContent = 'Loading staff profile…';
-      let storedStaff = null;
-      try { storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null'); } catch (_) {}
-      if (!storedStaff?.id) {
-        staffProfileStatus.textContent = 'Sign in as hospital staff to view this profile.';
-        return;
-      }
-      try {
-        const response = await fetch(`/api/staff-profile?staffId=${encodeURIComponent(storedStaff.id)}`, { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Could not load staff profile');
-        renderStaffProfile(data.staff);
-        applyStaffIdentity(data.staff);
-      } catch (error) {
-        staffProfileStatus.textContent = error.message || 'Could not load staff profile.';
       }
     }
 
@@ -6190,21 +6148,36 @@
     document.getElementById('backToDoctorPatients').addEventListener('click', () => navigateRoute('doctor/previous', false, true));
     document.getElementById('backToPatientRecords').addEventListener('click', () => navigateRoute('patient/records', false, true));
 
-    document.getElementById('logoutButton').addEventListener('click', () => {
-      setSettingsOpen(false);
+    async function signOutAccount() {
+      await stopMicrophone();
+      clearTimeout(kioskFinishTimer);
+      kioskFinishTimer = null;
+      elevenSignedUrlCache = null;
+      elevenSignedUrlPromise = null;
+      elevenSignedUrlPromiseKey = '';
+      elevenPatientContext = null;
+      try {
+        await fetch('/api/logout', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${activePatientSessionToken}` },
+          signal: AbortSignal.timeout(3000)
+        });
+      } catch (_) { /* Clear this browser's session even if the server is unavailable. */ }
+      activePatientSessionToken = '';
+      activePatient = null;
+      activeDoctor = null;
       patientLoggedInThisSession = false;
       try {
-        localStorage.removeItem('arogPatientId');
-        localStorage.removeItem('arogPatientName');
-        localStorage.removeItem('arogPatientSessionToken');
-        if (appShell.classList.contains('doctor-session')) localStorage.removeItem('arogDoctor');
+        for (const key of ['arogPatientId', 'arogPatientName', 'arogPatientSessionToken', 'arogDoctor', 'arogStaff']) {
+          localStorage.removeItem(key);
+        }
       } catch (_) {}
-      if (appShell.classList.contains('patient-session')) {
-        activePatient = null;
-        activePatientSessionToken = '';
-      }
-      if (appShell.classList.contains('doctor-session')) activeDoctor = null;
-      navigateRoute('roles');
+    }
+
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      setSettingsOpen(false);
+      await signOutAccount();
+      navigateRoute(authorizedPatientDevice ? 'login/device-patient' : 'roles');
     });
 
     tabs.forEach(tab => tab.addEventListener('click', () => {
@@ -6229,6 +6202,7 @@
     const voiceChatMessages = document.getElementById('voiceChatMessages');
     const voiceChatForm = document.getElementById('voiceChatForm');
     const voiceChatInput = document.getElementById('voiceChatInput');
+    const voiceProvider = document.getElementById('voiceProvider');
     const voicePrompts = {
       English: 'What health concern would you like to discuss today?',
       Hindi: 'आज आप किस स्वास्थ्य समस्या के बारे में बात करना चाहेंगी?'
@@ -6272,6 +6246,14 @@
     let replyPending = false;
     let readRepliesAloud = false;
     let elevenConversation = null;
+    let aarogyamSessionId = '';
+    let aarogyamCallActive = false;
+    let aarogyamGeneration = 0;
+    let aarogyamRecorder = null;
+    let aarogyamStream = null;
+    let aarogyamAudio = null;
+    let aarogyamAudioContext = null;
+    let aarogyamVadTimer = null;
     let elevenConnecting = false;
     let elevenTextOnly = false;
     let elevenConsentGranted = false;
@@ -6280,7 +6262,9 @@
     let hasPatientResponse = false;
     let elevenSessionGeneration = 0;
     let elevenSignedUrlCache = null;
+    let elevenPatientContext = null;
     let elevenSignedUrlPromise = null;
+    let elevenSignedUrlPromiseKey = '';
     let elevenLastAudioChunkAt = 0;
     let elevenLastAudibleOutputAt = 0;
     let elevenOutputMonitor = null;
@@ -6294,6 +6278,7 @@
     let autoCompleteTimer = null;
     let agentSpokeDuringCompletion = false;
     let checkupCompletionInProgress = false;
+    let kioskFinishTimer = null;
     const seenElevenMessages = new Set();
 
     function setVoiceHint(text, error = false) {
@@ -6302,9 +6287,9 @@
     }
 
     function syncVoiceControls() {
-      const voiceActive = !!elevenConversation || elevenConnecting;
+      const voiceActive = voiceProvider.value === 'aarogyam' ? aarogyamCallActive : !!elevenConversation || elevenConnecting;
       voiceTalkButton.setAttribute('aria-pressed', String(voiceActive && !elevenTextOnly));
-      voiceTalkLabel.textContent = elevenConnecting ? 'Connecting…' : elevenTextOnly ? 'Retry Talk' : voiceActive ? 'Stop' : 'Talk';
+      voiceTalkLabel.textContent = voiceProvider.value === 'aarogyam' ? (voiceActive ? 'End call' : 'Call') : elevenConnecting ? 'Connecting…' : elevenTextOnly ? 'Retry Talk' : voiceActive ? 'Stop' : 'Talk';
       voiceSendButton.disabled = replyPending || !voiceChatInput.value.trim();
       voiceTalkButton.disabled = false;
       voiceChatMessages.setAttribute('aria-busy', String(replyPending));
@@ -6312,6 +6297,7 @@
 
     async function stopMicrophone() {
       const stopPromise = stopElevenLabsSession();
+      stopAarogyamCall();
       voiceGeneration += 1;
       clearTimeout(voiceTimer);
       clearTimeout(agentAudioFallbackTimer);
@@ -6351,9 +6337,209 @@
       if (elevenOutputMonitor) clearInterval(elevenOutputMonitor);
       elevenOutputMonitor = null;
       setAgentOrbState();
+      replyPending = false;
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      syncVoiceControls();
       if (!session) return;
       try { await session.endSession(); }
       catch (_) { /* Session may already be closed. */ }
+      syncVoiceControls();
+    }
+
+    async function aarogyamRequest(path, options = {}) {
+      const { headers = {}, ...rest } = options;
+      const response = await fetch(`/api/aarogyam/${path}`, {
+        method: 'POST', cache: 'no-store', ...rest,
+        headers: { ...headers, Authorization: `Bearer ${activePatientSessionToken}` }
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const error = new Error(payload.error || 'Aarogyam AI is unavailable');
+        error.code = payload.code || '';
+        throw error;
+      }
+      return payload;
+    }
+
+    async function ensureAarogyamSession() {
+      if (aarogyamSessionId) return aarogyamSessionId;
+      const result = await aarogyamRequest('sessions', {
+        headers: { 'Content-Type': 'application/json' }, body: '{}'
+      });
+      aarogyamSessionId = result.session_id;
+      currentConversationId = result.session_id;
+      if (result.greeting) appendChatMessage(result.greeting, 'ai');
+      return aarogyamSessionId;
+    }
+
+    function stopAarogyamCapture() {
+      clearInterval(aarogyamVadTimer);
+      aarogyamVadTimer = null;
+      if (aarogyamRecorder?.state === 'recording') aarogyamRecorder.stop();
+      aarogyamRecorder = null;
+      aarogyamStream?.getTracks().forEach(track => track.stop());
+      aarogyamStream = null;
+      if (aarogyamAudioContext) void aarogyamAudioContext.close().catch(() => {});
+      aarogyamAudioContext = null;
+    }
+
+    function stopAarogyamCall() {
+      aarogyamGeneration += 1;
+      aarogyamCallActive = false;
+      stopAarogyamCapture();
+      aarogyamAudio?.pause();
+      aarogyamAudio = null;
+      replyPending = false;
+      setAgentOrbState();
+      syncVoiceControls();
+    }
+
+    async function playAarogyamAudio(payload, generation) {
+      if (!payload.audio_base64 || generation !== aarogyamGeneration) return;
+      const bytes = Uint8Array.from(atob(payload.audio_base64), char => char.charCodeAt(0));
+      const url = URL.createObjectURL(new Blob([bytes], { type: payload.audio_mime || 'audio/wav' }));
+      const player = new Audio(url);
+      aarogyamAudio = player;
+      player.volume = 1;
+      setAgentOrbState('speaking');
+      setVoiceHint('Aarogyam is speaking…');
+      try {
+        await new Promise((resolve, reject) => {
+          player.onended = resolve;
+          player.onpause = resolve;
+          player.onerror = () => reject(new Error('Voice playback failed'));
+          player.play().catch(reject);
+        });
+      } finally {
+        if (aarogyamAudio === player) aarogyamAudio = null;
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    async function startAarogyamListening(generation) {
+      if (!aarogyamCallActive || generation !== aarogyamGeneration) return;
+      try {
+        if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder || !window.AudioContext) {
+          throw new Error('Voice calls need a browser with microphone recording support.');
+        }
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+        if (!aarogyamCallActive || generation !== aarogyamGeneration) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        aarogyamStream = stream;
+        const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(type => MediaRecorder.isTypeSupported(type));
+        const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+        aarogyamRecorder = recorder;
+        const chunks = [];
+        let speechStarted = false;
+        let speechFrames = 0;
+        let noiseFloor = 0.008;
+        let silenceSince = 0;
+        const startedAt = Date.now();
+        const context = new AudioContext();
+        aarogyamAudioContext = context;
+        const source = context.createMediaStreamSource(stream);
+        const analyzer = context.createAnalyser();
+        analyzer.fftSize = 2048;
+        source.connect(analyzer);
+        const samples = new Uint8Array(analyzer.fftSize);
+        recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+        recorder.onstop = async () => {
+          stopAarogyamCapture();
+          if (!aarogyamCallActive || generation !== aarogyamGeneration || !speechStarted) {
+            if (aarogyamCallActive && generation === aarogyamGeneration) void startAarogyamListening(generation);
+            return;
+          }
+          try {
+            replyPending = true;
+            syncVoiceControls();
+            setVoiceHint('Aarogyam is thinking…');
+            const form = new FormData();
+            form.append('session_id', aarogyamSessionId);
+            form.append('audio', new Blob(chunks, { type: recorder.mimeType || 'audio/webm' }), `speech.${recorder.mimeType.includes('mp4') ? 'm4a' : 'webm'}`);
+            const result = await aarogyamRequest('voice/turn', { body: form });
+            if (!aarogyamCallActive || generation !== aarogyamGeneration) return;
+            if (result.transcript) {
+              appendChatMessage(result.transcript, 'user', 'You · voice');
+              hasPatientResponse = true;
+            }
+            if (result.answer) {
+              appendChatMessage(result.answer, 'ai');
+              voiceQuestion.textContent = result.answer;
+              if (hasPatientResponse && isFinalAgentResponse(result.answer)) {
+                finalAgentMessage = result.answer;
+                scheduleAutoCompleteTransition(result.answer);
+              }
+            }
+            if (result.audio_base64) await playAarogyamAudio(result, generation);
+            else if (result.audio_error) setVoiceHint('Voice unavailable; reply is shown in chat.', true);
+            if (pendingAutoComplete && generation === aarogyamGeneration) finishPendingAutoComplete();
+          } catch (error) {
+            if (generation === aarogyamGeneration) {
+              setVoiceHint(error.code === 'speech_not_understood'
+                ? 'I could not hear clearly. Listening again…' : error.message,
+                error.code !== 'speech_not_understood');
+              if (error.code === 'session_expired') {
+                aarogyamSessionId = '';
+                stopAarogyamCall();
+                setVoiceHint('The AI session expired. Tap Call to start again.', true);
+              }
+            }
+          } finally {
+            replyPending = false;
+            syncVoiceControls();
+            if (aarogyamCallActive && generation === aarogyamGeneration) void startAarogyamListening(generation);
+          }
+        };
+        recorder.start();
+        setAgentOrbState('listening');
+        setVoiceHint('Listening… speak naturally.');
+        aarogyamVadTimer = setInterval(() => {
+          if (generation !== aarogyamGeneration || recorder.state !== 'recording') return;
+          analyzer.getByteTimeDomainData(samples);
+          const rms = Math.sqrt(samples.reduce((sum, sample) => sum + ((sample - 128) / 128) ** 2, 0) / samples.length);
+          if (rms > Math.max(0.026, noiseFloor * 2.5)) {
+            speechFrames += 1;
+            if (speechFrames >= 3) speechStarted = true;
+            silenceSince = 0;
+          } else if (speechStarted) silenceSince ||= Date.now();
+          else {
+            speechFrames = Math.max(0, speechFrames - 1);
+            noiseFloor = Math.min(0.04, noiseFloor * 0.9 + rms * 0.1);
+          }
+          if ((speechStarted && silenceSince && Date.now() - silenceSince > 1000) || Date.now() - startedAt > 18_000) recorder.stop();
+        }, 120);
+      } catch (error) {
+        stopAarogyamCall();
+        setVoiceHint(error.message || 'Microphone unavailable', true);
+      }
+    }
+
+    async function startAarogyamCall() {
+      if (aarogyamCallActive) {
+        stopAarogyamCall();
+        setVoiceHint('Call stopped. Tap Call to talk again.');
+        return;
+      }
+      aarogyamCallActive = true;
+      const generation = ++aarogyamGeneration;
+      syncVoiceControls();
+      setAgentOrbState('connecting');
+      setVoiceHint('Connecting to Aarogyam AI…');
+      try {
+        await ensureAarogyamSession();
+        if (generation !== aarogyamGeneration) return;
+        const greeting = await aarogyamRequest('voice/greeting', {
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: aarogyamSessionId })
+        });
+        await playAarogyamAudio(greeting, generation);
+        if (aarogyamCallActive && generation === aarogyamGeneration) await startAarogyamListening(generation);
+      } catch (error) {
+        stopAarogyamCall();
+        setVoiceHint(error.message || 'Aarogyam AI is unavailable', true);
+      }
     }
 
     function normalizeTranscriptText(text) {
@@ -6398,7 +6584,8 @@
       const detailsRecorded = /(?:recorded|captured|saved).*(?:details|information|responses)/.test(normalized);
       const doctorReview = /doctor.*(?:review|see|meet)|(?:review|see|meet).*doctor/.test(normalized);
       const explicitCompletion = /(?:intake|check-up|checkup).*(?:complete|finished)/.test(normalized);
-      return (detailsRecorded && doctorReview) || (explicitCompletion && doctorReview);
+      const hindiCompletion = /(?:जाँच|जांच|चेक.?अप|बातचीत).{0,35}(?:पूरी|समाप्त)/.test(text);
+      return (detailsRecorded && doctorReview) || explicitCompletion || hindiCompletion;
     }
 
     function finishPendingAutoComplete() {
@@ -6435,6 +6622,7 @@
         replyPending = false;
         if (isFinalResponse && !exactDuplicate) {
           finalAgentMessage = text;
+          appendChatMessage(text, 'ai');
           scheduleAgentAudioFallback(text, Date.now(), sessionGeneration);
           scheduleAutoCompleteTransition(text);
           setVoiceHint('Check-up complete — opening your summary after this message.');
@@ -6476,25 +6664,41 @@
     }
 
     async function prefetchElevenLabsSignedUrl() {
-      if (elevenSignedUrlCache && elevenSignedUrlCache.expiresAt > Date.now() + 30_000) return elevenSignedUrlCache;
-      if (elevenSignedUrlPromise) return elevenSignedUrlPromise;
+      const patientId = activePatient?.id || '';
+      const patientToken = activePatientSessionToken;
+      const cacheKey = `${patientId}:${patientToken}`;
+      if (!patientId || !patientToken) throw new Error('Patient sign-in is required');
+      if (elevenSignedUrlCache?.cacheKey === cacheKey && elevenSignedUrlCache.expiresAt > Date.now() + 30_000) return elevenSignedUrlCache;
+      if (elevenSignedUrlPromise && elevenSignedUrlPromiseKey === cacheKey) return elevenSignedUrlPromise;
       const request = (async () => {
-        const response = await fetch('/api/elevenlabs/signed-url', { cache: 'no-store' });
+        const response = await fetch('/api/elevenlabs/signed-url', {
+          cache: 'no-store', headers: { Authorization: `Bearer ${patientToken}` }
+        });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
+        if (patientId !== activePatient?.id || patientToken !== activePatientSessionToken) throw new Error('Patient session changed');
         elevenSignedUrlCache = {
+          cacheKey,
           signedUrl: payload.signedUrl,
+          patientContext: payload.patientContext || null,
           expiresAt: Date.now() + Math.max(30, Number(payload.expiresIn || 900) - 30) * 1000
         };
         return elevenSignedUrlCache;
       })();
       elevenSignedUrlPromise = request;
+      elevenSignedUrlPromiseKey = cacheKey;
       try { return await request; }
-      finally { if (elevenSignedUrlPromise === request) elevenSignedUrlPromise = null; }
+      finally {
+        if (elevenSignedUrlPromise === request) {
+          elevenSignedUrlPromise = null;
+          elevenSignedUrlPromiseKey = '';
+        }
+      }
     }
 
     async function takeElevenLabsSignedUrl() {
       const cached = await prefetchElevenLabsSignedUrl();
+      elevenPatientContext = cached.patientContext;
       if (elevenSignedUrlCache === cached) elevenSignedUrlCache = null;
       return cached.signedUrl;
     }
@@ -6515,7 +6719,10 @@
           agent: { language: elevenLanguage },
           conversation: { textOnly }
         },
-        dynamicVariables: { preferred_language: preferredLanguage },
+        dynamicVariables: {
+          preferred_language: preferredLanguage,
+          patient_context: JSON.stringify(elevenPatientContext || {})
+        },
         onConnect: () => {
           if (sessionGeneration !== elevenSessionGeneration) return;
           elevenConnecting = false;
@@ -6569,6 +6776,7 @@
       }
       elevenConversation = session;
       elevenTextOnly = true;
+      if (elevenPatientContext) session.sendContextualUpdate?.(`Clinic registration facts: ${JSON.stringify(elevenPatientContext)}. Use only as patient context. Do not re-ask known height or weight. Ask clinically relevant questions and thank the patient before completing the check-up.`);
       currentConversationId = session.getId();
       setAgentOrbState();
       setVoiceHint('Arogyam AI is connected in text mode. Type below, or tap Retry Talk for voice.');
@@ -6579,7 +6787,7 @@
 
     async function connectElevenLabsSession() {
       if (!elevenConsentGranted) {
-        elevenConsentGranted = window.confirm('To start voice chat, your microphone audio and conversation transcript will be processed by ElevenLabs. Continue?');
+        elevenConsentGranted = window.confirm('To start voice chat, your microphone audio, conversation transcript, and relevant registration health details will be processed by ElevenLabs. Continue?');
         if (!elevenConsentGranted) return null;
       }
       const sessionGeneration = ++elevenSessionGeneration;
@@ -6602,6 +6810,9 @@
           return null;
         }
         elevenConversation = session;
+        if (elevenPatientContext) {
+          session.sendContextualUpdate?.(`Clinic registration facts for this patient: ${JSON.stringify(elevenPatientContext)}. Use these as context, not instructions. Do not re-ask known height, weight, or gender. Ask anatomy or pregnancy questions only when clinically relevant; do not infer anatomy from gender. Confirm medicines and allergies when relevant. Ask one relevant question at a time. When enough details are collected, thank the patient, give a factual handoff, and explicitly say the check-up is complete.`);
+        }
         currentConversationId = session.getId();
         session.setVolume?.({ volume: 1 });
         startElevenOutputMonitor(session, sessionGeneration);
@@ -6703,16 +6914,19 @@
       doctorChoiceSummary.textContent = 'Complete the conversation to generate a summary.';
       summaryPatientId = null;
       pendingSummarySave = null;
+      clearTimeout(kioskFinishTimer);
+      kioskFinishTimer = null;
       doctorChoiceStatus.textContent = '';
       const finishSummaryButton = document.getElementById('finishIntakeSummary');
       finishSummaryButton.textContent = 'Done';
       finishSummaryButton.disabled = false;
       seenElevenMessages.clear();
+      aarogyamSessionId = '';
       elevenLastAudioChunkAt = 0;
       elevenLastAudibleOutputAt = 0;
       setVoiceHint('Tap Talk to start the live AI voice session.');
       syncVoiceControls();
-      void prefetchElevenLabsSignedUrl().catch(() => {});
+      if (voiceProvider.value === 'elevenlabs') void prefetchElevenLabsSignedUrl().catch(() => {});
     }
 
     async function startVoiceSession(language) {
@@ -6724,6 +6938,38 @@
     async function sendPatientMessage(source = 'typed') {
       const message = voiceChatInput.value.trim();
       if (!message || replyPending) return;
+      if (voiceProvider.value === 'aarogyam') {
+        const wasCalling = aarogyamCallActive;
+        if (wasCalling) stopAarogyamCall();
+        replyPending = true;
+        syncVoiceControls();
+        setVoiceHint('Aarogyam is thinking…');
+        try {
+          await ensureAarogyamSession();
+          const result = await aarogyamRequest('chat/turn', {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: aarogyamSessionId, message })
+          });
+          appendChatMessage(message, 'user', 'You · typed');
+          voiceChatInput.value = '';
+          hasPatientResponse = true;
+          if (result.answer) {
+            appendChatMessage(result.answer, 'ai');
+            voiceQuestion.textContent = result.answer;
+            if (isFinalAgentResponse(result.answer)) {
+              finalAgentMessage = result.answer;
+              scheduleAutoCompleteTransition(result.answer);
+            }
+          }
+          setVoiceHint('Reply ready. Tap Call to speak.');
+        } catch (error) {
+          setVoiceHint(error.message, true);
+        } finally {
+          replyPending = false;
+          syncVoiceControls();
+        }
+        return;
+      }
       const session = elevenConversation?.isOpen() ? elevenConversation : await startElevenLabsSession();
       if (!session?.isOpen()) {
         setVoiceHint('Live AI is not connected. Tap Talk and try again.', true);
@@ -6822,7 +7068,9 @@
       doctorChoiceSummary.textContent = 'Loading your latest intake summary…';
       doctorChoiceStatus.textContent = '';
       try {
-        const response = await fetch(`/api/patient-intakes/latest?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
+        const response = await fetch(`/api/patient-intakes/latest?patientId=${encodeURIComponent(patientId)}`, {
+          cache: 'no-store', headers: { Authorization: `Bearer ${activePatientSessionToken}` }
+        });
         const data = await response.json().catch(() => ({}));
         if (activePatient?.id !== patientId || routeFromLocation() !== 'patient/intake-summary') return;
         if (!response.ok || !data.intake) throw new Error(data.error || 'No saved summary is available.');
@@ -6841,10 +7089,10 @@
       if (!pendingSummarySave) return;
       const button = document.getElementById('finishIntakeSummary');
       button.disabled = true;
-      doctorChoiceStatus.textContent = 'Gemini is preparing and saving your medical summary…';
+      doctorChoiceStatus.textContent = 'Preparing and saving your medical summary…';
       try {
         const response = await fetch('/api/patient-intakes', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${activePatientSessionToken}` },
           body: JSON.stringify(pendingSummarySave)
         });
         const data = await response.json().catch(() => ({}));
@@ -6854,8 +7102,14 @@
         button.textContent = authorizedPatientDevice ? 'Finish and sign out' : 'Done';
         doctorChoiceStatus.textContent = '';
         doctorChoiceCompletion.hidden = false;
-        doctorChoiceCompletion.querySelector('span').textContent = data.intake.uhidCreated ? 'Hospital UHID created' : 'Hospital UHID confirmed';
+        doctorChoiceCompletion.querySelector('span').textContent = 'Thank you. Check-up complete';
         doctorChoiceCompletionMessage.textContent = `${data.intake.hospitalName} · UHID ${data.intake.uhid} · ${data.intake.encounterNumber}`;
+        if (authorizedPatientDevice) {
+          clearTimeout(kioskFinishTimer);
+          kioskFinishTimer = setTimeout(() => {
+            if (routeFromLocation() === 'patient/intake-summary' && !pendingSummarySave) void finishAuthorizedPatientSession();
+          }, 12_000);
+        }
       } catch (error) {
         button.textContent = 'Retry save';
         doctorChoiceStatus.textContent = `Your summary is shown here, but saving failed: ${error.message || 'Please ask reception to help.'}`;
@@ -6864,14 +7118,10 @@
       }
     }
 
-    function finishAuthorizedPatientSession() {
-      try {
-        localStorage.removeItem('arogPatientId');
-        localStorage.removeItem('arogPatientName');
-        localStorage.removeItem('arogPatientSessionToken');
-      } catch (_) {}
-      activePatient = null;
-      patientLoggedInThisSession = false;
+    async function finishAuthorizedPatientSession() {
+      clearTimeout(kioskFinishTimer);
+      kioskFinishTimer = null;
+      await signOutAccount();
       summaryPatientId = '';
       resetCheckup();
       navigateRoute('login/device-patient', true, true);
@@ -6880,7 +7130,7 @@
     document.getElementById('backToVoiceCheckup').addEventListener('click', () => navigateRoute('patient/voice'));
     document.getElementById('finishIntakeSummary').addEventListener('click', () => {
       if (pendingSummarySave) return void saveIntakeSummary();
-      if (authorizedPatientDevice) return finishAuthorizedPatientSession();
+      if (authorizedPatientDevice) return void finishAuthorizedPatientSession();
       resetCheckup();
       navigateRoute('patient/start');
     });
@@ -6904,7 +7154,7 @@
       endVoiceSessionButton.disabled = true;
       setVoiceHint('Finishing your check-up…');
       try {
-        await stopElevenLabsSession();
+        await stopMicrophone();
         const summary = buildIntakeSummary();
         doctorChoiceSummary.textContent = summary;
         doctorChoiceCompletion.hidden = !finalAgentMessage;
@@ -6923,6 +7173,7 @@
     }
 
     voiceTalkButton.addEventListener('click', async () => {
+      if (voiceProvider.value === 'aarogyam') return startAarogyamCall();
       if (elevenTextOnly) {
         await stopElevenLabsSession();
         await startElevenLabsSession();
@@ -6931,6 +7182,7 @@
     });
 
     voiceOrb.addEventListener('click', async () => {
+      if (voiceProvider.value === 'aarogyam') return startAarogyamCall();
       if (elevenTextOnly) {
         await stopElevenLabsSession();
         await startElevenLabsSession();
@@ -6960,6 +7212,21 @@
       void sendPatientMessage();
     });
 
+    voiceProvider.addEventListener('change', async () => {
+      await stopMicrophone();
+      await prepareVoiceSession(languageSelect.value);
+      setVoiceHint(voiceProvider.value === 'aarogyam'
+        ? 'Aarogyam AI selected. Type below or tap Call.'
+        : 'Qwen395b selected. Type below or tap Talk.');
+    });
+    void fetch('/api/aarogyam/config', { cache: 'no-store' })
+      .then(response => response.json())
+      .then(config => {
+        const option = voiceProvider.querySelector('option[value="aarogyam"]');
+        option.disabled = !config.configured;
+        if (!config.configured) option.textContent = 'Aarogyam AI (unavailable)';
+      }).catch(() => {});
+
     endVoiceSessionButton.addEventListener('click', () => void completeCurrentCheckup());
 
     languageSelect.addEventListener('change', event => {
@@ -6979,10 +7246,38 @@
       } catch (_) {
         authorizedPatientDevice = false;
       }
+      let invalidPatientSession = false;
+      let invalidDoctorSession = false;
+      let invalidStaffSession = false;
+      try {
+        const response = await fetch('/api/session', {
+          cache: 'no-store', headers: { Authorization: `Bearer ${activePatientSessionToken}` }
+        });
+        if (response.ok) {
+          const session = await response.json();
+          const savedPatientId = localStorage.getItem('arogPatientId');
+          const savedDoctorId = JSON.parse(localStorage.getItem('arogDoctor') || 'null')?.id;
+          const savedStaffId = JSON.parse(localStorage.getItem('arogStaff') || 'null')?.id;
+          invalidPatientSession = Boolean(savedPatientId && session.patientId !== savedPatientId);
+          invalidDoctorSession = Boolean(savedDoctorId && session.doctorId !== savedDoctorId);
+          invalidStaffSession = Boolean(savedStaffId && session.staffId !== savedStaffId);
+          if (invalidPatientSession) {
+            for (const key of ['arogPatientId', 'arogPatientName', 'arogPatientSessionToken']) localStorage.removeItem(key);
+            activePatientSessionToken = '';
+            activePatient = null;
+            patientLoggedInThisSession = false;
+          }
+          if (invalidDoctorSession) { localStorage.removeItem('arogDoctor'); activeDoctor = null; }
+          if (invalidStaffSession) localStorage.removeItem('arogStaff');
+        }
+      } catch (_) { /* Keep local state until the server is reachable. */ }
       loginScreen.classList.toggle('device-patient-only', authorizedPatientDevice);
       appShell.classList.toggle('authorized-patient-device', authorizedPatientDevice);
       document.getElementById('exitDeviceMode').hidden = !authorizedPatientDevice;
       let initialRoute = routeFromLocation();
+      if (invalidDoctorSession && /^doctor\//.test(initialRoute)) initialRoute = 'login/doctor';
+      if (invalidStaffSession && /^staff\//.test(initialRoute)) initialRoute = 'login/staff';
+      if (invalidPatientSession && /^patient\//.test(initialRoute)) initialRoute = 'login/patient';
       if (authorizedPatientDevice) {
         try {
           localStorage.removeItem('arogPatientId');
