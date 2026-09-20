@@ -53,6 +53,9 @@ Aarogyam text chat and voice use separate sessions from ElevenLabs. Switching
 providers starts a new check-up conversation. Aarogyam voice records each user
 utterance and sends it after a pause; it is turn-based, not a full-duplex call.
 The selected provider's transcript is used for the clinician summary.
+The hosted ElevenLabs intake prompt and Focus guardrail are recorded in
+[`docs/elevenlabs-intake-agent.md`](docs/elevenlabs-intake-agent.md). This is an
+operator reference; changing the file does not automatically update ElevenLabs.
 
 The current prototype uses synthetic demonstration records only. It must not be used to store real patient information.
 

@@ -1418,6 +1418,7 @@
     .login-screen.device-patient-only .login-cards { grid-template-columns: repeat(2, minmax(260px, 430px)); justify-content: center; }
     .login-screen.device-patient-only .login-card { display: none; }
     .login-screen.device-patient-only .login-card[data-portal-role^="kiosk-"] { display: flex; --portal-accent: #0f766e; --portal-accent-rgb: 15, 118, 110; }
+    .login-screen.device-patient-only .login-card[data-portal-role="kiosk-returning"] { --portal-accent: #4f5db8; --portal-accent-rgb: 79, 93, 184; }
     .login-screen.device-patient-only .login-card[data-portal-role^="kiosk-"] { min-height: 290px; }
     .login-card {
       --portal-accent: #0f887f;
@@ -1496,6 +1497,7 @@
     }
     .login-card:nth-child(2) .login-card-icon { background: linear-gradient(145deg, #7884ed, #464dad); box-shadow: inset 0 2px 0 rgba(255,255,255,.26), 0 14px 28px rgba(89,100,207,.25); }
     .login-card:nth-child(3) .login-card-icon { background: linear-gradient(145deg, #28a4bd, #105d78); box-shadow: inset 0 2px 0 rgba(255,255,255,.26), 0 14px 28px rgba(22,117,142,.25); }
+    .login-card[data-portal-role="kiosk-returning"] .login-card-icon { background: linear-gradient(145deg, #7184e8, #394b9e); box-shadow: inset 0 2px 0 rgba(255,255,255,.26), 0 14px 28px rgba(79,93,184,.25); }
     .login-card-icon::before,
     .login-card-icon::after {
       content: "\2726";
@@ -1514,6 +1516,7 @@
     .login-card-icon .icon-accent { color: #bff9ef; }
     .login-card:nth-child(2) .login-card-icon .icon-accent { color: #dce1ff; }
     .login-card:nth-child(3) .login-card-icon .icon-accent { color: #cff6ff; }
+    .login-card[data-portal-role="kiosk-returning"] .login-card-icon .icon-accent { color: #dce5ff; }
     .login-card:is(:hover, :focus-within) .login-card-icon { transform: translateY(-6px) scale(1.06) rotate(-4deg); box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 18px 38px rgba(var(--portal-accent-rgb), .35), 0 0 0 9px rgba(var(--portal-accent-rgb), .09); }
     .login-card:is(:hover, :focus-within) .login-card-icon::before { animation: portal-spark-one .78s .08s cubic-bezier(.2,.8,.2,1) both; }
     .login-card:is(:hover, :focus-within) .login-card-icon::after { animation: portal-spark-two .82s .18s cubic-bezier(.2,.8,.2,1) both; }
@@ -2008,14 +2011,14 @@
           </article>
           <article class="login-card" data-portal-role="kiosk-new">
             <button class="login-card-main" type="button" id="kioskNewVisitor">
-              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><rect pathLength="1" x="17" y="12" width="30" height="40" rx="7" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" d="M25 12V9h14v3M26 31h12M32 25v12" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><path pathLength="1" class="icon-accent" d="m24 43 5 5 11-12" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><rect pathLength="1" x="14" y="13" width="36" height="38" rx="7" stroke="currentColor" stroke-width="2.7"/><circle pathLength="1" cx="28" cy="27" r="5" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" d="M19 41c1-5 4-8 9-8 4 0 6.5 1.8 8 5" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><circle pathLength="1" class="icon-accent" cx="45" cy="43" r="9" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" class="icon-accent" d="M45 39v8M41 43h8" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/></svg></span>
               <h2>New visitor</h2>
               <p class="authorized-login-note">Register with your mobile number and get a hospital UHID.</p>
             </button>
           </article>
           <article class="login-card" data-portal-role="kiosk-returning">
             <button class="login-card-main" type="button" id="kioskReturningVisitor">
-              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><rect pathLength="1" x="17" y="12" width="30" height="40" rx="7" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" d="M25 12V9h14v3M26 31h12M32 25v12" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><path pathLength="1" class="icon-accent" d="m24 43 5 5 11-12" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><path pathLength="1" class="icon-accent" d="M17 24a20 20 0 1 1-3 19" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path pathLength="1" class="icon-accent" d="M17 14v10h10" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><rect pathLength="1" x="24" y="25" width="24" height="22" rx="4" stroke="currentColor" stroke-width="2.7"/><circle pathLength="1" cx="31" cy="33" r="2.5" stroke="currentColor" stroke-width="2.2"/><path pathLength="1" d="M27 41c.5-2.4 1.8-3.6 4-3.6s3.5 1.2 4 3.6M39 33h5M39 39h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>
               <h2>Re-visitor</h2>
               <p class="authorized-login-note">Enter your hospital UHID and verify the linked mobile number.</p>
             </button>
