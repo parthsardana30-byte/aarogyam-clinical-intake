@@ -145,6 +145,12 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   const resetOtpVerification = await json('/api/signup-otp/verify', {
     method: 'POST', body: JSON.stringify({ phone, purpose: 'reset', id: resetOtpRequest.payload.id, otp: resetOtpRequest.payload.demoOtp }),
   });
+  const invalidReset = await json('/api/patient-password-reset', {
+    method: 'POST', body: JSON.stringify({ phone, otpRequestId: resetOtpRequest.payload.id,
+      otpVerificationToken: resetOtpVerification.payload.verificationToken, epin: 'secret123' }),
+  });
+  assert.equal(invalidReset.response.status, 400);
+  assert.match(invalidReset.payload.error, /exactly 6 digits/);
   const reset = await json('/api/patient-password-reset', {
     method: 'POST', body: JSON.stringify({ phone, otpRequestId: resetOtpRequest.payload.id,
       otpVerificationToken: resetOtpVerification.payload.verificationToken, epin: '654321' }),
