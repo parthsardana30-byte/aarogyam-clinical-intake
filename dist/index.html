@@ -2363,7 +2363,7 @@
                   <div class="voice-chat-title"><div class="voice-language" id="voiceLanguage" hidden>English conversation</div><h1 id="voicePrompt">Hello, Patient</h1></div>
                   <div class="voice-live-tools">
                     <select class="voice-provider-select" id="voiceProvider" aria-label="Choose AI for this check-up">
-                      <option value="elevenlabs">ElevenLabs</option>
+                      <option value="elevenlabs">Qwen395b</option>
                       <option value="aarogyam">Aarogyam AI</option>
                     </select>
                     <div class="voice-live-copy" hidden><div class="voice-status" id="voiceStatus" role="status" aria-live="polite">Arogyam is ready</div><div class="auto-mic" id="autoMicStatus"><span class="auto-mic-dot"></span><span id="autoMicText">Connecting microphone…</span></div></div>
@@ -6937,7 +6937,7 @@
       await prepareVoiceSession(languageSelect.value);
       setVoiceHint(voiceProvider.value === 'aarogyam'
         ? 'Aarogyam AI selected. Type below or tap Call.'
-        : 'ElevenLabs selected. Type below or tap Talk.');
+        : 'Qwen395b selected. Type below or tap Talk.');
     });
     void fetch('/api/aarogyam/config', { cache: 'no-store' })
       .then(response => response.json())

@@ -42,9 +42,10 @@ staff can use the six-digit manual code until TLS is configured.
 
 ## Patient check-up AI providers
 
-The check-up screen offers ElevenLabs and the self-hosted Aarogyam AI when both
-are configured. Set `ELEVENLABS_API_KEY` and `ELEVENLABS_AGENT_ID` for the existing
-agent. To enable Aarogyam AI, set `AAROGYAM_API_URL` to the HTTPS API origin and
+The check-up screen offers **Qwen395b** (the existing ElevenLabs voice agent)
+and the self-hosted Aarogyam AI when both are configured. Set
+`ELEVENLABS_API_KEY` and `ELEVENLABS_AGENT_ID` for the existing agent. To enable
+Aarogyam AI, set `AAROGYAM_API_URL` to the HTTPS API origin and
 `AAROGYAM_API_KEY` to its bearer key in the **site server's environment** (or
 Docker Compose `.env`), then restart the site. Never put either key in `dist/`.
 
