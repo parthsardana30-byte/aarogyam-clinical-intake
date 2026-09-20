@@ -1,4 +1,5 @@
 import argparse
+import importlib.util
 import json
 import os
 import re
@@ -78,6 +79,8 @@ TABLE PROTOCOL (CRITICAL)
 
 OUTPUT CONTRACT
 - Return exactly one complete JSON object or array and nothing else.
+- Return compact/minified JSON. Do not add indentation or decorative whitespace;
+  whitespace wastes generation time and does not change extracted content.
 - No Markdown fences, commentary, confidence scores, diagnosis, or explanation.
 - Choose keys and nesting from the document's own hierarchy and labels.
 - Preserve repeated sections as ordered arrays rather than overwriting keys.
@@ -132,6 +135,16 @@ Never fill missing content from knowledge or patterns. Output one JSON value and
 nothing else.
 
 CANDIDATE JSON:
+""".strip()
+
+
+JSON_SYNTAX_REPAIR_PROMPT = r"""
+Repair ONLY the JSON syntax of the candidate below. Preserve every key, string,
+number, null, array item, and relationship exactly. Do not add, remove, infer,
+summarize, normalize, or reorder document content. Return compact valid JSON and
+nothing else.
+
+CANDIDATE:
 """.strip()
 
 
@@ -246,10 +259,10 @@ class DocumentOCR:
     def __init__(
         self,
         model_name: str = "Qwen/Qwen2-VL-7B-Instruct",
-        max_new_tokens: int = 8192,
-        max_pixels: int = 3_211_264,
-        verify_output: bool = True,
-        use_coverage_ledger: bool = True,
+        max_new_tokens: int = 4096,
+        max_pixels: int = 1_605_632,
+        verify_output: bool = False,
+        use_coverage_ledger: bool = False,
     ) -> None:
         print(f"Loading {model_name} with 4-bit quantization...")
         quantization_config = BitsAndBytesConfig(
@@ -258,12 +271,32 @@ class DocumentOCR:
             bnb_4bit_compute_dtype=torch.float16,
             bnb_4bit_use_double_quant=True,
         )
-        self.model = Qwen2VLForConditionalGeneration.from_pretrained(
-            model_name,
-            torch_dtype=torch.float16,
-            device_map="auto",
-            quantization_config=quantization_config,
+        attention_backend = (
+            "flash_attention_2"
+            if importlib.util.find_spec("flash_attn") is not None
+            else "sdpa"
         )
+        if torch.cuda.is_available():
+            torch.backends.cuda.matmul.allow_tf32 = True
+        try:
+            self.model = Qwen2VLForConditionalGeneration.from_pretrained(
+                model_name,
+                torch_dtype=torch.float16,
+                device_map="auto",
+                quantization_config=quantization_config,
+                attn_implementation=attention_backend,
+            )
+        except (ImportError, ValueError) as exc:
+            if attention_backend != "flash_attention_2":
+                raise
+            print(f"Flash Attention 2 unavailable ({exc}); falling back to SDPA.")
+            self.model = Qwen2VLForConditionalGeneration.from_pretrained(
+                model_name,
+                torch_dtype=torch.float16,
+                device_map="auto",
+                quantization_config=quantization_config,
+                attn_implementation="sdpa",
+            )
         self.model.eval()
         self.processor = AutoProcessor.from_pretrained(model_name)
         self.max_new_tokens = max_new_tokens
@@ -354,6 +387,19 @@ class DocumentOCR:
             clean_up_tokenization_spaces=False,
         )[0].strip()
 
+    def _repair_json_syntax(self, malformed_text: str) -> Any:
+        """Use a fast text-only pass only when the vision result is not parseable."""
+        print("Repairing JSON syntax with a text-only pass...")
+        repaired_text = self._generate(
+            [
+                {
+                    "type": "text",
+                    "text": f"{JSON_SYNTAX_REPAIR_PROMPT}\n{_strip_json_fence(malformed_text)}",
+                }
+            ]
+        )
+        return parse_json_output(repaired_text)
+
     def _build_coverage_ledger(self, image_paths: list[str]) -> list[Any]:
         ledgers: list[Any] = []
         for page_number, image_path in enumerate(image_paths, start=1):
@@ -437,7 +483,8 @@ class DocumentOCR:
             draft: Optional[Any]
             try:
                 draft = parse_json_output(draft_text)
-            except ValueError:
+            except ValueError as exc:
+                print(f"Initial extraction JSON was malformed ({exc}).")
                 draft = None
 
             # The same vision model audits its own draft against the image. This
@@ -459,24 +506,46 @@ class DocumentOCR:
                         }
                     ]
                 )
-                verified = parse_json_output(verified_text)
+                try:
+                    verified = parse_json_output(verified_text)
+                except ValueError as exc:
+                    if draft is not None:
+                        print(
+                            "Warning: verification returned malformed JSON; "
+                            "using the valid first-pass extraction."
+                        )
+                        verified = draft
+                    else:
+                        print(f"Verification JSON was malformed ({exc}).")
+                        verified = self._repair_json_syntax(verified_text)
                 issues = table_width_issues(verified) + coverage_issues(verified, coverage_ledger)
-                return (
-                    self._repair_validation_issues(
+                if not issues:
+                    return verified
+                try:
+                    return self._repair_validation_issues(
                         page_content, verified, issues, coverage_ledger
                     )
-                    if issues
-                    else verified
-                )
+                except ValueError as exc:
+                    print(
+                        "Warning: validation repair failed; returning the last "
+                        f"complete JSON result instead ({exc})."
+                    )
+                    return verified
 
             if draft is None:
-                raise ValueError("Initial extraction was incomplete or invalid JSON.")
+                draft = self._repair_json_syntax(draft_text)
             issues = table_width_issues(draft) + coverage_issues(draft, coverage_ledger)
             if issues:
-                raise ValueError(
-                    "Lossless validation failed with verification disabled: "
-                    + "; ".join(issues)
-                )
+                print("Structural validation found issues; running one targeted repair pass.")
+                try:
+                    return self._repair_validation_issues(
+                        page_content, draft, issues, coverage_ledger
+                    )
+                except ValueError as exc:
+                    print(
+                        "Warning: targeted repair failed; returning the valid "
+                        f"first-pass JSON instead ({exc})."
+                    )
             return draft
         finally:
             for temp_file in temp_files:
@@ -498,32 +567,32 @@ def main() -> None:
     parser.add_argument(
         "--max-new-tokens",
         type=int,
-        default=8192,
-        help="Maximum output tokens (default: 8192)",
+        default=4096,
+        help="Maximum output tokens (default: 4096; raise for unusually long documents)",
     )
     parser.add_argument(
         "--max-pixels",
         type=int,
-        default=3_211_264,
-        help="Per-page vision pixel budget (default: 3211264)",
+        default=1_605_632,
+        help="Per-page vision pixel budget (default: 1605632)",
     )
     parser.add_argument(
-        "--no-verify",
+        "--verify",
         action="store_true",
-        help="Disable the second image-grounded verification pass",
+        help="Run a slower second image-grounded audit pass",
     )
     parser.add_argument(
-        "--no-ledger",
+        "--ledger",
         action="store_true",
-        help="Disable the independent page-by-page completeness ledger",
+        help="Run the slow independent page-by-page completeness ledger",
     )
     args = parser.parse_args()
 
     engine = DocumentOCR(
         max_new_tokens=args.max_new_tokens,
         max_pixels=args.max_pixels,
-        verify_output=not args.no_verify,
-        use_coverage_ledger=not args.no_ledger,
+        verify_output=args.verify,
+        use_coverage_ledger=args.ledger,
     )
     result = engine.extract_data(args.document_path)
     print(json.dumps(result, ensure_ascii=False, indent=2))

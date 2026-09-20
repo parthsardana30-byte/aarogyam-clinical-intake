@@ -30,27 +30,35 @@ async function waitForServer() {
   throw new Error('Test server did not start');
 }
 
-before(async () => {
-  dataDir = await mkdtemp(join(tmpdir(), 'aarogyam-api-test-'));
+async function startServer() {
   server = spawn(process.execPath, ['server.js'], {
     cwd: process.cwd(),
     env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', DATA_DIR: dataDir, OTP_DEMO_MODE: '1' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   await waitForServer();
-});
+}
 
-after(async () => {
+async function stopServer() {
   if (server && server.exitCode === null) {
     server.kill();
     await new Promise(resolve => server.once('exit', resolve));
   }
+}
+
+before(async () => {
+  dataDir = await mkdtemp(join(tmpdir(), 'aarogyam-api-test-'));
+  await startServer();
+});
+
+after(async () => {
+  await stopServer();
   await rm(dataDir, { recursive: true, force: true });
 });
 
 test('patient registration, login and dashboard stay patient-scoped', async () => {
   const phone = '9876543210';
-  const password = 'Test@123';
+  const password = '123456';
 
   const otpRequest = await json('/api/signup-otp/request', {
     method: 'POST', body: JSON.stringify({ phone }),
@@ -70,6 +78,8 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
       phone,
       otpRequestId: otpRequest.payload.id,
       otpVerificationToken: verification.payload.verificationToken,
+      identityMethod: 'aadhaar',
+      identityNumber: '700123456789',
       fullName: 'Integration Test Patient',
       dateOfBirth: '1995-06-15',
       gender: 'Female',
@@ -111,13 +121,13 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   });
   const reset = await json('/api/patient-password-reset', {
     method: 'POST', body: JSON.stringify({ phone, otpRequestId: resetOtpRequest.payload.id,
-      otpVerificationToken: resetOtpVerification.payload.verificationToken, password: 'NewTest@123' }),
+      otpVerificationToken: resetOtpVerification.payload.verificationToken, epin: '654321' }),
   });
   assert.equal(reset.response.status, 200);
   assert.ok(reset.payload.sessionToken);
 
   const login = await json('/api/patient-login', {
-    method: 'POST', body: JSON.stringify({ phone, password: 'NewTest@123' }),
+    method: 'POST', body: JSON.stringify({ phone, epin: '654321' }),
   });
   assert.equal(login.response.status, 200);
   assert.ok(login.payload.sessionToken);
@@ -142,6 +152,13 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   assert.equal(initialDashboard.payload.patient.profile.fullName, 'Integration Test Patient');
   assert.deepEqual(initialDashboard.payload.summary, { consultationCount: 0, documentCount: 0 });
 
+  const updateConditions = await json(`/api/patients/${patientId}/medical-conditions`, {
+    method: 'PUT', headers: auth, body: JSON.stringify({ conditions: ['diabetes', 'high_cholesterol'] }),
+  });
+  assert.equal(updateConditions.response.status, 200);
+  const dashboardAfterConditions = await json(`/api/patients/${patientId}/dashboard`, { headers: auth });
+  assert.deepEqual(dashboardAfterConditions.payload.patient.health.conditions, ['diabetes', 'high_cholesterol']);
+
   const upload = await json(`/api/patients/${patientId}/documents`, {
     method: 'POST',
     headers: auth,
@@ -157,6 +174,17 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   const dashboard = await json(`/api/patients/${patientId}/dashboard`, { headers: auth });
   assert.equal(dashboard.payload.summary.documentCount, 1);
   assert.equal(dashboard.payload.documents[0].name, 'test-result.png');
+
+  const abhaLogin = await json('/api/patient-login', {
+    method: 'POST', body: JSON.stringify({ identityMethod: 'abha', identityNumber: '80012345678901', epin: '654321' }),
+  });
+  assert.equal(abhaLogin.response.status, 200);
+
+  await stopServer();
+  await startServer();
+  const restoredSessionDashboard = await json(`/api/patients/${patientId}/dashboard`, { headers: auth });
+  assert.equal(restoredSessionDashboard.response.status, 200);
+  assert.equal(restoredSessionDashboard.payload.patient.abhaLast4, '8901');
 });
 
 test('OTP login tells an unregistered patient to register first', async () => {

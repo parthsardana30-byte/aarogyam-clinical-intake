@@ -3,7 +3,7 @@ const origin = String(process.env.AROGYAM_ORIGIN || 'http://localhost:4173').rep
 const patientCredentials = {
   identityMethod: 'aadhaar',
   identityNumber: '811122223333',
-  password: 'Demo@123',
+  password: '123456',
   phone: '9000000199'
 };
 
@@ -162,13 +162,18 @@ async function seed() {
   });
   if (!vitals.response.ok) throw new Error(vitals.payload.error || 'Could not save demo vitals');
 
+  const staffCompletion = await request(`/api/staff-intakes/${encodeURIComponent(intake.payload.intake.id)}/complete`, {
+    method: 'POST', body: JSON.stringify({ staffId: staff.id })
+  });
+  if (!staffCompletion.response.ok) throw new Error(staffCompletion.payload.error || 'Could not complete demo staff preparation');
+
   const [staffQueue, doctorPatients] = await Promise.all([
     request(`/api/staff-patients?staffId=${encodeURIComponent(staff.id)}`),
     request(`/api/doctor-patients?doctorId=${encodeURIComponent(doctorCredentials.doctorId)}`)
   ]);
   const staffPatient = staffQueue.payload.patients?.find(item => item.id === patient.id);
   const doctorPatient = doctorPatients.payload.patients?.find(item => item.patientId === patient.id);
-  if (!staffPatient || !doctorPatient) throw new Error('Demo patient was seeded but did not appear in both hospital portals');
+  if (staffPatient || !doctorPatient) throw new Error('Demo patient did not leave the staff queue and enter the doctor workflow');
 
   console.log(JSON.stringify({
     ready: true,
@@ -185,7 +190,7 @@ async function seed() {
     staff: { employeeId: staffCredentials.employeeId, password: staffCredentials.password },
     doctor: doctorCredentials,
     verified: {
-      staffQueue: true,
+      staffQueueCleared: true,
       doctorDashboard: true,
       vitals: doctorPatient.vitals,
       documents: doctorPatient.documents.length

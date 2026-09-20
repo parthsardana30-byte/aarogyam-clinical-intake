@@ -419,11 +419,12 @@
       .staff-action-card:is(:hover, :focus-visible), .staff-action-card:is(:hover, :focus-visible) .staff-action-icon { transform: none; }
       .staff-action-icon svg [stroke] { animation: none !important; stroke-dashoffset: 0 !important; }
     }
-    #reception .patient-table { min-width: 780px; }
-    #reception .patient-table th:nth-child(1), #reception .patient-table td:nth-child(1) { width: 24%; }
-    #reception .patient-table th:nth-child(2), #reception .patient-table td:nth-child(2) { width: 20%; }
-    #reception .patient-table th:nth-child(3), #reception .patient-table td:nth-child(3) { width: 27%; }
-    #reception .patient-table th:nth-child(4), #reception .patient-table td:nth-child(4) { width: 29%; }
+    #reception .patient-table { min-width: 920px; }
+    #reception .patient-table th:nth-child(1), #reception .patient-table td:nth-child(1) { width: 22%; }
+    #reception .patient-table th:nth-child(2), #reception .patient-table td:nth-child(2) { width: 15%; }
+    #reception .patient-table th:nth-child(3), #reception .patient-table td:nth-child(3) { width: 23%; }
+    #reception .patient-table th:nth-child(4), #reception .patient-table td:nth-child(4) { width: 25%; }
+    #reception .patient-table th:nth-child(5), #reception .patient-table td:nth-child(5) { width: 15%; }
     .requested-specialist { color: var(--teal-dark); font-weight: 750; }
     .patient-row-action { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 11px; background: #f5faf8; color: var(--teal-dark); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
     .patient-row-action svg { width: 17px; height: 17px; flex: 0 0 17px; }
@@ -432,6 +433,16 @@
     .patient-row-action.vitals:is(:hover, :focus-visible) { background: #e2ecfb; border-color: #7da1ca; }
     .patient-action-stack { display: grid; justify-items: start; gap: 6px; }
     .patient-action-stack small { color: var(--ink-soft); font-size: .7rem; line-height: 1.35; }
+    .staff-complete-stack { display: grid; justify-items: center; gap: 7px; }
+    .staff-complete-toggle { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #b9d5cb; border-radius: 50%; background: #f1f8f5; color: var(--teal); cursor: pointer; transition: transform .18s ease, background .18s ease, color .18s ease; }
+    .staff-complete-toggle svg { width: 20px; height: 20px; }
+    .staff-complete-toggle:is(:hover, :focus-visible), .staff-complete-toggle[aria-expanded="true"] { outline: none; transform: translateY(-1px); background: var(--teal); color: #fff; }
+    .staff-complete-toggle:disabled { cursor: not-allowed; opacity: .42; transform: none; }
+    .staff-complete-confirm { display: grid; gap: 5px; justify-items: center; }
+    .staff-complete-confirm[hidden] { display: none; }
+    .staff-complete-confirm button { min-height: 30px; padding: 0 10px; border: 0; border-radius: 8px; background: var(--teal-dark); color: #fff; font: inherit; font-size: .68rem; font-weight: 820; cursor: pointer; }
+    .staff-complete-confirm small { max-width: 130px; text-align: center; }
+    .staff-patient-row.is-completing { opacity: 0; transform: translateX(18px); transition: opacity .24s ease, transform .24s ease; }
     .patient-summary-action { margin-top: 7px; padding: 0; border: 0; background: transparent; color: var(--teal); font: inherit; font-size: .74rem; font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
     .patient-summary-action:is(:hover, :focus-visible) { color: var(--teal-dark); outline: none; }
     .status-pill { display: inline-flex; padding: 5px 9px; border-radius: 999px; background: var(--mint); color: var(--teal-dark); font-size: .76rem; font-weight: 750; }
@@ -1025,7 +1036,6 @@
     .current-summary-fact span, .current-summary-fact strong { display: block; }
     .current-summary-fact span { color: var(--ink-soft); font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; }
     .current-summary-fact strong { margin-top: 4px; font-size: .78rem; }
-    .clinical-review-note { padding: 11px 12px; border-radius: 11px; background: #fff4e8; color: #71421e; font-size: .72rem; line-height: 1.48; }
     .ask-ai-panel { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
     .ask-ai-panel strong { display: block; margin-bottom: 8px; font-size: .78rem; }
     .ask-ai-form { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 7px; }
@@ -1036,8 +1046,6 @@
     .ask-ai-answer.is-loading { color: #6b7f79; }
     .prescription-card { background: linear-gradient(180deg, #fffefb 0%, #fbfdfb 100%); }
     .prescription-card .clinical-work-body { padding: 0; overflow: hidden; }
-    .prescription-auto-note { display: flex; gap: 8px; align-items: flex-start; margin: 14px 14px 0; padding: 10px 11px; border: 1px solid #cfe1d9; border-radius: 10px; background: #eff8f4; color: #47645c; font-size: .67rem; line-height: 1.45; }
-    .prescription-auto-note::before { content: "✓"; width: 18px; height: 18px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: var(--teal); color: #fff; font-size: .62rem; font-weight: 900; }
     .prescription-sheet { display: grid; gap: 0; }
     .rx-tabs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 5px; margin: 12px 14px 0; padding: 4px; border: 1px solid #d8e3df; border-radius: 11px; background: #edf4f1; }
     .rx-tab { min-width: 0; min-height: 35px; padding: 6px 7px; border: 0; border-radius: 8px; background: transparent; color: #5a716a; font: inherit; font-size: .64rem; font-weight: 820; cursor: pointer; transition: background .18s ease, color .18s ease, box-shadow .18s ease; }
@@ -1073,6 +1081,8 @@
     .prescription-actions button { min-height: 39px; border-radius: 10px; font: inherit; font-size: .71rem; font-weight: 820; cursor: pointer; }
     .prescription-upload { border: 0; background: var(--teal); color: #fff; box-shadow: 0 10px 22px rgba(14,102,85,.16); }
     .prescription-upload:disabled { cursor: wait; opacity: .62; box-shadow: none; }
+    .no-prescription-option { display: flex; align-items: flex-start; gap: 8px; color: var(--ink-soft); font-size: .69rem; line-height: 1.35; cursor: pointer; }
+    .no-prescription-option input { margin-top: 2px; accent-color: var(--teal); }
     .rx-medicine-dialog { width: min(650px, calc(100vw - 28px)); max-height: min(760px, calc(100vh - 28px)); padding: 0; border: 0; border-radius: 19px; background: #fff; color: var(--ink); box-shadow: 0 30px 80px rgba(13,44,40,.28); }
     .rx-medicine-dialog::backdrop { background: rgba(18,42,38,.55); backdrop-filter: blur(5px); }
     .rx-medicine-form { display: flex; max-height: inherit; flex-direction: column; }
@@ -1278,6 +1288,15 @@
     .staff-profile-field span, .staff-profile-field strong { display: block; }
     .staff-profile-field span { margin-bottom: 6px; color: var(--ink-soft); font-size: .74rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
     .staff-profile-field strong { overflow-wrap: anywhere; font-size: 1rem; }
+    .patient-profile-card { background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(241,249,246,.92)); }
+    .patient-profile-identity { background: radial-gradient(circle at 88% 0, rgba(45,212,191,.18), transparent 34%), linear-gradient(135deg, #f7fcfa, #fff); }
+    .patient-profile-mark { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 20px; background: linear-gradient(145deg, #168b77, #0d5146); color: #fff; font-size: 1.15rem; font-weight: 850; letter-spacing: .04em; box-shadow: 0 14px 30px rgba(14,102,85,.2); }
+    .patient-profile-section { padding: 22px 26px 4px; }
+    .patient-profile-section + .patient-profile-section { border-top: 1px solid var(--line); }
+    .patient-profile-section h3 { margin: 0 0 4px; color: var(--teal-dark); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; }
+    .patient-profile-section .staff-profile-grid { padding: 0; }
+    .patient-profile-condition-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 22px; }
+    .patient-profile-condition { padding: 7px 10px; border: 1px solid #cfe1da; border-radius: 999px; background: #edf7f3; color: var(--teal-dark); font-size: .76rem; font-weight: 760; }
     .staff-profile-status { min-height: 20px; margin: 14px 2px 0; color: var(--ink-soft); font-size: .82rem; }
     @media (max-width: 680px) {
       .staff-profile-identity { grid-template-columns: 60px 1fr; padding: 20px; }
@@ -1286,6 +1305,7 @@
       .staff-profile-grid { grid-template-columns: 1fr; padding: 4px 20px 20px; }
       .staff-profile-field:nth-child(n) { padding: 17px 0; border-left: 0; border-bottom: 1px solid var(--line); }
       .staff-profile-field:last-child { border-bottom: 0; }
+      .patient-profile-section { padding-inline: 20px; }
     }
     .authorized-devices { margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
     .authorized-devices h3 { margin:0 0 10px; font-size:.95rem; }
@@ -2246,9 +2266,9 @@
           </div>
           <div style="overflow-x:auto">
             <table class="patient-table">
-              <thead><tr><th>Patient</th><th>UHID</th><th>Upload documents</th><th>Upload vitals</th></tr></thead>
+              <thead><tr><th>Patient</th><th>UHID</th><th>Upload documents</th><th>Upload vitals</th><th>Complete</th></tr></thead>
               <tbody id="staffPatientsBody">
-                <tr><td colspan="4"><small>Loading registered patients…</small></td></tr>
+                <tr><td colspan="5"><small>Loading registered patients…</small></td></tr>
               </tbody>
             </table>
           </div>
@@ -2311,6 +2331,53 @@
             </div>
           </article>
           <p class="staff-profile-status" id="doctorProfileStatus" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="view" id="patientProfile" aria-labelledby="patientProfileTitle">
+        <div class="staff-profile-page">
+          <div class="page-heading">
+            <div><span class="eyebrow">Patient account</span><h1 id="patientProfileTitle" tabindex="-1">My profile</h1><p class="heading-copy">Your personal identity, health details and account information.</p></div>
+            <button class="staff-profile-back" id="backToPatientRecords" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to records</button>
+          </div>
+          <article class="card staff-profile-card patient-profile-card">
+            <header class="staff-profile-identity patient-profile-identity">
+              <div class="patient-profile-mark" id="patientProfileMark" aria-hidden="true">P</div>
+              <div><h2 id="patientProfileName">Patient</h2><p id="patientProfileReference">Arogyam patient account</p></div>
+              <span class="staff-profile-verified">Verified patient</span>
+            </header>
+            <section class="patient-profile-section" aria-labelledby="patientIdentityHeading">
+              <h3 id="patientIdentityHeading">Identity and contact</h3>
+              <div class="staff-profile-grid">
+                <div class="staff-profile-field"><span>Full name</span><strong id="patientProfileFullName">—</strong></div>
+                <div class="staff-profile-field"><span>Patient ID</span><strong id="patientProfilePatientId">—</strong></div>
+                <div class="staff-profile-field"><span>Mobile number</span><strong id="patientProfilePhone">—</strong></div>
+                <div class="staff-profile-field"><span>Verified identity</span><strong id="patientProfileIdentity">—</strong></div>
+                <div class="staff-profile-field"><span>ABHA status</span><strong id="patientProfileAbha">—</strong></div>
+                <div class="staff-profile-field"><span>Account created</span><strong id="patientProfileCreated">—</strong></div>
+              </div>
+            </section>
+            <section class="patient-profile-section" aria-labelledby="patientPersonalHeading">
+              <h3 id="patientPersonalHeading">Personal details</h3>
+              <div class="staff-profile-grid">
+                <div class="staff-profile-field"><span>Date of birth</span><strong id="patientProfileDob">—</strong></div>
+                <div class="staff-profile-field"><span>Age</span><strong id="patientProfileAge">—</strong></div>
+                <div class="staff-profile-field"><span>Sex</span><strong id="patientProfileGender">—</strong></div>
+                <div class="staff-profile-field"><span>Blood group</span><strong id="patientProfileBloodGroup">—</strong></div>
+                <div class="staff-profile-field"><span>Height</span><strong id="patientProfileHeight">—</strong></div>
+                <div class="staff-profile-field"><span>Weight</span><strong id="patientProfileWeight">—</strong></div>
+              </div>
+            </section>
+            <section class="patient-profile-section" aria-labelledby="patientHealthHeading">
+              <h3 id="patientHealthHeading">Health information</h3>
+              <div class="staff-profile-grid">
+                <div class="staff-profile-field"><span>Allergies</span><strong id="patientProfileAllergies">—</strong></div>
+                <div class="staff-profile-field"><span>Known conditions</span><strong id="patientProfileConditionSummary">—</strong></div>
+              </div>
+              <div class="patient-profile-condition-list" id="patientProfileConditions" aria-label="Known health conditions"></div>
+            </section>
+          </article>
+          <p class="staff-profile-status" id="patientProfileStatus" role="status" aria-live="polite"></p>
         </div>
       </section>
 
@@ -2408,6 +2475,7 @@
             <select class="records-filter" id="patientRecordFilter" aria-label="Filter patient records">
               <option value="all">All records</option>
               <option value="visit">Consultations</option>
+              <option value="vitals">Vitals</option>
               <option value="lab">Lab reports</option>
               <option value="prescription">Prescriptions</option>
             </select>
@@ -2450,7 +2518,6 @@
                       <div class="current-summary-fact"><span>Pulse</span><strong>78 bpm</strong></div>
                       <div class="current-summary-fact"><span>SpO₂</span><strong>98%</strong></div>
                     </div>
-                    <div class="clinical-review-note"><strong>Review before prescribing:</strong> Uploaded prescription lists metformin, while the intake says no regular medicines. Confirm medication history with the patient.</div>
                     <div class="ask-ai-panel"><strong>Ask AI about this encounter</strong><form class="ask-ai-form" id="clinicalAskAiForm"><input id="clinicalAskAiInput" maxlength="300" placeholder="e.g. What should I clarify first?"/><button type="submit">Ask AI</button></form><p class="ask-ai-answer" id="clinicalAskAiAnswer" role="status" aria-live="polite">Ask about onset, relation to meals, bowel changes, hydration, medication use and red-flag symptoms. AI suggestions are not a diagnosis.</p></div>
                   </div>
                 </article>
@@ -2458,7 +2525,6 @@
                 <article class="card clinical-work-card prescription-card">
                   <header class="clinical-work-head"><div><span>Current encounter</span><h2>Prescription</h2></div></header>
                   <div class="clinical-work-body">
-                    <div class="prescription-auto-note">Doctor, hospital, patient, date, registration and authentication details are added automatically to the PDF.</div>
                     <div class="rx-tabs" role="tablist" aria-label="Prescription sections">
                       <button class="rx-tab" id="rxTabClinical" type="button" role="tab" aria-selected="true" aria-controls="rxPanelClinical" data-rx-tab="clinical">Clinical</button>
                       <button class="rx-tab" id="rxTabMedicines" type="button" role="tab" aria-selected="false" aria-controls="rxPanelMedicines" data-rx-tab="medicines">Medicines <span class="rx-tab-count" id="rxMedicineCount">0</span></button>
@@ -2489,14 +2555,17 @@
                     </div>
                     <div class="prescription-meta"><span id="prescriptionDraftStatus">Draft · not uploaded</span><span id="prescriptionWordCount">0 words</span></div>
                   </div>
-                  <div class="prescription-actions"><button class="prescription-upload" id="publishPrescription" type="button">Upload to patient portal</button></div>
+                  <div class="prescription-actions">
+                    <label class="no-prescription-option"><input id="noPrescriptionRequired" type="checkbox" /> No prescription required for this evaluation</label>
+                    <button class="prescription-upload" id="publishPrescription" type="button">End evaluation &amp; publish</button>
+                  </div>
                 </article>
               </div>
             </div>
 
             <div class="doctor-panel" data-doctor-panel-content="history">
               <div class="history-detail-heading"><h1 id="doctorHistoryTitle">Previous patient’s medical history</h1></div>
-              <section class="card history-patient-bar"><div><strong id="doctorHistoryPatient">Previous patient</strong><small id="doctorHistoryMeta">Medical records available</small></div><div class="history-filters" aria-label="Filter medical history"><button class="history-filter" type="button" data-history-filter="all" aria-pressed="true">All</button><button class="history-filter" type="button" data-history-filter="visit" aria-pressed="false">Consultations</button><button class="history-filter" type="button" data-history-filter="prescription" aria-pressed="false">Prescriptions</button><button class="history-filter" type="button" data-history-filter="lab" aria-pressed="false">Labs</button></div></section>
+              <section class="card history-patient-bar"><div><strong id="doctorHistoryPatient">Previous patient</strong><small id="doctorHistoryMeta">Medical records available</small></div><div class="history-filters" aria-label="Filter medical history"><button class="history-filter" type="button" data-history-filter="all" aria-pressed="true">All</button><button class="history-filter" type="button" data-history-filter="visit" aria-pressed="false">Consultations</button><button class="history-filter" type="button" data-history-filter="vitals" aria-pressed="false">Vitals</button><button class="history-filter" type="button" data-history-filter="prescription" aria-pressed="false">Prescriptions</button><button class="history-filter" type="button" data-history-filter="lab" aria-pressed="false">Labs</button></div></section>
               <div class="history-toolbar"><input class="history-search" id="doctorHistorySearch" type="search" maxlength="120" aria-label="Search this patient's history" placeholder="Search conditions, medicines, dates or documents"></div>
               <div class="dated-history" id="datedPatientHistory"></div>
               <div class="card history-empty" id="doctorHistoryEmpty">No records match this search and filter.</div>
@@ -2758,6 +2827,7 @@
     const linkAbhaStatus = document.getElementById('linkAbhaStatus');
     const staffProfileStatus = document.getElementById('staffProfileStatus');
     const doctorProfileStatus = document.getElementById('doctorProfileStatus');
+    const patientProfileStatus = document.getElementById('patientProfileStatus');
     let selectedLoginRole = 'patient';
     let selectedAuthMode = 'login';
     let patientLoginContext = 'normal';
@@ -3699,7 +3769,7 @@
       if (!visiblePatients.length) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 4;
+        cell.colSpan = 5;
         const copy = document.createElement('small');
         copy.textContent = message || (search ? 'No patient matches this search.' : 'No AI summaries from your authorized devices yet.');
         cell.append(copy); row.append(cell); staffPatientsBody.append(row);
@@ -3707,6 +3777,8 @@
       }
       visiblePatients.forEach(patient => {
         const row = document.createElement('tr');
+        row.className = 'staff-patient-row';
+        row.dataset.intakeId = patient.latestIntakeId || '';
         const identity = document.createElement('td');
         const name = document.createElement('strong'); name.textContent = patient.fullName;
         const summaryAction = document.createElement('button');
@@ -3745,7 +3817,19 @@
           ? `${patient.latestVitals.heartRate} bpm · ${patient.latestVitals.oxygenSaturation}% O₂ · ${patient.latestVitals.bloodPressure.systolic}/${patient.latestVitals.bloodPressure.diastolic}`
           : 'No vitals recorded';
         vitalsStack.append(vitalsButton, vitalsMeta); vitals.append(vitalsStack);
-        row.append(identity, uhid, documents, vitals); staffPatientsBody.append(row);
+        const complete = document.createElement('td');
+        const completeStack = document.createElement('div'); completeStack.className = 'staff-complete-stack';
+        const completeToggle = document.createElement('button'); completeToggle.type = 'button'; completeToggle.className = 'staff-complete-toggle';
+        completeToggle.dataset.staffCompleteToggle = patient.latestIntakeId || ''; completeToggle.setAttribute('aria-expanded', 'false');
+        completeToggle.setAttribute('aria-label', `Complete staff preparation for ${patient.fullName}`);
+        completeToggle.disabled = !patient.latestVitals;
+        completeToggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        const confirmation = document.createElement('span'); confirmation.className = 'staff-complete-confirm'; confirmation.hidden = true;
+        confirmation.dataset.staffCompleteConfirmation = patient.latestIntakeId || '';
+        const confirm = document.createElement('button'); confirm.type = 'button'; confirm.dataset.staffCompleteConfirm = patient.latestIntakeId || ''; confirm.textContent = 'Confirm';
+        const hint = document.createElement('small'); hint.textContent = patient.latestVitals ? 'Ready for doctor' : 'Vitals required';
+        confirmation.append(confirm, hint); completeStack.append(completeToggle, confirmation); complete.append(completeStack);
+        row.append(identity, uhid, documents, vitals, complete); staffPatientsBody.append(row);
       });
     }
 
@@ -3769,6 +3853,37 @@
     }
 
     staffPatientsBody.addEventListener('click', event => {
+      const completeToggle = event.target.closest('[data-staff-complete-toggle]');
+      if (completeToggle) {
+        const intakeId = completeToggle.dataset.staffCompleteToggle;
+        const confirmation = staffPatientsBody.querySelector(`[data-staff-complete-confirmation="${CSS.escape(intakeId)}"]`);
+        const expanded = completeToggle.getAttribute('aria-expanded') === 'true';
+        staffPatientsBody.querySelectorAll('[data-staff-complete-confirmation]').forEach(item => { item.hidden = true; });
+        staffPatientsBody.querySelectorAll('[data-staff-complete-toggle]').forEach(item => item.setAttribute('aria-expanded', 'false'));
+        if (confirmation && !expanded) { confirmation.hidden = false; completeToggle.setAttribute('aria-expanded', 'true'); }
+        return;
+      }
+      const completeConfirm = event.target.closest('[data-staff-complete-confirm]');
+      if (completeConfirm) {
+        const intakeId = completeConfirm.dataset.staffCompleteConfirm;
+        const row = completeConfirm.closest('tr');
+        let storedStaff = null;
+        try { storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null'); } catch (_) {}
+        completeConfirm.disabled = true; completeConfirm.textContent = 'Saving…';
+        void fetch(`/api/staff-intakes/${encodeURIComponent(intakeId)}/complete`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ staffId: storedStaff?.id || '' })
+        }).then(async response => {
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.error || 'Could not complete staff preparation');
+          row?.classList.add('is-completing');
+          showToast('Ready for doctor', 'Staff preparation is complete and the patient is now available to the doctor.');
+          setTimeout(() => void loadStaffPatients(), 250);
+        }).catch(error => {
+          completeConfirm.disabled = false; completeConfirm.textContent = 'Confirm';
+          showToast('Not completed', error.message || 'Could not complete staff preparation.');
+        });
+        return;
+      }
       const documentButton = event.target.closest('[data-patient-document]');
       if (documentButton) {
         stopStaffDocumentSession();
@@ -4707,19 +4822,22 @@
       summary.textContent = record.summary;
       const links = document.createElement('div');
       links.className = 'record-source-links';
-      const source = document.createElement('button');
-      source.type = 'button';
-      source.textContent = `View ${record.kind === 'lab' ? 'lab report' : record.kind === 'prescription' ? 'prescription' : 'consultation note'}`;
-      source.addEventListener('click', () => {
-        if (record.previewUrl) {
-          const opened = window.open(record.previewUrl, '_blank', 'noopener');
-          if (!opened) showToast('Allow pop-ups', 'Your browser blocked the document tab. Allow pop-ups for Arogyam and try again.');
-          return;
-        }
-        showToast('No document attached', `${record.title} contains a clinical record but no uploaded file.`);
-      });
-      links.append(source);
-      item.append(head, summary, links);
+      if (record.kind !== 'vitals') {
+        const source = document.createElement('button');
+        source.type = 'button';
+        source.textContent = `View ${record.kind === 'lab' ? 'lab report' : record.kind === 'prescription' ? 'prescription' : 'consultation note'}`;
+        source.addEventListener('click', () => {
+          if (record.previewUrl) {
+            const opened = window.open(record.previewUrl, '_blank', 'noopener');
+            if (!opened) showToast('Allow pop-ups', 'Your browser blocked the document tab. Allow pop-ups for Arogyam and try again.');
+            return;
+          }
+          showToast('No document attached', `${record.title} contains a clinical record but no uploaded file.`);
+        });
+        links.append(source);
+      }
+      item.append(head, summary);
+      if (links.childElementCount) item.append(links);
       return item;
     }
 
@@ -4750,7 +4868,6 @@
       const summaryList = document.getElementById('clinicalAiSummary');
       const preview = document.getElementById('clinicalHistoryPreview');
       const facts = document.querySelectorAll('.current-summary-fact strong');
-      const review = document.querySelector('.clinical-review-note');
       const patientBanner = document.querySelector('.doctor-patient-banner');
       if (!patient) {
         selectedClinicalPatient = null;
@@ -4762,7 +4879,6 @@
         document.getElementById('clinicalSummarySource').textContent = 'AI-assisted intake';
         summaryList.replaceChildren(Object.assign(document.createElement('li'), { textContent: 'No completed intake is available for this hospital.' }));
         ['Not recorded', 'Not recorded', 'Not recorded'].forEach((value, index) => { if (facts[index]) facts[index].textContent = value; });
-        if (review) review.innerHTML = '<strong>Previous-document review:</strong> Select a patient to compare current information with prior evidence.';
         preview.innerHTML = '<p class="clinical-empty">No hospital documents are available.</p>';
         return;
       }
@@ -4783,11 +4899,6 @@
       const summaryPoints = (patient.summary.match(/[^.!?]+[.!?]?/g) || [patient.summary]).map(point => point.trim()).filter(Boolean).slice(0, 8);
       summaryList.replaceChildren(...summaryPoints.map(point => Object.assign(document.createElement('li'), { textContent: point })));
       patient.vitals.forEach((value, index) => { if (facts[index]) facts[index].textContent = value; });
-      if (review) {
-        review.replaceChildren();
-        const label = document.createElement('strong'); label.textContent = 'Previous-document review: ';
-        review.append(label, patient.review);
-      }
       if (patient.documents.length) {
         preview.replaceChildren(...patient.documents.slice(0, 4).map(documentRecord => {
           const item = document.createElement('article');
@@ -4926,9 +5037,9 @@
       appShell.hidden = false;
       appShell.classList.remove('doctor-session', 'patient-session', 'staff-session', 'checkup-active', 'voice-mode');
       appShell.classList.add(`${role}-session`);
-      accountProfileButton.hidden = role !== 'staff' && role !== 'doctor';
+      accountProfileButton.hidden = false;
       linkAbhaButton.hidden = role !== 'patient';
-      accountProfileLabel.textContent = role === 'doctor' ? 'View doctor profile' : 'View staff profile';
+      accountProfileLabel.textContent = role === 'doctor' ? 'View doctor profile' : role === 'staff' ? 'View staff profile' : 'View my profile';
       openView(view);
     }
 
@@ -4974,6 +5085,61 @@
       const firstName = patient.fullName.trim().split(/\s+/)[0] || patient.fullName;
       document.getElementById('patientWelcomeName').textContent = firstName;
       document.getElementById('voicePrompt').textContent = `Hello, ${firstName}`;
+    }
+
+    function patientProfileAge(dateOfBirth) {
+      const birth = new Date(`${dateOfBirth}T00:00:00`);
+      if (Number.isNaN(birth.getTime())) return 'Not available';
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age -= 1;
+      return `${Math.max(0, age)} years`;
+    }
+
+    function renderPatientProfile(patient) {
+      const profile = patient.profile || {};
+      const health = patient.health || {};
+      const name = profile.fullName || 'Patient';
+      const initials = name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'P';
+      const identityMethod = patient.identity?.method === 'abha' ? 'ABHA ID' : patient.identity?.method === 'aadhaar' ? 'Aadhaar number' : 'Verified identity';
+      document.getElementById('patientProfileMark').textContent = initials;
+      document.getElementById('patientProfileName').textContent = name;
+      document.getElementById('patientProfileReference').textContent = `Patient ID ${patient.id}`;
+      document.getElementById('patientProfileFullName').textContent = name;
+      document.getElementById('patientProfilePatientId').textContent = patient.id || 'Not available';
+      document.getElementById('patientProfilePhone').textContent = patient.phone ? `+91 ${patient.phone}` : 'Not available';
+      document.getElementById('patientProfileIdentity').textContent = patient.identity?.last4 ? `${identityMethod} · •••• ${patient.identity.last4}` : 'Not linked';
+      document.getElementById('patientProfileAbha').textContent = patient.abhaLinkStatus === 'linked' ? `Linked · •••• ${patient.identity?.last4 || ''}` : 'Not linked';
+      document.getElementById('patientProfileCreated').textContent = patient.createdAt ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date(patient.createdAt)) : 'Not available';
+      document.getElementById('patientProfileDob').textContent = profile.dateOfBirth ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date(`${profile.dateOfBirth}T00:00:00`)) : 'Not available';
+      document.getElementById('patientProfileAge').textContent = patientProfileAge(profile.dateOfBirth);
+      document.getElementById('patientProfileGender').textContent = profile.gender || 'Not recorded';
+      document.getElementById('patientProfileBloodGroup').textContent = profile.bloodGroup || 'Not recorded';
+      document.getElementById('patientProfileHeight').textContent = Number.isFinite(Number(profile.heightCm)) ? `${profile.heightCm} cm` : 'Not recorded';
+      document.getElementById('patientProfileWeight').textContent = Number.isFinite(Number(profile.weightKg)) ? `${profile.weightKg} kg` : 'Not recorded';
+      document.getElementById('patientProfileAllergies').textContent = health.allergies || 'None reported';
+      const recordedConditions = Array.isArray(health.conditions) ? health.conditions.filter(condition => !/^none(?: reported)?$/i.test(String(condition).trim())) : [];
+      const conditions = recordedConditions.length ? recordedConditions : ['None reported'];
+      document.getElementById('patientProfileConditionSummary').textContent = recordedConditions.length ? `${recordedConditions.length} recorded` : 'None recorded';
+      const list = document.getElementById('patientProfileConditions');
+      list.replaceChildren(...conditions.map(condition => Object.assign(document.createElement('span'), { className: 'patient-profile-condition', textContent: condition })));
+      patientProfileStatus.textContent = '';
+    }
+
+    async function loadPatientProfile() {
+      patientProfileStatus.textContent = 'Loading your profile…';
+      const patientId = activePatient?.id || localStorage.getItem('arogPatientId') || '';
+      const token = activePatientSessionToken || localStorage.getItem('arogPatientSessionToken') || '';
+      if (!patientId || !token) return void (patientProfileStatus.textContent = 'Sign in as a patient to view your profile.');
+      try {
+        const response = await fetch(`/api/patients/${encodeURIComponent(patientId)}/dashboard`, { cache: 'no-store', headers: { Authorization: `Bearer ${token}` } });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.patient) throw new Error(data.error || 'Could not load your patient profile');
+        renderPatientProfile(data.patient);
+        applyPatientIdentity({ id: data.patient.id, fullName: data.patient.profile?.fullName || 'Patient' });
+      } catch (error) {
+        patientProfileStatus.textContent = error.message || 'Could not load your patient profile.';
+      }
     }
 
     function applyDoctorIdentity(doctor) {
@@ -5045,17 +5211,23 @@
       const recordedVitals = patient.vitals;
       const visitHistory = patient.history.map(item => ({
         date: new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(item.createdAt)),
-        iso: item.createdAt.slice(0, 10), kind: 'visit', type: 'AI intake',
+        iso: item.createdAt.slice(0, 10), createdAt: item.createdAt, kind: 'visit', type: 'AI intake',
         title: item.encounterNumber || 'Hospital encounter', summary: item.summary
       }));
       const documentHistory = patient.documents.map(item => ({
         date: new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(item.createdAt)),
-        iso: item.createdAt.slice(0, 10), kind: item.type.includes('pdf') ? 'prescription' : 'lab', type: 'Document',
+        iso: item.createdAt.slice(0, 10), createdAt: item.createdAt, kind: item.type.includes('pdf') ? 'prescription' : 'lab', type: 'Document',
         title: item.name,
         summary: item.aiSummary || (item.analysisStatus === 'processing' || item.analysisStatus === 'queued'
           ? 'Gemini is reading this document.' : 'Document uploaded by the hospital care team.'),
         previewUrl: item.previewUrl
       }));
+      const vitalsHistory = recordedVitals ? [{
+        date: new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(recordedVitals.recordedAt)),
+        iso: recordedVitals.recordedAt.slice(0, 10), createdAt: recordedVitals.recordedAt, kind: 'vitals', type: 'Vitals',
+        title: 'Reception vitals',
+        summary: `Blood pressure ${recordedVitals.systolic}/${recordedVitals.diastolic} mmHg · Pulse ${recordedVitals.heartRate} bpm · SpO₂ ${recordedVitals.oxygenSaturation}%`
+      }] : [];
       return {
         ...patient,
         id: patient.uhid,
@@ -5067,7 +5239,7 @@
         vitals: recordedVitals
           ? [`${recordedVitals.systolic}/${recordedVitals.diastolic} mmHg`, `${recordedVitals.heartRate} bpm`, `${recordedVitals.oxygenSaturation}%`]
           : ['Not recorded', 'Not recorded', 'Not recorded'],
-        history: [...visitHistory, ...documentHistory].sort((a, b) => b.iso.localeCompare(a.iso)),
+        history: [...visitHistory, ...vitalsHistory, ...documentHistory].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))),
         documents: patient.documents || [],
         concern: patient.summary,
         meta: `${patient.encounterNumber} · UHID ${patient.uhid}`
@@ -5230,7 +5402,7 @@
         } else if (/^patient\/(?:language|voice|intake-summary|specialty|summary)$/.test(route)) {
           route = patientLoggedInThisSession ? 'patient/start' : 'login/patient';
           history.replaceState({ route }, '', `#/${route}`);
-        } else if (!patientLoggedInThisSession && /^patient\/(?:start|records|access-history)$/.test(route)) {
+        } else if (!patientLoggedInThisSession && /^patient\/(?:start|records|access-history|profile)$/.test(route)) {
           route = 'login/patient';
           history.replaceState({ route }, '', '#/login/patient');
         }
@@ -5267,6 +5439,14 @@
       const registerMatch = route.match(/^register\/(patient|doctor|staff)$/);
       if (registerMatch) {
         selectLoginRole(registerMatch[1], focus, 'register');
+        return;
+      }
+
+      if (route === 'patient/profile') {
+        showSession('patient', 'patientProfile');
+        patientNavButtons.forEach(button => button.setAttribute('aria-selected', 'false'));
+        void loadPatientProfile();
+        if (focus) document.getElementById('patientProfileTitle').focus({ preventScroll: true });
         return;
       }
 
@@ -5526,6 +5706,8 @@
       const allergies = document.getElementById('rxAllergies');
       if (complaint) complaint.value = patient?.summary || '';
       if (allergies) allergies.value = patient?.allergies && patient.allergies !== 'None reported' ? patient.allergies : '';
+      const noPrescription = document.getElementById('noPrescriptionRequired');
+      if (noPrescription) noPrescription.checked = false;
       prescriptionMedicines = [];
       renderPrescriptionMedicines();
       setPrescriptionTab('clinical');
@@ -5562,26 +5744,29 @@
     prescriptionEditor?.addEventListener('input', updatePrescriptionWordCount);
     prescriptionEditor?.addEventListener('change', updatePrescriptionWordCount);
     document.getElementById('publishPrescription')?.addEventListener('click', async event => {
-      if (!selectedClinicalPatient) return void showToast('Select a patient', 'Search for a hospital patient before uploading a prescription.');
+      if (!selectedClinicalPatient) return void showToast('Select a patient', 'Search for a hospital patient before ending an evaluation.');
       const payload = prescriptionPayload();
-      if (!payload.clinical.chiefComplaint || !payload.clinical.diagnosis || !payload.medications.length) {
+      payload.intakeId = selectedClinicalPatient.intakeId;
+      payload.reviewedSummary = selectedClinicalPatient.summary;
+      payload.noPrescription = document.getElementById('noPrescriptionRequired')?.checked === true;
+      if (!payload.clinical.chiefComplaint || !payload.clinical.diagnosis || (!payload.noPrescription && !payload.medications.length)) {
         setPrescriptionTab(!payload.clinical.chiefComplaint || !payload.clinical.diagnosis ? 'clinical' : 'medicines');
-        return void showToast('Complete required fields', 'Add the chief complaint, clinical impression and at least one medicine.');
+        return void showToast('Complete required fields', 'Add the chief complaint and clinical impression, then add a medicine or select no prescription required.');
       }
-      const button = event.currentTarget; button.disabled = true; button.textContent = 'Generating secure PDF…';
+      const button = event.currentTarget; button.disabled = true; button.textContent = 'Publishing evaluation…';
       try {
-        const response = await fetch('/api/doctor-prescriptions', {
+        const response = await fetch('/api/doctor-evaluations/complete', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Could not upload prescription');
-        prescriptionDraftStatus.textContent = `Uploaded · ${data.prescriptionId}`;
+        if (!response.ok) throw new Error(data.error || 'Could not complete the evaluation');
+        prescriptionDraftStatus.textContent = data.prescriptionId ? `Published · ${data.prescriptionId}` : 'Published · no prescription required';
         await loadDoctorPatients();
-        showToast('Prescription uploaded', `${data.prescriptionId} is now available in ${selectedClinicalPatient?.fullName || 'the patient'}’s records.`);
+        showToast('Evaluation published', `The reviewed summary${data.prescriptionId ? ' and prescription' : ''} are now available in the patient portal.`);
       } catch (error) {
-        showToast('Upload failed', error.message || 'Could not upload the prescription.');
+        showToast('Evaluation not published', error.message || 'Could not complete the evaluation.');
       } finally {
-        button.disabled = false; button.textContent = 'Upload to patient portal';
+        button.disabled = false; button.textContent = 'End evaluation & publish';
       }
     });
 
@@ -5602,10 +5787,11 @@
       });
     }
 
-    function createPatientRecordItem(id, type, title, subtitle, status) {
+    function createPatientRecordItem(id, type, title, subtitle, status, createdAt = '') {
       const item = document.createElement('button');
       item.className = 'patient-record-item'; item.type = 'button';
       item.dataset.recordId = id; item.dataset.recordType = type; item.setAttribute('aria-selected', 'false');
+      item.dataset.recordCreatedAt = createdAt;
       const icon = document.createElement('span'); icon.className = 'record-icon';
       icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18H6V3Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
       const copy = document.createElement('span'); copy.className = 'record-copy';
@@ -5614,7 +5800,7 @@
       const badge = document.createElement('span'); badge.className = 'record-status'; badge.textContent = status;
       copy.append(strong, small); item.append(icon, copy, badge);
       const record = patientRecordData[id];
-      if (type === 'visit' && record) {
+      if ((type === 'visit' || type === 'vitals') && record) {
         item.classList.add('has-inline');
         const inline = document.createElement('span'); inline.className = 'patient-record-inline';
         const context = document.createElement('span');
@@ -5683,16 +5869,28 @@
         Object.keys(patientRecordData).forEach(key => delete patientRecordData[key]);
         const visitsById = new Map((data.visits || []).map(visit => [visit.id, visit]));
         for (const visit of data.visits || []) {
-          const id = `visit-${visit.id}`;
-          patientRecordData[id] = {
-            meta: `${patientDate(visit.createdAt)} · Consultation`, title: visit.encounterNumber || 'Hospital consultation',
-            doctor: visit.doctor ? `${visit.doctor.name} · ${visit.doctor.specialty}` : 'Doctor assessment not recorded yet',
-            summary: visit.summary || 'No consultation summary was recorded.',
-            plan: `${visit.hospitalName}${visit.hospitalLocation ? `, ${visit.hospitalLocation}` : ''} · UHID ${visit.uhid || 'Pending'}`,
-            files: visit.documents || [], vitals: visit.vitals
-          };
-          const item = createPatientRecordItem(id, 'visit', visit.encounterNumber || 'Hospital consultation', `${visit.hospitalName} · ${patientDate(visit.createdAt)}`, 'Consultation');
-          list.insertBefore(item, patientRecordsEmpty); patientRecordItems.push(item);
+          if (visit.evaluationStatus === 'completed') {
+            const id = `visit-${visit.id}`;
+            patientRecordData[id] = {
+              meta: `${patientDate(visit.evaluationCompletedAt || visit.createdAt)} · Consultation`, title: visit.encounterNumber || 'Hospital consultation',
+              doctor: visit.doctor ? `${visit.doctor.name} · ${visit.doctor.specialty}` : 'Doctor assessment completed',
+              summary: visit.summary || 'The doctor completed this evaluation.',
+              plan: `${visit.hospitalName}${visit.hospitalLocation ? `, ${visit.hospitalLocation}` : ''} · UHID ${visit.uhid || 'Pending'}`,
+              files: visit.documents || [], vitals: visit.vitals
+            };
+            patientRecordItems.push(createPatientRecordItem(id, 'visit', visit.encounterNumber || 'Hospital consultation', `${visit.hospitalName} · ${patientDate(visit.evaluationCompletedAt || visit.createdAt)}`, 'Consultation', visit.evaluationCompletedAt || visit.createdAt));
+          }
+          if (visit.vitals) {
+            const id = `vitals-${visit.id}`;
+            patientRecordData[id] = {
+              meta: `${patientDate(visit.vitals.recordedAt)} · Vitals`, title: 'Reception vitals',
+              doctor: 'Recorded by the hospital staff team',
+              summary: `Blood pressure ${visit.vitals.systolic}/${visit.vitals.diastolic} mmHg · Pulse ${visit.vitals.heartRate} bpm · SpO₂ ${visit.vitals.oxygenSaturation}%`,
+              plan: `${visit.hospitalName} · ${visit.encounterNumber || 'Hospital encounter'}`,
+              files: [], vitals: visit.vitals
+            };
+            patientRecordItems.push(createPatientRecordItem(id, 'vitals', 'Reception vitals', `${visit.hospitalName} · ${patientDate(visit.vitals.recordedAt)}`, 'Vitals', visit.vitals.recordedAt));
+          }
         }
         for (const documentRecord of data.documents || []) {
           const id = `document-${documentRecord.id}`;
@@ -5707,9 +5905,10 @@
             plan: visit ? `${visit.hospitalName} · ${visit.encounterNumber || 'Hospital encounter'}` : 'Open the file to review the complete document.',
             files: [documentRecord], vitals: null
           };
-          const item = createPatientRecordItem(id, category, documentRecord.name, `Added ${patientDate(documentRecord.createdAt)} · ${documentRecord.type.includes('pdf') ? 'PDF' : 'File'}`, categoryLabel);
-          list.insertBefore(item, patientRecordsEmpty); patientRecordItems.push(item);
+          patientRecordItems.push(createPatientRecordItem(id, category, documentRecord.name, `Added ${patientDate(documentRecord.createdAt)} · ${documentRecord.type.includes('pdf') ? 'PDF' : 'File'}`, categoryLabel, documentRecord.createdAt));
         }
+        patientRecordItems.sort((a, b) => String(b.dataset.recordCreatedAt).localeCompare(String(a.dataset.recordCreatedAt)));
+        patientRecordItems.forEach(item => list.insertBefore(item, patientRecordsEmpty));
         renderPatientAccessHistory(data.accessHistory || []);
         filterPatientRecords();
       } catch (error) { showToast('Records unavailable', error.message || 'Could not load your records.'); }
@@ -5983,10 +6182,13 @@
 
     accountProfileButton.addEventListener('click', () => {
       setSettingsOpen(false);
-      navigateRoute(appShell.classList.contains('doctor-session') ? 'doctor/profile' : 'staff/profile', false, true);
+      const destination = appShell.classList.contains('doctor-session') ? 'doctor/profile'
+        : appShell.classList.contains('staff-session') ? 'staff/profile' : 'patient/profile';
+      navigateRoute(destination, false, true);
     });
     document.getElementById('backToStaffPatients').addEventListener('click', () => navigateRoute('staff/patients', false, true));
     document.getElementById('backToDoctorPatients').addEventListener('click', () => navigateRoute('doctor/previous', false, true));
+    document.getElementById('backToPatientRecords').addEventListener('click', () => navigateRoute('patient/records', false, true));
 
     document.getElementById('logoutButton').addEventListener('click', () => {
       setSettingsOpen(false);
@@ -5994,8 +6196,13 @@
       try {
         localStorage.removeItem('arogPatientId');
         localStorage.removeItem('arogPatientName');
+        localStorage.removeItem('arogPatientSessionToken');
         if (appShell.classList.contains('doctor-session')) localStorage.removeItem('arogDoctor');
       } catch (_) {}
+      if (appShell.classList.contains('patient-session')) {
+        activePatient = null;
+        activePatientSessionToken = '';
+      }
       if (appShell.classList.contains('doctor-session')) activeDoctor = null;
       navigateRoute('roles');
     });

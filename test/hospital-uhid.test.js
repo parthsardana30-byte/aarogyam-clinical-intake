@@ -38,7 +38,7 @@ async function registerPatient() {
   const registration = await json('/api/patient-registrations', {
     method: 'POST', body: JSON.stringify({
       phone, otpRequestId: otp.payload.id, otpVerificationToken: verification.payload.verificationToken,
-      identityMethod: 'aadhaar', identityNumber: '800123456780', password: 'Test@123',
+      identityMethod: 'aadhaar', identityNumber: '800123456780', epin: '123456',
       fullName: 'Hospital Identity Patient', dateOfBirth: '1990-04-12', gender: 'Male',
       heightCm: 172, weightKg: 70, bloodGroup: 'B+', conditions: ['none'], allergies: 'None',
     }),
@@ -106,7 +106,7 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
 
   const patientLogin = await json('/api/patient-login', {
     method: 'POST', headers: { Cookie: cookieA },
-    body: JSON.stringify({ identityMethod: 'aadhaar', identityNumber: '800123456780', password: 'Test@123' }),
+    body: JSON.stringify({ identityMethod: 'aadhaar', identityNumber: '800123456780', epin: '123456' }),
   });
   assert.equal(patientLogin.response.status, 200);
   assert.equal(patientLogin.payload.patient.id, patient.id);
@@ -172,6 +172,27 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.equal(queueA.payload.patients[0].latestVitals.heartRate, 78);
   assert.equal(queueB.payload.patients[0].uhid, firstB.payload.intake.uhid);
 
+  const vitalsB = await json('/api/staff-patient-vitals', {
+    method: 'POST', body: JSON.stringify({
+      staffId: 'STAFF-B', patientId: patient.id, intakeId: firstB.payload.intake.id,
+      heartRate: 76, oxygenSaturation: 99, systolic: 118, diastolic: 76,
+    }),
+  });
+  assert.equal(vitalsB.response.status, 201);
+  const staffCompletionB = await json(`/api/staff-intakes/${firstB.payload.intake.id}/complete`, {
+    method: 'POST', body: JSON.stringify({ staffId: 'STAFF-B' }),
+  });
+  assert.equal(staffCompletionB.response.status, 200);
+
+  const doctorBeforeStaffCompletion = await json('/api/doctor-patients?doctorId=CHA-GEN-1001');
+  assert.equal(doctorBeforeStaffCompletion.payload.patients.some(record => record.uhid === firstA.payload.intake.uhid), false);
+  const staffCompletion = await json(`/api/staff-intakes/${secondA.payload.intake.id}/complete`, {
+    method: 'POST', body: JSON.stringify({ staffId: 'STAFF-A' }),
+  });
+  assert.equal(staffCompletion.response.status, 200);
+  const queueAfterCompletion = await json('/api/staff-patients?staffId=STAFF-A');
+  assert.equal(queueAfterCompletion.payload.patients.some(record => record.uhid === firstA.payload.intake.uhid), false);
+
   const doctor = await json('/api/doctor-patients?doctorId=CHA-GEN-1001');
   assert.equal(doctor.response.status, 200);
   assert.equal(doctor.payload.patients[0].uhid, firstA.payload.intake.uhid);
@@ -204,9 +225,10 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.equal(nonMedicalQuestion.response.status, 422);
   assert.match(nonMedicalQuestion.payload.error, /only medical questions/i);
 
-  const prescription = await json('/api/doctor-prescriptions', {
+  const prescription = await json('/api/doctor-evaluations/complete', {
     method: 'POST', body: JSON.stringify({
-      doctorId: 'CHA-GEN-1001', patientId: patient.id,
+      doctorId: 'CHA-GEN-1001', patientId: patient.id, intakeId: secondA.payload.intake.id,
+      reviewedSummary: 'Doctor-reviewed headache consultation summary.',
       clinical: { chiefComplaint: 'Headache for two days', diagnosis: 'Tension-type headache', allergies: 'Penicillin' },
       medications: [{
         name: 'Paracetamol', strength: '500 mg', form: 'Tablet', dose: '1 tablet', route: 'Oral',
@@ -225,9 +247,11 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
     headers: { Authorization: `Bearer ${patientLogin.payload.sessionToken}` },
   });
   assert.equal(dashboard.response.status, 200);
-  assert.equal(dashboard.payload.summary.consultationCount, 3);
+  assert.equal(dashboard.payload.summary.consultationCount, 1);
   assert.equal(dashboard.payload.visits.length, 3);
   const ahmedabadVisit = dashboard.payload.visits.find(item => item.id === secondA.payload.intake.id);
+  assert.equal(ahmedabadVisit.summary, 'Doctor-reviewed headache consultation summary.');
+  assert.equal(ahmedabadVisit.evaluationStatus, 'completed');
   assert.equal(ahmedabadVisit.vitals.heartRate, 78);
   assert.equal(ahmedabadVisit.doctor.name, 'Dr. Aarav Mehta');
   assert.equal(ahmedabadVisit.documents.some(item => item.category === 'lab'), true);

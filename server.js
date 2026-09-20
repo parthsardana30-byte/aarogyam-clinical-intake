@@ -28,7 +28,6 @@ const manualDeviceCodeMaxAttempts = 10;
 const enrollments = new Map();
 const signupOtps = new Map();
 const signupOtpLastSent = new Map();
-const patientSessions = new Map();
 const manualDeviceCodeAttempts = new Map();
 const hospitalBranches = new Map([
   ['civil-ahmedabad', { id: 'civil-ahmedabad', name: 'Civil Hospital', location: 'Ahmedabad, Gujarat', uhidPrefix: 'CHA', issuedDoctorIds: new Set(['CHA-DR-2187']) }],
@@ -131,9 +130,22 @@ async function loadPatients() {
       conditions_json TEXT NOT NULL,
       allergies TEXT,
       abha_link_status TEXT NOT NULL DEFAULT 'unlinked',
+      abha_ciphertext TEXT,
+      abha_iv TEXT,
+      abha_tag TEXT,
+      abha_last4 TEXT,
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS patients_phone_idx ON patients(phone);
+    CREATE TABLE IF NOT EXISTS patient_sessions (
+      token_hash TEXT PRIMARY KEY,
+      patient_id TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS patient_sessions_patient_idx ON patient_sessions(patient_id);
+    CREATE INDEX IF NOT EXISTS patient_sessions_expiry_idx ON patient_sessions(expires_at);
     CREATE TABLE IF NOT EXISTS doctors (
       doctor_id TEXT PRIMARY KEY,
       hospital_id TEXT NOT NULL,
@@ -264,6 +276,12 @@ async function loadPatients() {
     );
     CREATE INDEX IF NOT EXISTS patient_data_access_patient_idx ON patient_data_access_log(patient_id, accessed_at DESC);
   `);
+  const patientColumns = new Set(patientsDb.prepare('PRAGMA table_info(patients)').all().map(column => column.name));
+  for (const [column, type] of [
+    ['abha_ciphertext', 'TEXT'], ['abha_iv', 'TEXT'], ['abha_tag', 'TEXT'], ['abha_last4', 'TEXT']
+  ]) {
+    if (!patientColumns.has(column)) patientsDb.exec(`ALTER TABLE patients ADD COLUMN ${column} ${type}`);
+  }
   // Preserve summaries from visits created by the retired OPD queue flow.
   patientsDb.exec(`
     INSERT OR IGNORE INTO patient_intakes (id, patient_id, conversation_id, language, summary, created_at)
@@ -285,7 +303,10 @@ async function loadPatients() {
   const patientIntakeColumns = new Set(patientsDb.prepare('PRAGMA table_info(patient_intakes)').all().map(column => column.name));
   const patientIntakeMigrations = [
     ['device_id', 'TEXT'], ['staff_id', 'TEXT'], ['hospital_id', 'TEXT'], ['hospital_uhid', 'TEXT'],
-    ['encounter_number', 'TEXT'], ['intake_source', "TEXT NOT NULL DEFAULT 'authorized-device'"]
+    ['encounter_number', 'TEXT'], ['intake_source', "TEXT NOT NULL DEFAULT 'authorized-device'"],
+    ['staff_status', "TEXT NOT NULL DEFAULT 'pending'"], ['staff_completed_at', 'TEXT'],
+    ['staff_completed_by', 'TEXT'], ['evaluation_status', "TEXT NOT NULL DEFAULT 'awaiting_staff'"],
+    ['evaluating_doctor_id', 'TEXT'], ['published_summary', 'TEXT'], ['evaluation_completed_at', 'TEXT']
   ];
   for (const [column, type] of patientIntakeMigrations) {
     if (!patientIntakeColumns.has(column)) patientsDb.exec(`ALTER TABLE patient_intakes ADD COLUMN ${column} ${type}`);
@@ -347,6 +368,7 @@ async function loadPatients() {
     },
     health: { conditions: JSON.parse(row.conditions_json), allergies: row.allergies },
     abhaLinkStatus: row.abha_link_status,
+    abhaLast4: row.abha_last4 || (row.identity_method === 'abha' ? row.identity_last4 : ''),
     createdAt: row.created_at
   }));
 }
@@ -377,6 +399,15 @@ function decryptIdentityNumber(row) {
   const decipher = createDecipheriv('aes-256-gcm', patientEncryptionKey(), Buffer.from(row.identity_iv, 'base64'));
   decipher.setAuthTag(Buffer.from(row.identity_tag, 'base64'));
   return Buffer.concat([decipher.update(Buffer.from(row.identity_ciphertext, 'base64')), decipher.final()]).toString('utf8');
+}
+
+function decryptAbhaNumber(row) {
+  if (!row.abha_ciphertext || !row.abha_iv || !row.abha_tag) {
+    return row.identity_method === 'abha' ? decryptIdentityNumber(row) : '';
+  }
+  const decipher = createDecipheriv('aes-256-gcm', patientEncryptionKey(), Buffer.from(row.abha_iv, 'base64'));
+  decipher.setAuthTag(Buffer.from(row.abha_tag, 'base64'));
+  return Buffer.concat([decipher.update(Buffer.from(row.abha_ciphertext, 'base64')), decipher.final()]).toString('utf8');
 }
 
 function cookies(request) {
@@ -534,16 +565,24 @@ function resumePendingDocumentAnalyses() {
 
 function createPatientSession(patientId) {
   const token = randomBytes(32).toString('base64url');
-  patientSessions.set(hash(token), { patientId, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 });
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  patientsDb.prepare('DELETE FROM patient_sessions WHERE datetime(expires_at) <= datetime(?)').run(now.toISOString());
+  patientsDb.prepare(`INSERT INTO patient_sessions (token_hash, patient_id, expires_at, created_at)
+    VALUES (?, ?, ?, ?)`).run(hash(token), patientId, expiresAt, now.toISOString());
   return token;
 }
 
 function authorizePatient(request, response, patientId) {
   const authorization = String(request.headers.authorization || '');
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : '';
-  const session = token ? patientSessions.get(hash(token)) : null;
-  if (!session || session.patientId !== patientId || session.expiresAt < Date.now()) {
-    if (session?.expiresAt < Date.now()) patientSessions.delete(hash(token));
+  const tokenHash = token ? hash(token) : '';
+  const session = tokenHash
+    ? patientsDb.prepare('SELECT patient_id, expires_at FROM patient_sessions WHERE token_hash = ?').get(tokenHash)
+    : null;
+  const expired = session && new Date(session.expires_at).getTime() <= Date.now();
+  if (!session || session.patient_id !== patientId || expired) {
+    if (expired) patientsDb.prepare('DELETE FROM patient_sessions WHERE token_hash = ?').run(tokenHash);
     sendJson(response, 401, { error: 'Your patient session is invalid or expired' });
     return false;
   }
@@ -558,6 +597,7 @@ function publicPatientProfile(patient) {
     profile: patient.profile,
     health: patient.health,
     abhaLinkStatus: patient.abhaLinkStatus,
+    abhaLast4: patient.abhaLast4 || (patient.identity.method === 'abha' ? patient.identity.last4 : ''),
     createdAt: patient.createdAt
   };
 }
@@ -771,6 +811,25 @@ function purgeExpiredSignupOtps() {
 }
 
 async function deliverSignupOtp(phone, otp) {
+  if (process.env.OTP_DEMO_MODE === '1') return { mode: 'demo' };
+  const { authKey, otpTemplateId, otpApiConfigured } = msg91Config();
+  if (otpApiConfigured) {
+    const endpoint = new URL('https://control.msg91.com/api/v5/otp');
+    endpoint.searchParams.set('template_id', otpTemplateId);
+    endpoint.searchParams.set('mobile', `91${phone}`);
+    endpoint.searchParams.set('otp', otp);
+    endpoint.searchParams.set('otp_length', '6');
+    endpoint.searchParams.set('otp_expiry', '5');
+    const result = await fetch(endpoint, {
+      method: 'POST',
+      headers: { authkey: authKey, Accept: 'application/json' }
+    });
+    const payload = await result.json().catch(() => ({}));
+    if (!result.ok || String(payload.type || '').toLowerCase() !== 'success') {
+      throw new Error(String(payload.message || `MSG91 rejected the OTP request (${result.status})`).slice(0, 180));
+    }
+    return { mode: 'sms' };
+  }
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const fromNumber = process.env.TWILIO_FROM_NUMBER;
@@ -800,10 +859,16 @@ function msg91Config() {
   const widgetId = String(process.env.MSG91_WIDGET_ID || '').trim();
   const tokenAuth = String(process.env.MSG91_WIDGET_TOKEN || '').trim();
   const authKey = String(process.env.MSG91_AUTH_KEY || '').trim();
-  return { widgetId, tokenAuth, authKey, configured: Boolean(widgetId && tokenAuth && authKey) };
+  const otpTemplateId = String(process.env.MSG91_OTP_TEMPLATE_ID || '').trim();
+  return {
+    widgetId, tokenAuth, authKey, otpTemplateId,
+    configured: Boolean(widgetId && tokenAuth && authKey),
+    otpApiConfigured: Boolean(authKey && otpTemplateId)
+  };
 }
 
 function signupOtpConfig(_request, response) {
+  if (process.env.OTP_DEMO_MODE === '1') return sendJson(response, 200, { provider: 'server' });
   const config = msg91Config();
   if (config.configured) {
     return sendJson(response, 200, { provider: 'msg91', widgetId: config.widgetId, tokenAuth: config.tokenAuth });
@@ -934,9 +999,9 @@ async function loginPatientWithOtp(request, response) {
 
 async function resetPatientPassword(request, response) {
   const body = await readJson(request);
-  const password = String(body.password || '');
-  if (password.length < 6 || password.length > 128) {
-    return sendJson(response, 400, { error: 'Password must contain at least 6 characters' });
+  const password = String(body.epin || body.password || '');
+  if (!/^\d{6}$/.test(password)) {
+    return sendJson(response, 400, { error: 'E-PIN must contain exactly 6 digits' });
   }
   const verified = verifiedPatientOtp(body, 'reset');
   if (!verified) return sendJson(response, 401, { error: 'OTP verification is invalid or expired' });
@@ -955,8 +1020,9 @@ async function resetPatientPassword(request, response) {
 const allowedBloodGroups = new Set(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']);
 const allowedGenders = new Set(['Female', 'Male', 'Non-binary', 'Prefer not to say']);
 const allowedConditions = new Set([
-  'heart_disease', 'hypertension', 'diabetes', 'asthma', 'thyroid',
-  'kidney_disease', 'liver_disease', 'arthritis', 'none'
+  'heart_disease', 'hypertension', 'diabetes', 'asthma', 'thyroid', 'thyroid_disorder',
+  'kidney_disease', 'kidney_condition', 'liver_disease', 'arthritis', 'high_cholesterol',
+  'chronic_lung_disease', 'epilepsy', 'cancer', 'none'
 ]);
 
 async function createPatientRegistration(request, response) {
@@ -992,7 +1058,7 @@ async function createPatientRegistration(request, response) {
   const heightCm = Number(body.heightCm);
   const weightKg = Number(body.weightKg);
   const bloodGroup = String(body.bloodGroup || 'Unknown');
-  const password = String(body.password || '');
+  const password = String(body.epin || body.password || '');
   const allergies = String(body.allergies || '').trim().slice(0, 300);
   let conditions = Array.isArray(body.conditions) ? [...new Set(body.conditions.map(String))] : [];
   conditions = conditions.filter(condition => allowedConditions.has(condition));
@@ -1005,7 +1071,7 @@ async function createPatientRegistration(request, response) {
   if (!Number.isFinite(heightCm) || heightCm < 50 || heightCm > 250) return sendJson(response, 400, { error: 'Height must be between 50 and 250 cm' });
   if (!Number.isFinite(weightKg) || weightKg < 2 || weightKg > 350) return sendJson(response, 400, { error: 'Weight must be between 2 and 350 kg' });
   if (!allowedBloodGroups.has(bloodGroup)) return sendJson(response, 400, { error: 'Select a valid blood group' });
-  if (password.length < 6 || password.length > 128) return sendJson(response, 400, { error: 'Password must contain at least 6 characters' });
+  if (!/^\d{6}$/.test(password)) return sendJson(response, 400, { error: 'E-PIN must contain exactly 6 digits' });
 
   const passwordSalt = randomBytes(16).toString('hex');
   let patientId;
@@ -1053,17 +1119,17 @@ async function createPatientRegistration(request, response) {
 async function loginPatient(request, response) {
   const body = await readJson(request);
   const phone = normalizeIndianPhone(body.phone || body.identifier);
-  const password = String(body.password || '');
+  const password = String(body.epin || body.password || '');
   if (phone) {
     const row = patientsDb.prepare('SELECT * FROM patients WHERE phone = ?').get(phone);
     const patient = row ? patients.find(item => item.id === row.id) : null;
     if (!patient || !password || !patient.password?.salt || !patient.password?.hash) {
-      return sendJson(response, 401, { error: 'Mobile number or password is incorrect' });
+      return sendJson(response, 401, { error: 'Mobile number or E-PIN is incorrect' });
     }
     const candidate = scryptSync(password, patient.password.salt, 64);
     const stored = Buffer.from(patient.password.hash, 'hex');
     if (stored.length !== candidate.length || !timingSafeEqual(stored, candidate)) {
-      return sendJson(response, 401, { error: 'Mobile number or password is incorrect' });
+      return sendJson(response, 401, { error: 'Mobile number or E-PIN is incorrect' });
     }
     return sendJson(response, 200, {
       patient: { id: patient.id, fullName: patient.profile.fullName },
@@ -1074,11 +1140,16 @@ async function loginPatient(request, response) {
   const identityNumber = String(body.identityNumber || body.identifier || '').replace(/\D/g, '');
   const identityValid = identityMethod === 'abha' ? /^\d{14}$/.test(identityNumber) : identityMethod === 'aadhaar' && /^\d{12}$/.test(identityNumber);
   if (!identityMethod || !identityValid) return sendJson(response, 400, { error: 'Enter a valid ABHA ID or Aadhaar number' });
-  const candidates = patientsDb.prepare(`
-    SELECT * FROM patients WHERE identity_method = ? AND identity_last4 = ?
-  `).all(identityMethod, identityNumber.slice(-4));
+  const candidates = identityMethod === 'abha'
+    ? patientsDb.prepare(`SELECT * FROM patients WHERE
+        (identity_method = 'abha' AND identity_last4 = ?) OR abha_last4 = ?`)
+        .all(identityNumber.slice(-4), identityNumber.slice(-4))
+    : patientsDb.prepare('SELECT * FROM patients WHERE identity_method = ? AND identity_last4 = ?')
+        .all(identityMethod, identityNumber.slice(-4));
   const row = candidates.find(candidate => {
-    try { return decryptIdentityNumber(candidate) === identityNumber; } catch { return false; }
+    try {
+      return (identityMethod === 'abha' ? decryptAbhaNumber(candidate) : decryptIdentityNumber(candidate)) === identityNumber;
+    } catch { return false; }
   });
   const patient = row ? patients.find(item => item.id === row.id) : null;
   if (!patient || !password || !patient.password?.salt || !patient.password?.hash) {
@@ -1129,6 +1200,7 @@ function getPatientDashboard(request, response, patientId) {
       ORDER BY CASE WHEN latest.intake_id = i.id THEN 0 ELSE 1 END, datetime(latest.recorded_at) DESC LIMIT 1
     )
     LEFT JOIN doctors d ON d.doctor_id = COALESCE(
+      i.evaluating_doctor_id,
       (SELECT pd.uploaded_by_doctor_id FROM patient_documents pd
        WHERE pd.patient_id = i.patient_id AND pd.intake_id = i.id AND pd.uploaded_by_doctor_id IS NOT NULL
        ORDER BY datetime(pd.created_at) DESC LIMIT 1),
@@ -1149,7 +1221,9 @@ function getPatientDashboard(request, response, patientId) {
       hospitalName: branch?.name || 'Hospital',
       hospitalLocation: branch?.location || '',
       uhid: row.hospital_uhid,
-      summary: row.summary,
+      summary: row.evaluation_status === 'completed' ? (row.published_summary || row.summary) : '',
+      evaluationStatus: row.evaluation_status || 'awaiting_staff',
+      evaluationCompletedAt: row.evaluation_completed_at || null,
       language: row.language,
       intakeSource: row.intake_source,
       createdAt: row.created_at,
@@ -1166,7 +1240,7 @@ function getPatientDashboard(request, response, patientId) {
   });
   sendJson(response, 200, {
     patient: publicPatientProfile(patient),
-    summary: { consultationCount: visits.length, documentCount: documents.length },
+    summary: { consultationCount: visits.filter(visit => visit.evaluationStatus === 'completed').length, documentCount: documents.length },
     visits,
     accessHistory: visits.map(visit => ({
       id: visit.id,
@@ -1187,20 +1261,38 @@ async function linkPatientAbha(request, response, patientId) {
   const body = await readJson(request);
   const abhaNumber = String(body.abhaNumber || '').replace(/\D/g, '');
   if (!/^\d{14}$/.test(abhaNumber)) return sendJson(response, 400, { error: 'Enter a valid 14-digit ABHA ID' });
-  const duplicate = patientsDb.prepare('SELECT id FROM patients WHERE identity_method = ? AND identity_last4 = ? AND id <> ?')
-    .all('abha', abhaNumber.slice(-4)).find(candidate => {
-      const row = patientsDb.prepare('SELECT * FROM patients WHERE id = ?').get(candidate.id);
-      try { return decryptIdentityNumber(row) === abhaNumber; } catch { return false; }
+  const duplicate = patientsDb.prepare(`SELECT * FROM patients WHERE id <> ? AND
+      ((identity_method = 'abha' AND identity_last4 = ?) OR abha_last4 = ?)`)
+    .all(patientId, abhaNumber.slice(-4), abhaNumber.slice(-4)).find(candidate => {
+      try { return decryptAbhaNumber(candidate) === abhaNumber; } catch { return false; }
     });
   if (duplicate) return sendJson(response, 409, { error: 'This ABHA ID is already linked to another account' });
   const encrypted = encryptIdentityNumber(abhaNumber);
-  patientsDb.prepare(`UPDATE patients SET identity_method = 'abha', identity_ciphertext = ?, identity_iv = ?,
-    identity_tag = ?, identity_last4 = ?, abha_link_status = 'linked' WHERE id = ?`)
+  patientsDb.prepare(`UPDATE patients SET abha_ciphertext = ?, abha_iv = ?, abha_tag = ?,
+    abha_last4 = ?, abha_link_status = 'linked' WHERE id = ?`)
     .run(encrypted.ciphertext, encrypted.iv, encrypted.tag, abhaNumber.slice(-4), patientId);
   const patient = patients.find(item => item.id === patientId);
-  patient.identity = { method: 'abha', last4: abhaNumber.slice(-4) };
   patient.abhaLinkStatus = 'linked';
+  patient.abhaLast4 = abhaNumber.slice(-4);
   sendJson(response, 200, { linked: true, last4: abhaNumber.slice(-4) });
+}
+
+async function updatePatientMedicalConditions(request, response, patientId) {
+  if (!authorizePatient(request, response, patientId)) return;
+  const patient = patients.find(item => item.id === patientId);
+  if (!patient) return sendJson(response, 404, { error: 'Patient account was not found' });
+  const body = await readJson(request);
+  let conditions = Array.isArray(body.conditions)
+    ? [...new Set(body.conditions.map(value => String(value).trim().toLowerCase()))]
+    : [];
+  if (!conditions.length || conditions.some(condition => !allowedConditions.has(condition))) {
+    return sendJson(response, 400, { error: 'Select valid medical conditions or choose none' });
+  }
+  if (conditions.includes('none')) conditions = ['none'];
+  patientsDb.prepare('UPDATE patients SET conditions_json = ? WHERE id = ?')
+    .run(JSON.stringify(conditions), patientId);
+  patient.health.conditions = conditions;
+  sendJson(response, 200, { conditions });
 }
 
 function patientAccessHistory(request, response, patientId) {
@@ -1543,7 +1635,7 @@ function listStaffPatients(request, response, url) {
       (SELECT COUNT(*) FROM patient_documents pd WHERE pd.patient_id = p.id AND pd.hospital_id = i.hospital_id) AS document_count,
       v.heart_rate, v.oxygen_saturation, v.systolic_bp, v.diastolic_bp, v.recorded_at,
       i.id AS intake_id, i.summary, i.created_at AS intake_created_at, i.device_id,
-      i.encounter_number, i.intake_source, i.hospital_id
+      i.encounter_number, i.intake_source, i.hospital_id, i.staff_status
     FROM patient_intakes i
     JOIN patients p ON p.id = i.patient_id
     JOIN patient_hospital_identities h ON h.patient_id = p.id AND h.hospital_id = i.hospital_id
@@ -1553,6 +1645,12 @@ function listStaffPatients(request, response, url) {
       ORDER BY datetime(latest.recorded_at) DESC LIMIT 1
     )
     WHERE i.hospital_id = ?
+      AND COALESCE(i.staff_status, 'pending') <> 'completed'
+      AND i.id = (
+        SELECT latest.id FROM patient_intakes latest
+        WHERE latest.patient_id = i.patient_id AND latest.hospital_id = i.hospital_id
+        ORDER BY datetime(latest.created_at) DESC LIMIT 1
+      )
     ORDER BY datetime(i.created_at) DESC
   `).all(staff.hospital_id);
   const patientMap = new Map();
@@ -1589,6 +1687,25 @@ function listStaffPatients(request, response, url) {
   }
   const patients = [...patientMap.values()];
   sendJson(response, 200, { patients });
+}
+
+async function completeStaffPreparation(request, response, intakeId) {
+  const body = await readJson(request);
+  const staffId = normalizeStaffId(body.staffId);
+  const staff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(staffId);
+  if (!staff) return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
+  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ? AND hospital_id = ?').get(intakeId, staff.hospital_id);
+  if (!intake) return sendJson(response, 404, { error: 'This hospital intake was not found' });
+  if (intake.staff_status === 'completed') return sendJson(response, 200, { completed: true, intakeId });
+  const vitals = patientsDb.prepare('SELECT id FROM patient_vitals WHERE intake_id = ? ORDER BY datetime(recorded_at) DESC LIMIT 1').get(intakeId);
+  if (!vitals) return sendJson(response, 409, { error: 'Record the patient vitals before completing staff preparation' });
+  const completedAt = new Date().toISOString();
+  patientsDb.prepare(`
+    UPDATE patient_intakes
+    SET staff_status = 'completed', staff_completed_at = ?, staff_completed_by = ?, evaluation_status = 'ready_for_doctor'
+    WHERE id = ?
+  `).run(completedAt, staff.employee_id, intakeId);
+  sendJson(response, 200, { completed: true, intakeId, completedAt, evaluationStatus: 'ready_for_doctor' });
 }
 
 async function createStaffPatientVitals(request, response) {
@@ -1656,6 +1773,8 @@ function publicPatientIntake(row, uhidCreated = false) {
     uhidCreated,
     encounterNumber: row.encounter_number,
     intakeSource: row.intake_source || 'authorized-device',
+    staffStatus: row.staff_status || 'pending',
+    evaluationStatus: row.evaluation_status || 'awaiting_staff',
     createdAt: row.created_at
   };
 }
@@ -1827,12 +1946,14 @@ function listDoctorPatients(_request, response, url) {
   if (!doctor) return sendJson(response, 404, { error: 'Doctor account was not found' });
   const rows = patientsDb.prepare(`
     SELECT p.*, h.uhid, h.hospital_id, i.id AS intake_id, i.language, i.summary,
-      i.encounter_number, i.intake_source, i.created_at AS intake_created_at
+      i.encounter_number, i.intake_source, i.created_at AS intake_created_at,
+      i.staff_status, i.evaluation_status, i.evaluation_completed_at
     FROM patient_hospital_identities h
     JOIN patients p ON p.id = h.patient_id
     JOIN patient_intakes i ON i.id = (
       SELECT latest.id FROM patient_intakes latest
       WHERE latest.patient_id = p.id AND latest.hospital_id = h.hospital_id
+        AND COALESCE(latest.staff_status, 'pending') = 'completed'
       ORDER BY datetime(latest.created_at) DESC LIMIT 1
     )
     WHERE h.hospital_id = ?
@@ -1876,6 +1997,9 @@ function listDoctorPatients(_request, response, url) {
       evidenceReview,
       intakeSource: row.intake_source,
       createdAt: row.intake_created_at,
+      intakeId: row.intake_id,
+      evaluationStatus: row.evaluation_status || 'ready_for_doctor',
+      evaluationCompletedAt: row.evaluation_completed_at || null,
       vitals: vitals ? {
         heartRate: vitals.heart_rate,
         oxygenSaturation: vitals.oxygen_saturation,
@@ -2080,7 +2204,7 @@ function createPrescriptionPdf(sections) {
   return Buffer.from(output, 'latin1');
 }
 
-async function createDoctorPrescription(request, response) {
+async function createDoctorPrescription(request, response, { completeEvaluation = false } = {}) {
   const body = await readJson(request, 120_000);
   const doctorId = normalizeDoctorId(body.doctorId);
   const patientId = String(body.patientId || '').trim();
@@ -2090,8 +2214,17 @@ async function createDoctorPrescription(request, response) {
   if (!patient) return sendJson(response, 404, { error: 'Patient account was not found' });
   const identity = hospitalIdentity(patientId, doctor.hospital_id);
   if (!identity) return sendJson(response, 404, { error: 'This patient is not enrolled at your hospital' });
-  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patientId, doctor.hospital_id);
+  const requestedIntakeId = String(body.intakeId || '').trim();
+  const intake = requestedIntakeId
+    ? patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ? AND patient_id = ? AND hospital_id = ?').get(requestedIntakeId, patientId, doctor.hospital_id)
+    : patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(created_at) DESC LIMIT 1').get(patientId, doctor.hospital_id);
   if (!intake) return sendJson(response, 404, { error: 'No hospital encounter was found for this patient' });
+  if (completeEvaluation && intake.staff_status !== 'completed') {
+    return sendJson(response, 409, { error: 'Hospital staff must complete vitals and preparation before the evaluation can be published' });
+  }
+  if (completeEvaluation && intake.evaluation_status === 'completed') {
+    return sendJson(response, 409, { error: 'This evaluation has already been published' });
+  }
 
   const clinical = body.clinical || {};
   const instructions = body.instructions || {};
@@ -2105,8 +2238,24 @@ async function createDoctorPrescription(request, response) {
     timing: cleanPrescriptionText(item.timing, 160), duration: cleanPrescriptionText(item.duration, 80),
     quantity: cleanPrescriptionText(item.quantity, 60), refills: cleanPrescriptionText(item.refills, 40)
   })).filter(item => item.name) : [];
+  const noPrescription = completeEvaluation && body.noPrescription === true;
   if (!chiefComplaint || !diagnosis) return sendJson(response, 400, { error: 'Enter the chief complaint and clinical impression' });
-  if (!medications.length) return sendJson(response, 400, { error: 'Add at least one medicine' });
+  if (!noPrescription && !medications.length) return sendJson(response, 400, { error: 'Add at least one medicine or select no prescription required' });
+
+  const completedAt = new Date().toISOString();
+  const publishedSummary = cleanPrescriptionText(body.reviewedSummary, 6000) || intake.summary;
+  if (noPrescription) {
+    patientsDb.prepare(`
+      UPDATE patient_intakes
+      SET evaluation_status = 'completed', evaluating_doctor_id = ?, published_summary = ?, evaluation_completed_at = ?
+      WHERE id = ?
+    `).run(doctor.doctor_id, publishedSummary, completedAt, intake.id);
+    return sendJson(response, 201, {
+      evaluation: { intakeId: intake.id, status: 'completed', completedAt, noPrescription: true },
+      prescriptionId: null,
+      document: null
+    });
+  }
 
   const prescriptionId = `RX-${new Date().getUTCFullYear()}-${randomInt(100000, 1000000)}`;
   const issuedAt = new Date();
@@ -2163,13 +2312,24 @@ async function createDoctorPrescription(request, response) {
       ) VALUES (?, ?, ?, ?, ?, ?, 'application/pdf', ?, ?, ?, ?, ?, ?, 'prescription')
     `).run(documentId, uploadSessionId, patient.id, identity.uhid, patient.full_name,
       `Prescription ${prescriptionId}.pdf`, pdf.length, storedName, createdAt, doctor.hospital_id, intake.id, doctor.doctor_id);
+    if (completeEvaluation) {
+      patientsDb.prepare(`
+        UPDATE patient_intakes
+        SET evaluation_status = 'completed', evaluating_doctor_id = ?, published_summary = ?, evaluation_completed_at = ?
+        WHERE id = ?
+      `).run(doctor.doctor_id, publishedSummary, completedAt, intake.id);
+    }
     patientsDb.exec('COMMIT');
   } catch (error) {
     patientsDb.exec('ROLLBACK');
     throw error;
   }
   const document = patientsDb.prepare('SELECT * FROM patient_documents WHERE id = ?').get(documentId);
-  sendJson(response, 201, { prescriptionId, document: publicDashboardDocument(document) });
+  sendJson(response, 201, {
+    prescriptionId,
+    document: publicDashboardDocument(document),
+    ...(completeEvaluation ? { evaluation: { intakeId: intake.id, status: 'completed', completedAt, noPrescription: false } } : {})
+  });
 }
 
 async function serveDoctorDocument(_request, response, documentId, url) {
@@ -2471,6 +2631,8 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'GET' && patientDashboardMatch) return getPatientDashboard(request, response, decodeURIComponent(patientDashboardMatch[1]));
     const patientAbhaMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/link-abha$/);
     if (request.method === 'POST' && patientAbhaMatch) return await linkPatientAbha(request, response, decodeURIComponent(patientAbhaMatch[1]));
+    const patientConditionsMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/medical-conditions$/);
+    if (request.method === 'PUT' && patientConditionsMatch) return await updatePatientMedicalConditions(request, response, decodeURIComponent(patientConditionsMatch[1]));
     const patientAccessHistoryMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/access-history$/);
     if (request.method === 'GET' && patientAccessHistoryMatch) return patientAccessHistory(request, response, decodeURIComponent(patientAccessHistoryMatch[1]));
     const patientDashboardUploadMatch = url.pathname.match(/^\/api\/patients\/([^/]+)\/documents$/);
@@ -2490,12 +2652,15 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/doctor-patient-access') return await recordDoctorPatientAccess(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-clinical-assistant') return await answerDoctorClinicalQuestion(request, response);
     if (request.method === 'POST' && url.pathname === '/api/doctor-prescriptions') return await createDoctorPrescription(request, response);
+    if (request.method === 'POST' && url.pathname === '/api/doctor-evaluations/complete') return await createDoctorPrescription(request, response, { completeEvaluation: true });
     const doctorDocumentMatch = url.pathname.match(/^\/api\/doctor-documents\/([0-9a-f-]+)$/i);
     if (request.method === 'GET' && doctorDocumentMatch) return await serveDoctorDocument(request, response, doctorDocumentMatch[1], url);
     if (request.method === 'POST' && url.pathname === '/api/staff-registrations') return await createStaffRegistration(request, response);
     if (request.method === 'POST' && url.pathname === '/api/staff-login') return await loginStaff(request, response);
     if (request.method === 'GET' && url.pathname === '/api/staff-patients') return listStaffPatients(request, response, url);
     if (request.method === 'POST' && url.pathname === '/api/staff-patient-vitals') return await createStaffPatientVitals(request, response);
+    const staffCompleteMatch = url.pathname.match(/^\/api\/staff-intakes\/([0-9a-f-]+)\/complete$/i);
+    if (request.method === 'POST' && staffCompleteMatch) return await completeStaffPreparation(request, response, staffCompleteMatch[1]);
     if (request.method === 'GET' && url.pathname === '/api/staff-profile') return getStaffProfile(request, response, url);
     const statusMatch = url.pathname.match(/^\/api\/device-enrollments\/([0-9a-f-]+)\/status$/i);
     if (request.method === 'GET' && statusMatch) return enrollmentStatus(request, response, statusMatch[1], url);
