@@ -1317,31 +1317,42 @@ function getPatientDashboard(request, response, patientId) {
   if (!authorizePatient(request, response, patientId)) return;
   const patient = patients.find(item => item.id === patientId);
   if (!patient) return sendJson(response, 404, { error: 'Patient account was not found' });
-  const intakes = patientsDb.prepare(`
-    SELECT i.*,
-      v.heart_rate, v.oxygen_saturation, v.systolic_bp, v.diastolic_bp, v.recorded_at,
-      d.doctor_id, d.full_name AS doctor_name, d.specialty AS doctor_specialty
-    FROM patient_intakes i
-    LEFT JOIN patient_vitals v ON v.id = (
-      SELECT latest.id FROM patient_vitals latest
-      WHERE latest.patient_id = i.patient_id AND (latest.intake_id = i.id OR (latest.intake_id IS NULL AND latest.hospital_id = i.hospital_id))
-      ORDER BY CASE WHEN latest.intake_id = i.id THEN 0 ELSE 1 END, datetime(latest.recorded_at) DESC LIMIT 1
-    )
-    LEFT JOIN doctors d ON d.doctor_id = COALESCE(
-      i.evaluating_doctor_id,
-      (SELECT pd.uploaded_by_doctor_id FROM patient_documents pd
-       WHERE pd.patient_id = i.patient_id AND pd.intake_id = i.id AND pd.uploaded_by_doctor_id IS NOT NULL
-       ORDER BY datetime(pd.created_at) DESC LIMIT 1),
-      (SELECT access.doctor_id FROM patient_data_access_log access
-       WHERE access.patient_id = i.patient_id AND access.hospital_id = i.hospital_id
-       ORDER BY datetime(access.accessed_at) DESC LIMIT 1)
-    )
-    WHERE i.patient_id = ?
-    ORDER BY datetime(i.created_at) DESC
-  `).all(patientId);
+  // Resolve related records separately: SQLite builds on deployed hosts differ in
+  // which outer aliases a nested JOIN subquery can reference.
+  const intakes = patientsDb.prepare('SELECT * FROM patient_intakes WHERE patient_id = ? ORDER BY datetime(created_at) DESC').all(patientId);
   const documents = patientsDb.prepare('SELECT * FROM patient_documents WHERE patient_id = ? ORDER BY datetime(created_at) DESC').all(patientId);
+  const vitals = patientsDb.prepare('SELECT * FROM patient_vitals WHERE patient_id = ? ORDER BY datetime(recorded_at) DESC').all(patientId);
+  const accessLog = patientsDb.prepare('SELECT doctor_id, hospital_id FROM patient_data_access_log WHERE patient_id = ? ORDER BY datetime(accessed_at) DESC').all(patientId);
+  const latestVitalsByIntake = new Map();
+  const latestGeneralVitalsByHospital = new Map();
+  for (const vital of vitals) {
+    if (vital.intake_id && !latestVitalsByIntake.has(vital.intake_id)) latestVitalsByIntake.set(vital.intake_id, vital);
+    else if (!vital.intake_id && vital.hospital_id && !latestGeneralVitalsByHospital.has(vital.hospital_id)) {
+      latestGeneralVitalsByHospital.set(vital.hospital_id, vital);
+    }
+  }
+  const latestDocumentDoctorByIntake = new Map();
+  const documentsByIntake = new Map();
+  for (const document of documents) {
+    if (!document.intake_id) continue;
+    if (!documentsByIntake.has(document.intake_id)) documentsByIntake.set(document.intake_id, []);
+    documentsByIntake.get(document.intake_id).push(document);
+    if (document.uploaded_by_doctor_id && !latestDocumentDoctorByIntake.has(document.intake_id)) {
+      latestDocumentDoctorByIntake.set(document.intake_id, document.uploaded_by_doctor_id);
+    }
+  }
+  const latestAccessDoctorByHospital = new Map();
+  for (const entry of accessLog) {
+    if (!latestAccessDoctorByHospital.has(entry.hospital_id)) latestAccessDoctorByHospital.set(entry.hospital_id, entry.doctor_id);
+  }
+  const doctorQuery = patientsDb.prepare('SELECT doctor_id, full_name, specialty FROM doctors WHERE doctor_id = ?');
+  const doctorsById = new Map();
   const visits = intakes.map(row => {
     const branch = hospitalBranches.get(row.hospital_id);
+    const vital = latestVitalsByIntake.get(row.id) || latestGeneralVitalsByHospital.get(row.hospital_id);
+    const doctorId = row.evaluating_doctor_id || latestDocumentDoctorByIntake.get(row.id) || latestAccessDoctorByHospital.get(row.hospital_id);
+    if (doctorId && !doctorsById.has(doctorId)) doctorsById.set(doctorId, doctorQuery.get(doctorId));
+    const doctor = doctorsById.get(doctorId);
     return {
       id: row.id,
       encounterNumber: row.encounter_number,
@@ -1355,15 +1366,15 @@ function getPatientDashboard(request, response, patientId) {
       language: row.language,
       intakeSource: row.intake_source,
       createdAt: row.created_at,
-      doctor: row.doctor_id ? { id: row.doctor_id, name: row.doctor_name, specialty: row.doctor_specialty } : null,
-      vitals: row.recorded_at ? {
-        heartRate: row.heart_rate,
-        oxygenSaturation: row.oxygen_saturation,
-        systolic: row.systolic_bp,
-        diastolic: row.diastolic_bp,
-        recordedAt: row.recorded_at
+      doctor: doctor ? { id: doctor.doctor_id, name: doctor.full_name, specialty: doctor.specialty } : null,
+      vitals: vital ? {
+        heartRate: vital.heart_rate,
+        oxygenSaturation: vital.oxygen_saturation,
+        systolic: vital.systolic_bp,
+        diastolic: vital.diastolic_bp,
+        recordedAt: vital.recorded_at
       } : null,
-      documents: documents.filter(document => document.intake_id === row.id).map(publicDashboardDocument)
+      documents: (documentsByIntake.get(row.id) || []).map(publicDashboardDocument)
     };
   });
   sendJson(response, 200, {
