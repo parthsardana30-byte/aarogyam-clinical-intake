@@ -6,10 +6,12 @@ Kotlin/Jetpack Compose patient app in the same repository as the Aarogyam websit
 
 1. Clone the `application` branch and run `npm install` in the repository root.
 2. Create a local `.env` from the root `.env.example`; copy real secrets separately. Never commit `.env`.
-3. Start the backend with `npm start`. To display local demo OTPs for testing, set `NODE_ENV=development` and `OTP_DEMO_MODE=1` in `.env`.
-4. Open `aarogyam-patient-android` in Android Studio and run the `app` configuration on an emulator.
+3. Deploy the shared backend to the VPS before testing a phone APK. Keep the VPS server's secrets in its own `.env` (not in Git).
+4. Open `aarogyam-patient-android` in Android Studio and build/run the `app` configuration. A debug APK is available at `app/build/outputs/apk/debug/app-debug.apk` and can be installed on a phone for testing.
 
-The debug API base defaults to `http://10.0.2.2:4173`, which points from the Android emulator to the host PC. Override it with `AAROGYAM_DEBUG_API_BASE_URL` as a Gradle property or environment variable. The release base defaults to `https://aarogyam.129-121-127-58.sslip.io` and can be overridden with `AAROGYAM_RELEASE_API_BASE_URL`. Use the backend origin only; do not append `/#/roles`.
+Both debug and release APKs default to the VPS API origin `https://aarogyam.129-121-127-58.sslip.io`. They call `/api` on that origin, not the website's `/#/roles` page. Override with `AAROGYAM_DEBUG_API_BASE_URL` or `AAROGYAM_RELEASE_API_BASE_URL` as a Gradle property or environment variable if the host changes. For local emulator testing only, set `AAROGYAM_DEBUG_API_BASE_URL=http://10.0.2.2:4173`, run `npm start` on the PC, and optionally set `NODE_ENV=development` and `OTP_DEMO_MODE=1` in the local `.env` for demo OTPs.
+
+An installed phone needs internet access and a valid HTTPS certificate for the VPS origin. Its backend must have the same `/api` routes as this branch; changing the APK URL alone does not deploy those routes to the VPS.
 
 The unchanged website continues using patient passwords. The Android app uses a six-digit E-PIN. Both are accepted by the same backend login, registration and reset routes. A website account with an older nonnumeric password can use Android's OTP login or Forgot E-PIN to set a six-digit E-PIN. This changes the account's shared credential.
 

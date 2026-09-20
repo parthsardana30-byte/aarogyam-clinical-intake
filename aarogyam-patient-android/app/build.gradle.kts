@@ -5,12 +5,13 @@ plugins {
 
 fun buildConfigString(value: String) = "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
+val defaultApiBaseUrl = "https://aarogyam.129-121-127-58.sslip.io"
 val debugApiBaseUrl = providers.gradleProperty("AAROGYAM_DEBUG_API_BASE_URL")
     .orElse(providers.environmentVariable("AAROGYAM_DEBUG_API_BASE_URL"))
-    .getOrElse("http://10.0.2.2:4173")
+    .getOrElse(defaultApiBaseUrl)
 val releaseApiBaseUrl = providers.gradleProperty("AAROGYAM_RELEASE_API_BASE_URL")
     .orElse(providers.environmentVariable("AAROGYAM_RELEASE_API_BASE_URL"))
-    .getOrElse("https://aarogyam.129-121-127-58.sslip.io")
+    .getOrElse(defaultApiBaseUrl)
 
 android {
     namespace = "in.aarogyam.patient"
