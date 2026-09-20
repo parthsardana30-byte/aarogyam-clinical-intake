@@ -375,10 +375,16 @@ async function loadPatients() {
   }));
 }
 
-async function saveDevices() {
-  const temporary = `${devicesFile}.tmp`;
-  await writeFile(temporary, JSON.stringify(devices, null, 2));
-  await rename(temporary, devicesFile);
+let deviceSaveQueue = Promise.resolve();
+function saveDevices() {
+  const snapshot = JSON.stringify(devices, null, 2);
+  const save = deviceSaveQueue.then(async () => {
+    const temporary = `${devicesFile}.${randomUUID()}.tmp`;
+    await writeFile(temporary, snapshot);
+    await rename(temporary, devicesFile);
+  });
+  deviceSaveQueue = save.catch(() => {});
+  return save;
 }
 
 function patientEncryptionKey() {
