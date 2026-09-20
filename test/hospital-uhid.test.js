@@ -44,11 +44,13 @@ async function registerPatient() {
     }),
   });
   assert.equal(registration.response.status, 201);
-  return registration.payload.patient;
+  return { ...registration.payload.patient, sessionToken: registration.payload.sessionToken };
 }
 
-async function authorizeDevice(staffId, name) {
-  const invitation = await json('/api/device-enrollments', { method: 'POST', body: JSON.stringify({ staffId }) });
+async function authorizeDevice(staffId, name, staffCookie) {
+  const invitation = await json('/api/device-enrollments', {
+    method: 'POST', headers: { Cookie: staffCookie }, body: JSON.stringify({ staffId })
+  });
   assert.equal(invitation.response.status, 201);
   const request = await json('/api/device-enrollment-requests', {
     method: 'POST', body: JSON.stringify({ name, code: invitation.payload.code, platform: 'Integration test' }),
@@ -98,9 +100,15 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   });
   assert.equal(staffA.response.status, 201);
   assert.equal(staffB.response.status, 201);
+  const staffCookieA = staffA.response.headers.get('set-cookie').split(';')[0];
+  const staffCookieB = staffB.response.headers.get('set-cookie').split(';')[0];
+  const wrongStaffId = await json('/api/staff-login', {
+    method: 'POST', body: JSON.stringify({ employeeId: 'NOT-STAFF-A', password: 'Password@1' }),
+  });
+  assert.equal(wrongStaffId.response.status, 401);
   const [cookieA, cookieB, patient] = await Promise.all([
-    authorizeDevice('STAFF-A', 'Ahmedabad kiosk'),
-    authorizeDevice('STAFF-B', 'Gurugram kiosk'),
+    authorizeDevice('STAFF-A', 'Ahmedabad kiosk', staffCookieA),
+    authorizeDevice('STAFF-B', 'Gurugram kiosk', staffCookieB),
     registerPatient(),
   ]);
 
@@ -112,36 +120,41 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.equal(patientLogin.payload.patient.id, patient.id);
 
   const firstA = await json('/api/patient-intakes', {
-    method: 'POST', headers: { Cookie: cookieA },
+    method: 'POST', headers: { Cookie: cookieA, Authorization: `Bearer ${patient.sessionToken}` },
     body: JSON.stringify({ patientId: patient.id, conversationId: 'conversation-a-1', language: 'English', summary: 'Headache for two days. No fever reported.' }),
   });
   assert.equal(firstA.response.status, 201);
   assert.match(firstA.payload.intake.uhid, /^CHA-\d{6}$/);
   assert.equal(firstA.payload.intake.uhidCreated, true);
+  const intakeWithoutPatientLogin = await json('/api/patient-intakes', {
+    method: 'POST', headers: { Cookie: cookieA },
+    body: JSON.stringify({ patientId: patient.id, conversationId: 'unauthorized', summary: 'Should not be saved' }),
+  });
+  assert.equal(intakeWithoutPatientLogin.response.status, 401);
 
   const retryA = await json('/api/patient-intakes', {
-    method: 'POST', headers: { Cookie: cookieA },
+    method: 'POST', headers: { Cookie: cookieA, Authorization: `Bearer ${patient.sessionToken}` },
     body: JSON.stringify({ patientId: patient.id, conversationId: 'conversation-a-1', language: 'English', summary: 'Headache for two days. No fever reported.' }),
   });
   assert.equal(retryA.payload.intake.uhid, firstA.payload.intake.uhid);
   assert.equal(retryA.payload.intake.encounterNumber, firstA.payload.intake.encounterNumber);
 
   const secondA = await json('/api/patient-intakes', {
-    method: 'POST', headers: { Cookie: cookieA },
+    method: 'POST', headers: { Cookie: cookieA, Authorization: `Bearer ${patient.sessionToken}` },
     body: JSON.stringify({ patientId: patient.id, conversationId: 'conversation-a-2', language: 'Hindi', summary: 'Follow-up intake completed.' }),
   });
   assert.equal(secondA.payload.intake.uhid, firstA.payload.intake.uhid);
   assert.notEqual(secondA.payload.intake.encounterNumber, firstA.payload.intake.encounterNumber);
 
   const firstB = await json('/api/patient-intakes', {
-    method: 'POST', headers: { Cookie: cookieB },
+    method: 'POST', headers: { Cookie: cookieB, Authorization: `Bearer ${patient.sessionToken}` },
     body: JSON.stringify({ patientId: patient.id, conversationId: 'conversation-b-1', language: 'English', summary: 'First Gurugram intake completed.' }),
   });
   assert.match(firstB.payload.intake.uhid, /^CHG-\d{6}$/);
   assert.notEqual(firstB.payload.intake.uhid, firstA.payload.intake.uhid);
 
   const vitals = await json('/api/staff-patient-vitals', {
-    method: 'POST', body: JSON.stringify({
+    method: 'POST', headers: { Cookie: staffCookieA }, body: JSON.stringify({
       staffId: 'STAFF-A', patientId: patient.id, intakeId: secondA.payload.intake.id,
       heartRate: 78, oxygenSaturation: 98, systolic: 122, diastolic: 80,
     }),
@@ -157,7 +170,7 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   });
   assert.equal(documentUpload.response.status, 201);
   const completedDocument = await json('/api/staff-patient-documents', {
-    method: 'POST', body: JSON.stringify({
+    method: 'POST', headers: { Cookie: staffCookieA }, body: JSON.stringify({
       staffId: 'STAFF-A', patientId: patient.id, patientName: patient.fullName,
       intakeId: secondA.payload.intake.id,
       documentCategory: 'lab',
@@ -166,27 +179,58 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   });
   assert.equal(completedDocument.response.status, 200);
 
-  const queueA = await json('/api/staff-patients?staffId=STAFF-A');
-  const queueB = await json('/api/staff-patients?staffId=STAFF-B');
+  const queueA = await json('/api/staff-patients?staffId=STAFF-A', { headers: { Cookie: staffCookieA } });
+  const queueB = await json('/api/staff-patients?staffId=STAFF-B', { headers: { Cookie: staffCookieB } });
   assert.equal(queueA.payload.patients[0].uhid, firstA.payload.intake.uhid);
   assert.equal(queueA.payload.patients[0].latestVitals.heartRate, 78);
   assert.equal(queueB.payload.patients[0].uhid, firstB.payload.intake.uhid);
+  const wrongStaffQueue = await json('/api/staff-patients?staffId=STAFF-B', { headers: { Cookie: staffCookieA } });
+  assert.equal(wrongStaffQueue.response.status, 401);
+  const staffC = await json('/api/staff-registrations', {
+    method: 'POST', body: JSON.stringify({
+      hospitalId: 'civil-ahmedabad', employeeId: 'STAFF-C', password: 'Password@1',
+      fullName: 'Other Ahmedabad Staff', phone: '9000000103', email: 'staff-c@example.test',
+    }),
+  });
+  const staffCookieC = staffC.response.headers.get('set-cookie').split(';')[0];
+  const queueC = await json('/api/staff-patients?staffId=STAFF-C', { headers: { Cookie: staffCookieC } });
+  assert.deepEqual(queueC.payload.patients, []);
+  const crossStaffVitals = await json('/api/staff-patient-vitals', {
+    method: 'POST', headers: { Cookie: staffCookieC }, body: JSON.stringify({
+      staffId: 'STAFF-C', patientId: patient.id, intakeId: secondA.payload.intake.id,
+      heartRate: 78, oxygenSaturation: 98, systolic: 122, diastolic: 80,
+    }),
+  });
+  assert.equal(crossStaffVitals.response.status, 404);
 
-  const doctor = await json('/api/doctor-patients?doctorId=CHA-GEN-1001');
+  const doctorLogin = await json('/api/doctor-login', {
+    method: 'POST', body: JSON.stringify({ doctorId: 'CHA-GEN-1001', password: 'Aarogyam@2026' }),
+  });
+  assert.equal(doctorLogin.response.status, 200);
+  const doctorCookie = doctorLogin.response.headers.get('set-cookie').split(';')[0];
+  const doctor = await json('/api/doctor-patients?doctorId=CHA-GEN-1001', { headers: { Cookie: doctorCookie } });
   assert.equal(doctor.response.status, 200);
   assert.equal(doctor.payload.patients[0].uhid, firstA.payload.intake.uhid);
   assert.equal(doctor.payload.patients[0].vitals.oxygenSaturation, 98);
   assert.equal(doctor.payload.patients[0].documents[0].name, 'previous-prescription.png');
   assert.equal(doctor.payload.patients.some(record => record.uhid === firstB.payload.intake.uhid), false);
+  const anonymousDoctorQueue = await json('/api/doctor-patients?doctorId=CHA-GEN-1001');
+  assert.equal(anonymousDoctorQueue.response.status, 401);
 
-  const gurugramDoctor = await json('/api/doctor-patients?doctorId=CHG-DEMO-1000');
+  const gurugramLogin = await json('/api/doctor-login', {
+    method: 'POST', body: JSON.stringify({ doctorId: 'CHG-DEMO-1000', password: 'Aarogyam@2026' }),
+  });
+  const gurugramCookie = gurugramLogin.response.headers.get('set-cookie').split(';')[0];
+  const gurugramDoctor = await json('/api/doctor-patients?doctorId=CHG-DEMO-1000', { headers: { Cookie: gurugramCookie } });
   assert.equal(gurugramDoctor.response.status, 200);
   assert.equal(gurugramDoctor.payload.doctor.hospitalId, 'civil-gurugram');
   assert.equal(gurugramDoctor.payload.patients.some(record => record.uhid === firstB.payload.intake.uhid), true);
   assert.equal(gurugramDoctor.payload.patients.some(record => record.uhid === firstA.payload.intake.uhid), false);
+  const wrongDoctorQueue = await json('/api/doctor-patients?doctorId=CHG-DEMO-1000', { headers: { Cookie: doctorCookie } });
+  assert.equal(wrongDoctorQueue.response.status, 401);
 
   const clinicalAnswer = await json('/api/doctor-clinical-assistant', {
-    method: 'POST', body: JSON.stringify({
+    method: 'POST', headers: { Cookie: doctorCookie }, body: JSON.stringify({
       doctorId: 'CHA-GEN-1001', patientId: patient.id,
       question: 'What should I clarify first from the current intake and previous history?',
     }),
@@ -197,7 +241,7 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.equal(clinicalAnswer.payload.groundedIn.documentCount, 1);
 
   const nonMedicalQuestion = await json('/api/doctor-clinical-assistant', {
-    method: 'POST', body: JSON.stringify({
+    method: 'POST', headers: { Cookie: doctorCookie }, body: JSON.stringify({
       doctorId: 'CHA-GEN-1001', patientId: patient.id, question: 'Write a poem about the weather',
     }),
   });
@@ -205,7 +249,7 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.match(nonMedicalQuestion.payload.error, /only medical questions/i);
 
   const prescription = await json('/api/doctor-prescriptions', {
-    method: 'POST', body: JSON.stringify({
+    method: 'POST', headers: { Cookie: doctorCookie }, body: JSON.stringify({
       doctorId: 'CHA-GEN-1001', patientId: patient.id,
       clinical: { chiefComplaint: 'Headache for two days', diagnosis: 'Tension-type headache', allergies: 'Penicillin' },
       medications: [{
@@ -240,4 +284,8 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   });
   assert.equal(pdf.status, 200);
   assert.equal((await pdf.text()).startsWith('%PDF-1.4'), true);
+  const staffLogout = await json('/api/logout', { method: 'POST', headers: { Cookie: staffCookieA } });
+  assert.equal(staffLogout.response.status, 200);
+  const afterLogout = await json('/api/staff-patients?staffId=STAFF-A', { headers: { Cookie: staffCookieA } });
+  assert.equal(afterLogout.response.status, 401);
 });

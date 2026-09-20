@@ -140,6 +140,9 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   const initialDashboard = await json(`/api/patients/${patientId}/dashboard`, { headers: auth });
   assert.equal(initialDashboard.response.status, 200);
   assert.equal(initialDashboard.payload.patient.profile.fullName, 'Integration Test Patient');
+  assert.equal(initialDashboard.payload.patient.profile.gender, 'Female');
+  assert.equal(initialDashboard.payload.patient.profile.heightCm, 165);
+  assert.equal(initialDashboard.payload.patient.profile.weightKg, 62);
   assert.deepEqual(initialDashboard.payload.summary, { consultationCount: 0, documentCount: 0 });
 
   const upload = await json(`/api/patients/${patientId}/documents`, {
