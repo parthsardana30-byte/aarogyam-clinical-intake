@@ -1113,9 +1113,17 @@ async function loginPatientWithOtp(request, response) {
   }
   const verified = verifiedPatientOtp(body, 'login');
   if (!verified) return sendJson(response, 401, { error: 'OTP verification is invalid or expired' });
+  const requestedUhid = String(body.uhid || '').trim().toUpperCase();
+  const newHospitalVisit = body.newHospitalVisit === true;
+  if (requestedUhid && newHospitalVisit) return sendJson(response, 400, { error: 'Choose a new or returning visit' });
+  const identity = requestedUhid ? kioskIdentityForPatient(request, verified.patient.id, requestedUhid)
+    : newHospitalVisit ? createKioskIdentityForPatient(request, verified.patient.id) : null;
+  if (newHospitalVisit && !identity) return sendJson(response, 403, { error: 'An authorized hospital kiosk is required' });
+  if (requestedUhid && !identity) return sendJson(response, 401, { error: 'UHID and verified mobile number do not match this hospital' });
   verified.entry.consumed = true;
   sendJson(response, 200, {
-    patient: { id: verified.patient.id, fullName: verified.patient.profile.fullName },
+    patient: { id: verified.patient.id, fullName: verified.patient.profile.fullName,
+      ...(identity ? { uhid: identity.uhid, uhidCreated: identity.created === true } : {}) },
     sessionToken: createPatientSession(verified.patient.id)
   });
 }
@@ -1165,6 +1173,11 @@ async function createPatientRegistration(request, response) {
   if (documentSessionId && !pendingDocumentSession) {
     return sendJson(response, 400, { error: 'The document upload session expired. Return to the document step and try again.' });
   }
+  const kioskDevice = authorizedDeviceForRequest(request);
+  const kioskHospitalId = kioskDevice?.hospitalId || null;
+  if (kioskDevice && !hospitalBranches.has(kioskHospitalId)) {
+    return sendJson(response, 409, { error: 'This kiosk is not linked to a hospital. Ask staff to authorize it again.' });
+  }
 
   const requestedIdentityMethod = body.identityMethod === 'abha' ? 'abha' : body.identityMethod === 'aadhaar' ? 'aadhaar' : 'phone';
   const requestedIdentityNumber = String(body.identityNumber || '').replace(/\D/g, '');
@@ -1211,22 +1224,31 @@ async function createPatientRegistration(request, response) {
     abhaLinkStatus: identityMethod === 'abha' ? 'linked' : 'unlinked',
     createdAt: new Date().toISOString()
   };
-  patientsDb.prepare(`
-    INSERT INTO patients (
-      id, phone, identity_method, identity_ciphertext, identity_iv, identity_tag, identity_last4,
-      password_salt, password_hash, full_name, date_of_birth, gender, height_cm, weight_kg,
-      blood_group, conditions_json, allergies, abha_link_status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    patient.id, patient.phone, patient.identity.method, encryptedIdentity.ciphertext, encryptedIdentity.iv,
-    encryptedIdentity.tag, patient.identity.last4, patient.password.salt, patient.password.hash,
-    patient.profile.fullName, patient.profile.dateOfBirth, patient.profile.gender, patient.profile.heightCm,
-    patient.profile.weightKg, patient.profile.bloodGroup, JSON.stringify(patient.health.conditions),
-    patient.health.allergies, patient.abhaLinkStatus, patient.createdAt
-  );
-  if (pendingDocumentSession) {
-    patientsDb.prepare('UPDATE patient_documents SET patient_id = ? WHERE upload_session_id = ?').run(patient.id, documentSessionId);
-    patientsDb.prepare("UPDATE patient_document_sessions SET status = 'completed' WHERE id = ?").run(documentSessionId);
+  let kioskIdentity = null;
+  patientsDb.exec('BEGIN IMMEDIATE');
+  try {
+    patientsDb.prepare(`
+      INSERT INTO patients (
+        id, phone, identity_method, identity_ciphertext, identity_iv, identity_tag, identity_last4,
+        password_salt, password_hash, full_name, date_of_birth, gender, height_cm, weight_kg,
+        blood_group, conditions_json, allergies, abha_link_status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      patient.id, patient.phone, patient.identity.method, encryptedIdentity.ciphertext, encryptedIdentity.iv,
+      encryptedIdentity.tag, patient.identity.last4, patient.password.salt, patient.password.hash,
+      patient.profile.fullName, patient.profile.dateOfBirth, patient.profile.gender, patient.profile.heightCm,
+      patient.profile.weightKg, patient.profile.bloodGroup, JSON.stringify(patient.health.conditions),
+      patient.health.allergies, patient.abhaLinkStatus, patient.createdAt
+    );
+    if (pendingDocumentSession) {
+      patientsDb.prepare('UPDATE patient_documents SET patient_id = ? WHERE upload_session_id = ?').run(patient.id, documentSessionId);
+      patientsDb.prepare("UPDATE patient_document_sessions SET status = 'completed' WHERE id = ?").run(documentSessionId);
+    }
+    if (kioskHospitalId) kioskIdentity = getOrCreateHospitalIdentity(patient.id, kioskHospitalId, patient.createdAt);
+    patientsDb.exec('COMMIT');
+  } catch (error) {
+    patientsDb.exec('ROLLBACK');
+    throw error;
   }
   patients.push(patient);
   otpEntry.consumed = true;
@@ -1234,7 +1256,8 @@ async function createPatientRegistration(request, response) {
     ? Number(patientsDb.prepare('SELECT COUNT(*) AS count FROM patient_documents WHERE patient_id = ?').get(patient.id).count)
     : 0;
   sendJson(response, 201, {
-    patient: { id: patient.id, fullName: patient.profile.fullName, documentCount },
+    patient: { id: patient.id, fullName: patient.profile.fullName, documentCount,
+      ...(kioskIdentity ? { uhid: kioskIdentity.uhid, uhidCreated: kioskIdentity.created === true } : {}) },
     sessionToken: createPatientSession(patient.id)
   });
 }
@@ -1243,6 +1266,10 @@ async function loginPatient(request, response) {
   const body = await readJson(request);
   const phone = normalizeIndianPhone(body.phone || body.identifier);
   const password = String(body.epin || body.password || '');
+  const requestedUhid = String(body.uhid || '').trim().toUpperCase();
+  const newHospitalVisit = body.newHospitalVisit === true;
+  if (requestedUhid && newHospitalVisit) return sendJson(response, 400, { error: 'Choose a new or returning visit' });
+  if (newHospitalVisit && !phone) return sendJson(response, 400, { error: 'Enter the mobile number linked to your account' });
   if (phone) {
     const row = patientsDb.prepare('SELECT * FROM patients WHERE phone = ?').get(phone);
     const patient = row ? patients.find(item => item.id === row.id) : null;
@@ -1254,8 +1281,13 @@ async function loginPatient(request, response) {
     if (stored.length !== candidate.length || !timingSafeEqual(stored, candidate)) {
       return sendJson(response, 401, { error: 'Mobile number or E-PIN is incorrect' });
     }
+    const identity = requestedUhid ? kioskIdentityForPatient(request, patient.id, requestedUhid)
+      : newHospitalVisit ? createKioskIdentityForPatient(request, patient.id) : null;
+    if (newHospitalVisit && !identity) return sendJson(response, 403, { error: 'An authorized hospital kiosk is required' });
+    if (requestedUhid && !identity) return sendJson(response, 401, { error: 'UHID and mobile number do not match this hospital' });
     return sendJson(response, 200, {
-      patient: { id: patient.id, fullName: patient.profile.fullName },
+      patient: { id: patient.id, fullName: patient.profile.fullName,
+        ...(identity ? { uhid: identity.uhid, uhidCreated: identity.created === true } : {}) },
       sessionToken: createPatientSession(patient.id)
     });
   }
@@ -1845,6 +1877,19 @@ async function completeStaffPreparation(request, response, intakeId) {
     WHERE id = ?
   `).run(completedAt, staff.employee_id, intakeId);
   sendJson(response, 200, { completed: true, intakeId, completedAt, evaluationStatus: 'ready_for_doctor' });
+}
+
+function kioskIdentityForPatient(request, patientId, uhid) {
+  const device = authorizedDeviceForRequest(request);
+  if (!device || !hospitalBranches.has(device.hospitalId)) return null;
+  const identity = hospitalIdentity(patientId, device.hospitalId);
+  return identity?.uhid === uhid ? identity : null;
+}
+
+function createKioskIdentityForPatient(request, patientId) {
+  const device = authorizedDeviceForRequest(request);
+  if (!device || !hospitalBranches.has(device.hospitalId)) return null;
+  return getOrCreateHospitalIdentity(patientId, device.hospitalId);
 }
 
 function staffCanAccessIntake(intake, staffId) {
