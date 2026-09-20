@@ -6832,9 +6832,12 @@
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
         if (patientId !== activePatient?.id || patientToken !== activePatientSessionToken) throw new Error('Patient session changed');
+        const voiceUrl = new URL(payload.signedUrl, window.location.origin);
+        if (voiceUrl.origin !== window.location.origin) throw new Error('Voice session origin is invalid.');
+        voiceUrl.protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         elevenSignedUrlCache = {
           cacheKey,
-          signedUrl: payload.signedUrl,
+          signedUrl: voiceUrl.toString(),
           patientContext: payload.patientContext || null,
           expiresAt: Date.now() + Math.max(30, Number(payload.expiresIn || 900) - 30) * 1000
         };

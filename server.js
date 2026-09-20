@@ -4,6 +4,7 @@ import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import QRCode from 'qrcode';
+import WebSocket, { WebSocketServer } from 'ws';
 
 const host = process.env.HOST || '127.0.0.1';
 const port = Number(process.env.PORT || 4173);
@@ -59,6 +60,9 @@ const testDoctorAccounts = [
   { id: 'CHR-DEMO-1000', hospitalId: 'civil-rajkot', fullName: 'Dr. Riya Mehta', degree: 'MBBS, MD', specialty: 'General Medicine', registration: 'DEMO-GJMC-1000', experience: 8, room: 'OPD-1', phone: '9000006631', email: 'demo.rajkot@aarogyam.test' }
 ];
 const elevenLabsSignedUrlLastIssued = new Map();
+const elevenVoiceTickets = new Map();
+const elevenVoiceTicketTtlMs = 90_000;
+const elevenVoiceServer = new WebSocketServer({ noServer: true, maxPayload: 1024 * 1024 });
 const activeDocumentAnalyses = new Set();
 let devices = [];
 let patients = [];
@@ -713,8 +717,63 @@ async function createElevenLabsSignedUrl(request, response) {
   if (!result.ok) return sendJson(response, 502, { error: 'Voice agent is temporarily unavailable' });
   const payload = await result.json();
   if (!payload.signed_url) return sendJson(response, 502, { error: 'Voice agent returned an invalid session' });
+  let upstreamUrl;
+  try { upstreamUrl = new URL(payload.signed_url); }
+  catch { return sendJson(response, 502, { error: 'Voice agent returned an invalid session' }); }
+  if (upstreamUrl.protocol !== 'wss:' || (upstreamUrl.hostname !== 'api.elevenlabs.io' && !upstreamUrl.hostname.endsWith('.elevenlabs.io'))) {
+    return sendJson(response, 502, { error: 'Voice agent returned an invalid session' });
+  }
+  const ticket = randomBytes(24).toString('base64url');
+  const now = Date.now();
+  for (const [key, session] of elevenVoiceTickets) {
+    if (session.expiresAt <= now) elevenVoiceTickets.delete(key);
+  }
+  elevenVoiceTickets.set(ticket, { signedUrl: payload.signed_url, expiresAt: now + elevenVoiceTicketTtlMs });
   elevenLabsSignedUrlLastIssued.set(ip, Date.now());
-  sendJson(response, 200, { configured: true, signedUrl: payload.signed_url, expiresIn: 900, patientContext: patientIntakeContext(patient) });
+  sendJson(response, 200, { configured: true, signedUrl: `/api/elevenlabs/voice?ticket=${ticket}`, expiresIn: 60, patientContext: patientIntakeContext(patient) });
+}
+
+function rejectVoiceUpgrade(socket, status) {
+  if (!socket.destroyed) socket.end(`HTTP/1.1 ${status}\r\nConnection: close\r\n\r\n`);
+}
+
+function upgradeElevenLabsVoice(request, socket, head) {
+  let url;
+  try { url = new URL(request.url || '/', 'http://localhost'); }
+  catch { return rejectVoiceUpgrade(socket, '400 Bad Request'); }
+  if (url.pathname !== '/api/elevenlabs/voice') return rejectVoiceUpgrade(socket, '404 Not Found');
+  const origin = request.headers.origin;
+  if (origin) {
+    try {
+      if (new URL(origin).host !== request.headers.host) return rejectVoiceUpgrade(socket, '403 Forbidden');
+    } catch { return rejectVoiceUpgrade(socket, '403 Forbidden'); }
+  }
+  const ticketId = url.searchParams.get('ticket') || '';
+  const ticket = elevenVoiceTickets.get(ticketId);
+  elevenVoiceTickets.delete(ticketId);
+  if (!ticket || ticket.expiresAt <= Date.now()) return rejectVoiceUpgrade(socket, '401 Unauthorized');
+
+  const upstream = new WebSocket(ticket.signedUrl, 'convai', { handshakeTimeout: 10_000 });
+  const fail = () => rejectVoiceUpgrade(socket, '502 Bad Gateway');
+  upstream.once('error', fail);
+  upstream.once('close', fail);
+  upstream.once('open', () => {
+    upstream.off('error', fail);
+    upstream.off('close', fail);
+    if (socket.destroyed) return upstream.close();
+    elevenVoiceServer.handleUpgrade(request, socket, head, client => {
+      client.on('message', (data, isBinary) => {
+        if (upstream.readyState === WebSocket.OPEN) upstream.send(data, { binary: isBinary });
+      });
+      upstream.on('message', (data, isBinary) => {
+        if (client.readyState === WebSocket.OPEN) client.send(data, { binary: isBinary });
+      });
+      client.on('close', () => upstream.close());
+      upstream.on('close', () => client.close());
+      client.on('error', () => upstream.close());
+      upstream.on('error', () => client.close());
+    });
+  });
 }
 
 const aarogyamPaths = new Map([
@@ -2933,4 +2992,5 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
+server.on('upgrade', upgradeElevenLabsVoice);
 server.listen(port, host, () => console.log(`Arogyam running at http://${host}:${port}`));
