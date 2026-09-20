@@ -615,6 +615,60 @@ async function createElevenLabsSignedUrl(request, response) {
   sendJson(response, 200, { configured: true, signedUrl: payload.signed_url, expiresIn: 900 });
 }
 
+const aarogyamPaths = new Map([
+  ['/api/aarogyam/sessions', '/api/sessions'],
+  ['/api/aarogyam/chat/turn', '/api/chat/turn'],
+  ['/api/aarogyam/voice/greeting', '/api/voice/greeting'],
+  ['/api/aarogyam/voice/turn', '/api/voice/turn']
+]);
+
+async function proxyAarogyam(request, response, pathname) {
+  if (!authorizedDeviceForRequest(request)) {
+    return sendJson(response, 403, { error: 'AI check-up is available only on an authorized device' });
+  }
+  const base = String(process.env.AAROGYAM_API_URL || '').trim();
+  const key = String(process.env.AAROGYAM_API_KEY || '').trim();
+  if (!base || !key) return sendJson(response, 503, { error: 'Aarogyam AI is not configured' });
+  let target;
+  try {
+    target = new URL(aarogyamPaths.get(pathname), `${base.replace(/\/$/, '')}/`);
+    if (target.protocol !== 'https:') throw new Error('HTTPS required');
+  } catch {
+    return sendJson(response, 503, { error: 'Aarogyam AI URL is invalid' });
+  }
+  const contentType = String(request.headers['content-type'] || '');
+  const multipart = pathname === '/api/aarogyam/voice/turn';
+  if (multipart ? !contentType.startsWith('multipart/form-data;') : !contentType.startsWith('application/json')) {
+    return sendJson(response, 415, { error: 'Unsupported content type' });
+  }
+  const maxBytes = multipart ? 8 * 1024 * 1024 : 20_000;
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of request) {
+    size += chunk.length;
+    if (size > maxBytes) return sendJson(response, 413, { error: 'Request is too large' });
+    chunks.push(chunk);
+  }
+  try {
+    const upstream = await fetch(target, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': contentType, Accept: 'application/json' },
+      body: Buffer.concat(chunks),
+      signal: AbortSignal.timeout(multipart ? 120_000 : 60_000)
+    });
+    const body = await upstream.text();
+    if (!upstream.ok) {
+      console.error('Aarogyam upstream error:', upstream.status, body.slice(0, 300));
+      return sendJson(response, 502, { error: 'Aarogyam AI request failed' });
+    }
+    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    response.end(body);
+  } catch (error) {
+    console.error('Aarogyam connection failed:', error);
+    sendJson(response, 502, { error: 'Aarogyam AI is temporarily unavailable' });
+  }
+}
+
 async function serveElevenLabsClient(response) {
   try {
     const body = await readFile(resolve('node_modules/@elevenlabs/client/dist/lib.iife.js'));
@@ -2511,6 +2565,10 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'DELETE' && deviceMatch) return await revokeDevice(request, response, deviceMatch[1], url);
     if (request.method === 'GET' && url.pathname === '/api/device-session') return await deviceSession(request, response);
     if (request.method === 'POST' && url.pathname === '/api/device-session/logout') return exitDeviceSession(request, response);
+    if (request.method === 'GET' && url.pathname === '/api/aarogyam/config') {
+      return sendJson(response, 200, { configured: Boolean(process.env.AAROGYAM_API_URL && process.env.AAROGYAM_API_KEY) });
+    }
+    if (request.method === 'POST' && aarogyamPaths.has(url.pathname)) return await proxyAarogyam(request, response, url.pathname);
     if (request.method === 'GET' && url.pathname === '/api/elevenlabs/signed-url') return await createElevenLabsSignedUrl(request, response);
     if (request.method === 'GET' && url.pathname === '/vendor/elevenlabs-client.js') return await serveElevenLabsClient(response);
     if (request.method === 'GET' || request.method === 'HEAD') return await serveStatic(request, response);

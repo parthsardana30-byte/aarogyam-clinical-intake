@@ -606,6 +606,7 @@
     .voice-chat-title h1 { font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 650; letter-spacing: -.04em; margin: 0; line-height: 1.2; }
     .voice-chat-title::before { content: "AROGYAM"; display: block; margin-bottom: 7px; font-size: .63rem; letter-spacing: .18em; font-weight: 750; color: #538375; }
     .voice-live-tools { display: flex; align-items: center; gap: 10px; }
+    .voice-provider-select { min-height: 40px; max-width: 155px; border: 1px solid #b7d1c4; border-radius: 10px; background: #fff; color: var(--ink); padding: 8px; font: inherit; font-size: .82rem; font-weight: 650; }
     .voice-language[hidden], .voice-live-copy[hidden] { display: none !important; }
     .voice-question { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .voice-end, .voice-audio-toggle { min-height: 40px; border: 1px solid rgba(34,76,62,.16); border-radius: 10px; background: rgba(255,255,255,.58); color: var(--ink); padding: 9px 14px; font: inherit; font-size: .85rem; font-weight: 650; cursor: pointer; }
@@ -2361,6 +2362,10 @@
                 <div class="voice-chat-head">
                   <div class="voice-chat-title"><div class="voice-language" id="voiceLanguage" hidden>English conversation</div><h1 id="voicePrompt">Hello, Patient</h1></div>
                   <div class="voice-live-tools">
+                    <select class="voice-provider-select" id="voiceProvider" aria-label="Choose AI for this check-up">
+                      <option value="elevenlabs">ElevenLabs</option>
+                      <option value="aarogyam">Aarogyam AI</option>
+                    </select>
                     <div class="voice-live-copy" hidden><div class="voice-status" id="voiceStatus" role="status" aria-live="polite">Arogyam is ready</div><div class="auto-mic" id="autoMicStatus"><span class="auto-mic-dot"></span><span id="autoMicText">Connecting microphone…</span></div></div>
                     <button class="voice-audio-toggle" id="voiceAudioToggle" type="button" aria-pressed="false" aria-label="Read replies aloud">
                       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m11 5-5 4H3v6h3l5 4V5ZM15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Read aloud</span>
@@ -5143,54 +5148,6 @@
       }
     }
 
-    function applyStaffIdentity(staff) {
-      if (!staff?.id) return;
-      const displayName = staff.fullName || `Staff ${staff.id}`;
-      const sidebarName = document.getElementById('staffSidebarName');
-      const sidebarHospital = document.getElementById('staffSidebarHospital');
-      const sidebarMark = document.getElementById('staffSidebarMark');
-      if (sidebarName) sidebarName.textContent = displayName;
-      if (sidebarHospital) {
-        sidebarHospital.textContent = `${staff.hospitalName} · ${staff.hospitalLocation}`;
-        sidebarHospital.title = `${staff.hospitalName} · ${staff.hospitalLocation}`;
-      }
-      if (sidebarMark) sidebarMark.setAttribute('aria-label', `${displayName} account`);
-    }
-
-    function renderStaffProfile(staff) {
-      document.getElementById('staffProfileName').textContent = staff.fullName;
-      document.getElementById('staffProfileHospital').textContent = `${staff.hospitalName} · ${staff.hospitalLocation}`;
-      document.getElementById('staffProfileFullName').textContent = staff.fullName;
-      document.getElementById('staffProfileEmployeeId').textContent = staff.id;
-      document.getElementById('staffProfilePhone').textContent = staff.phone ? `+91 ${staff.phone}` : 'Not available';
-      document.getElementById('staffProfileEmail').textContent = staff.email || 'Not available';
-      document.getElementById('staffProfileBranch').textContent = staff.hospitalName;
-      document.getElementById('staffProfileLocation').textContent = staff.hospitalLocation;
-      document.getElementById('staffProfileCreated').textContent = staff.createdAt
-        ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date(staff.createdAt))
-        : 'Not available';
-      staffProfileStatus.textContent = '';
-    }
-
-    async function loadStaffProfile() {
-      staffProfileStatus.textContent = 'Loading staff profile…';
-      let storedStaff = null;
-      try { storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null'); } catch (_) {}
-      if (!storedStaff?.id) {
-        staffProfileStatus.textContent = 'Sign in as hospital staff to view this profile.';
-        return;
-      }
-      try {
-        const response = await fetch(`/api/staff-profile?staffId=${encodeURIComponent(storedStaff.id)}`, { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Could not load staff profile');
-        renderStaffProfile(data.staff);
-        applyStaffIdentity(data.staff);
-      } catch (error) {
-        staffProfileStatus.textContent = error.message || 'Could not load staff profile.';
-      }
-    }
-
     try {
       const storedPatientName = localStorage.getItem('arogPatientName');
       const storedPatientId = localStorage.getItem('arogPatientId');
@@ -6022,6 +5979,7 @@
     const voiceChatMessages = document.getElementById('voiceChatMessages');
     const voiceChatForm = document.getElementById('voiceChatForm');
     const voiceChatInput = document.getElementById('voiceChatInput');
+    const voiceProvider = document.getElementById('voiceProvider');
     const voicePrompts = {
       English: 'What health concern would you like to discuss today?',
       Hindi: 'आज आप किस स्वास्थ्य समस्या के बारे में बात करना चाहेंगी?'
@@ -6065,6 +6023,14 @@
     let replyPending = false;
     let readRepliesAloud = false;
     let elevenConversation = null;
+    let aarogyamSessionId = '';
+    let aarogyamCallActive = false;
+    let aarogyamGeneration = 0;
+    let aarogyamRecorder = null;
+    let aarogyamStream = null;
+    let aarogyamAudio = null;
+    let aarogyamAudioContext = null;
+    let aarogyamVadTimer = null;
     let elevenConnecting = false;
     let elevenTextOnly = false;
     let elevenConsentGranted = false;
@@ -6095,9 +6061,9 @@
     }
 
     function syncVoiceControls() {
-      const voiceActive = !!elevenConversation || elevenConnecting;
+      const voiceActive = voiceProvider.value === 'aarogyam' ? aarogyamCallActive : !!elevenConversation || elevenConnecting;
       voiceTalkButton.setAttribute('aria-pressed', String(voiceActive && !elevenTextOnly));
-      voiceTalkLabel.textContent = elevenConnecting ? 'Connecting…' : elevenTextOnly ? 'Retry Talk' : voiceActive ? 'Stop' : 'Talk';
+      voiceTalkLabel.textContent = voiceProvider.value === 'aarogyam' ? (voiceActive ? 'End call' : 'Call') : elevenConnecting ? 'Connecting…' : elevenTextOnly ? 'Retry Talk' : voiceActive ? 'Stop' : 'Talk';
       voiceSendButton.disabled = replyPending || !voiceChatInput.value.trim();
       voiceTalkButton.disabled = false;
       voiceChatMessages.setAttribute('aria-busy', String(replyPending));
@@ -6105,6 +6071,7 @@
 
     async function stopMicrophone() {
       const stopPromise = stopElevenLabsSession();
+      stopAarogyamCall();
       voiceGeneration += 1;
       clearTimeout(voiceTimer);
       clearTimeout(agentAudioFallbackTimer);
@@ -6147,6 +6114,165 @@
       if (!session) return;
       try { await session.endSession(); }
       catch (_) { /* Session may already be closed. */ }
+    }
+
+    async function aarogyamRequest(path, options = {}) {
+      const response = await fetch(`/api/aarogyam/${path}`, {
+        method: 'POST', cache: 'no-store', ...options
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Aarogyam AI is unavailable');
+      return payload;
+    }
+
+    async function ensureAarogyamSession() {
+      if (aarogyamSessionId) return aarogyamSessionId;
+      const result = await aarogyamRequest('sessions', {
+        headers: { 'Content-Type': 'application/json' }, body: '{}'
+      });
+      aarogyamSessionId = result.session_id;
+      currentConversationId = result.session_id;
+      if (result.greeting) appendChatMessage(result.greeting, 'ai');
+      return aarogyamSessionId;
+    }
+
+    function stopAarogyamCapture() {
+      clearInterval(aarogyamVadTimer);
+      aarogyamVadTimer = null;
+      if (aarogyamRecorder?.state === 'recording') aarogyamRecorder.stop();
+      aarogyamRecorder = null;
+      aarogyamStream?.getTracks().forEach(track => track.stop());
+      aarogyamStream = null;
+      if (aarogyamAudioContext) void aarogyamAudioContext.close().catch(() => {});
+      aarogyamAudioContext = null;
+    }
+
+    function stopAarogyamCall() {
+      aarogyamGeneration += 1;
+      aarogyamCallActive = false;
+      stopAarogyamCapture();
+      aarogyamAudio?.pause();
+      aarogyamAudio = null;
+      setAgentOrbState();
+      syncVoiceControls();
+    }
+
+    async function playAarogyamAudio(payload, generation) {
+      if (!payload.audio_base64 || generation !== aarogyamGeneration) return;
+      const bytes = Uint8Array.from(atob(payload.audio_base64), char => char.charCodeAt(0));
+      const url = URL.createObjectURL(new Blob([bytes], { type: payload.audio_mime || 'audio/wav' }));
+      const player = new Audio(url);
+      aarogyamAudio = player;
+      player.volume = 1;
+      setAgentOrbState('speaking');
+      setVoiceHint('Aarogyam is speaking…');
+      try {
+        await new Promise((resolve, reject) => {
+          player.onended = resolve;
+          player.onpause = resolve;
+          player.onerror = () => reject(new Error('Voice playback failed'));
+          player.play().catch(reject);
+        });
+      } finally {
+        if (aarogyamAudio === player) aarogyamAudio = null;
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    async function startAarogyamListening(generation) {
+      if (!aarogyamCallActive || generation !== aarogyamGeneration) return;
+      try {
+        if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder || !window.AudioContext) {
+          throw new Error('Voice calls need a browser with microphone recording support.');
+        }
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+        if (!aarogyamCallActive || generation !== aarogyamGeneration) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        aarogyamStream = stream;
+        const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(type => MediaRecorder.isTypeSupported(type));
+        const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+        aarogyamRecorder = recorder;
+        const chunks = [];
+        let speechStarted = false;
+        let silenceSince = 0;
+        const startedAt = Date.now();
+        const context = new AudioContext();
+        aarogyamAudioContext = context;
+        const source = context.createMediaStreamSource(stream);
+        const analyzer = context.createAnalyser();
+        analyzer.fftSize = 2048;
+        source.connect(analyzer);
+        const samples = new Uint8Array(analyzer.fftSize);
+        recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+        recorder.onstop = async () => {
+          stopAarogyamCapture();
+          if (!aarogyamCallActive || generation !== aarogyamGeneration || !speechStarted) {
+            if (aarogyamCallActive && generation === aarogyamGeneration) void startAarogyamListening(generation);
+            return;
+          }
+          try {
+            replyPending = true;
+            syncVoiceControls();
+            setVoiceHint('Aarogyam is thinking…');
+            const form = new FormData();
+            form.append('session_id', aarogyamSessionId);
+            form.append('audio', new Blob(chunks, { type: recorder.mimeType || 'audio/webm' }), `speech.${recorder.mimeType.includes('mp4') ? 'm4a' : 'webm'}`);
+            const result = await aarogyamRequest('voice/turn', { body: form });
+            if (!aarogyamCallActive || generation !== aarogyamGeneration) return;
+            if (result.transcript) appendChatMessage(result.transcript, 'user', 'You · voice');
+            if (result.answer) {
+              appendChatMessage(result.answer, 'ai');
+              voiceQuestion.textContent = result.answer;
+            }
+            if (result.audio_base64) await playAarogyamAudio(result, generation);
+            else if (result.audio_error) setVoiceHint('Voice unavailable; reply is shown in chat.', true);
+          } catch (error) {
+            if (generation === aarogyamGeneration) setVoiceHint(error.message, true);
+          } finally {
+            replyPending = false;
+            syncVoiceControls();
+            if (aarogyamCallActive && generation === aarogyamGeneration) void startAarogyamListening(generation);
+          }
+        };
+        recorder.start();
+        setAgentOrbState('listening');
+        setVoiceHint('Listening… speak naturally.');
+        aarogyamVadTimer = setInterval(() => {
+          if (generation !== aarogyamGeneration || recorder.state !== 'recording') return;
+          analyzer.getByteTimeDomainData(samples);
+          const rms = Math.sqrt(samples.reduce((sum, sample) => sum + ((sample - 128) / 128) ** 2, 0) / samples.length);
+          if (rms > 0.022) { speechStarted = true; silenceSince = 0; }
+          else if (speechStarted) silenceSince ||= Date.now();
+          if ((speechStarted && silenceSince && Date.now() - silenceSince > 1000) || Date.now() - startedAt > 18_000) recorder.stop();
+        }, 120);
+      } catch (error) {
+        stopAarogyamCall();
+        setVoiceHint(error.message || 'Microphone unavailable', true);
+      }
+    }
+
+    async function startAarogyamCall() {
+      if (aarogyamCallActive) return stopAarogyamCall();
+      aarogyamCallActive = true;
+      const generation = ++aarogyamGeneration;
+      syncVoiceControls();
+      setAgentOrbState('connecting');
+      setVoiceHint('Connecting to Aarogyam AI…');
+      try {
+        await ensureAarogyamSession();
+        if (generation !== aarogyamGeneration) return;
+        const greeting = await aarogyamRequest('voice/greeting', {
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: aarogyamSessionId })
+        });
+        await playAarogyamAudio(greeting, generation);
+        if (aarogyamCallActive && generation === aarogyamGeneration) await startAarogyamListening(generation);
+      } catch (error) {
+        stopAarogyamCall();
+        setVoiceHint(error.message || 'Aarogyam AI is unavailable', true);
+      }
     }
 
     function normalizeTranscriptText(text) {
@@ -6501,11 +6627,12 @@
       finishSummaryButton.textContent = 'Done';
       finishSummaryButton.disabled = false;
       seenElevenMessages.clear();
+      aarogyamSessionId = '';
       elevenLastAudioChunkAt = 0;
       elevenLastAudibleOutputAt = 0;
       setVoiceHint('Tap Talk to start the live AI voice session.');
       syncVoiceControls();
-      void prefetchElevenLabsSignedUrl().catch(() => {});
+      if (voiceProvider.value === 'elevenlabs') void prefetchElevenLabsSignedUrl().catch(() => {});
     }
 
     async function startVoiceSession(language) {
@@ -6517,6 +6644,34 @@
     async function sendPatientMessage(source = 'typed') {
       const message = voiceChatInput.value.trim();
       if (!message || replyPending) return;
+      if (voiceProvider.value === 'aarogyam') {
+        const wasCalling = aarogyamCallActive;
+        if (wasCalling) stopAarogyamCall();
+        replyPending = true;
+        syncVoiceControls();
+        setVoiceHint('Aarogyam is thinking…');
+        try {
+          await ensureAarogyamSession();
+          const result = await aarogyamRequest('chat/turn', {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: aarogyamSessionId, message })
+          });
+          appendChatMessage(message, 'user', 'You · typed');
+          voiceChatInput.value = '';
+          hasPatientResponse = true;
+          if (result.answer) {
+            appendChatMessage(result.answer, 'ai');
+            voiceQuestion.textContent = result.answer;
+          }
+          setVoiceHint('Reply ready. Tap Call to speak.');
+        } catch (error) {
+          setVoiceHint(error.message, true);
+        } finally {
+          replyPending = false;
+          syncVoiceControls();
+        }
+        return;
+      }
       const session = elevenConversation?.isOpen() ? elevenConversation : await startElevenLabsSession();
       if (!session?.isOpen()) {
         setVoiceHint('Live AI is not connected. Tap Talk and try again.', true);
@@ -6716,6 +6871,7 @@
     }
 
     voiceTalkButton.addEventListener('click', async () => {
+      if (voiceProvider.value === 'aarogyam') return startAarogyamCall();
       if (elevenTextOnly) {
         await stopElevenLabsSession();
         await startElevenLabsSession();
@@ -6724,6 +6880,7 @@
     });
 
     voiceOrb.addEventListener('click', async () => {
+      if (voiceProvider.value === 'aarogyam') return startAarogyamCall();
       if (elevenTextOnly) {
         await stopElevenLabsSession();
         await startElevenLabsSession();
@@ -6752,6 +6909,21 @@
       event.preventDefault();
       void sendPatientMessage();
     });
+
+    voiceProvider.addEventListener('change', async () => {
+      await stopMicrophone();
+      await prepareVoiceSession(languageSelect.value);
+      setVoiceHint(voiceProvider.value === 'aarogyam'
+        ? 'Aarogyam AI selected. Type below or tap Call.'
+        : 'ElevenLabs selected. Type below or tap Talk.');
+    });
+    void fetch('/api/aarogyam/config', { cache: 'no-store' })
+      .then(response => response.json())
+      .then(config => {
+        const option = voiceProvider.querySelector('option[value="aarogyam"]');
+        option.disabled = !config.configured;
+        if (!config.configured) option.textContent = 'Aarogyam AI (unavailable)';
+      }).catch(() => {});
 
     endVoiceSessionButton.addEventListener('click', () => void completeCurrentCheckup());
 
