@@ -658,8 +658,16 @@ async function proxyAarogyam(request, response, pathname) {
     });
     const body = await upstream.text();
     if (!upstream.ok) {
-      console.error('Aarogyam upstream error:', upstream.status, body.slice(0, 300));
-      return sendJson(response, 502, { error: 'Aarogyam AI request failed' });
+      let detail = '';
+      try { detail = String(JSON.parse(body).detail || ''); } catch { /* Upstream may return plain text. */ }
+      console.error('Aarogyam upstream error:', upstream.status, detail.slice(0, 120));
+      if (upstream.status === 422 && /Speech could not be understood/i.test(detail)) {
+        return sendJson(response, 422, { error: 'I could not hear that clearly. Please speak again.', code: 'speech_not_understood' });
+      }
+      if (upstream.status === 404 && /session not found/i.test(detail)) {
+        return sendJson(response, 404, { error: 'The AI session expired. Please restart the call.', code: 'session_expired' });
+      }
+      return sendJson(response, 502, { error: 'Aarogyam AI is temporarily unavailable. Please try again.' });
     }
     response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     response.end(body);

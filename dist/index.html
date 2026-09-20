@@ -6121,7 +6121,11 @@
         method: 'POST', cache: 'no-store', ...options
       });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || 'Aarogyam AI is unavailable');
+      if (!response.ok) {
+        const error = new Error(payload.error || 'Aarogyam AI is unavailable');
+        error.code = payload.code || '';
+        throw error;
+      }
       return payload;
     }
 
@@ -6196,6 +6200,8 @@
         aarogyamRecorder = recorder;
         const chunks = [];
         let speechStarted = false;
+        let speechFrames = 0;
+        let noiseFloor = 0.008;
         let silenceSince = 0;
         const startedAt = Date.now();
         const context = new AudioContext();
@@ -6229,7 +6235,16 @@
             if (result.audio_base64) await playAarogyamAudio(result, generation);
             else if (result.audio_error) setVoiceHint('Voice unavailable; reply is shown in chat.', true);
           } catch (error) {
-            if (generation === aarogyamGeneration) setVoiceHint(error.message, true);
+            if (generation === aarogyamGeneration) {
+              setVoiceHint(error.code === 'speech_not_understood'
+                ? 'I could not hear clearly. Listening again…' : error.message,
+                error.code !== 'speech_not_understood');
+              if (error.code === 'session_expired') {
+                aarogyamSessionId = '';
+                stopAarogyamCall();
+                setVoiceHint('The AI session expired. Tap Call to start again.', true);
+              }
+            }
           } finally {
             replyPending = false;
             syncVoiceControls();
@@ -6243,8 +6258,15 @@
           if (generation !== aarogyamGeneration || recorder.state !== 'recording') return;
           analyzer.getByteTimeDomainData(samples);
           const rms = Math.sqrt(samples.reduce((sum, sample) => sum + ((sample - 128) / 128) ** 2, 0) / samples.length);
-          if (rms > 0.022) { speechStarted = true; silenceSince = 0; }
-          else if (speechStarted) silenceSince ||= Date.now();
+          if (rms > Math.max(0.026, noiseFloor * 2.5)) {
+            speechFrames += 1;
+            if (speechFrames >= 3) speechStarted = true;
+            silenceSince = 0;
+          } else if (speechStarted) silenceSince ||= Date.now();
+          else {
+            speechFrames = Math.max(0, speechFrames - 1);
+            noiseFloor = Math.min(0.04, noiseFloor * 0.9 + rms * 0.1);
+          }
           if ((speechStarted && silenceSince && Date.now() - silenceSince > 1000) || Date.now() - startedAt > 18_000) recorder.stop();
         }, 120);
       } catch (error) {
