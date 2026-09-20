@@ -186,6 +186,19 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
     }),
   });
   assert.equal(completedDocument.response.status, 200);
+  const staffDocumentDashboard = await json(`/api/patients/${patient.id}/dashboard`, {
+    headers: { Authorization: `Bearer ${patient.sessionToken}` },
+  });
+  assert.equal(staffDocumentDashboard.response.status, 200);
+  const staffDocument = staffDocumentDashboard.payload.documents.find(item => item.id === documentUpload.payload.file.id);
+  assert.equal(staffDocument?.source, 'hospital_staff');
+  assert.equal(staffDocument?.category, 'lab');
+  assert.ok(staffDocument?.hospitalName);
+  const staffDocumentFile = await fetch(origin + staffDocument.previewUrl, {
+    headers: { Authorization: `Bearer ${patient.sessionToken}` },
+  });
+  assert.equal(staffDocumentFile.status, 200);
+  assert.equal(staffDocumentFile.headers.get('content-type'), 'image/png');
 
   const queueA = await json('/api/staff-patients?staffId=STAFF-A', { headers: { Cookie: staffCookieA } });
   const queueB = await json('/api/staff-patients?staffId=STAFF-B', { headers: { Cookie: staffCookieB } });

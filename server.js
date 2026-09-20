@@ -1293,6 +1293,9 @@ function publicDashboardDocument(row) {
   const inferredCategory = /^prescription\b|\brx[- _]/i.test(row.original_name)
     ? 'prescription'
     : /\b(?:lab|pathology|radiology|blood|test)\b/i.test(row.original_name) ? 'lab' : 'other';
+  const source = row.uploaded_by_doctor_id ? 'doctor'
+    : row.uploaded_by_staff_id ? 'hospital_staff'
+      : row.patient_reference ? 'patient' : 'registration';
   return {
     id: row.id,
     name: row.original_name,
@@ -1300,7 +1303,9 @@ function publicDashboardDocument(row) {
     size: row.size_bytes,
     createdAt: row.created_at,
     category: row.document_category && row.document_category !== 'other' ? row.document_category : inferredCategory,
+    source,
     hospitalId: row.hospital_id || null,
+    hospitalName: row.hospital_id ? hospitalBranches.get(row.hospital_id)?.name || 'Hospital' : null,
     intakeId: row.intake_id || null,
     analysisStatus: row.ai_status || 'not-started',
     aiSummary: row.ai_summary || '',

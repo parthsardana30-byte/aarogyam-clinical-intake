@@ -72,6 +72,16 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   });
   assert.equal(verification.response.status, 200);
 
+  const registrationDocuments = await json('/api/document-upload-sessions', { method: 'POST', body: '{}' });
+  assert.equal(registrationDocuments.response.status, 201);
+  const registrationUpload = await json(`/api/document-upload-sessions/${registrationDocuments.payload.id}/files`, {
+    method: 'POST', body: JSON.stringify({
+      token: registrationDocuments.payload.token, name: 'previous-report.png', type: 'image/png',
+      data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    }),
+  });
+  assert.equal(registrationUpload.response.status, 201);
+
   const registration = await json('/api/patient-registrations', {
     method: 'POST',
     body: JSON.stringify({
@@ -89,11 +99,14 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
       conditions: ['none'],
       allergies: 'None',
       password,
+      documentSessionId: registrationDocuments.payload.id,
+      documentSessionToken: registrationDocuments.payload.token,
     }),
   });
   assert.equal(registration.response.status, 201);
   assert.match(registration.payload.patient.id, /^AS-\d{6}$/);
   assert.ok(registration.payload.sessionToken);
+  assert.equal(registration.payload.patient.documentCount, 1);
 
   const phoneLogin = await json('/api/patient-login', {
     method: 'POST', body: JSON.stringify({ phone, password }),
@@ -153,7 +166,14 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   assert.equal(initialDashboard.payload.patient.profile.gender, 'Female');
   assert.equal(initialDashboard.payload.patient.profile.heightCm, 165);
   assert.equal(initialDashboard.payload.patient.profile.weightKg, 62);
-  assert.deepEqual(initialDashboard.payload.summary, { consultationCount: 0, documentCount: 0 });
+  assert.deepEqual(initialDashboard.payload.summary, { consultationCount: 0, documentCount: 1 });
+  assert.equal(initialDashboard.payload.documents[0].name, 'previous-report.png');
+  assert.equal(initialDashboard.payload.documents[0].source, 'registration');
+  const registrationFile = await fetch(origin + initialDashboard.payload.documents[0].previewUrl, { headers: auth });
+  assert.equal(registrationFile.status, 200);
+  assert.equal(registrationFile.headers.get('content-type'), 'image/png');
+  const wrongPatientFile = await fetch(origin + initialDashboard.payload.documents[0].previewUrl.replace(patientId, 'AS-000001'), { headers: auth });
+  assert.notEqual(wrongPatientFile.status, 200);
 
   const updateConditions = await json(`/api/patients/${patientId}/medical-conditions`, {
     method: 'PUT', headers: auth, body: JSON.stringify({ conditions: ['diabetes', 'high_cholesterol'] }),
@@ -175,8 +195,8 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   assert.equal(upload.payload.document.name, 'test-result.png');
 
   const dashboard = await json(`/api/patients/${patientId}/dashboard`, { headers: auth });
-  assert.equal(dashboard.payload.summary.documentCount, 1);
-  assert.equal(dashboard.payload.documents[0].name, 'test-result.png');
+  assert.equal(dashboard.payload.summary.documentCount, 2);
+  assert.ok(dashboard.payload.documents.some(document => document.name === 'test-result.png' && document.source === 'patient'));
 
   const abhaLogin = await json('/api/patient-login', {
     method: 'POST', body: JSON.stringify({ identityMethod: 'abha', identityNumber: '80012345678901', epin: '654321' }),

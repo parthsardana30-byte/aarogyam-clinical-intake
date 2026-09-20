@@ -2398,8 +2398,8 @@
               </button>
             </section>
             <aside class="patient-dashboard-side" aria-label="Patient dashboard summary">
-              <article class="patient-dashboard-card"><span>Recent consultations</span><strong>3 visits</strong></article>
-              <article class="patient-dashboard-card"><span>Documents on file</span><strong>4 records</strong></article>
+              <article class="patient-dashboard-card"><span>Recent consultations</span><strong id="patientConsultationCount">Loading…</strong></article>
+              <button class="patient-dashboard-card action" id="openPatientDocuments" type="button"><span>Documents on file</span><strong id="patientDocumentCount">View documents →</strong></button>
               <button class="patient-dashboard-card action" id="openPatientRecords" type="button"><span>Health history</span><strong>View my records →</strong></button>
             </aside>
           </div>
@@ -2474,12 +2474,13 @@
         </section>
         <section class="patient-records" id="patientRecords" aria-labelledby="patientRecordsTitle" hidden>
           <div class="records-heading">
-            <div><h1 id="patientRecordsTitle" tabindex="-1">My records</h1></div>
+            <div><h1 id="patientRecordsTitle" tabindex="-1">My records</h1><p>Documents uploaded at registration or by hospital staff appear here.</p></div>
           </div>
           <div class="records-toolbar">
             <input class="records-search" id="patientRecordSearch" type="search" maxlength="120" placeholder="Search visits, doctors or concerns" aria-label="Search patient records">
             <select class="records-filter" id="patientRecordFilter" aria-label="Filter patient records">
               <option value="all">All records</option>
+              <option value="documents">All documents</option>
               <option value="visit">Consultations</option>
               <option value="vitals">Vitals</option>
               <option value="lab">Lab reports</option>
@@ -4306,7 +4307,7 @@
       ['#voiceStatus', 'patient.voice.ready'], ['#voiceQuestion', 'patient.voice.question'], ['#autoMicText', 'patient.voice.connecting'], ['#endVoiceSession', 'patient.voice.end'],
       ['.voice-chat-send-label', 'common.send'],
       ['#patientRecordsTitle', 'records.title'], ['#patientRecords .records-heading p', 'records.subtitle'], ['#patientRecords .records-summary-card:nth-child(1) span', 'records.consultations'], ['#patientRecords .records-summary-card:nth-child(2) span', 'records.documents'], ['#patientRecords .records-summary-card:nth-child(3) span', 'records.followup'],
-      ['#patientRecordFilter option[value="all"]', 'records.filter.all'], ['#patientRecordFilter option[value="visit"]', 'records.filter.visits'], ['#patientRecordFilter option[value="lab"]', 'records.filter.labs'], ['#patientRecordFilter option[value="prescription"]', 'records.filter.prescriptions'], ['#patientRecordsEmpty', 'records.empty'],
+      ['#patientRecordFilter option[value="all"]', 'records.filter.all'], ['#patientRecordFilter option[value="documents"]', 'records.filter.documents'], ['#patientRecordFilter option[value="visit"]', 'records.filter.visits'], ['#patientRecordFilter option[value="lab"]', 'records.filter.labs'], ['#patientRecordFilter option[value="prescription"]', 'records.filter.prescriptions'], ['#patientRecordsEmpty', 'records.empty'],
       ['#patientRecords .record-detail-row:nth-child(1) > span', 'records.clinician'], ['#patientRecords .record-detail-row:nth-child(2) > span', 'records.summary'], ['#patientRecords .record-detail-row:nth-child(3) > span', 'records.plan'],
       ['.doctor-top-tabs .doctor-top-tab:nth-child(1)', 'doctor.nav.records'],
       ['#doctor .summary-section:nth-child(1) h3', 'doctor.chiefConcern'], ['#doctor .summary-section:nth-child(2) h3', 'doctor.context'], ['#doctor .summary-section:nth-child(3) h3', 'doctor.ayurvedic'], ['#doctor .summary-section:nth-child(4) h3', 'doctor.flags'],
@@ -4492,6 +4493,7 @@
         stopMicrophone();
       }
       if (isVoice) startVoiceSession(languageSelect.value);
+      if (isStart && !authorizedPatientDevice) void loadPatientRecordDocuments();
       if (isIntakeSummary && summaryPatientId !== activePatient?.id) void loadLatestIntakeSummary();
       if (focus && isStart) startCheckupButton.focus();
       if (focus && isLanguage) languageOptions.querySelector('input').focus();
@@ -4536,7 +4538,11 @@
       confirmLanguage.disabled = false;
     }
 
-    startCheckupButton.addEventListener('click', () => navigateRoute('patient/records', false, true));
+    startCheckupButton.addEventListener('click', () => {
+      patientRecordSearch.value = '';
+      patientRecordFilter.value = 'all';
+      navigateRoute('patient/records', false, true);
+    });
 
     languageOptions.addEventListener('change', () => {
       confirmLanguage.disabled = !languageForm.elements.checkupLanguage.value;
@@ -5735,13 +5741,23 @@
     const patientRecordsEmpty = document.getElementById('patientRecordsEmpty');
     const patientDate = value => new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(value));
 
+    function clearPatientRecordView() {
+      document.getElementById('patientRecordList').replaceChildren(patientRecordsEmpty);
+      patientRecordsEmpty.hidden = false;
+      patientRecordItems = [];
+      Object.keys(patientRecordData).forEach(key => delete patientRecordData[key]);
+      document.getElementById('patientConsultationCount').textContent = '—';
+      document.getElementById('patientDocumentCount').textContent = 'View documents →';
+      renderPatientAccessHistory([]);
+    }
+
     function bindPatientRecordItem(item) {
       if (item.dataset.bound === 'true') return;
       item.dataset.bound = 'true';
       item.addEventListener('click', () => {
         selectPatientRecord(item.dataset.recordId);
         const record = patientRecordData[item.dataset.recordId];
-        if (item.dataset.recordType !== 'visit' && record?.files?.[0]?.previewUrl) void openPatientDocument(record.files[0]);
+        if (item.dataset.recordKind === 'document' && record?.files?.[0]?.previewUrl) void openPatientDocument(record.files[0]);
       });
     }
 
@@ -5749,6 +5765,7 @@
       const item = document.createElement('button');
       item.className = 'patient-record-item'; item.type = 'button';
       item.dataset.recordId = id; item.dataset.recordType = type; item.setAttribute('aria-selected', 'false');
+      item.dataset.recordKind = type === 'visit' || type === 'vitals' ? type : 'document';
       item.dataset.recordCreatedAt = createdAt;
       const icon = document.createElement('span'); icon.className = 'record-icon';
       icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18H6V3Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
@@ -5782,12 +5799,24 @@
     }
 
     async function openPatientDocument(record) {
-      const token = activePatientSessionToken || localStorage.getItem('arogPatientSessionToken') || '';
-      const response = await fetch(record.previewUrl, { headers: { Authorization: `Bearer ${token}` } });
-      if (!response.ok) return void showToast('Document unavailable', 'Sign in again to open this secure document.');
-      const url = URL.createObjectURL(await response.blob());
-      window.open(url, '_blank', 'noopener');
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      const previewWindow = window.open('about:blank', '_blank');
+      if (previewWindow) previewWindow.opener = null;
+      try {
+        const token = activePatientSessionToken || localStorage.getItem('arogPatientSessionToken') || '';
+        const response = await fetch(record.previewUrl, { headers: { Authorization: `Bearer ${token}` } });
+        if (!response.ok) throw new Error('Sign in again to open this secure document.');
+        const url = URL.createObjectURL(await response.blob());
+        if (previewWindow) previewWindow.location.replace(url);
+        else {
+          const download = document.createElement('a');
+          download.href = url; download.download = record.name || 'document';
+          download.click();
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 300_000);
+      } catch (error) {
+        previewWindow?.close();
+        showToast('Document unavailable', error.message || 'Could not open this document.');
+      }
     }
 
     function renderPatientAccessHistory(history = []) {
@@ -5812,15 +5841,19 @@
     }
 
     async function loadPatientRecordDocuments() {
-      if (!activePatient?.id) return;
+      const patientId = activePatient?.id;
+      if (!patientId) return void clearPatientRecordView();
       const token = activePatientSessionToken || localStorage.getItem('arogPatientSessionToken') || '';
-      if (!token) return;
+      if (!token) return void clearPatientRecordView();
       try {
-        const response = await fetch(`/api/patients/${encodeURIComponent(activePatient.id)}/dashboard`, {
+        const response = await fetch(`/api/patients/${encodeURIComponent(patientId)}/dashboard`, {
           cache: 'no-store', headers: { Authorization: `Bearer ${token}` }
         });
         const data = await response.json().catch(() => ({}));
+        if (activePatient?.id !== patientId || activePatientSessionToken !== token) return;
         if (!response.ok) throw new Error(data.error || 'Could not load patient records');
+        document.getElementById('patientConsultationCount').textContent = `${data.summary?.consultationCount || 0} visits`;
+        document.getElementById('patientDocumentCount').textContent = `${data.summary?.documentCount || 0} documents →`;
         const list = document.getElementById('patientRecordList');
         list.replaceChildren(patientRecordsEmpty);
         patientRecordItems = [];
@@ -5855,21 +5888,28 @@
           const visit = visitsById.get(documentRecord.intakeId);
           const category = documentRecord.category || 'other';
           const categoryLabel = category === 'prescription' ? 'Prescription' : category === 'lab' ? 'Lab report' : 'Document';
+          const sourceLabel = documentRecord.source === 'hospital_staff' ? `Uploaded by ${documentRecord.hospitalName || 'hospital'} staff`
+            : documentRecord.source === 'doctor' ? `Issued by ${documentRecord.hospitalName || 'hospital'} doctor`
+              : documentRecord.source === 'registration' ? 'Uploaded at registration' : 'Uploaded by you';
           patientRecordData[id] = {
             meta: `${patientDate(documentRecord.createdAt)} · ${categoryLabel}`,
             title: documentRecord.name,
-            doctor: visit?.doctor ? `${visit.doctor.name} · ${visit.doctor.specialty}` : 'Uploaded to your secure patient record',
+            doctor: sourceLabel,
             summary: category === 'prescription' ? 'Prescription issued for this hospital encounter.' : category === 'lab' ? 'Lab report uploaded to this hospital encounter.' : 'Medical document uploaded to your patient record.',
             plan: visit ? `${visit.hospitalName} · ${visit.encounterNumber || 'Hospital encounter'}` : 'Open the file to review the complete document.',
             files: [documentRecord], vitals: null
           };
-          patientRecordItems.push(createPatientRecordItem(id, category, documentRecord.name, `Added ${patientDate(documentRecord.createdAt)} · ${documentRecord.type.includes('pdf') ? 'PDF' : 'File'}`, categoryLabel, documentRecord.createdAt));
+          patientRecordItems.push(createPatientRecordItem(id, category, documentRecord.name, `${sourceLabel} · ${patientDate(documentRecord.createdAt)} · ${documentRecord.type?.includes('pdf') ? 'PDF' : 'File'}`, categoryLabel, documentRecord.createdAt));
         }
         patientRecordItems.sort((a, b) => String(b.dataset.recordCreatedAt).localeCompare(String(a.dataset.recordCreatedAt)));
         patientRecordItems.forEach(item => list.insertBefore(item, patientRecordsEmpty));
         renderPatientAccessHistory(data.accessHistory || []);
         filterPatientRecords();
-      } catch (error) { showToast('Records unavailable', error.message || 'Could not load your records.'); }
+      } catch (error) {
+        if (activePatient?.id !== patientId || activePatientSessionToken !== token) return;
+        clearPatientRecordView();
+        showToast('Records unavailable', error.message || 'Could not load your records.');
+      }
     }
 
     function selectPatientRecord(id) {
@@ -5881,7 +5921,7 @@
       const query = patientRecordSearch.value.trim().toLowerCase();
       const type = patientRecordFilter.value;
       const visible = patientRecordItems.filter(item => {
-        const matchesType = type === 'all' || item.dataset.recordType === type;
+        const matchesType = type === 'all' || (type === 'documents' ? item.dataset.recordKind === 'document' : item.dataset.recordType === type);
         const matchesQuery = !query || item.textContent.toLowerCase().includes(query);
         item.hidden = !(matchesType && matchesQuery);
         return !item.hidden;
@@ -6165,6 +6205,7 @@
       } catch (_) { /* Clear this browser's session even if the server is unavailable. */ }
       activePatientSessionToken = '';
       activePatient = null;
+      clearPatientRecordView();
       activeDoctor = null;
       patientLoggedInThisSession = false;
       try {
@@ -6188,7 +6229,16 @@
       resetCheckup();
       navigateRoute('patient/start');
     }));
-    document.getElementById('openPatientRecords').addEventListener('click', () => navigateRoute('patient/records', false, true));
+    document.getElementById('openPatientRecords').addEventListener('click', () => {
+      patientRecordSearch.value = '';
+      patientRecordFilter.value = 'all';
+      navigateRoute('patient/records', false, true);
+    });
+    document.getElementById('openPatientDocuments').addEventListener('click', () => {
+      patientRecordSearch.value = '';
+      patientRecordFilter.value = 'documents';
+      navigateRoute('patient/records', false, true);
+    });
     document.querySelectorAll('[data-toast]').forEach(button => button.addEventListener('click', () => {
       const [title, text] = button.dataset.toast.split('|'); showToast(title, text);
     }));
