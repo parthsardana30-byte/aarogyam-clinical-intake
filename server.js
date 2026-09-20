@@ -4,7 +4,6 @@ import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import QRCode from 'qrcode';
-import WebSocket, { WebSocketServer } from 'ws';
 
 const host = process.env.HOST || '127.0.0.1';
 const port = Number(process.env.PORT || 4173);
@@ -60,9 +59,6 @@ const testDoctorAccounts = [
   { id: 'CHR-DEMO-1000', hospitalId: 'civil-rajkot', fullName: 'Dr. Riya Mehta', degree: 'MBBS, MD', specialty: 'General Medicine', registration: 'DEMO-GJMC-1000', experience: 8, room: 'OPD-1', phone: '9000006631', email: 'demo.rajkot@aarogyam.test' }
 ];
 const elevenLabsSignedUrlLastIssued = new Map();
-const elevenVoiceTickets = new Map();
-const elevenVoiceTicketTtlMs = 90_000;
-const elevenVoiceServer = new WebSocketServer({ noServer: true, maxPayload: 1024 * 1024 });
 const activeDocumentAnalyses = new Set();
 let devices = [];
 let patients = [];
@@ -379,16 +375,10 @@ async function loadPatients() {
   }));
 }
 
-let deviceSaveQueue = Promise.resolve();
-function saveDevices() {
-  const snapshot = JSON.stringify(devices, null, 2);
-  const save = deviceSaveQueue.then(async () => {
-    const temporary = `${devicesFile}.${randomUUID()}.tmp`;
-    await writeFile(temporary, snapshot);
-    await rename(temporary, devicesFile);
-  });
-  deviceSaveQueue = save.catch(() => {});
-  return save;
+async function saveDevices() {
+  const temporary = `${devicesFile}.tmp`;
+  await writeFile(temporary, JSON.stringify(devices, null, 2));
+  await rename(temporary, devicesFile);
 }
 
 function patientEncryptionKey() {
@@ -717,63 +707,8 @@ async function createElevenLabsSignedUrl(request, response) {
   if (!result.ok) return sendJson(response, 502, { error: 'Voice agent is temporarily unavailable' });
   const payload = await result.json();
   if (!payload.signed_url) return sendJson(response, 502, { error: 'Voice agent returned an invalid session' });
-  let upstreamUrl;
-  try { upstreamUrl = new URL(payload.signed_url); }
-  catch { return sendJson(response, 502, { error: 'Voice agent returned an invalid session' }); }
-  if (upstreamUrl.protocol !== 'wss:' || (upstreamUrl.hostname !== 'api.elevenlabs.io' && !upstreamUrl.hostname.endsWith('.elevenlabs.io'))) {
-    return sendJson(response, 502, { error: 'Voice agent returned an invalid session' });
-  }
-  const ticket = randomBytes(24).toString('base64url');
-  const now = Date.now();
-  for (const [key, session] of elevenVoiceTickets) {
-    if (session.expiresAt <= now) elevenVoiceTickets.delete(key);
-  }
-  elevenVoiceTickets.set(ticket, { signedUrl: payload.signed_url, expiresAt: now + elevenVoiceTicketTtlMs });
   elevenLabsSignedUrlLastIssued.set(ip, Date.now());
-  sendJson(response, 200, { configured: true, signedUrl: `/api/elevenlabs/voice?ticket=${ticket}`, expiresIn: 60, patientContext: patientIntakeContext(patient) });
-}
-
-function rejectVoiceUpgrade(socket, status) {
-  if (!socket.destroyed) socket.end(`HTTP/1.1 ${status}\r\nConnection: close\r\n\r\n`);
-}
-
-function upgradeElevenLabsVoice(request, socket, head) {
-  let url;
-  try { url = new URL(request.url || '/', 'http://localhost'); }
-  catch { return rejectVoiceUpgrade(socket, '400 Bad Request'); }
-  if (url.pathname !== '/api/elevenlabs/voice') return rejectVoiceUpgrade(socket, '404 Not Found');
-  const origin = request.headers.origin;
-  if (origin) {
-    try {
-      if (new URL(origin).host !== request.headers.host) return rejectVoiceUpgrade(socket, '403 Forbidden');
-    } catch { return rejectVoiceUpgrade(socket, '403 Forbidden'); }
-  }
-  const ticketId = url.searchParams.get('ticket') || '';
-  const ticket = elevenVoiceTickets.get(ticketId);
-  elevenVoiceTickets.delete(ticketId);
-  if (!ticket || ticket.expiresAt <= Date.now()) return rejectVoiceUpgrade(socket, '401 Unauthorized');
-
-  const upstream = new WebSocket(ticket.signedUrl, 'convai', { handshakeTimeout: 10_000 });
-  const fail = () => rejectVoiceUpgrade(socket, '502 Bad Gateway');
-  upstream.once('error', fail);
-  upstream.once('close', fail);
-  upstream.once('open', () => {
-    upstream.off('error', fail);
-    upstream.off('close', fail);
-    if (socket.destroyed) return upstream.close();
-    elevenVoiceServer.handleUpgrade(request, socket, head, client => {
-      client.on('message', (data, isBinary) => {
-        if (upstream.readyState === WebSocket.OPEN) upstream.send(data, { binary: isBinary });
-      });
-      upstream.on('message', (data, isBinary) => {
-        if (client.readyState === WebSocket.OPEN) client.send(data, { binary: isBinary });
-      });
-      client.on('close', () => upstream.close());
-      upstream.on('close', () => client.close());
-      client.on('error', () => upstream.close());
-      upstream.on('error', () => client.close());
-    });
-  });
+  sendJson(response, 200, { configured: true, signedUrl: payload.signed_url, expiresIn: 900, patientContext: patientIntakeContext(patient) });
 }
 
 const aarogyamPaths = new Map([
@@ -1178,17 +1113,9 @@ async function loginPatientWithOtp(request, response) {
   }
   const verified = verifiedPatientOtp(body, 'login');
   if (!verified) return sendJson(response, 401, { error: 'OTP verification is invalid or expired' });
-  const requestedUhid = String(body.uhid || '').trim().toUpperCase();
-  const newHospitalVisit = body.newHospitalVisit === true;
-  if (requestedUhid && newHospitalVisit) return sendJson(response, 400, { error: 'Choose a new or returning visit' });
-  const identity = requestedUhid ? kioskIdentityForPatient(request, verified.patient.id, requestedUhid)
-    : newHospitalVisit ? createKioskIdentityForPatient(request, verified.patient.id) : null;
-  if (newHospitalVisit && !identity) return sendJson(response, 403, { error: 'An authorized hospital kiosk is required' });
-  if (requestedUhid && !identity) return sendJson(response, 401, { error: 'UHID and verified mobile number do not match this hospital' });
   verified.entry.consumed = true;
   sendJson(response, 200, {
-    patient: { id: verified.patient.id, fullName: verified.patient.profile.fullName,
-      ...(identity ? { uhid: identity.uhid, uhidCreated: identity.created === true } : {}) },
+    patient: { id: verified.patient.id, fullName: verified.patient.profile.fullName },
     sessionToken: createPatientSession(verified.patient.id)
   });
 }
@@ -1238,11 +1165,6 @@ async function createPatientRegistration(request, response) {
   if (documentSessionId && !pendingDocumentSession) {
     return sendJson(response, 400, { error: 'The document upload session expired. Return to the document step and try again.' });
   }
-  const kioskDevice = authorizedDeviceForRequest(request);
-  const kioskHospitalId = kioskDevice?.hospitalId || null;
-  if (kioskDevice && !hospitalBranches.has(kioskHospitalId)) {
-    return sendJson(response, 409, { error: 'This kiosk is not linked to a hospital. Ask staff to authorize it again.' });
-  }
 
   const requestedIdentityMethod = body.identityMethod === 'abha' ? 'abha' : body.identityMethod === 'aadhaar' ? 'aadhaar' : 'phone';
   const requestedIdentityNumber = String(body.identityNumber || '').replace(/\D/g, '');
@@ -1289,31 +1211,22 @@ async function createPatientRegistration(request, response) {
     abhaLinkStatus: identityMethod === 'abha' ? 'linked' : 'unlinked',
     createdAt: new Date().toISOString()
   };
-  let kioskIdentity = null;
-  patientsDb.exec('BEGIN IMMEDIATE');
-  try {
-    patientsDb.prepare(`
-      INSERT INTO patients (
-        id, phone, identity_method, identity_ciphertext, identity_iv, identity_tag, identity_last4,
-        password_salt, password_hash, full_name, date_of_birth, gender, height_cm, weight_kg,
-        blood_group, conditions_json, allergies, abha_link_status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      patient.id, patient.phone, patient.identity.method, encryptedIdentity.ciphertext, encryptedIdentity.iv,
-      encryptedIdentity.tag, patient.identity.last4, patient.password.salt, patient.password.hash,
-      patient.profile.fullName, patient.profile.dateOfBirth, patient.profile.gender, patient.profile.heightCm,
-      patient.profile.weightKg, patient.profile.bloodGroup, JSON.stringify(patient.health.conditions),
-      patient.health.allergies, patient.abhaLinkStatus, patient.createdAt
-    );
-    if (pendingDocumentSession) {
-      patientsDb.prepare('UPDATE patient_documents SET patient_id = ? WHERE upload_session_id = ?').run(patient.id, documentSessionId);
-      patientsDb.prepare("UPDATE patient_document_sessions SET status = 'completed' WHERE id = ?").run(documentSessionId);
-    }
-    if (kioskHospitalId) kioskIdentity = getOrCreateHospitalIdentity(patient.id, kioskHospitalId, patient.createdAt);
-    patientsDb.exec('COMMIT');
-  } catch (error) {
-    patientsDb.exec('ROLLBACK');
-    throw error;
+  patientsDb.prepare(`
+    INSERT INTO patients (
+      id, phone, identity_method, identity_ciphertext, identity_iv, identity_tag, identity_last4,
+      password_salt, password_hash, full_name, date_of_birth, gender, height_cm, weight_kg,
+      blood_group, conditions_json, allergies, abha_link_status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    patient.id, patient.phone, patient.identity.method, encryptedIdentity.ciphertext, encryptedIdentity.iv,
+    encryptedIdentity.tag, patient.identity.last4, patient.password.salt, patient.password.hash,
+    patient.profile.fullName, patient.profile.dateOfBirth, patient.profile.gender, patient.profile.heightCm,
+    patient.profile.weightKg, patient.profile.bloodGroup, JSON.stringify(patient.health.conditions),
+    patient.health.allergies, patient.abhaLinkStatus, patient.createdAt
+  );
+  if (pendingDocumentSession) {
+    patientsDb.prepare('UPDATE patient_documents SET patient_id = ? WHERE upload_session_id = ?').run(patient.id, documentSessionId);
+    patientsDb.prepare("UPDATE patient_document_sessions SET status = 'completed' WHERE id = ?").run(documentSessionId);
   }
   patients.push(patient);
   otpEntry.consumed = true;
@@ -1321,8 +1234,7 @@ async function createPatientRegistration(request, response) {
     ? Number(patientsDb.prepare('SELECT COUNT(*) AS count FROM patient_documents WHERE patient_id = ?').get(patient.id).count)
     : 0;
   sendJson(response, 201, {
-    patient: { id: patient.id, fullName: patient.profile.fullName, documentCount,
-      ...(kioskIdentity ? { uhid: kioskIdentity.uhid, uhidCreated: kioskIdentity.created === true } : {}) },
+    patient: { id: patient.id, fullName: patient.profile.fullName, documentCount },
     sessionToken: createPatientSession(patient.id)
   });
 }
@@ -1331,10 +1243,6 @@ async function loginPatient(request, response) {
   const body = await readJson(request);
   const phone = normalizeIndianPhone(body.phone || body.identifier);
   const password = String(body.epin || body.password || '');
-  const requestedUhid = String(body.uhid || '').trim().toUpperCase();
-  const newHospitalVisit = body.newHospitalVisit === true;
-  if (requestedUhid && newHospitalVisit) return sendJson(response, 400, { error: 'Choose a new or returning visit' });
-  if (newHospitalVisit && !phone) return sendJson(response, 400, { error: 'Enter the mobile number linked to your account' });
   if (phone) {
     const row = patientsDb.prepare('SELECT * FROM patients WHERE phone = ?').get(phone);
     const patient = row ? patients.find(item => item.id === row.id) : null;
@@ -1346,13 +1254,8 @@ async function loginPatient(request, response) {
     if (stored.length !== candidate.length || !timingSafeEqual(stored, candidate)) {
       return sendJson(response, 401, { error: 'Mobile number or E-PIN is incorrect' });
     }
-    const identity = requestedUhid ? kioskIdentityForPatient(request, patient.id, requestedUhid)
-      : newHospitalVisit ? createKioskIdentityForPatient(request, patient.id) : null;
-    if (newHospitalVisit && !identity) return sendJson(response, 403, { error: 'An authorized hospital kiosk is required' });
-    if (requestedUhid && !identity) return sendJson(response, 401, { error: 'UHID and mobile number do not match this hospital' });
     return sendJson(response, 200, {
-      patient: { id: patient.id, fullName: patient.profile.fullName,
-        ...(identity ? { uhid: identity.uhid, uhidCreated: identity.created === true } : {}) },
+      patient: { id: patient.id, fullName: patient.profile.fullName },
       sessionToken: createPatientSession(patient.id)
     });
   }
@@ -1942,19 +1845,6 @@ async function completeStaffPreparation(request, response, intakeId) {
     WHERE id = ?
   `).run(completedAt, staff.employee_id, intakeId);
   sendJson(response, 200, { completed: true, intakeId, completedAt, evaluationStatus: 'ready_for_doctor' });
-}
-
-function kioskIdentityForPatient(request, patientId, uhid) {
-  const device = authorizedDeviceForRequest(request);
-  if (!device || !hospitalBranches.has(device.hospitalId)) return null;
-  const identity = hospitalIdentity(patientId, device.hospitalId);
-  return identity?.uhid === uhid ? identity : null;
-}
-
-function createKioskIdentityForPatient(request, patientId) {
-  const device = authorizedDeviceForRequest(request);
-  if (!device || !hospitalBranches.has(device.hospitalId)) return null;
-  return getOrCreateHospitalIdentity(patientId, device.hospitalId);
 }
 
 function staffCanAccessIntake(intake, staffId) {
@@ -2992,5 +2882,4 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-server.on('upgrade', upgradeElevenLabsVoice);
 server.listen(port, host, () => console.log(`Arogyam running at http://${host}:${port}`));

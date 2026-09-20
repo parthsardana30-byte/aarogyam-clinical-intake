@@ -3,7 +3,6 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
-import { connect } from 'node:net';
 import { after, before, test } from 'node:test';
 
 const port = 43173;
@@ -55,18 +54,6 @@ before(async () => {
 after(async () => {
   await stopServer();
   await rm(dataDir, { recursive: true, force: true });
-});
-
-test('voice relay rejects an upgrade without a one-time ticket', async () => {
-  const response = await new Promise((resolve, reject) => {
-    const socket = connect(port, '127.0.0.1');
-    let received = '';
-    socket.on('connect', () => socket.write('GET /api/elevenlabs/voice?ticket=invalid HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n'));
-    socket.on('data', chunk => { received += chunk.toString(); });
-    socket.on('end', () => resolve(received));
-    socket.on('error', reject);
-  });
-  assert.match(response, /^HTTP\/1\.1 401 Unauthorized/);
 });
 
 test('patient registration, login and dashboard stay patient-scoped', async () => {

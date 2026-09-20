@@ -1414,12 +1414,10 @@
     .exit-device-mode:hover { background:#0f887f; color:#fff; transform:translateY(-1px); }
     .exit-device-mode:focus-visible { outline:3px solid rgba(15,136,127,.18); outline-offset:3px; }
     .login-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .login-card[data-portal-role^="kiosk-"] { display: none; }
-    .login-screen.device-patient-only .login-cards { grid-template-columns: repeat(2, minmax(260px, 430px)); justify-content: center; }
+    .login-card[data-portal-role="authorized-patient"] { display: none; }
+    .login-screen.device-patient-only .login-cards { grid-template-columns: minmax(260px, 430px); justify-content: center; }
     .login-screen.device-patient-only .login-card { display: none; }
-    .login-screen.device-patient-only .login-card[data-portal-role^="kiosk-"] { display: flex; --portal-accent: #0f766e; --portal-accent-rgb: 15, 118, 110; }
-    .login-screen.device-patient-only .login-card[data-portal-role="kiosk-returning"] { --portal-accent: #4f5db8; --portal-accent-rgb: 79, 93, 184; }
-    .login-screen.device-patient-only .login-card[data-portal-role^="kiosk-"] { min-height: 290px; }
+    .login-screen.device-patient-only .login-card[data-portal-role="authorized-patient"] { display: flex; --portal-accent: #0f766e; --portal-accent-rgb: 15, 118, 110; }
     .login-card {
       --portal-accent: #0f887f;
       --portal-accent-rgb: 15, 136, 127;
@@ -1497,7 +1495,6 @@
     }
     .login-card:nth-child(2) .login-card-icon { background: linear-gradient(145deg, #7884ed, #464dad); box-shadow: inset 0 2px 0 rgba(255,255,255,.26), 0 14px 28px rgba(89,100,207,.25); }
     .login-card:nth-child(3) .login-card-icon { background: linear-gradient(145deg, #28a4bd, #105d78); box-shadow: inset 0 2px 0 rgba(255,255,255,.26), 0 14px 28px rgba(22,117,142,.25); }
-    .login-card[data-portal-role="kiosk-returning"] .login-card-icon { background: linear-gradient(145deg, #7184e8, #394b9e); box-shadow: inset 0 2px 0 rgba(255,255,255,.26), 0 14px 28px rgba(79,93,184,.25); }
     .login-card-icon::before,
     .login-card-icon::after {
       content: "\2726";
@@ -1516,7 +1513,6 @@
     .login-card-icon .icon-accent { color: #bff9ef; }
     .login-card:nth-child(2) .login-card-icon .icon-accent { color: #dce1ff; }
     .login-card:nth-child(3) .login-card-icon .icon-accent { color: #cff6ff; }
-    .login-card[data-portal-role="kiosk-returning"] .login-card-icon .icon-accent { color: #dce5ff; }
     .login-card:is(:hover, :focus-within) .login-card-icon { transform: translateY(-6px) scale(1.06) rotate(-4deg); box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 18px 38px rgba(var(--portal-accent-rgb), .35), 0 0 0 9px rgba(var(--portal-accent-rgb), .09); }
     .login-card:is(:hover, :focus-within) .login-card-icon::before { animation: portal-spark-one .78s .08s cubic-bezier(.2,.8,.2,1) both; }
     .login-card:is(:hover, :focus-within) .login-card-icon::after { animation: portal-spark-two .82s .18s cubic-bezier(.2,.8,.2,1) both; }
@@ -1551,8 +1547,6 @@
       box-shadow: 0 28px 90px rgba(16, 43, 39, .17);
     }
     .login-form-shell.patient-login-details .login-form-area { justify-content:flex-start; overflow-y:auto; padding-top:30px; padding-bottom:28px; scrollbar-gutter:stable; }
-    .kiosk-uhid-notice { margin: 8px 0 0; padding: 12px 16px; border-radius: 13px; background: #e7f5ee; color: #17614e; font-weight: 750; text-align: center; }
-    .kiosk-uhid-notice[hidden] { display: none; }
     .login-form-shell.patient-signup-details { height: min(900px, calc(100dvh - 24px)); }
     .login-form-shell.doctor-registration-details { height: min(850px, calc(100dvh - 40px)); }
     .login-form-shell.staff-registration-details { height: min(920px, calc(100dvh - 24px)); }
@@ -1820,8 +1814,6 @@
 
     @media (max-width: 820px), (max-height: 760px) { .hospital-backdrop-identity { display: none; } }
     @media (max-width: 760px) {
-      .login-screen.device-patient-only .login-cards { grid-template-columns: minmax(0, 1fr); }
-      .login-screen.device-patient-only .login-card[data-portal-role^="kiosk-"] { min-height: 200px; }
       .login-screen { padding: 24px 14px 40px; }
       .login-screen::before { inset: 8px; border-radius: 24px; }
       .login-brand { justify-content: flex-start; margin-bottom: 28px; }
@@ -2009,18 +2001,11 @@
             </button>
             <button class="login-card-register" type="button" data-register-role="staff">Register</button>
           </article>
-          <article class="login-card" data-portal-role="kiosk-new">
-            <button class="login-card-main" type="button" id="kioskNewVisitor">
-              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><rect pathLength="1" x="14" y="13" width="36" height="38" rx="7" stroke="currentColor" stroke-width="2.7"/><circle pathLength="1" cx="28" cy="27" r="5" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" d="M19 41c1-5 4-8 9-8 4 0 6.5 1.8 8 5" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><circle pathLength="1" class="icon-accent" cx="45" cy="43" r="9" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" class="icon-accent" d="M45 39v8M41 43h8" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/></svg></span>
-              <h2>New visitor</h2>
-              <p class="authorized-login-note">Register with your mobile number and get a hospital UHID.</p>
-            </button>
-          </article>
-          <article class="login-card" data-portal-role="kiosk-returning">
-            <button class="login-card-main" type="button" id="kioskReturningVisitor">
-              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><path pathLength="1" class="icon-accent" d="M17 24a20 20 0 1 1-3 19" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path pathLength="1" class="icon-accent" d="M17 14v10h10" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><rect pathLength="1" x="24" y="25" width="24" height="22" rx="4" stroke="currentColor" stroke-width="2.7"/><circle pathLength="1" cx="31" cy="33" r="2.5" stroke="currentColor" stroke-width="2.2"/><path pathLength="1" d="M27 41c.5-2.4 1.8-3.6 4-3.6s3.5 1.2 4 3.6M39 33h5M39 39h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>
-              <h2>Re-visitor</h2>
-              <p class="authorized-login-note">Enter your hospital UHID and verify the linked mobile number.</p>
+          <article class="login-card" data-portal-role="authorized-patient">
+            <button class="login-card-main" type="button" data-authorized-patient-login>
+              <span class="login-card-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle class="icon-glow" cx="32" cy="32" r="27"/><rect pathLength="1" x="17" y="12" width="30" height="40" rx="7" stroke="currentColor" stroke-width="2.7"/><path pathLength="1" d="M25 12V9h14v3M26 31h12M32 25v12" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><path pathLength="1" class="icon-accent" d="m24 43 5 5 11-12" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <h2>Authorized Patient Check-up</h2>
+              <p class="authorized-login-note">For this hospital-authorized device only</p>
             </button>
           </article>
         </div>
@@ -2080,7 +2065,6 @@
               </select>
               <small class="field-help" id="staffHospitalHelp">Any non-empty employee ID is accepted.</small>
             </div>
-            <div class="field-group" id="kioskUhidGroup" hidden><label for="kioskUhid">Hospital UHID</label><input id="kioskUhid" autocomplete="off" inputmode="text" maxlength="24" pattern="[A-Za-z0-9-]{4,24}" placeholder="e.g. CHA-123456" /><small class="field-help">Use the UHID from your previous hospital visit.</small></div>
             <div class="field-group" id="loginIdentifierGroup"><label for="loginIdentifier" id="identifierLabel">Patient ID</label><input id="loginIdentifier" autocomplete="username" maxlength="30" required placeholder="Enter patient ID" /></div>
             <div class="doctor-profile-fields" id="doctorProfileFields" hidden>
               <div class="doctor-profile-heading"><strong>Professional details</strong><small>These details identify the clinician in hospital records and patient-facing workflows.</small></div>
@@ -2423,7 +2407,6 @@
             <form class="language-card" id="languageForm">
               <div class="language-step-heading">
                 <h1>Choose your language</h1>
-                <p class="kiosk-uhid-notice" id="kioskUhidNotice" hidden></p>
               </div>
               <fieldset class="language-options" id="languageOptions">
                 <legend class="sr-only">Select a language for your check-up</legend>
@@ -2754,9 +2737,6 @@
     const patientLoginDocuments = document.getElementById('patientLoginDocuments');
     const loginIdentifierGroup = document.getElementById('loginIdentifierGroup');
     const loginIdentifier = document.getElementById('loginIdentifier');
-    const kioskUhidGroup = document.getElementById('kioskUhidGroup');
-    const kioskUhid = document.getElementById('kioskUhid');
-    const kioskUhidNotice = document.getElementById('kioskUhidNotice');
     const signupOtpPanel = document.getElementById('signupOtpPanel');
     const sendSignupOtp = document.getElementById('sendSignupOtp');
     const signupOtpVerify = document.getElementById('signupOtpVerify');
@@ -3001,25 +2981,6 @@
       return digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
     }
 
-    function validKioskUhid() {
-      if (!authorizedPatientDevice || patientLoginContext !== 'authorized' || selectedAuthMode !== 'login') return true;
-      kioskUhid.value = kioskUhid.value.trim().toUpperCase();
-      if (/^[A-Z]{2,8}-\d{6}$/.test(kioskUhid.value)) return true;
-      loginStatus.textContent = 'Enter the UHID from your previous hospital visit.';
-      kioskUhid.focus();
-      return false;
-    }
-
-    function showKioskUhid(uhid, created = false) {
-      kioskUhidNotice.hidden = !authorizedPatientDevice || !uhid;
-      if (!kioskUhidNotice.hidden) {
-        const hindi = languageSelect.value === 'Hindi';
-        kioskUhidNotice.textContent = created
-          ? (hindi ? `आपका नया UHID ${uhid} आपके मोबाइल नंबर से जुड़ गया है।` : `Your new UHID ${uhid} is linked to your mobile number.`)
-          : (hindi ? `वापसी पर स्वागत है। आपका अस्पताल UHID ${uhid} है।` : `Welcome back. Your hospital UHID is ${uhid}.`);
-      }
-    }
-
     function currentOtpPurpose() {
       if (patientAccessMode === 'login' || patientAccessMode === 'reset') return patientAccessMode;
       if (selectedLoginRole === 'patient' && selectedAuthMode === 'login') return 'login';
@@ -3041,7 +3002,7 @@
         && Boolean(signupOtpPhone)
         && normalizedSignupPhone() === signupOtpPhone
         && patientSignupIdentityIsValid()
-        && /^[0-9]{6}$/.test(loginPassword.value);
+        && loginPassword.value.length >= 6;
     }
 
     function updatePatientSignupContinueState() {
@@ -3214,9 +3175,6 @@
       if (role === 'patient' && mode === 'login' && patientLoginContext === 'authorized') {
         localized[0] = currentLanguage === 'Hindi' ? 'अधिकृत रोगी चेक-इन' : 'Authorized patient check-in';
       }
-      if (role === 'patient' && mode === 'login' && patientLoginContext === 'authorized-new') {
-        localized[0] = currentLanguage === 'Hindi' ? 'नया अस्पताल विज़िटर' : 'New hospital visitor';
-      }
       if (mode === 'register') localized[0] = registrationTitles[role];
       document.getElementById('formTitle').textContent = localized[0];
       const isPatientRegistration = role === 'patient' && mode === 'register';
@@ -3229,11 +3187,6 @@
         hospitalBackdropIdentity.hidden = true;
       }
       const isPatientLogin = role === 'patient' && mode === 'login';
-      const isKioskReturning = isPatientLogin && patientLoginContext === 'authorized' && authorizedPatientDevice;
-      kioskUhidGroup.hidden = !isKioskReturning;
-      kioskUhid.required = isKioskReturning;
-      kioskUhid.value = '';
-      kioskUhidGroup.querySelector('label').textContent = currentLanguage === 'Hindi' ? 'अस्पताल UHID' : 'Hospital UHID';
       document.getElementById('identifierLabel').textContent = isPatientRegistration || isPatientLogin
         ? (currentLanguage === 'Hindi' ? 'मोबाइल नंबर' : 'Mobile number')
         : isDoctorRegistration ? 'Hospital-issued doctor ID' : localized[1];
@@ -3249,19 +3202,6 @@
       loginIdentifier.required = !isStaffRegistration;
       loginPassword.autocomplete = isAccountRegistration ? 'new-password' : 'current-password';
       loginPassword.minLength = isDoctorRegistration || isStaffRegistration ? 8 : isPatientRegistration ? 6 : 0;
-      if (role === 'patient') {
-        loginPassword.pattern = '[0-9]{6}';
-        loginPassword.maxLength = 6;
-        loginPassword.inputMode = 'numeric';
-        document.querySelector('#loginPasswordGroup label').textContent = '6-digit E-PIN';
-        loginPassword.placeholder = 'Enter 6-digit E-PIN';
-      } else {
-        loginPassword.removeAttribute('pattern');
-        loginPassword.maxLength = 128;
-        loginPassword.inputMode = 'text';
-        document.querySelector('#loginPasswordGroup label').textContent = 'Password';
-        loginPassword.placeholder = 'Enter password';
-      }
       loginPasswordGroup.hidden = false;
       loginPassword.required = true;
       loginSubmitButton.hidden = false;
@@ -3276,7 +3216,6 @@
       if (patientLoginMethods) patientLoginMethods.hidden = true;
       loginForm.hidden = false;
       patientLoginActions.hidden = !isPatientLogin;
-      patientForgotPassword.hidden = authorizedPatientDevice && isPatientLogin;
       doctorHospitalGroup.hidden = !isDoctorRegistration;
       doctorHospitalSelect.required = isDoctorRegistration;
       doctorProfileFields.hidden = !isDoctorRegistration;
@@ -3326,11 +3265,10 @@
       loginFormShell.hidden = false;
       loginFormShell.classList.remove('patient-signup-details');
       loginFormShell.classList.remove('patient-login-details');
-      loginFormShell.classList.toggle('patient-login-details', isPatientLogin && authorizedPatientDevice);
       loginFormShell.classList.toggle('doctor-registration-details', isDoctorRegistration);
       loginFormShell.classList.toggle('staff-registration-details', isStaffRegistration);
       loginScreen.classList.add('form-open');
-      if (focus && !isPatientRegistration) (isKioskReturning ? kioskUhid : loginIdentifier).focus();
+      if (focus && !isPatientRegistration) document.getElementById('loginIdentifier').focus();
     }
 
     function choosePatientSignupMethod(method, focus = true) {
@@ -3375,7 +3313,6 @@
     }
 
     function beginPatientAccess(mode) {
-      if (authorizedPatientDevice && patientLoginContext === 'authorized' && !validKioskUhid()) return;
       const phone = normalizedSignupPhone();
       if (!/^[6-9]\d{9}$/.test(phone)) {
         loginStatus.textContent = 'Enter your 10-digit mobile number first.';
@@ -3403,7 +3340,7 @@
 
     patientUsePassword.addEventListener('click', () => {
       resetSignupOtp(true);
-      if (selectedLoginRole === 'patient' && selectedAuthMode === 'register') signupOtpPanel.hidden = false;
+      if (isPatientRegistration) signupOtpPanel.hidden = false;
       patientAccessMode = null;
       loginStatus.textContent = '';
       loginPasswordGroup.hidden = false;
@@ -3424,10 +3361,10 @@
       }
       activePatientSessionToken = data.sessionToken || '';
       applyPatientIdentity(data.patient);
-      showKioskUhid(data.patient.uhid, data.patient.uhidCreated);
       patientLoggedInThisSession = true;
       resetCheckup();
-      const destination = authorizedPatientDevice ? 'patient/language' : 'patient/start';
+      const destination = patientLoginContext === 'authorized' && authorizedPatientDevice
+        ? 'patient/language' : 'patient/start';
       navigateRoute(destination);
     }
 
@@ -3439,13 +3376,9 @@
         return;
       }
       if (currentOtpPurpose() !== 'login') return;
-      if (!validKioskUhid()) throw new Error('Enter your hospital UHID to continue.');
       const response = await fetch('/api/patient-login-otp', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: signupOtpPhone, otpRequestId: signupOtpRequestId,
-          otpVerificationToken: signupOtpVerificationToken,
-          uhid: authorizedPatientDevice && patientLoginContext === 'authorized' ? kioskUhid.value.trim().toUpperCase() : undefined,
-          newHospitalVisit: authorizedPatientDevice && patientLoginContext === 'authorized-new' })
+        body: JSON.stringify({ phone: signupOtpPhone, otpRequestId: signupOtpRequestId, otpVerificationToken: signupOtpVerificationToken })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Could not sign in with OTP');
@@ -3484,7 +3417,6 @@
     });
 
     sendSignupOtp.addEventListener('click', async () => {
-      if (currentOtpPurpose() === 'login' && !validKioskUhid()) return;
       const phone = normalizedSignupPhone();
       if (!/^[6-9]\d{9}$/.test(phone)) {
         setSignupOtpStatus('Enter a valid 10-digit Indian mobile number.', 'error');
@@ -3500,13 +3432,6 @@
         const availability = await availabilityResponse.json();
         if (currentOtpPurpose() === 'register') {
           if (!availabilityResponse.ok || !availability.available) {
-            if (authorizedPatientDevice && availabilityResponse.status === 409) {
-              navigateRoute('login/device-new-existing', false, true);
-              loginIdentifier.value = phone;
-              beginPatientAccess('login');
-              setSignupOtpStatus('This mobile number already has an account. Verify it by OTP to issue or reuse this hospital UHID.');
-              return;
-            }
             throw new Error(availability.error || 'This mobile number cannot be used for a new account');
           }
         } else if (availabilityResponse.ok && availability.available) {
@@ -4140,7 +4065,6 @@
         activePatientSessionToken = data.sessionToken || '';
         activePatient = data.patient;
         applyPatientIdentity(data.patient);
-        showKioskUhid(data.patient.uhid, data.patient.uhidCreated);
         patientRegistrationPassword = '';
         if (patientDocumentPoll) clearInterval(patientDocumentPoll);
         patientDocumentPoll = null;
@@ -4158,12 +4082,7 @@
     });
 
     document.querySelectorAll('[data-login-role]').forEach(card => card.addEventListener('click', () => navigateRoute(`login/${card.dataset.loginRole}`, false, true)));
-    document.getElementById('kioskNewVisitor').addEventListener('click', () => {
-      navigateRoute('register/patient', false, true);
-    });
-    document.getElementById('kioskReturningVisitor').addEventListener('click', () => {
-      navigateRoute('login/device-returning', false, true);
-    });
+    document.querySelectorAll('[data-authorized-patient-login]').forEach(card => card.addEventListener('click', () => navigateRoute('login/device-patient', false, true)));
     document.querySelectorAll('[data-enroll-device]').forEach(button => button.addEventListener('click', () => { location.href = '/device-enroll.html'; }));
     document.querySelectorAll('[data-register-role]').forEach(button => button.addEventListener('click', () => navigateRoute(`register/${button.dataset.registerRole}`, false, true)));
     document.querySelectorAll('[data-patient-signup]').forEach(button => button.addEventListener('click', () => choosePatientSignupMethod(button.dataset.patientSignup)));
@@ -4490,16 +4409,6 @@
     function translateRolePicker(language) {
       const copy = roleTranslations[language] || roleTranslations.English;
       document.getElementById('loginTitle').textContent = copy[0];
-      const hindi = language === 'Hindi';
-      document.querySelector('#kioskNewVisitor h2').textContent = hindi ? 'नया विज़िटर' : 'New visitor';
-      document.querySelector('#kioskNewVisitor p').textContent = hindi
-        ? 'मोबाइल नंबर से रजिस्टर करें और अस्पताल UHID पाएँ।'
-        : 'Register with your mobile number and get a hospital UHID.';
-      document.querySelector('#kioskReturningVisitor h2').textContent = hindi ? 'दोबारा आने वाले विज़िटर' : 'Re-visitor';
-      document.querySelector('#kioskReturningVisitor p').textContent = hindi
-        ? 'अस्पताल UHID दर्ज करें और उससे जुड़ा मोबाइल नंबर सत्यापित करें।'
-        : 'Enter your hospital UHID and verify the linked mobile number.';
-      if (authorizedPatientDevice) document.getElementById('loginTitle').textContent = hindi ? 'अपनी विज़िट चुनें' : 'Choose your visit';
       document.getElementById('patientLoginLabel').textContent = copy[1];
       document.getElementById('doctorLoginLabel').textContent = copy[2];
       document.getElementById('staffLoginLabel').textContent = copy[3];
@@ -5130,10 +5039,7 @@
       loginForm.reset();
       loginFormShell.hidden = true;
       rolePicker.hidden = false;
-      kioskUhidNotice.hidden = true;
-      document.getElementById('loginTitle').textContent = authorizedPatientDevice
-        ? (roleLanguageSelect.value === 'Hindi' ? 'अपनी विज़िट चुनें' : 'Choose your visit')
-        : 'Choose your care portal';
+      document.getElementById('loginTitle').textContent = authorizedPatientDevice ? 'Authorized patient check-up' : 'Choose your care portal';
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
 
@@ -5440,10 +5346,10 @@
       if (cancelLoginMotion) cancelLoginMotion();
       if (authorizedPatientDevice) {
         if (route === 'login/patient') {
-          route = 'login/device-returning';
-          history.replaceState({ route }, '', '#/login/device-returning');
+          route = 'login/device-patient';
+          history.replaceState({ route }, '', '#/login/device-patient');
         }
-        const blockedRoleRoute = /^(?:doctor\/|staff\/|register\/(?:doctor|staff)|login\/(?:doctor|staff))/.test(route);
+        const blockedRoleRoute = /^(?:doctor\/|staff\/|register\/|login\/(?:doctor|staff))/.test(route);
         const protectedPatientRoute = /^patient\//.test(route) && !patientLoggedInThisSession;
         if (blockedRoleRoute || protectedPatientRoute) {
           route = protectedPatientRoute ? 'login/device-patient' : 'roles';
@@ -5454,7 +5360,7 @@
         }
       }
       if (!authorizedPatientDevice) {
-        if (route === 'login/device-patient' || route === 'login/device-returning' || route === 'login/device-new-existing') {
+        if (route === 'login/device-patient') {
           route = 'login/patient';
           history.replaceState({ route }, '', '#/login/patient');
         } else if (/^patient\/(?:language|voice|intake-summary|specialty|summary)$/.test(route)) {
@@ -5490,23 +5396,13 @@
       }
 
       if (route === 'login/device-patient') {
-        showRolePicker();
-        return;
-      }
-
-      if (route === 'login/device-returning') {
         selectLoginRole('patient', focus, 'login', 'authorized');
-        return;
-      }
-
-      if (route === 'login/device-new-existing') {
-        selectLoginRole('patient', focus, 'login', 'authorized-new');
         return;
       }
 
       const registerMatch = route.match(/^register\/(patient|doctor|staff)$/);
       if (registerMatch) {
-        selectLoginRole(registerMatch[1], focus, 'register', authorizedPatientDevice && registerMatch[1] === 'patient' ? 'authorized' : 'normal');
+        selectLoginRole(registerMatch[1], focus, 'register');
         return;
       }
 
@@ -6053,8 +5949,8 @@
           setSignupOtpStatus('The mobile number changed. Verify the new number before continuing.', 'error');
           return;
         }
-        if (!/^[0-9]{6}$/.test(loginPassword.value)) {
-          loginStatus.textContent = 'Enter a 6-digit E-PIN.';
+        if (loginPassword.value.length < 6) {
+          loginStatus.textContent = 'Password must contain at least 6 characters.';
           loginPassword.focus();
           updatePatientSignupContinueState();
           return;
@@ -6065,7 +5961,6 @@
         return;
       }
       if (role === 'patient' && selectedAuthMode === 'login') {
-        if (!validKioskUhid()) return;
         const phone = loginIdentifier.value.replace(/\D/g, '');
         if (!/^[6-9]\d{9}$/.test(phone)) {
           loginStatus.textContent = 'Enter a valid 10-digit mobile number.';
@@ -6077,9 +5972,7 @@
           const response = await fetch('/api/patient-login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone, password: loginPassword.value,
-              uhid: authorizedPatientDevice && patientLoginContext === 'authorized' ? kioskUhid.value.trim().toUpperCase() : undefined,
-              newHospitalVisit: authorizedPatientDevice && patientLoginContext === 'authorized-new' })
+            body: JSON.stringify({ phone, password: loginPassword.value })
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || 'Could not sign in');
@@ -6088,7 +5981,6 @@
           }
           activePatientSessionToken = data.sessionToken || '';
           applyPatientIdentity(data.patient);
-          showKioskUhid(data.patient.uhid, data.patient.uhidCreated);
         } catch (error) {
           loginStatus.textContent = error.message || 'Could not sign in.';
           return;
@@ -6252,7 +6144,7 @@
           patientLoggedInThisSession = true;
           resetCheckup();
         }
-        const patientDestination = authorizedPatientDevice
+        const patientDestination = patientLoginContext === 'authorized' && authorizedPatientDevice
           ? 'patient/language'
           : 'patient/start';
         navigateRoute(role === 'patient' ? patientDestination : role === 'doctor' ? 'doctor/previous' : 'staff/patients');
@@ -6835,12 +6727,9 @@
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.signedUrl) throw new Error(payload.error || 'Voice agent is not configured.');
         if (patientId !== activePatient?.id || patientToken !== activePatientSessionToken) throw new Error('Patient session changed');
-        const voiceUrl = new URL(payload.signedUrl, window.location.origin);
-        if (voiceUrl.origin !== window.location.origin) throw new Error('Voice session origin is invalid.');
-        voiceUrl.protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         elevenSignedUrlCache = {
           cacheKey,
-          signedUrl: voiceUrl.toString(),
+          signedUrl: payload.signedUrl,
           patientContext: payload.patientContext || null,
           expiresAt: Date.now() + Math.max(30, Number(payload.expiresIn || 900) - 30) * 1000
         };
