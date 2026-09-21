@@ -124,7 +124,6 @@ private fun CompleteProfileCard(language: AppLanguage, onClick: () -> Unit) {
 private fun IdentityCard(profile: PatientProfile?, viewModel: MainViewModel, language: AppLanguage) {
     var expanded by remember { mutableStateOf(false) }
     val fallbackName = viewModel.state.session?.patient?.fullName ?: l10n(language, "Patient", "मरीज")
-    val patientId = profile?.id ?: viewModel.state.session?.patient?.id.orEmpty()
 
     Card(
         modifier = Modifier.animateContentSize(),
@@ -139,9 +138,17 @@ private fun IdentityCard(profile: PatientProfile?, viewModel: MainViewModel, lan
                 }
                 Column(Modifier.weight(1f).padding(start = 13.dp)) {
                     Text(profile?.fullName ?: fallbackName, color = DeepTeal, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                    Text(profile?.phone ?: "${l10n(language, "Patient ID", "मरीज ID")} · $patientId", color = Muted, fontSize = 13.sp)
+                    Text(profile?.phone.orEmpty(), color = Muted, fontSize = 13.sp)
                 }
                 Icon(Icons.Default.CheckCircle, "Verified patient", tint = Forest, modifier = Modifier.size(22.dp))
+            }
+            if (profile?.abhaLinkStatus.equals("linked", true)) {
+                Column(Modifier.fillMaxWidth().padding(top = 14.dp).clip(RoundedCornerShape(15.dp))
+                    .background(Mint).padding(horizontal = 13.dp, vertical = 11.dp)) {
+                    Text("ABHA ID", color = Muted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    Text(profile?.abhaNumber?.takeIf { it.isNotBlank() } ?: "•••• ${profile?.abhaLast4.orEmpty()}",
+                        color = DeepTeal, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 3.dp))
+                }
             }
             Row(
                 Modifier.fillMaxWidth().padding(top = 15.dp).clip(RoundedCornerShape(15.dp)).background(Mint).padding(11.dp),
@@ -163,7 +170,6 @@ private fun IdentityCard(profile: PatientProfile?, viewModel: MainViewModel, lan
                     val notAvailable = l10n(language, "Not available", "उपलब्ध नहीं")
                     val notAdded = l10n(language, "Not added", "जोड़ा नहीं गया")
                     DetailRow(l10n(language, "Full name", "पूरा नाम"), profile?.fullName ?: fallbackName)
-                    DetailRow(l10n(language, "Patient ID", "मरीज ID"), patientId.ifBlank { notAvailable })
                     DetailRow(l10n(language, "Phone", "फोन"), profile?.phone ?: notAvailable)
                     DetailRow(l10n(language, "Date of birth", "जन्म तिथि"), profile?.dateOfBirth ?: notAdded)
                     DetailRow(l10n(language, "Gender", "लिंग"), profile?.gender ?: notAdded)
@@ -178,7 +184,7 @@ private fun IdentityCard(profile: PatientProfile?, viewModel: MainViewModel, lan
                         )
                     }
                     if (profile?.abhaLinkStatus.equals("linked", true)) {
-                        DetailRow("ABHA ID", "${l10n(language, "Added", "जोड़ा गया")} ···· ${profile?.abhaLast4.orEmpty()}")
+                        DetailRow("ABHA ID", profile?.abhaNumber?.takeIf { it.isNotBlank() } ?: "•••• ${profile?.abhaLast4.orEmpty()}")
                     }
                 }
             }

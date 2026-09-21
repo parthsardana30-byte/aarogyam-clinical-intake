@@ -57,7 +57,7 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 private enum class ScannerStatus { Tap, Opening, Scanned, Success, Cancelled, Unavailable }
 
 @Composable
-internal fun ScannerScreen(language: AppLanguage, modifier: Modifier = Modifier) {
+internal fun ScannerScreen(language: AppLanguage, busy: Boolean, error: String?, onQrScanned: (String) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var scannerStatus by remember { mutableStateOf(ScannerStatus.Tap) }
     val options = remember {
@@ -68,12 +68,16 @@ internal fun ScannerScreen(language: AppLanguage, modifier: Modifier = Modifier)
     fun startScanner() {
         scannerStatus = ScannerStatus.Opening
         scanner.startScan()
-            .addOnSuccessListener { barcode -> scannerStatus = if (barcode.rawValue.isNullOrBlank()) ScannerStatus.Scanned else ScannerStatus.Success }
+            .addOnSuccessListener { barcode ->
+                val value = barcode.rawValue
+                scannerStatus = if (value.isNullOrBlank()) ScannerStatus.Scanned else ScannerStatus.Success
+                if (!value.isNullOrBlank()) onQrScanned(value)
+            }
             .addOnCanceledListener { scannerStatus = ScannerStatus.Cancelled }
             .addOnFailureListener { scannerStatus = ScannerStatus.Unavailable }
     }
 
-    LaunchedEffect(Unit) { startScanner() }
+    LaunchedEffect(Unit) { if (!busy) startScanner() }
 
     AarogyamBackdrop(modifier.fillMaxSize()) {
         LazyColumn(
@@ -85,10 +89,12 @@ internal fun ScannerScreen(language: AppLanguage, modifier: Modifier = Modifier)
                 ScreenIntro(
                     l10n(language, "At the hospital", "अस्पताल में"),
                     l10n(language, "Scan hospital QR", "अस्पताल का QR स्कैन करें"),
-                    l10n(language, "Scan the hospital QR to securely begin your visit.", "अपनी विज़िट सुरक्षित रूप से शुरू करने के लिए अस्पताल का QR स्कैन करें।"),
+                    l10n(language, "First scan the staff authorization QR. After approval, scan the AI check-up QR.", "पहले स्टाफ का अनुमति QR स्कैन करें। मंज़ूरी के बाद AI चेक-अप QR स्कैन करें।"),
                 )
             }
             item { ScannerViewport(scannerStatus, language, ::startScanner) }
+            if (busy) item { Text(l10n(language, "Checking hospital QR…", "अस्पताल का QR जांच रहे हैं…"), color = Forest, fontWeight = FontWeight.SemiBold) }
+            if (error != null) item { Text(error, color = Color(0xFFB42318), fontWeight = FontWeight.Medium) }
             item {
                 Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Mint)) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -96,9 +102,9 @@ internal fun ScannerScreen(language: AppLanguage, modifier: Modifier = Modifier)
                             Icon(Icons.Default.Shield, null, tint = Forest)
                         }
                         Column(Modifier.padding(start = 12.dp)) {
-                            Text(l10n(language, "Secure hospital access", "सुरक्षित अस्पताल एक्सेस"), color = DeepTeal, fontWeight = FontWeight.Bold)
+                            Text(l10n(language, "", ""), color = DeepTeal, fontWeight = FontWeight.Bold)
                             Text(
-                                l10n(language, "The QR expires quickly and only unlocks check-in for that hospital.", "QR जल्दी समाप्त हो जाता है और केवल उसी अस्पताल का चेक-इन खोलता है।"),
+                                l10n(language, "", ""),
                                 color = Muted,
                                 fontSize = 12.sp,
                                 lineHeight = 17.sp,
@@ -162,7 +168,7 @@ private fun scannerStatusText(status: ScannerStatus, language: AppLanguage): Str
     ScannerStatus.Tap -> l10n(language, "Tap the frame to scan", "स्कैन करने के लिए फ्रेम पर टैप करें")
     ScannerStatus.Opening -> l10n(language, "Opening secure camera…", "सुरक्षित कैमरा खुल रहा है…")
     ScannerStatus.Scanned -> l10n(language, "QR scanned", "QR स्कैन हो गया")
-    ScannerStatus.Success -> l10n(language, "Hospital QR scanned successfully", "अस्पताल का QR सफलतापूर्वक स्कैन हुआ")
+    ScannerStatus.Success -> l10n(language, "QR scanned · checking access", "QR स्कैन हुआ · एक्सेस जांच रहे हैं")
     ScannerStatus.Cancelled -> l10n(language, "Scan cancelled · tap to try again", "स्कैन रद्द हुआ · फिर से टैप करें")
     ScannerStatus.Unavailable -> l10n(language, "Scanner unavailable · tap to try again", "स्कैनर उपलब्ध नहीं · फिर से टैप करें")
 }

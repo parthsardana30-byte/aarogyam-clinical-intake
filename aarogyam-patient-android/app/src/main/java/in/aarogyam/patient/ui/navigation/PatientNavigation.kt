@@ -25,12 +25,16 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +54,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import `in`.aarogyam.patient.ui.MainViewModel
+import `in`.aarogyam.patient.data.HealthDocument
 import `in`.aarogyam.patient.ui.components.ArogyamBrand
 import `in`.aarogyam.patient.ui.components.LanguageMenu
 import `in`.aarogyam.patient.ui.components.tr
@@ -61,7 +66,10 @@ import `in`.aarogyam.patient.ui.screens.profile.CompleteProfileScreen
 import `in`.aarogyam.patient.ui.screens.profile.MedicalConditionsScreen
 import `in`.aarogyam.patient.ui.screens.profile.ProfileScreen
 import `in`.aarogyam.patient.ui.screens.records.RecordsScreen
+import `in`.aarogyam.patient.ui.screens.records.DocumentViewerScreen
 import `in`.aarogyam.patient.ui.screens.scanner.ScannerScreen
+import `in`.aarogyam.patient.ui.screens.scanner.DeviceEnrollmentScreen
+import `in`.aarogyam.patient.ui.screens.ai.VoiceIntakeScreen
 import `in`.aarogyam.patient.ui.theme.Canvas
 import `in`.aarogyam.patient.ui.theme.DeepTeal
 import `in`.aarogyam.patient.ui.theme.Forest
@@ -80,6 +88,9 @@ internal enum class PatientDestination(val route: String) {
     AddAppointment("add-appointment"),
     CompleteProfile("complete-profile"),
     MedicalConditions("medical-conditions"),
+    DocumentViewer("document-viewer"),
+    VoiceIntake("voice-intake"),
+    DeviceAuthorization("device-authorization"),
 }
 
 private data class MainNavItem(
@@ -90,12 +101,23 @@ private data class MainNavItem(
 )
 
 @Composable
-fun PatientExperience(viewModel: MainViewModel, onPickDocument: () -> Unit) {
+fun PatientExperience(viewModel: MainViewModel, intakeLink: String?, onIntakeLinkConsumed: () -> Unit,
+                      onPickDocument: () -> Unit, onDownloadDocument: (HealthDocument) -> Unit) {
     val navController = rememberNavController()
     val state = viewModel.state
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(state.message) {
+        state.message?.let { message ->
+            viewModel.clearMessage()
+            snackbarHostState.showSnackbar(message)
+        }
+    }
     val language = state.companion.language
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: PatientDestination.Home.route
+    LaunchedEffect(currentRoute) {
+        if (currentRoute == PatientDestination.Files.route) viewModel.refresh()
+    }
     val mainItems = listOf(
         MainNavItem(PatientDestination.Home, Icons.Default.Home, tr(language, "home")),
         MainNavItem(PatientDestination.Files, Icons.Default.Folder, tr(language, "files")),
@@ -116,8 +138,17 @@ fun PatientExperience(viewModel: MainViewModel, onPickDocument: () -> Unit) {
         }
     }
 
+    LaunchedEffect(intakeLink, state.session?.patient?.id) {
+        if (intakeLink != null && state.session != null) {
+            onIntakeLinkConsumed()
+            navigateTo(PatientDestination.Scanner)
+            viewModel.scanHospitalQr(intakeLink) { navigateTo(PatientDestination.VoiceIntake) }
+        }
+    }
+
     Scaffold(
         containerColor = Canvas,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             if (showAppChrome) {
                 TopAppBar(
@@ -150,9 +181,42 @@ fun PatientExperience(viewModel: MainViewModel, onPickDocument: () -> Unit) {
                 )
             }
             composable(PatientDestination.Files.route) {
-                RecordsScreen(viewModel, state.dashboard, onPickDocument)
+                RecordsScreen(viewModel, state.dashboard,
+                    onPickDocument = onPickDocument,
+                    onOpenDocument = { document ->
+                        viewModel.openDocument(document)
+                        navigateTo(PatientDestination.DocumentViewer)
+                    },
+                    onDownloadDocument = onDownloadDocument,
+                    onDeleteDocument = viewModel::deleteDocument,
+                )
             }
-            composable(PatientDestination.Scanner.route) { ScannerScreen(language = language) }
+            composable(PatientDestination.DocumentViewer.route) {
+                DocumentViewerScreen(viewModel,
+                    onBack = { viewModel.closeDocument(); navController.popBackStack() },
+                    onDownload = onDownloadDocument,
+                )
+            }
+            composable(PatientDestination.Scanner.route) {
+                ScannerScreen(language = language, busy = viewModel.intakeQrBusy, error = viewModel.intakeQrError,
+                    onQrScanned = { raw ->
+                        if (viewModel.prepareDeviceAuthorization(raw)) navigateTo(PatientDestination.DeviceAuthorization)
+                        else viewModel.scanHospitalQr(raw) { navigateTo(PatientDestination.VoiceIntake) }
+                    })
+            }
+            composable(PatientDestination.DeviceAuthorization.route) {
+                viewModel.enrollmentUrl?.let { url ->
+                    DeviceEnrollmentScreen(url,
+                        onAuthorized = { viewModel.finishDeviceAuthorization { navController.popBackStack() } },
+                        onBack = { navController.popBackStack() })
+                }
+            }
+            composable(PatientDestination.VoiceIntake.route) {
+                val grant = viewModel.intakeGrant
+                val session = state.session
+                if (grant != null && session != null) VoiceIntakeScreen(session, grant, language,
+                    onClose = { viewModel.refresh(); navController.popBackStack() })
+            }
             composable(PatientDestination.AccessHistory.route) { AccessHistoryScreen(state.dashboard, language) }
             composable(PatientDestination.Profile.route) {
                 ProfileScreen(
@@ -166,6 +230,7 @@ fun PatientExperience(viewModel: MainViewModel, onPickDocument: () -> Unit) {
                 CareScreen(
                     viewModel = viewModel,
                     onAddAppointment = { navigateTo(PatientDestination.AddAppointment) },
+                    onUploadRecord = onPickDocument,
                 )
             }
             composable(PatientDestination.AddAppointment.route) { AddAppointmentScreen(viewModel, navController::popBackStack) }

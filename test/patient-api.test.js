@@ -60,6 +60,17 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   const phone = '9876543210';
   const password = '123456';
 
+  const invalidIdentity = await json('/api/patient-registration-identity', {
+    method: 'POST', body: JSON.stringify({ identityMethod: 'abha', identityNumber: '1234' }),
+  });
+  assert.equal(invalidIdentity.response.status, 400);
+
+  const acceptedIdentity = await json('/api/patient-registration-identity', {
+    method: 'POST', body: JSON.stringify({ identityMethod: 'abha', identityNumber: '80012345678901' }),
+  });
+  assert.equal(acceptedIdentity.response.status, 200);
+  assert.equal(acceptedIdentity.payload.accepted, true);
+
   const otpRequest = await json('/api/signup-otp/request', {
     method: 'POST', body: JSON.stringify({ phone }),
   });
@@ -81,6 +92,19 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
     }),
   });
   assert.equal(registrationUpload.response.status, 201);
+  const disposableUpload = await json(`/api/document-upload-sessions/${registrationDocuments.payload.id}/files`, {
+    method: 'POST', body: JSON.stringify({
+      token: registrationDocuments.payload.token, name: 'remove-before-registration.png', type: 'image/png',
+      data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    }),
+  });
+  assert.equal(disposableUpload.response.status, 201);
+  const deletedRegistrationUpload = await fetch(`${origin}/api/document-upload-sessions/${registrationDocuments.payload.id}/files/${disposableUpload.payload.file.id}?token=${encodeURIComponent(registrationDocuments.payload.token)}`, { method: 'DELETE' });
+  assert.equal(deletedRegistrationUpload.status, 204);
+  const registrationUploadStatus = await json(`/api/document-upload-sessions/${registrationDocuments.payload.id}/status?token=${encodeURIComponent(registrationDocuments.payload.token)}`);
+  assert.deepEqual(registrationUploadStatus.payload.files.map(file => file.name), ['previous-report.png']);
+  await stopServer();
+  await startServer();
 
   const registration = await json('/api/patient-registrations', {
     method: 'POST',
@@ -98,7 +122,7 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
       bloodGroup: 'O+',
       conditions: ['none'],
       allergies: 'None',
-      password,
+      epin: password,
       documentSessionId: registrationDocuments.payload.id,
       documentSessionToken: registrationDocuments.payload.token,
     }),
@@ -107,6 +131,11 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   assert.match(registration.payload.patient.id, /^AS-\d{6}$/);
   assert.ok(registration.payload.sessionToken);
   assert.equal(registration.payload.patient.documentCount, 1);
+
+  const epinLogin = await json('/api/patient-login', {
+    method: 'POST', body: JSON.stringify({ phone, epin: password }),
+  });
+  assert.equal(epinLogin.response.status, 200);
 
   const phoneLogin = await json('/api/patient-login', {
     method: 'POST', body: JSON.stringify({ phone, password }),
@@ -166,6 +195,7 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
   assert.equal(initialDashboard.payload.patient.profile.gender, 'Female');
   assert.equal(initialDashboard.payload.patient.profile.heightCm, 165);
   assert.equal(initialDashboard.payload.patient.profile.weightKg, 62);
+  assert.equal(initialDashboard.payload.patient.abhaNumber, '80012345678901');
   assert.deepEqual(initialDashboard.payload.summary, { consultationCount: 0, documentCount: 1 });
   assert.equal(initialDashboard.payload.documents[0].name, 'previous-report.png');
   assert.equal(initialDashboard.payload.documents[0].source, 'registration');
@@ -188,26 +218,88 @@ test('patient registration, login and dashboard stay patient-scoped', async () =
     body: JSON.stringify({
       name: 'test-result.png',
       type: 'image/png',
+      category: 'lab',
       data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
     }),
   });
   assert.equal(upload.response.status, 201);
   assert.equal(upload.payload.document.name, 'test-result.png');
+  assert.equal(upload.payload.document.deletable, true);
+  assert.equal(upload.payload.document.category, 'lab');
+  assert.equal(upload.payload.document.classificationSource, 'manual');
 
   const dashboard = await json(`/api/patients/${patientId}/dashboard`, { headers: auth });
   assert.equal(dashboard.payload.summary.documentCount, 2);
   assert.ok(dashboard.payload.documents.some(document => document.name === 'test-result.png' && document.source === 'patient'));
+  const documentPath = `/api/patients/${patientId}/documents/${upload.payload.document.id}`;
+  const preview = await fetch(origin + documentPath, { headers: auth });
+  assert.equal(preview.status, 200);
+  assert.equal(preview.headers.get('content-type'), 'image/png');
+  assert.ok((await preview.arrayBuffer()).byteLength > 0);
+  const deniedDelete = await fetch(origin + documentPath, { method: 'DELETE' });
+  assert.equal(deniedDelete.status, 401);
+  const deleted = await fetch(origin + documentPath, { method: 'DELETE', headers: auth });
+  assert.equal(deleted.status, 204);
+  const missingPreview = await fetch(origin + documentPath, { headers: auth });
+  assert.equal(missingPreview.status, 404);
+  const dashboardAfterDelete = await json(`/api/patients/${patientId}/dashboard`, { headers: auth });
+  assert.equal(dashboardAfterDelete.payload.summary.documentCount, 1);
+  assert.ok(dashboardAfterDelete.payload.documents.some(document => document.name === 'previous-report.png'));
+
+  const pdfBytes = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF\n');
+  const pdfUpload = await json(`/api/patients/${patientId}/documents`, {
+    method: 'POST', headers: auth,
+    body: JSON.stringify({ name: 'visit-summary.pdf', type: 'application/pdf', data: pdfBytes.toString('base64') }),
+  });
+  assert.equal(pdfUpload.response.status, 201);
+  const pdfPath = `/api/patients/${patientId}/documents/${pdfUpload.payload.document.id}`;
+  const pdfPreview = await fetch(origin + pdfPath, { headers: auth });
+  assert.equal(pdfPreview.status, 200);
+  assert.equal(pdfPreview.headers.get('content-type'), 'application/pdf');
+  assert.deepEqual(Buffer.from(await pdfPreview.arrayBuffer()), pdfBytes);
+  const pdfDelete = await fetch(origin + pdfPath, { method: 'DELETE', headers: auth });
+  assert.equal(pdfDelete.status, 204);
 
   const abhaLogin = await json('/api/patient-login', {
     method: 'POST', body: JSON.stringify({ identityMethod: 'abha', identityNumber: '80012345678901', epin: '654321' }),
   });
   assert.equal(abhaLogin.response.status, 200);
 
+  const abhaPhone = '9876543212';
+  const abhaOtp = await json('/api/signup-otp/request', { method: 'POST', body: JSON.stringify({ phone: abhaPhone }) });
+  const abhaVerification = await json('/api/signup-otp/verify', {
+    method: 'POST', body: JSON.stringify({ phone: abhaPhone, id: abhaOtp.payload.id, otp: abhaOtp.payload.demoOtp }),
+  });
+  const abhaRegistration = await json('/api/patient-registrations', {
+    method: 'POST', body: JSON.stringify({
+      phone: abhaPhone, otpRequestId: abhaOtp.payload.id, otpVerificationToken: abhaVerification.payload.verificationToken,
+      identityMethod: 'abha', identityNumber: '80012345678902', epin: '123456', fullName: 'ABHA Primary Patient',
+      dateOfBirth: '1992-03-20', gender: 'Male', heightCm: 174, weightKg: 72, bloodGroup: 'A+', conditions: ['none'], allergies: 'None',
+    }),
+  });
+  assert.equal(abhaRegistration.response.status, 201);
+  const abhaPatientId = abhaRegistration.payload.patient.id;
+  const abhaAuth = { Authorization: `Bearer ${abhaRegistration.payload.sessionToken}` };
+  const linkAadhaar = await json(`/api/patients/${abhaPatientId}/link-aadhaar`, {
+    method: 'POST', headers: abhaAuth, body: JSON.stringify({ aadhaarNumber: '700123456780' }),
+  });
+  assert.equal(linkAadhaar.response.status, 200);
+  assert.equal(linkAadhaar.payload.last4, '6780');
+  const abhaDashboard = await json(`/api/patients/${abhaPatientId}/dashboard`, { headers: abhaAuth });
+  assert.equal(abhaDashboard.payload.patient.identity.method, 'abha');
+  assert.equal(abhaDashboard.payload.patient.aadhaarLinkStatus, 'linked');
+  assert.equal(abhaDashboard.payload.patient.aadhaarLast4, '6780');
+  const linkedAadhaarLogin = await json('/api/patient-login', {
+    method: 'POST', body: JSON.stringify({ identityMethod: 'aadhaar', identityNumber: '700123456780', epin: '123456' }),
+  });
+  assert.equal(linkedAadhaarLogin.response.status, 200);
+
   await stopServer();
   await startServer();
   const restoredSessionDashboard = await json(`/api/patients/${patientId}/dashboard`, { headers: auth });
   assert.equal(restoredSessionDashboard.response.status, 200);
   assert.equal(restoredSessionDashboard.payload.patient.abhaLast4, '8901');
+  assert.equal(restoredSessionDashboard.payload.patient.abhaNumber, '80012345678901');
 });
 
 test('OTP login tells an unregistered patient to register first', async () => {

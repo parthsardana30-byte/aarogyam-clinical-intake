@@ -22,6 +22,7 @@ data class PatientProfile(
     val identityLast4: String,
     val abhaLinkStatus: String,
     val abhaLast4: String,
+    val abhaNumber: String = "",
 )
 
 data class DoctorSummary(
@@ -64,6 +65,7 @@ data class HealthDocument(
     val intakeId: String? = null,
     val analysisStatus: String = "not-started",
     val aiSummary: String? = null,
+    val deletable: Boolean = false,
 )
 
 data class AccessHistoryEntry(

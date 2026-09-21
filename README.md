@@ -49,6 +49,13 @@ Aarogyam AI, set `AAROGYAM_API_URL` to the HTTPS API origin and
 `AAROGYAM_API_KEY` to its bearer key in the **site server's environment** (or
 Docker Compose `.env`), then restart the site. Never put either key in `dist/`.
 
+Page narration uses ElevenLabs for high-quality English and Hindi audio and
+caches each fixed guide under the persistent `data/voice-guide-cache` folder.
+Set `ELEVENLABS_TTS_VOICE_ID_EN` and `ELEVENLABS_TTS_VOICE_ID_HI` to native
+voices for the clearest accents. When either value is omitted, the server
+reuses the configured agent voice. If ElevenLabs is unavailable, the browser's
+built-in speech engine remains the automatic fallback.
+
 Aarogyam text chat and voice use separate sessions from ElevenLabs. Switching
 providers starts a new check-up conversation. Aarogyam voice records each user
 utterance and sends it after a pause; it is turn-based, not a full-duplex call.

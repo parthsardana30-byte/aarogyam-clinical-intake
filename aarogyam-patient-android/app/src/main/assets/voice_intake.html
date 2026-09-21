@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Aarogyam AI check-up</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#102b27;background:#f6faf8}
+    *{box-sizing:border-box}
+    html,body{height:100%;min-height:0}
+    body{margin:0;overflow:hidden;background:radial-gradient(circle at 50% 31%,#e6f9f2 0,#f6faf8 48%,#fff 100%)}
+    [hidden]{display:none!important}
+    button,input{font:inherit}
+    .page{position:fixed;inset:0;width:100%;height:auto;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;max-width:800px;margin:auto;overflow:hidden}
+    header{padding:18px 20px 12px;border-bottom:1px solid #dfece6;background:#ffffffd9;backdrop-filter:blur(16px)}
+    .eyebrow{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:#407364;font-weight:800}
+    h1{font-size:24px;line-height:1.18;letter-spacing:-.035em;margin:5px 0 7px}
+    .hospital{display:inline-flex;align-items:center;gap:7px;color:#376d5d;font-size:13px;font-weight:650}
+    .hospital:before{content:"";width:7px;height:7px;border-radius:50%;background:#3dae86}
+    .session-tools{display:flex;align-items:center;gap:8px;margin-top:10px}
+    .session-tools label{flex:none;white-space:nowrap;font-size:11px;color:#527668;font-weight:750}
+    .session-tools select{min-width:0;max-width:175px;border:1px solid #bcd7c8;border-radius:10px;background:#fff;color:#194b3c;padding:8px 10px;font:inherit;font-size:12px;font-weight:700}
+    .language-tag{border:1px solid #cde5d7;border-radius:10px;padding:8px 10px;background:#edf8f1;color:#20684f;font-size:12px;font-weight:750}
+    main{min-height:0;display:grid;grid-template-rows:minmax(188px,43%) minmax(0,1fr);overflow:hidden}
+    .voice-area{position:relative;z-index:1;min-height:0;padding:12px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#f3fbf7 0%,#eaf8f0 74%,#f6faf8 100%);border-bottom:1px solid #dceee5}
+    .orb{position:relative;flex:none;width:clamp(98px,18vh,132px);height:clamp(98px,18vh,132px);border:0;border-radius:50%;background:radial-gradient(circle at 34% 26%,#6cf5ce,#0e7766 45%,#173a3a 82%);box-shadow:0 14px 28px #12665132,inset 0 2px 5px #ffffff8f;color:white;display:grid;place-items:center;cursor:pointer;transition:transform .2s,box-shadow .2s}
+    .orb:active{transform:scale(.96)}
+    .orb:disabled{opacity:.65}
+    .orb.listening{box-shadow:0 0 0 11px #30b88c20,0 0 0 24px #30b88c10,0 18px 30px #12665144;animation:breathe 2s infinite}
+    .orb.speaking{animation:breathe .65s infinite alternate}
+    .orb.connecting{animation:breathe 1s infinite alternate}
+    @keyframes breathe{50%{transform:scale(1.055)}}
+    .pulse{width:70px;height:70px;fill:none;stroke:white;stroke-width:4.3;stroke-linecap:round;stroke-linejoin:round}
+    .status{font-size:13px;color:#4b6b60;min-height:20px;margin:0}
+    .status.error{color:#b42318}
+    .hint{font-size:11px;color:#688377;margin:0}
+    .chat{position:relative;z-index:0;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:16px 17px 20px;scrollbar-color:#b7d2c4 transparent}
+    .bubble{max-width:88%;border-radius:18px;padding:12px 15px;line-height:1.52;font-size:14px;overflow-wrap:anywhere;box-shadow:0 4px 16px #153c2c0b}
+    .bubble.ai{align-self:flex-start;background:#193e34;color:#f6fffa;border-bottom-left-radius:5px}
+    .bubble.user{align-self:flex-end;background:#e0f1e8;color:#173c31;border-bottom-right-radius:5px;border:1px solid #bcdcc9}
+    .bubble small{display:block;opacity:.7;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
+    .empty{margin:auto;text-align:center;color:#667f73;font-size:14px;max-width:250px;line-height:1.5}
+    footer{padding:12px 15px max(16px,env(safe-area-inset-bottom));border-top:1px solid #dfece6;background:#ffffffee;backdrop-filter:blur(16px)}
+    .form{display:flex;gap:8px;align-items:center;border:1px solid #cbded3;border-radius:16px;background:white;padding:6px;box-shadow:0 6px 18px #174c3810}
+    .form input{flex:1;min-width:0;height:43px;border:0;outline:0;padding:0 8px;color:#183e32;background:transparent;font-size:14px}
+    .send{height:43px;min-width:55px;border:0;border-radius:11px;background:#153f32;color:white;font-weight:750;padding:0 12px}
+    .send:disabled,.finish:disabled{opacity:.48}
+    .finish{display:block;width:100%;background:transparent;border:0;color:#28644d;font-weight:750;font-size:13px;padding:13px 0 0}
+    .result{display:none;min-height:0;overflow-y:auto;padding:28px 22px;text-align:left}
+    .result.show{display:block}
+    .result-card{background:white;border:1px solid #dcebe2;border-radius:22px;padding:22px;box-shadow:0 12px 25px #144d3012}
+    .result-mark{width:52px;height:52px;background:#e3f5eb;color:#0c7758;border-radius:16px;display:grid;place-items:center;font-size:27px;font-weight:bold}
+    .result h2{font-size:24px;letter-spacing:-.03em;margin:18px 0 9px}
+    .result p{line-height:1.6;color:#4b6b60}
+    .summary{white-space:pre-wrap;color:#183d31!important;background:#f3faf6;border-left:3px solid #69cfa4;border-radius:8px;padding:14px;font-size:14px}
+    .reference{color:#12684e!important;font-weight:700;font-size:13px}
+    .choice{min-height:0;overflow-y:auto;display:flex;padding:28px 22px}
+    .choice-card{flex:none;width:100%;max-width:440px;margin:auto;background:#fff;border:1px solid #dcebe3;border-radius:28px;padding:26px;box-shadow:0 20px 44px #173e2c10}
+    .choice-icon{width:52px;height:52px;border-radius:17px;background:#e4f5ec;color:#147759;display:grid;place-items:center;font-size:24px;font-weight:750}
+    .choice-card h2{font-size:27px;letter-spacing:-.04em;margin:20px 0 8px;line-height:1.18}
+    .choice-card p{font-size:14px;line-height:1.5;color:#61786c;margin:0 0 22px}
+    .language-list{display:grid;gap:11px}
+    .language-option{width:100%;border:1.5px solid #d9e9e0;border-radius:17px;padding:16px;background:#fff;color:#183b30;text-align:left;display:flex;align-items:center;gap:14px;cursor:pointer}
+    .language-option.selected{border-color:#168564;background:#edf9f2;box-shadow:0 0 0 3px #16856415}
+    .language-monogram{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#eff6f1;color:#206a52;font-size:17px;font-weight:800}
+    .language-option strong{display:block;font-size:16px}
+    .language-option small{display:block;color:#6f897c;margin-top:3px;font-size:12px}
+    .choice-continue{width:100%;margin-top:24px;padding:15px;border:0;border-radius:15px;background:#0e6e55;color:#fff;font-weight:750;cursor:pointer}
+    .choice-continue:disabled{opacity:.45;cursor:default}
+    .choice-note{font-size:12px!important;text-align:center;margin:13px 0 0!important}
+    @media(max-height:620px){header{padding:10px 18px 8px}h1{font-size:20px}main{grid-template-rows:minmax(96px,39%) minmax(0,1fr)}.voice-area{gap:3px}.orb{width:72px;height:72px}.pulse{width:42px;height:42px}.hint{display:none}.choice{padding:12px 18px}.choice-card{padding:20px}}
+    @media(prefers-reduced-motion:reduce){.orb,.orb.listening,.orb.speaking,.orb.connecting{animation:none}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header><div class="eyebrow" id="eyebrow">Aarogyam · hospital check-up</div><h1 id="page-title">Choose your language</h1><div class="hospital" id="hospital"></div><div class="session-tools" id="session-tools" hidden><span class="language-tag" id="language-tag">English</span><label for="provider" id="model-label">AI model</label><select id="provider" aria-label="Choose AI for this check-up"><option value="elevenlabs">Qwen395b</option><option value="aarogyam">Aarogyam AI</option></select></div></header>
+    <section class="choice" id="language-step" aria-labelledby="language-title"><div class="choice-card"><div class="choice-icon">अ A</div><h2 id="language-title">Choose your language<br>अपनी भाषा चुनें</h2><p>Choose how you would like to speak with Aarogyam AI.</p><div class="language-list"><button type="button" class="language-option" data-language="English" aria-pressed="false"><span class="language-monogram">EN</span><span><strong>English</strong><small>Speak in English</small></span></button><button type="button" class="language-option" data-language="Hindi" aria-pressed="false"><span class="language-monogram">हि</span><span><strong>हिन्दी</strong><small>हिन्दी में बात करें</small></span></button></div><button class="choice-continue" id="language-continue" type="button" disabled>Continue · आगे बढ़ें</button><p class="choice-note">Your conversation is shared with the hospital team only after you save it.</p></div></section>
+    <main id="conversation" hidden>
+      <section class="voice-area"><button id="orb" class="orb" type="button" aria-label="Start voice conversation"><svg class="pulse" viewBox="0 0 70 70" aria-hidden="true"><path d="M5 37h14l7-16 10 31 8-21 5 6h16"/></svg></button><p class="status" id="status" role="status" aria-live="polite">Tap the circle to talk</p><p class="hint" id="hint">Your conversation becomes a summary for the hospital team.</p></section>
+      <div class="chat" id="chat"><p class="empty" id="empty">Speak naturally, or type a message below. When you finish, your summary will be saved to this visit.</p></div>
+    </main>
+    <section class="result" id="result"><div class="result-card"><div class="result-mark">✓</div><h2>Check-up saved</h2><p>Your information is ready for the hospital team. Please proceed to reception.</p><p class="reference" id="reference"></p><p class="summary" id="summary"></p></div></section>
+    <footer id="controls" hidden><form class="form" id="form"><input id="message" maxlength="1200" aria-label="Message" placeholder="Type a message" autocomplete="off"><button class="send" id="send" type="submit">Send</button></form><button class="finish" id="finish" type="button">Finish and save check-up</button></footer>
+  </div>
+  <script>const config=__AROGYAM_CONFIG__;</script>
+  <script src="/vendor/elevenlabs-client.js"></script>
+  <script>
+    const $=id=>document.getElementById(id);
+    const hospital=$('hospital'),status=$('status'),orb=$('orb'),chat=$('chat'),empty=$('empty'),finish=$('finish'),send=$('send');
+    hospital.textContent=config.hospitalName;
+    const copy={English:{title:'Tell us what brings you in',tap:'Tap the circle to talk',listening:'Listening · speak naturally',speaking:'Aarogyam is speaking…',connecting:'Connecting to Aarogyam…',paused:'Voice paused · tap to resume',ended:'Connection ended · tap to reconnect',thinking:'Aarogyam is thinking…',saving:'Saving your check-up…',hint:'Your conversation becomes a summary for the hospital team.',empty:'Speak naturally, or type a message below. When you finish, your summary will be saved to this visit.',placeholder:'Type a message',send:'Send',finish:'Finish and save check-up',you:'You',needMessage:'Talk or send a message before saving your check-up.',retry:'Retry saving check-up',saved:'Check-up saved',ready:'Your information is ready for the hospital team. Please proceed to reception.'},Hindi:{title:'अपनी परेशानी बताइए',tap:'बात करने के लिए हरे बटन को दबाएँ',listening:'हम सुन रहे हैं · आराम से बोलें',speaking:'आरोग्यम जवाब दे रहा है…',connecting:'आरोग्यम से जुड़ रहे हैं…',paused:'आवाज़ रुकी है · फिर शुरू करने के लिए दबाएँ',ended:'कनेक्शन बंद हुआ · फिर जुड़ने के लिए दबाएँ',thinking:'आरोग्यम सोच रहा है…',saving:'आपकी जानकारी सहेजी जा रही है…',hint:'बातचीत का सारांश अस्पताल की देखभाल टीम को मिलेगा।',empty:'आप बोल सकते हैं या नीचे संदेश लिख सकते हैं। समाप्त करने पर सारांश इस विज़िट के साथ सहेजा जाएगा।',placeholder:'संदेश लिखें',send:'भेजें',finish:'जाँच समाप्त करके सहेजें',you:'आप',needMessage:'सहेजने से पहले बोलें या संदेश भेजें।',retry:'फिर से सहेजें',saved:'जाँच सहेजी गई',ready:'आपकी जानकारी अस्पताल की टीम के लिए तैयार है। कृपया रिसेप्शन पर जाएँ।'}};
+    let selectedLanguage='';
+    document.querySelectorAll('.language-option').forEach(button=>button.addEventListener('click',()=>{selectedLanguage=button.dataset.language;document.querySelectorAll('.language-option').forEach(option=>{const active=option===button;option.classList.toggle('selected',active);option.setAttribute('aria-pressed',String(active))});$('language-continue').disabled=false}));
+    $('language-continue').addEventListener('click',()=>{if(!selectedLanguage)return;config.language=selectedLanguage;config.voiceLanguage=selectedLanguage==='Hindi'?'hi':'en';document.documentElement.lang=config.voiceLanguage;const c=copy[selectedLanguage];$('page-title').textContent=c.title;$('eyebrow').textContent=selectedLanguage==='Hindi'?'आरोग्यम · अस्पताल जाँच':'Aarogyam · hospital check-up';$('model-label').textContent=selectedLanguage==='Hindi'?'AI मॉडल':'AI model';$('status').textContent=c.tap;$('hint').textContent=c.hint;$('empty').textContent=c.empty;$('message').placeholder=c.placeholder;$('send').textContent=c.send;$('finish').textContent=c.finish;$('language-tag').textContent=selectedLanguage==='Hindi'?'हिन्दी':'English';document.querySelector('#result h2').textContent=c.saved;document.querySelector('#result .result-card>p').textContent=c.ready;$('language-step').hidden=true;$('session-tools').hidden=false;$('conversation').hidden=false;$('controls').hidden=false});
+    const t=key=>copy[config.language]?.[key]||copy.English[key];
+    let conversation=null,conversationId='',connecting=false,saving=false,finished=false,textOnly=false,pendingSave=null;
+    let modelGeneration=0,qwenSessionGeneration=0,sending=false,qwenAudioTimer=null,qwenOutputMonitor=null,qwenLastAudibleAt=0;
+    const seenQwenEvents=new Set();
+    let aarogyamSessionId='',aarogyamActive=false,aarogyamGeneration=0,aarogyamStream=null,aarogyamRecorder=null,aarogyamAudioContext=null,aarogyamVadTimer=null,aarogyamPlayer=null;
+    const transcript=[];
+    const recentBubbles=[];
+    function showStatus(message,error=false){status.textContent=message;status.classList.toggle('error',error)}
+    function stopSpeechFallback(){clearTimeout(qwenAudioTimer);qwenAudioTimer=null;if('speechSynthesis'in window)window.speechSynthesis.cancel()}
+    async function speakFallback(message){if(!('speechSynthesis'in window)||!('SpeechSynthesisUtterance'in window))return false;window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(message);utterance.lang=config.voiceLanguage==='hi'?'hi-IN':'en-IN';utterance.rate=.94;let played=false;await new Promise(resolve=>{const timer=setTimeout(resolve,20000);utterance.onend=()=>{played=true;clearTimeout(timer);resolve()};utterance.onerror=()=>{clearTimeout(timer);resolve()};window.speechSynthesis.speak(utterance)});return played}
+    function stopQwenSession(){qwenSessionGeneration++;clearInterval(qwenOutputMonitor);qwenOutputMonitor=null;stopSpeechFallback();seenQwenEvents.clear();const old=conversation;conversation=null;connecting=false;textOnly=false;orb.className='orb';if(old?.isOpen())void old.endSession().catch(()=>{})}
+    function bubble(role,text){const content=String(text||'').trim();if(!content)return false;const now=Date.now();if(recentBubbles.some(item=>item.role===role&&item.text===content&&now-item.at<2000))return false;recentBubbles.push({role,text:content,at:now});if(recentBubbles.length>12)recentBubbles.shift();empty?.remove();const item=document.createElement('div');item.className='bubble '+(role==='patient'?'user':'ai');const label=document.createElement('small');label.textContent=role==='patient'?t('you'):'Aarogyam';const body=document.createElement('span');body.textContent=content;item.append(label,body);chat.append(item);chat.scrollTop=chat.scrollHeight;transcript.push({role,text:content.slice(0,1200)});return true}
+    async function aarogyamRequest(path,body){const response=await fetch('/api/aarogyam/'+path,{method:'POST',headers:body instanceof FormData?{Authorization:'Bearer '+config.patientToken}:{'Content-Type':'application/json',Authorization:'Bearer '+config.patientToken},body:body instanceof FormData?body:JSON.stringify(body),credentials:'include',cache:'no-store'});const result=await response.json().catch(()=>({}));if(!response.ok)throw Object.assign(new Error(result.error||`Aarogyam AI request failed (${response.status})`),{code:result.code||''});return result}
+    async function ensureAarogyamSession(selectedModel=modelGeneration){if(aarogyamSessionId)return aarogyamSessionId;const result=await aarogyamRequest('sessions',{});if(selectedModel!==modelGeneration||$('provider').value!=='aarogyam')return '';if(!result.session_id)throw Error('Aarogyam AI did not start a session');aarogyamSessionId=result.session_id;conversationId ||= result.session_id;return aarogyamSessionId}
+    function releaseAarogyamCapture(){clearInterval(aarogyamVadTimer);aarogyamVadTimer=null;if(aarogyamRecorder?.state==='recording')aarogyamRecorder.stop();aarogyamRecorder=null;aarogyamStream?.getTracks().forEach(track=>track.stop());aarogyamStream=null;if(aarogyamAudioContext)void aarogyamAudioContext.close().catch(()=>{});aarogyamAudioContext=null}
+    function stopAarogyamCall(){aarogyamGeneration++;aarogyamActive=false;releaseAarogyamCapture();aarogyamPlayer?.pause();aarogyamPlayer=null;stopSpeechFallback();orb.className='orb'}
+    async function playAarogyamAudio(result,generation){if(!result.audio_base64||generation!==aarogyamGeneration)return;const bytes=Uint8Array.from(atob(result.audio_base64),char=>char.charCodeAt(0));const url=URL.createObjectURL(new Blob([bytes],{type:result.audio_mime||'audio/wav'}));const player=new Audio(url);aarogyamPlayer=player;orb.className='orb speaking';showStatus(t('speaking'));try{await new Promise((resolve,reject)=>{player.onended=resolve;player.onpause=resolve;player.onerror=()=>reject(Error('Voice playback failed'));player.play().catch(reject)})}finally{if(aarogyamPlayer===player)aarogyamPlayer=null;URL.revokeObjectURL(url)}}
+    async function listenAarogyam(generation){
+      if(!aarogyamActive||generation!==aarogyamGeneration)return;
+      try{
+        if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder||!window.AudioContext)throw Error('Voice recording is unavailable on this phone');
+        const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+        if(!aarogyamActive||generation!==aarogyamGeneration){stream.getTracks().forEach(track=>track.stop());return}
+        aarogyamStream=stream;
+        const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(type=>MediaRecorder.isTypeSupported(type));
+        const recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
+        aarogyamRecorder=recorder;
+        const chunks=[];
+        let speechStarted=false,speechFrames=0,noiseFloor=.008,silenceSince=0;
+        const startedAt=Date.now();
+        const context=new AudioContext();aarogyamAudioContext=context;
+        await context.resume();
+        const source=context.createMediaStreamSource(stream),analyzer=context.createAnalyser();
+        analyzer.fftSize=2048;source.connect(analyzer);
+        const samples=new Uint8Array(analyzer.fftSize);
+        recorder.ondataavailable=event=>{if(event.data.size)chunks.push(event.data)};
+        recorder.onerror=event=>{stopAarogyamCall();showStatus(event.error?.message||'Microphone recording failed',true)};
+        recorder.onstop=async()=>{
+          releaseAarogyamCapture();
+          if(!aarogyamActive||generation!==aarogyamGeneration)return;
+          if(!speechStarted){showStatus(config.language==='Hindi'?'आवाज़ नहीं सुनी · फिर बोलें':'No speech heard · please try again');void listenAarogyam(generation);return}
+          try{
+            if(!chunks.some(chunk=>chunk.size))throw Error('No audio was recorded. Please try again.');
+            showStatus(t('thinking'));
+            const form=new FormData();form.append('session_id',aarogyamSessionId);
+            form.append('audio',new Blob(chunks,{type:recorder.mimeType||'audio/webm'}),recorder.mimeType.includes('mp4')?'speech.m4a':'speech.webm');
+            const result=await aarogyamRequest('voice/turn',form);
+            if(!aarogyamActive||generation!==aarogyamGeneration)return;
+            if(result.transcript)bubble('patient',result.transcript);
+            if(result.answer)bubble('assistant',result.answer);
+            if(result.audio_base64){try{await playAarogyamAudio(result,generation)}catch{if(result.answer&&!(await speakFallback(result.answer)))showStatus('Voice reply unavailable; read the answer below.',true)}}
+            else if(result.answer&&!(await speakFallback(result.answer)))showStatus('Voice reply unavailable; read the answer below.',true);
+          }catch(error){
+            if(generation!==aarogyamGeneration)return;
+            showStatus(error.message||'Could not process speech',true);
+            if(error.code==='session_expired'){aarogyamSessionId='';stopAarogyamCall();return}
+          }
+          if(aarogyamActive&&generation===aarogyamGeneration)void listenAarogyam(generation)
+        };
+        recorder.start();orb.className='orb listening';showStatus(t('listening'));
+        aarogyamVadTimer=setInterval(()=>{
+          if(generation!==aarogyamGeneration||recorder.state!=='recording')return;
+          analyzer.getByteTimeDomainData(samples);
+          const rms=Math.sqrt(samples.reduce((sum,sample)=>sum+((sample-128)/128)**2,0)/samples.length);
+          if(rms>Math.max(.018,noiseFloor*2)){speechFrames++;if(speechFrames>=2)speechStarted=true;silenceSince=0}
+          else if(speechStarted)silenceSince||=Date.now();
+          else{speechFrames=Math.max(0,speechFrames-1);noiseFloor=Math.min(.04,noiseFloor*.9+rms*.1)}
+          if((speechStarted&&silenceSince&&Date.now()-silenceSince>1100)||Date.now()-startedAt>18000)recorder.stop()
+        },120)
+      }catch(error){stopAarogyamCall();showStatus(error.message||'Microphone unavailable',true)}
+    }
+    async function startAarogyamCall(){if(aarogyamActive){stopAarogyamCall();showStatus(t('paused'));return}aarogyamActive=true;const generation=++aarogyamGeneration;const selectedModel=modelGeneration;orb.className='orb connecting';showStatus(t('connecting'));try{await ensureAarogyamSession();if(generation!==aarogyamGeneration||selectedModel!==modelGeneration)return;await listenAarogyam(generation)}catch(error){if(generation!==aarogyamGeneration)return;stopAarogyamCall();showStatus(error.message||'Aarogyam AI is unavailable',true)}}
+    $('provider').addEventListener('change',()=>{modelGeneration++;stopAarogyamCall();stopQwenSession();aarogyamSessionId='';seenQwenEvents.clear();showStatus($('provider').value==='aarogyam'?(config.language==='Hindi'?'Aarogyam AI चुना गया · बात करने के लिए बटन दबाएँ':'Aarogyam AI selected · tap the circle to call'):(config.language==='Hindi'?'Qwen395b चुना गया · बात करने के लिए बटन दबाएँ':'Qwen395b selected · tap the circle to talk'))});
+    fetch('/api/aarogyam/config',{credentials:'include',cache:'no-store'}).then(response=>response.json()).then(result=>{const option=$('provider').querySelector('[value="aarogyam"]');if(!result.configured){option.disabled=true;option.textContent='Aarogyam AI (unavailable)'}}).catch(()=>{});
+    async function signedUrl(){const response=await fetch('/api/elevenlabs/signed-url?patientId='+encodeURIComponent(config.patientId),{headers:{Authorization:'Bearer '+config.patientToken,'X-Aarogyam-Intake-Grant':config.grant},credentials:'include',cache:'no-store'});const data=await response.json().catch(()=>({}));if(!response.ok||!data.signedUrl)throw Error(data.error||`Voice request failed (${response.status})`);return data.signedUrl}
+    function options(url,useTextOnly,generation){const selectedModel=modelGeneration;const current=()=>generation===qwenSessionGeneration&&selectedModel===modelGeneration&&$('provider').value==='elevenlabs';return {signedUrl:url,connectionType:'websocket',textOnly:useTextOnly,overrides:{agent:{language:config.voiceLanguage},conversation:{textOnly:useTextOnly}},dynamicVariables:{preferred_language:config.language},onConnect:()=>{if(!current())return;connecting=false;textOnly=useTextOnly;orb.className='orb '+(useTextOnly?'':'listening');showStatus(useTextOnly?'Connected in text mode · type below':t('listening'))},onModeChange:({mode})=>{if(!current()||useTextOnly)return;orb.className='orb '+(mode==='speaking'?'speaking':'listening');showStatus(mode==='speaking'?t('speaking'):t('listening'))},onMessage:payload=>{if(!current())return;const message=String(payload?.message||'').trim();if(!message)return;const agent=payload.role==='agent'||payload.source==='ai';if(payload.event_id){const eventKey=(agent?'assistant:':'patient:')+payload.event_id;if(seenQwenEvents.has(eventKey))return;seenQwenEvents.add(eventKey);if(seenQwenEvents.size>100)seenQwenEvents.clear()}if(!bubble(agent?'assistant':'patient',message))return;if(agent){if(useTextOnly)showStatus(config.language==='Hindi'?'जवाब आ गया · अगला संदेश लिखें':'Reply ready · type your next message');else{const receivedAt=Date.now();clearTimeout(qwenAudioTimer);qwenAudioTimer=setTimeout(()=>{if(current()&&qwenLastAudibleAt<receivedAt-1000)void speakFallback(message)},3000)}}},onError:error=>{if(current())showStatus(String(error||'Voice connection error'),true)},onDisconnect:()=>{if(!current())return;conversation=null;connecting=false;orb.className='orb';clearInterval(qwenOutputMonitor);qwenOutputMonitor=null;if(!finished&&!saving)showStatus(t('ended'))}}}
+    async function startSession(useTextOnly=false){if(conversation?.isOpen())return conversation;if(connecting||finished||$('provider').value!=='elevenlabs')return null;if(!window.ElevenLabsClient?.Conversation){showStatus('Voice client did not load. Check your connection.',true);return null}const generation=++qwenSessionGeneration;const selectedModel=modelGeneration;connecting=true;orb.className='orb connecting';showStatus(t('connecting'));let url='';try{url=await signedUrl();if(generation!==qwenSessionGeneration||selectedModel!==modelGeneration)return null;const started=await window.ElevenLabsClient.Conversation.startSession(options(url,useTextOnly,generation));if(generation!==qwenSessionGeneration||selectedModel!==modelGeneration){await started.endSession().catch(()=>{});return null}conversation=started;conversationId ||= started.getId();started.setVolume?.({volume:1});if(!useTextOnly){qwenLastAudibleAt=0;qwenOutputMonitor=setInterval(()=>{if(generation!==qwenSessionGeneration||!started.isOpen()){clearInterval(qwenOutputMonitor);qwenOutputMonitor=null;return}try{if(Number(started.getOutputVolume?.()||0)>.002){qwenLastAudibleAt=Date.now();clearTimeout(qwenAudioTimer);qwenAudioTimer=null}}catch{}},120)}return started}catch(error){if(generation!==qwenSessionGeneration||selectedModel!==modelGeneration)return null;connecting=false;orb.className='orb';showStatus(error.message||'Could not connect to voice',true);return null}}
+    orb.addEventListener('click',async()=>{if($('provider').value==='aarogyam'){await startAarogyamCall();return}if(conversation?.isOpen()){const wasTextOnly=textOnly;stopQwenSession();if(wasTextOnly)await startSession(false);else showStatus(t('paused'))}else await startSession(false)});
+    $('form').addEventListener('submit',async event=>{
+      event.preventDefault();const field=$('message'),message=field.value.trim();
+      if(!message||saving||finished||sending)return;
+      sending=true;send.disabled=true;
+      const selectedModel=modelGeneration,provider=$('provider').value;
+      try{
+        if(provider==='aarogyam'){
+          if(aarogyamActive)stopAarogyamCall();
+          showStatus(t('thinking'));
+          const sessionId=await ensureAarogyamSession(selectedModel);
+          if(!sessionId||selectedModel!==modelGeneration)return;
+          const result=await aarogyamRequest('chat/turn',{session_id:sessionId,message});
+          if(selectedModel!==modelGeneration||$('provider').value!==provider)return;
+          bubble('patient',message);field.value='';
+          if(result.answer)bubble('assistant',result.answer);
+          showStatus(t('tap'));
+        }else{
+          const session=conversation?.isOpen()?conversation:await startSession(true);
+          if(!session?.isOpen()||selectedModel!==modelGeneration||$('provider').value!==provider)return;
+          session.sendUserMessage(message);bubble('patient',message);field.value='';showStatus(t('thinking'))
+        }
+      }catch(error){if(selectedModel===modelGeneration)showStatus(error.message||'Could not send message',true)}
+      finally{sending=false;send.disabled=false}
+    });
+    function draftSummary(){const answers=transcript.filter(item=>item.role==='patient').map(item=>item.text);return answers.length?'Patient reports: '+answers.slice(0,12).join('; ').slice(0,5600):''}
+    async function saveIntake(){if(saving||finished)return;if(!conversationId||!transcript.some(item=>item.role==='patient')){showStatus(t('needMessage'),true);return}saving=true;finish.disabled=true;showStatus(t('saving'));try{stopAarogyamCall();stopQwenSession();pendingSave??={patientId:config.patientId,conversationId,language:config.language,summary:draftSummary(),transcript:transcript.slice(-40),intakeSource:'app-qr'};const response=await fetch('/api/patient-intakes',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+config.patientToken,'X-Aarogyam-Intake-Grant':config.grant},credentials:'include',body:JSON.stringify(pendingSave)});const data=await response.json().catch(()=>({}));if(!response.ok||!data.intake)throw Error(data.error||`Could not save check-up (${response.status})`);finished=true;$('conversation').hidden=true;$('controls').hidden=true;$('session-tools').hidden=true;$('result').classList.add('show');$('summary').textContent=data.intake.summary;$('reference').textContent=[data.intake.hospitalName,data.intake.uhid,data.intake.encounterNumber].filter(Boolean).join(' · ')}catch(error){showStatus('Save failed: '+(error.message||'Please retry'),true);finish.textContent=t('retry')}finally{saving=false;finish.disabled=false}}
+    finish.addEventListener('click',saveIntake);
+    window.addEventListener('pagehide',()=>{stopAarogyamCall();stopQwenSession()});
+  </script>
+</body>
+</html>

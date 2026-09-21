@@ -28,6 +28,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -102,8 +104,9 @@ internal fun CompleteProfileScreen(viewModel: MainViewModel, onClose: () -> Unit
                             }
                             OutlinedTextField(
                                 value = abhaId,
-                                onValueChange = { abhaId = it },
+                                onValueChange = { abhaId = it.filter(Char::isDigit).take(14) },
                                 label = { Text("ABHA ID") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 supportingText = { Text(l10n(language, "Your verified Aadhaar details will not be changed.", "आपका सत्यापित आधार विवरण नहीं बदलेगा।")) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
@@ -113,7 +116,7 @@ internal fun CompleteProfileScreen(viewModel: MainViewModel, onClose: () -> Unit
                     }
                 }
                 item {
-                    PrimaryFlowButton(l10n(language, "Save ABHA ID", "ABHA ID सहेजें"), abhaId.filter(Char::isDigit).length == 14) {
+                    PrimaryFlowButton(l10n(language, "Save ABHA ID", "ABHA ID सहेजें"), abhaId.length == 14) {
                         viewModel.completeProfileIdentity(abhaId, onClose)
                     }
                 }
@@ -126,7 +129,6 @@ internal fun CompleteProfileScreen(viewModel: MainViewModel, onClose: () -> Unit
 @Composable
 private fun RegistrationDetailsCard(profile: PatientProfile?, viewModel: MainViewModel, language: AppLanguage) {
     val patientName = profile?.fullName ?: viewModel.state.session?.patient?.fullName ?: l10n(language, "Patient", "मरीज")
-    val patientId = profile?.id ?: viewModel.state.session?.patient?.id.orEmpty()
     val conditions = profile?.conditions.orEmpty().map(::friendlyCondition).joinToString().ifBlank { l10n(language, "None added", "कोई नहीं") }
     val notAvailable = l10n(language, "Not available", "उपलब्ध नहीं")
     val notAdded = l10n(language, "Not added", "जोड़ा नहीं गया")
@@ -137,7 +139,6 @@ private fun RegistrationDetailsCard(profile: PatientProfile?, viewModel: MainVie
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 17.dp, vertical = 8.dp)) {
             ProfileDetail(l10n(language, "Full name", "पूरा नाम"), patientName)
-            ProfileDetail(l10n(language, "Patient ID", "मरीज ID"), patientId.ifBlank { notAvailable })
             ProfileDetail(l10n(language, "Mobile number", "मोबाइल नंबर"), profile?.phone ?: notAvailable)
             ProfileDetail(l10n(language, "Date of birth", "जन्म तिथि"), profile?.dateOfBirth ?: notAdded)
             ProfileDetail(l10n(language, "Gender", "लिंग"), profile?.gender ?: notAdded)

@@ -18,14 +18,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +48,7 @@ import `in`.aarogyam.patient.data.PatientVisit
 import `in`.aarogyam.patient.ui.MainViewModel
 import `in`.aarogyam.patient.ui.components.AarogyamBackdrop
 import `in`.aarogyam.patient.ui.components.EmptyCard
+import `in`.aarogyam.patient.ui.components.DocumentUploadBanner
 import `in`.aarogyam.patient.ui.components.ScreenIntro
 import `in`.aarogyam.patient.ui.components.SectionTitle
 import `in`.aarogyam.patient.ui.components.l10n
@@ -55,11 +64,29 @@ internal fun RecordsScreen(
     viewModel: MainViewModel,
     dashboard: Dashboard?,
     onPickDocument: () -> Unit,
+    onOpenDocument: (HealthDocument) -> Unit,
+    onDownloadDocument: (HealthDocument) -> Unit,
+    onDeleteDocument: (HealthDocument) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val documents = dashboard?.documents.orEmpty()
     val visits = dashboard?.visits.orEmpty()
     val language = viewModel.state.companion.language
+    var pendingDelete by remember { mutableStateOf<HealthDocument?>(null) }
+
+    pendingDelete?.let { document ->
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text(l10n(language, "Delete this record?", "यह रिकॉर्ड हटाएं?")) },
+            text = { Text(l10n(language, "This removes the file from your app and website. It cannot be undone.", "यह फाइल ऐप और वेबसाइट दोनों से हट जाएगी। इसे वापस नहीं लाया जा सकता।")) },
+            confirmButton = {
+                TextButton(onClick = { pendingDelete = null; onDeleteDocument(document) }) {
+                    Text(l10n(language, "Delete", "हटाएं"), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text(l10n(language, "Cancel", "रद्द करें")) } },
+        )
+    }
 
     AarogyamBackdrop(modifier.fillMaxSize()) {
         LazyColumn(
@@ -75,15 +102,24 @@ internal fun RecordsScreen(
                 )
             }
             item { UploadFileCard(language, onPickDocument) }
+            if (viewModel.documentUpload.uploading || viewModel.documentUpload.error != null || viewModel.documentUpload.completed) {
+                item { DocumentUploadBanner(viewModel.documentUpload, onPickDocument) }
+            }
             if (visits.isNotEmpty()) {
                 item { SectionTitle(l10n(language, "Hospital visits", "अस्पताल विज़िट"), null) {} }
                 items(visits, key = { "visit-${it.id}" }) { visit -> VisitCard(visit, language) }
             }
-            item { SectionTitle(l10n(language, "Your records", "आपके रिकॉर्ड"), null) {} }
+            item { SectionTitle(l10n(language, "Your records", "आपके रिकॉर्ड"), l10n(language, "Refresh", "रीफ्रेश"), viewModel::refresh) }
             if (documents.isEmpty()) {
                 item { EmptyCard(l10n(language, "No medical files yet", "अभी कोई मेडिकल फाइल नहीं"), l10n(language, "Upload a report or prescription to keep it here.", "रिपोर्ट या पर्चा यहां रखने के लिए अपलोड करें।")) }
             } else {
-                items(documents, key = { it.id }) { document -> MedicalFileCard(document, language) }
+                items(documents, key = { it.id }) { document ->
+                    MedicalFileCard(document, language,
+                        onOpen = { onOpenDocument(document) },
+                        onDownload = { onDownloadDocument(document) },
+                        onDelete = { pendingDelete = document },
+                    )
+                }
             }
         }
     }
@@ -152,7 +188,7 @@ private fun UploadFileCard(language: `in`.aarogyam.patient.ui.AppLanguage, onCli
             ) { Icon(Icons.Default.UploadFile, null, tint = Color.White, modifier = Modifier.size(27.dp)) }
             Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
                 Text(l10n(language, "Upload medical record", "मेडिकल रिकॉर्ड अपलोड करें"), color = DeepTeal, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text(l10n(language, "PDF, prescription, report or scan", "PDF, पर्चा, रिपोर्ट या स्कैन"), color = Muted, fontSize = 13.sp, modifier = Modifier.padding(top = 3.dp))
+                Text(l10n(language, "PDF or image · under 8 MB", "PDF या फोटो · 8 MB से कम"), color = Muted, fontSize = 13.sp, modifier = Modifier.padding(top = 3.dp))
             }
             Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Forest)
         }
@@ -160,13 +196,20 @@ private fun UploadFileCard(language: `in`.aarogyam.patient.ui.AppLanguage, onCli
 }
 
 @Composable
-private fun MedicalFileCard(document: HealthDocument, language: `in`.aarogyam.patient.ui.AppLanguage) {
+private fun MedicalFileCard(
+    document: HealthDocument,
+    language: `in`.aarogyam.patient.ui.AppLanguage,
+    onOpen: () -> Unit,
+    onDownload: () -> Unit,
+    onDelete: () -> Unit,
+) {
     Card(
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = .95f)),
         border = BorderStroke(1.dp, Border),
     ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.fillMaxWidth().padding(12.dp)) {
+        Row(Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(50.dp).clip(RoundedCornerShape(16.dp)).background(Mint),
                 contentAlignment = Alignment.Center,
@@ -179,6 +222,20 @@ private fun MedicalFileCard(document: HealthDocument, language: `in`.aarogyam.pa
                 Text("${l10n(language, "Added", "जोड़ा गया")} ${document.createdAt.take(10)}", color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 3.dp))
             }
             Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Forest.copy(alpha = .65f))
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            TextButton(onClick = onOpen) { Text(l10n(language, "View", "देखें")) }
+            TextButton(onClick = onDownload) {
+                Icon(Icons.Default.FileDownload, null, modifier = Modifier.size(18.dp))
+                Text(l10n(language, "Download", "डाउनलोड"), modifier = Modifier.padding(start = 5.dp))
+            }
+            if (document.deletable) {
+                TextButton(onClick = onDelete) {
+                    Icon(Icons.Default.DeleteOutline, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
+                    Text(l10n(language, "Delete", "हटाएं"), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(start = 5.dp))
+                }
+            }
+        }
         }
     }
 }

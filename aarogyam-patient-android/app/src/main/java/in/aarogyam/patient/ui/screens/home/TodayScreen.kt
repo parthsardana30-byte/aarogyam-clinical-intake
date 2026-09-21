@@ -42,6 +42,7 @@ import `in`.aarogyam.patient.ui.MainViewModel
 import `in`.aarogyam.patient.ui.AppLanguage
 import `in`.aarogyam.patient.ui.components.AarogyamBackdrop
 import `in`.aarogyam.patient.ui.components.DateTile
+import `in`.aarogyam.patient.ui.components.DocumentUploadBanner
 import `in`.aarogyam.patient.ui.components.EmptyCard
 import `in`.aarogyam.patient.ui.components.SectionTitle
 import `in`.aarogyam.patient.ui.components.tr
@@ -76,9 +77,16 @@ internal fun TodayScreen(
         ) {
             item {
                 Text("${tr(language, "hello")}, $firstName", style = MaterialTheme.typography.headlineLarge, color = DeepTeal)
-                Text(l10n(language, "Your care for today", "आज आपकी देखभाल"), color = Muted, modifier = Modifier.padding(top = 2.dp))
+                Text(
+                    l10n(language, "Your care for today", "आज आपकी देखभाल"),
+                    color = Muted,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
             }
             item { UploadRecordCard(language, onUploadRecord) }
+            if (viewModel.documentUpload.uploading || viewModel.documentUpload.error != null || viewModel.documentUpload.completed) {
+                item { DocumentUploadBanner(viewModel.documentUpload, onUploadRecord) }
+            }
             item { LatestReminderCard(latestReminder, language, onOpenAppointmentReminders) }
             item { SectionTitle(l10n(language, "Your appointment reminders", "आपके अपॉइंटमेंट रिमाइंडर"), l10n(language, "Manage", "देखें"), onOpenAppointmentReminders) }
             if (reminders.isEmpty()) {

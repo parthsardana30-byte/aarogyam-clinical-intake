@@ -2,7 +2,9 @@
 .gradle/
 .gradle-home/
 .idea/
+.kotlin/
 local.properties
+local-secrets.properties
 build/
 captures/
 .externalNativeBuild/

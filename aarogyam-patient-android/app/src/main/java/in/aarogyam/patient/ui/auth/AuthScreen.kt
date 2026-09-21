@@ -28,18 +28,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import `in`.aarogyam.patient.ui.MainViewModel
-import `in`.aarogyam.patient.ui.RegistrationDraft
 import `in`.aarogyam.patient.ui.components.AarogyamBackdrop
 import `in`.aarogyam.patient.ui.components.ArogyamBrand
 import `in`.aarogyam.patient.ui.theme.*
 
 private enum class AuthPage { Login, Register, LoginWithOtp, ForgotEpin }
-
-private val registrationMedicalConditions = listOf(
-    "Diabetes", "Hypertension", "Asthma", "Thyroid disorder", "Heart disease",
-    "High cholesterol", "Arthritis", "Kidney condition", "Chronic lung disease",
-    "Epilepsy", "Cancer", "None of these",
-)
 
 @Composable
 internal fun AuthScreen(viewModel: MainViewModel) {
@@ -49,20 +42,22 @@ internal fun AuthScreen(viewModel: MainViewModel) {
     AarogyamBackdrop(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize()) {
             Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+                Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(Modifier.height(30.dp))
-                ArogyamBrand(Modifier.fillMaxWidth())
-                Spacer(Modifier.height(28.dp))
-                Box(Modifier.size(72.dp).clip(RoundedCornerShape(23.dp)).background(Mint), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.Person, null, tint = Forest, modifier = Modifier.size(37.dp))
-                    Box(Modifier.align(Alignment.BottomEnd).size(27.dp).clip(CircleShape).background(Forest), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.HealthAndSafety, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.height(if (page == AuthPage.Register) 12.dp else 26.dp))
+                ArogyamBrand(Modifier.fillMaxWidth(), compact = page == AuthPage.Register)
+                Spacer(Modifier.height(if (page == AuthPage.Register) 20.dp else 28.dp))
+                if (page != AuthPage.Register) {
+                    Box(Modifier.size(72.dp).clip(RoundedCornerShape(23.dp)).background(Mint), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Person, null, tint = Forest, modifier = Modifier.size(37.dp))
+                        Box(Modifier.align(Alignment.BottomEnd).size(27.dp).clip(CircleShape).background(Forest), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.HealthAndSafety, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                        }
                     }
+                    Text("Your health, always with you.", style = MaterialTheme.typography.headlineLarge, color = DeepTeal, modifier = Modifier.padding(top = 17.dp))
+                    Text("Sign in securely to access appointments, visits and medical records.", color = Muted, lineHeight = 21.sp, modifier = Modifier.padding(top = 7.dp, bottom = 22.dp))
                 }
-                Text("Your health, always with you.", style = MaterialTheme.typography.headlineLarge, color = DeepTeal, modifier = Modifier.padding(top = 17.dp))
-                Text("Sign in securely to access appointments, visits and medical records.", color = Muted, lineHeight = 21.sp, modifier = Modifier.padding(top = 7.dp, bottom = 22.dp))
                 Card(
                     shape = RoundedCornerShape(28.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = .96f)),
@@ -83,7 +78,7 @@ internal fun AuthScreen(viewModel: MainViewModel) {
                                 onLoginWithOtp = { open(AuthPage.LoginWithOtp) },
                                 onForgotEpin = { open(AuthPage.ForgotEpin) },
                             )
-                            AuthPage.Register -> RegistrationForm(viewModel)
+                            AuthPage.Register -> RegistrationFlow(viewModel)
                             AuthPage.LoginWithOtp -> LoginWithOtpForm(viewModel) { open(AuthPage.Login) }
                             AuthPage.ForgotEpin -> ForgotEpinForm(viewModel) { open(AuthPage.Login) }
                         }
@@ -114,7 +109,7 @@ private fun LoginForm(viewModel: MainViewModel, onLoginWithOtp: () -> Unit, onFo
     StatusMessage(viewModel.state.message)
     Button(
         onClick = { viewModel.login(phone, epin) },
-        enabled = phone.length == 10 && epin.length == 6,
+        enabled = phone.isValidIndianPhone() && epin.length == 6,
         modifier = Modifier.fillMaxWidth().height(56.dp),
         shape = RoundedCornerShape(16.dp),
     ) { Text("Open my dashboard", fontWeight = FontWeight.Bold) }
@@ -126,6 +121,7 @@ private fun LoginWithOtpForm(viewModel: MainViewModel, onBack: () -> Unit) {
     var requestId by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
     var demoOtp by remember { mutableStateOf<String?>(null) }
+    val otpLength = expectedOtpLength(demoOtp)
 
     Text("Login with OTP", style = MaterialTheme.typography.headlineSmall, color = DeepTeal)
     Text(
@@ -135,12 +131,12 @@ private fun LoginWithOtpForm(viewModel: MainViewModel, onBack: () -> Unit) {
     )
     FormField(phone, { if (requestId.isBlank()) phone = it.digits(10) }, "Registered mobile number", keyboardType = KeyboardType.Phone)
     if (requestId.isNotBlank()) {
-        FormField(otp, { otp = it.digits(6) }, "6-digit OTP", keyboardType = KeyboardType.Number)
+        FormField(otp, { otp = it.digits(otpLength) }, "$otpLength-digit OTP", keyboardType = KeyboardType.Number)
         demoOtp?.let { Text("Local demo OTP: $it", color = Forest, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp)) }
     }
     FlowButton(
         if (requestId.isBlank()) "Send OTP" else "Verify OTP and sign in",
-        phone.length == 10 && (requestId.isBlank() || otp.length == 6),
+        phone.isValidIndianPhone() && (requestId.isBlank() || otp.length == otpLength),
     ) {
         if (requestId.isBlank()) {
             viewModel.requestOtp(phone, "login") { requestId = it.id; demoOtp = it.demoOtp }
@@ -160,6 +156,7 @@ private fun ForgotEpinForm(viewModel: MainViewModel, onBack: () -> Unit) {
     var otp by remember { mutableStateOf("") }
     var verificationToken by remember { mutableStateOf("") }
     var demoOtp by remember { mutableStateOf<String?>(null) }
+    val otpLength = expectedOtpLength(demoOtp)
     var epin by remember { mutableStateOf("") }
     var confirmEpin by remember { mutableStateOf("") }
 
@@ -169,15 +166,15 @@ private fun ForgotEpinForm(viewModel: MainViewModel, onBack: () -> Unit) {
         1 -> {
             Text("We will send an OTP to your registered mobile number.", color = Muted, modifier = Modifier.padding(bottom = 14.dp))
             FormField(phone, { phone = it.digits(10) }, "Registered mobile number", keyboardType = KeyboardType.Phone)
-            FlowButton("Send OTP", phone.length == 10) {
+            FlowButton("Send OTP", phone.isValidIndianPhone()) {
                 viewModel.requestOtp(phone, "reset") { requestId = it.id; demoOtp = it.demoOtp; step = 2 }
             }
         }
         2 -> {
             Text("Enter the OTP sent to +91 $phone.", color = Muted, modifier = Modifier.padding(bottom = 14.dp))
-            FormField(otp, { otp = it.digits(6) }, "6-digit OTP", keyboardType = KeyboardType.Number)
+            FormField(otp, { otp = it.digits(otpLength) }, "$otpLength-digit OTP", keyboardType = KeyboardType.Number)
             demoOtp?.let { Text("Local demo OTP: $it", color = Forest, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp)) }
-            FlowButton("Verify OTP", otp.length == 6) {
+            FlowButton("Verify OTP", otp.length == otpLength) {
                 viewModel.verifyOtp(phone, requestId, otp, "reset") { verifiedRequestId, token ->
                     requestId = verifiedRequestId; verificationToken = token; step = 3
                 }
@@ -197,121 +194,16 @@ private fun ForgotEpinForm(viewModel: MainViewModel, onBack: () -> Unit) {
     TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back to sign in", color = Forest) }
 }
 
+
 @Composable
-private fun RegistrationForm(viewModel: MainViewModel) {
-    var step by remember { mutableIntStateOf(1) }
-    var phone by remember { mutableStateOf("") }
-    var requestId by remember { mutableStateOf("") }
-    var otp by remember { mutableStateOf("") }
-    var verificationToken by remember { mutableStateOf("") }
-    var demoOtp by remember { mutableStateOf<String?>(null) }
-    var aadhaar by remember { mutableStateOf("") }
-    var aadhaarVerified by remember { mutableStateOf(false) }
-    var name by remember { mutableStateOf("") }
-    var dob by remember { mutableStateOf("") }
-    var gender by remember { mutableStateOf("Female") }
-    var height by remember { mutableStateOf("") }
-    var weight by remember { mutableStateOf("") }
-    var bloodGroup by remember { mutableStateOf("Unknown") }
-    var conditions by remember { mutableStateOf<Set<String>>(emptySet()) }
-    var allergies by remember { mutableStateOf("") }
-    var epin by remember { mutableStateOf("") }
-    var confirmEpin by remember { mutableStateOf("") }
-
-    Text("Create your patient account", style = MaterialTheme.typography.headlineSmall, color = DeepTeal)
-    StepLabel(step)
-    when (step) {
-        1 -> {
-            SectionPrompt("Verify your mobile number")
-            FormField(phone, { phone = it.digits(10) }, "10-digit mobile number", keyboardType = KeyboardType.Phone)
-            if (requestId.isNotBlank()) {
-                FormField(otp, { otp = it.digits(6) }, "6-digit OTP", keyboardType = KeyboardType.Number)
-                demoOtp?.let { Text("Local demo OTP: $it", color = Forest, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp)) }
-            }
-            FlowButton(if (requestId.isBlank()) "Send OTP" else "Verify number", phone.length == 10 && (requestId.isBlank() || otp.length == 6)) {
-                if (requestId.isBlank()) viewModel.requestOtp(phone) { requestId = it.id; demoOtp = it.demoOtp }
-                else viewModel.verifyOtp(phone, requestId, otp) { verifiedRequestId, token ->
-                    requestId = verifiedRequestId; verificationToken = token; step = 2
-                }
-            }
-        }
-        2 -> {
-            SectionPrompt("Basic information")
-            FormField(name, { name = it }, "Full name")
-            FormField(dob, { dob = it }, "Date of birth (YYYY-MM-DD)")
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.padding(bottom = 10.dp)) {
-                listOf("Female", "Male", "Prefer not to say").forEach { option ->
-                    FilterChip(selected = gender == option, onClick = { gender = option }, label = { Text(option, fontSize = 11.sp) })
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                FormField(height, { height = it.digits(3) }, "Height cm", Modifier.weight(1f), keyboardType = KeyboardType.Number)
-                FormField(weight, { weight = it.digits(3) }, "Weight kg", Modifier.weight(1f), keyboardType = KeyboardType.Number)
-            }
-            Text("Aadhaar verification is required", color = DeepTeal, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 4.dp, bottom = 7.dp))
-            FormField(aadhaar, { aadhaar = it.digits(12); aadhaarVerified = false }, "12-digit Aadhaar number", keyboardType = KeyboardType.Number)
-            FlowButton(if (aadhaarVerified) "Aadhaar verified (demo)" else "Verify Aadhaar (demo)", aadhaar.length == 12 && !aadhaarVerified) { aadhaarVerified = true }
-            FlowButton(
-                "Continue",
-                name.trim().length > 1 && dob.isNotBlank() && (height.toIntOrNull() ?: 0) in 50..250 && (weight.toIntOrNull() ?: 0) in 2..350 && aadhaarVerified,
-            ) { step = 3 }
-        }
-        else -> {
-            SectionPrompt("Previous medical conditions")
-            Text("Select everything that applies. This stays in your patient profile and can be edited later.", color = Muted, fontSize = 13.sp, modifier = Modifier.padding(bottom = 9.dp))
-            Card(
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, Border),
-                modifier = Modifier.padding(bottom = 12.dp),
-            ) {
-                Column(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
-                    registrationMedicalConditions.forEach { condition ->
-                        Row(
-                            Modifier.fillMaxWidth().clickable { conditions = updateRegistrationConditions(conditions, condition) }.padding(horizontal = 8.dp, vertical = 1.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Checkbox(
-                                checked = condition in conditions,
-                                onCheckedChange = { conditions = updateRegistrationConditions(conditions, condition) },
-                                colors = CheckboxDefaults.colors(checkedColor = Forest),
-                            )
-                            Text(condition, color = DeepTeal, fontSize = 14.sp)
-                        }
-                    }
-                }
-            }
-            SectionPrompt("Set your E-PIN")
-            FormField(bloodGroup, { bloodGroup = it }, "Blood group (or Unknown)")
-            FormField(allergies, { allergies = it }, "Allergies (optional)")
-            FormField(epin, { epin = it.digits(6) }, "Create 6-digit E-PIN", password = true, keyboardType = KeyboardType.NumberPassword)
-            FormField(confirmEpin, { confirmEpin = it.digits(6) }, "Confirm E-PIN", password = true, keyboardType = KeyboardType.NumberPassword)
-            PinMismatch(epin, confirmEpin)
-            FlowButton("Create account and continue", conditions.isNotEmpty() && epin.length == 6 && epin == confirmEpin) {
-                val knownConditions = conditions.map {
-                    if (it == "None of these") "none" else it.lowercase().replace(' ', '_')
-                }
-                viewModel.register(
-                    phone, requestId, verificationToken,
-                    RegistrationDraft(
-                        "aadhaar", aadhaar, name, dob, gender,
-                        height.toDoubleOrNull() ?: 0.0, weight.toDoubleOrNull() ?: 0.0,
-                        bloodGroup.ifBlank { "Unknown" }, knownConditions.ifEmpty { listOf("none") }, allergies, epin,
-                    ),
-                )
-            }
-        }
-    }
-    if (step > 1) TextButton({ step-- }) { Text("Back", color = Forest) }
-    StatusMessage(viewModel.state.message)
-}
-
-@Composable private fun StepLabel(step: Int) = Text("STEP $step OF 3", color = Forest, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp, modifier = Modifier.padding(top = 7.dp, bottom = 14.dp))
-@Composable private fun SectionPrompt(text: String) = Text(text, color = DeepTeal, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
+private fun StepLabel(step: Int) = Text("STEP $step OF 3", color = Forest, fontSize = 11.sp,
+    fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp, modifier = Modifier.padding(top = 7.dp, bottom = 14.dp))
 
 @Composable
 private fun PinMismatch(epin: String, confirmation: String) {
-    if (confirmation.isNotEmpty() && epin != confirmation) Text("E-PINs do not match", color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+    if (confirmation.isNotEmpty() && epin != confirmation) {
+        Text("E-PINs do not match", color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+    }
 }
 
 @Composable
@@ -353,14 +245,11 @@ private fun FormField(
     )
 }
 
-private fun String.digits(limit: Int) = filter(Char::isDigit).take(limit)
+private fun expectedOtpLength(demoOtp: String?) = demoOtp?.length?.takeIf { it in 4..6 } ?: 4
 
-private fun updateRegistrationConditions(selected: Set<String>, condition: String): Set<String> = when {
-    condition == "None of these" && condition !in selected -> setOf("None of these")
-    condition == "None of these" -> emptySet()
-    condition in selected -> selected - condition
-    else -> (selected - "None of these") + condition
-}
+internal fun String.isValidIndianPhone() = matches(Regex("[6-9][0-9]{9}"))
+
+private fun String.digits(limit: Int) = filter(Char::isDigit).take(limit)
 
 @Composable
 internal fun StatusMessage(message: String?) {

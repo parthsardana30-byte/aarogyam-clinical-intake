@@ -6,6 +6,8 @@ tmp/
 .DS_Store
 Thumbs.db
 node_modules/
+__pycache__/
+*.py[cod]
 data/authorized-devices.json
 data/authorized-devices.json.tmp
 data/patients.json

@@ -71,7 +71,8 @@ before(async () => {
   dataDir = await mkdtemp(join(tmpdir(), 'aarogyam-uhid-test-'));
   server = spawn(process.execPath, ['server.js'], {
     cwd: process.cwd(),
-    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', DATA_DIR: dataDir, OTP_DEMO_MODE: '1' },
+    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', DATA_DIR: dataDir, OTP_DEMO_MODE: '1',
+      MOBILE_INTAKE_STATIC_QR_ENABLED: '1', MOBILE_INTAKE_STATIC_HOSPITAL_ID: 'civil-ahmedabad' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   await waitForServer();
@@ -102,6 +103,26 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.equal(staffB.response.status, 201);
   const staffCookieA = staffA.response.headers.get('set-cookie').split(';')[0];
   const staffCookieB = staffB.response.headers.get('set-cookie').split(';')[0];
+  const availabilityDoctorLogin = await json('/api/doctor-login', {
+    method: 'POST', body: JSON.stringify({ doctorId: 'CHA-GEN-1001', password: 'Aarogyam@2026' }),
+  });
+  assert.equal(availabilityDoctorLogin.response.status, 200);
+  const availabilityDoctorCookie = availabilityDoctorLogin.response.headers.get('set-cookie').split(';')[0];
+  const initialAvailableDoctors = await json('/api/staff-doctor-availability?staffId=STAFF-A', { headers: { Cookie: staffCookieA } });
+  assert.equal(initialAvailableDoctors.response.status, 200);
+  assert.ok(initialAvailableDoctors.payload.doctors.some(doctor => doctor.id === 'CHA-GEN-1001'));
+  const doctorInactive = await json('/api/doctor-availability', {
+    method: 'POST', headers: { Cookie: availabilityDoctorCookie }, body: JSON.stringify({ doctorId: 'CHA-GEN-1001', status: 'inactive' }),
+  });
+  assert.equal(doctorInactive.response.status, 200);
+  const unavailableDoctors = await json('/api/staff-doctor-availability?staffId=STAFF-A', { headers: { Cookie: staffCookieA } });
+  assert.ok(!unavailableDoctors.payload.doctors.some(doctor => doctor.id === 'CHA-GEN-1001'));
+  const doctorActive = await json('/api/doctor-availability', {
+    method: 'POST', headers: { Cookie: availabilityDoctorCookie }, body: JSON.stringify({ doctorId: 'CHA-GEN-1001', status: 'active' }),
+  });
+  assert.equal(doctorActive.response.status, 200);
+  const availableDoctors = await json('/api/staff-doctor-availability?staffId=STAFF-A', { headers: { Cookie: staffCookieA } });
+  assert.ok(availableDoctors.payload.doctors.some(doctor => doctor.id === 'CHA-GEN-1001'));
   const wrongStaffId = await json('/api/staff-login', {
     method: 'POST', body: JSON.stringify({ employeeId: 'NOT-STAFF-A', password: 'Password@1' }),
   });
@@ -127,13 +148,55 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   });
   assert.equal(kioskStaff.response.status, 403);
 
+  const qrWithoutHospital = await json('/api/mobile-intake/qr');
+  assert.equal(qrWithoutHospital.response.status, 403);
+  const hospitalQr = await json('/api/mobile-intake/qr', { headers: { Cookie: cookieA } });
+  assert.equal(hospitalQr.response.status, 200);
+  assert.match(hospitalQr.payload.qrText, /^arogyam:\/\/intake\?code=/);
+  const qrCode = new URL(hospitalQr.payload.qrText).searchParams.get('code');
+  const anonymousClaim = await json('/api/mobile-intake/redeem', {
+    method: 'POST', body: JSON.stringify({ patientId: patient.id, code: qrCode }),
+  });
+  assert.equal(anonymousClaim.response.status, 401);
+  const mobileHeaders = { Authorization: `Bearer ${patientLogin.payload.sessionToken}` };
+  const qrClaim = await json('/api/mobile-intake/redeem', {
+    method: 'POST', headers: mobileHeaders, body: JSON.stringify({ patientId: patient.id, code: qrCode }),
+  });
+  assert.equal(qrClaim.response.status, 200);
+  const repeatClaim = await json('/api/mobile-intake/redeem', {
+    method: 'POST', headers: mobileHeaders, body: JSON.stringify({ patientId: patient.id, code: qrCode }),
+  });
+  assert.equal(repeatClaim.response.status, 410);
+  const mobileIntake = await json('/api/patient-intakes', {
+    method: 'POST', headers: { ...mobileHeaders, 'X-Aarogyam-Intake-Grant': qrClaim.payload.grant },
+    body: JSON.stringify({ patientId: patient.id, conversationId: 'mobile-voice-a-1', language: 'English', summary: 'Patient reports cough for two days.' }),
+  });
+  assert.equal(mobileIntake.response.status, 201);
+  assert.equal(mobileIntake.payload.intake.intakeSource, 'app-qr');
+  assert.match(mobileIntake.payload.intake.uhid, /^CHA-\d{6}$/);
+  assert.equal(mobileIntake.payload.intake.uhidCreated, true);
+
+  const staticClaim = await json('/api/mobile-intake/redeem', {
+    method: 'POST', headers: mobileHeaders,
+    body: JSON.stringify({ patientId: patient.id, code: 'AROGYAM-AI-CHECKUP-V1' }),
+  });
+  assert.equal(staticClaim.response.status, 200);
+  const staticIntake = await json('/api/patient-intakes', {
+    method: 'POST', headers: { ...mobileHeaders, 'X-Aarogyam-Intake-Grant': staticClaim.payload.grant },
+    body: JSON.stringify({ patientId: patient.id, conversationId: 'static-mobile-voice-a-1', language: 'English', summary: 'Patient reports a headache.' }),
+  });
+  assert.equal(staticIntake.response.status, 201);
+  assert.equal(staticIntake.payload.intake.intakeSource, 'app-qr');
+  assert.equal(staticIntake.payload.intake.uhid, mobileIntake.payload.intake.uhid);
+
   const firstA = await json('/api/patient-intakes', {
     method: 'POST', headers: { Cookie: cookieA, Authorization: `Bearer ${patient.sessionToken}` },
     body: JSON.stringify({ patientId: patient.id, conversationId: 'conversation-a-1', language: 'English', summary: 'Headache for two days. No fever reported.' }),
   });
   assert.equal(firstA.response.status, 201);
   assert.match(firstA.payload.intake.uhid, /^CHA-\d{6}$/);
-  assert.equal(firstA.payload.intake.uhidCreated, true);
+  assert.equal(firstA.payload.intake.uhidCreated, false);
+  assert.equal(firstA.payload.intake.uhid, mobileIntake.payload.intake.uhid);
   const intakeWithoutPatientLogin = await json('/api/patient-intakes', {
     method: 'POST', headers: { Cookie: cookieA },
     body: JSON.stringify({ patientId: patient.id, conversationId: 'unauthorized', summary: 'Should not be saved' }),
@@ -193,12 +256,37 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   const staffDocument = staffDocumentDashboard.payload.documents.find(item => item.id === documentUpload.payload.file.id);
   assert.equal(staffDocument?.source, 'hospital_staff');
   assert.equal(staffDocument?.category, 'lab');
+  assert.equal(staffDocument?.classificationSource, 'manual');
+  assert.ok(staffDocument?.title);
   assert.ok(staffDocument?.hospitalName);
   const staffDocumentFile = await fetch(origin + staffDocument.previewUrl, {
     headers: { Authorization: `Bearer ${patient.sessionToken}` },
   });
   assert.equal(staffDocumentFile.status, 200);
   assert.equal(staffDocumentFile.headers.get('content-type'), 'image/png');
+
+  const automaticSession = await json('/api/document-upload-sessions', { method: 'POST', body: '{}' });
+  const automaticUpload = await json(`/api/document-upload-sessions/${automaticSession.payload.id}/files`, {
+    method: 'POST', body: JSON.stringify({
+      token: automaticSession.payload.token, name: 'renal-lab-panel.png', type: 'image/png',
+      data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    }),
+  });
+  const automaticCompletion = await json('/api/staff-patient-documents', {
+    method: 'POST', headers: { Cookie: staffCookieA }, body: JSON.stringify({
+      staffId: 'STAFF-A', patientId: patient.id, patientName: patient.fullName,
+      intakeId: secondA.payload.intake.id, documentCategory: 'auto',
+      documentSessionId: automaticSession.payload.id, documentSessionToken: automaticSession.payload.token,
+    }),
+  });
+  assert.equal(automaticCompletion.response.status, 200);
+  const automaticDashboard = await json(`/api/patients/${patient.id}/dashboard`, {
+    headers: { Authorization: `Bearer ${patient.sessionToken}` },
+  });
+  const automaticDocument = automaticDashboard.payload.documents.find(item => item.id === automaticUpload.payload.file.id);
+  assert.equal(automaticDocument?.category, 'lab');
+  assert.equal(automaticDocument?.classificationSource, 'filename');
+  assert.equal(automaticDocument?.title, 'renal-lab-panel');
 
   const queueA = await json('/api/staff-patients?staffId=STAFF-A', { headers: { Cookie: staffCookieA } });
   const queueB = await json('/api/staff-patients?staffId=STAFF-B', { headers: { Cookie: staffCookieB } });
@@ -254,10 +342,16 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.equal(doctor.response.status, 200);
   assert.equal(doctor.payload.patients[0].uhid, firstA.payload.intake.uhid);
   assert.equal(doctor.payload.patients[0].vitals.oxygenSaturation, 98);
-  assert.equal(doctor.payload.patients[0].documents[0].name, 'previous-prescription.png');
+  assert.equal(doctor.payload.patients[0].documents[0].name, 'renal-lab-panel.png');
   assert.equal(doctor.payload.patients.some(record => record.uhid === firstB.payload.intake.uhid), false);
   const anonymousDoctorQueue = await json('/api/doctor-patients?doctorId=CHA-GEN-1001');
   assert.equal(anonymousDoctorQueue.response.status, 401);
+  const generalDoctorAyurvedaAssessment = await json('/api/doctor-ayurveda-assessment', {
+    method: 'POST', headers: { Cookie: doctorCookie }, body: JSON.stringify({
+      doctorId: 'CHA-GEN-1001', patientId: patient.id, intakeId: 'missing-intake',
+    }),
+  });
+  assert.equal(generalDoctorAyurvedaAssessment.response.status, 404);
 
   const gurugramLogin = await json('/api/doctor-login', {
     method: 'POST', body: JSON.stringify({ doctorId: 'CHG-DEMO-1000', password: 'Aarogyam@2026' }),
@@ -280,7 +374,7 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.equal(clinicalAnswer.response.status, 200);
   assert.match(clinicalAnswer.payload.answer, /Current intake/);
   assert.equal(clinicalAnswer.payload.groundedIn.hasVitals, true);
-  assert.equal(clinicalAnswer.payload.groundedIn.documentCount, 1);
+  assert.equal(clinicalAnswer.payload.groundedIn.documentCount, 2);
 
   const nonMedicalQuestion = await json('/api/doctor-clinical-assistant', {
     method: 'POST', headers: { Cookie: doctorCookie }, body: JSON.stringify({
@@ -313,7 +407,8 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   });
   assert.equal(dashboard.response.status, 200);
   assert.equal(dashboard.payload.summary.consultationCount, 1);
-  assert.equal(dashboard.payload.visits.length, 3);
+  assert.equal(dashboard.payload.visits.length, 5);
+  assert.equal(dashboard.payload.visits.some(item => item.id === mobileIntake.payload.intake.id), true);
   const ahmedabadVisit = dashboard.payload.visits.find(item => item.id === secondA.payload.intake.id);
   assert.equal(ahmedabadVisit.summary, 'Doctor-reviewed headache consultation summary.');
   assert.equal(ahmedabadVisit.evaluationStatus, 'completed');
@@ -324,6 +419,8 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   const prescriptionDocument = dashboard.payload.documents.find(item => item.name.includes(prescription.payload.prescriptionId));
   assert.equal(prescriptionDocument.type, 'application/pdf');
   assert.equal(prescriptionDocument.category, 'prescription');
+  assert.equal(prescriptionDocument.classificationSource, 'system');
+  assert.match(prescriptionDocument.title, /^Prescription - /);
   const pdf = await fetch(`${origin}${prescriptionDocument.previewUrl}`, {
     headers: { Authorization: `Bearer ${patientLogin.payload.sessionToken}` },
   });

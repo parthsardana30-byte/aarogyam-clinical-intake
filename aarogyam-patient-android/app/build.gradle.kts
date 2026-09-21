@@ -1,9 +1,21 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
 fun buildConfigString(value: String) = "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+
+val localSecrets = Properties().apply {
+    val secretsFile = rootProject.file("local-secrets.properties")
+    if (secretsFile.isFile) secretsFile.inputStream().use { load(it) }
+}
+fun mobileWidgetSetting(name: String) = providers.gradleProperty(name)
+    .orElse(providers.environmentVariable(name))
+    .getOrElse(localSecrets.getProperty(name, ""))
+val mobileWidgetId = mobileWidgetSetting("MSG91_MOBILE_WIDGET_ID")
+val mobileWidgetToken = mobileWidgetSetting("MSG91_MOBILE_WIDGET_TOKEN")
 
 val defaultApiBaseUrl = "https://aarogyam.129-121-127-58.sslip.io"
 val debugApiBaseUrl = providers.gradleProperty("AAROGYAM_DEBUG_API_BASE_URL")
@@ -23,6 +35,9 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0.0"
+
+        buildConfigField("String", "MSG91_MOBILE_WIDGET_ID", buildConfigString(mobileWidgetId))
+        buildConfigField("String", "MSG91_MOBILE_WIDGET_TOKEN", buildConfigString(mobileWidgetToken))
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -5,11 +5,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
 class ApiException(message: String, val status: Int) : Exception(message)
+
+data class MobileIntakeGrant(val token: String, val hospitalName: String, val expiresAt: String)
 
 class ApiClient(private val baseUrl: String) {
     private suspend fun request(
@@ -17,6 +20,7 @@ class ApiClient(private val baseUrl: String) {
         path: String,
         token: String? = null,
         body: JSONObject? = null,
+        cookie: String? = null,
     ): JSONObject = withContext(Dispatchers.IO) {
         val connection = URL(baseUrl.trimEnd('/') + path).openConnection() as HttpURLConnection
         try {
@@ -25,6 +29,7 @@ class ApiClient(private val baseUrl: String) {
             connection.readTimeout = 20_000
             connection.setRequestProperty("Accept", "application/json")
             if (token != null) connection.setRequestProperty("Authorization", "Bearer $token")
+            if (cookie != null) connection.setRequestProperty("Cookie", cookie)
             if (body != null) {
                 connection.doOutput = true
                 connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
@@ -33,8 +38,17 @@ class ApiClient(private val baseUrl: String) {
             val status = connection.responseCode
             val stream = if (status in 200..299) connection.inputStream else connection.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-            val json = if (text.isBlank()) JSONObject() else JSONObject(text)
-            if (status !in 200..299) throw ApiException(json.optString("error", "Request failed"), status)
+            val json = if (text.isBlank()) JSONObject() else runCatching { JSONObject(text) }.getOrDefault(JSONObject())
+            if (status !in 200..299) {
+                val message = json.optString("error").ifBlank {
+                    when (status) {
+                        413 -> "The server rejected this file as too large. Check the VPS upload limit."
+                        404, 405 -> "This feature is not available on the VPS yet."
+                        else -> "Request failed (HTTP $status)"
+                    }
+                }
+                throw ApiException(message, status)
+            }
             json
         } finally {
             connection.disconnect()
@@ -46,6 +60,25 @@ class ApiClient(private val baseUrl: String) {
             .put("phone", phone.filter(Char::isDigit))
             .put("epin", epin.filter(Char::isDigit)))
         return json.toAuthSession()
+    }
+
+    suspend fun redeemHospitalQr(session: AuthSession, code: String): MobileIntakeGrant {
+        val json = try {
+            request("POST", "/api/mobile-intake/redeem", session.token,
+                JSONObject().put("patientId", session.patient.id).put("code", code))
+        } catch (error: ApiException) {
+            if (error.status == 404 || error.status == 405) {
+                throw ApiException("AI check-up has not been enabled on the hospital server yet.", error.status)
+            }
+            throw error
+        }
+        return MobileIntakeGrant(json.getString("grant"), json.optString("hospitalName", "Hospital"), json.getString("expiresAt"))
+    }
+
+    suspend fun isAuthorizedPatientDevice(cookie: String): Boolean {
+        if (!cookie.split(';').any { it.trim().startsWith("arog_device=") }) return false
+        val json = request("GET", "/api/device-session", cookie = cookie)
+        return json.optBoolean("authorized") && json.optString("allowedRole") == "patient"
     }
 
     suspend fun loginWithVerifiedOtp(phone: String, requestId: String, verificationToken: String): AuthSession {
@@ -63,8 +96,16 @@ class ApiClient(private val baseUrl: String) {
         return OtpRequest(json.getString("id"), json.optString("demoOtp").ifBlank { null })
     }
 
+    suspend fun checkRegistrationAvailability(phone: String) {
+        request("POST", "/api/patient-registration-availability", body = JSONObject()
+            .put("phone", phone.filter(Char::isDigit)))
+    }
+
     suspend fun otpProviderConfig(): OtpProviderConfig {
-        val json = request("GET", "/api/signup-otp/config")
+        val json = request("GET", "/api/signup-otp/config?client=android")
+        if (json.optString("client") != "android") {
+            throw ApiException("The VPS backend needs the Android OTP update before mobile signup can work", 503)
+        }
         return OtpProviderConfig(
             provider = json.optString("provider", "server"),
             widgetId = json.optString("widgetId"),
@@ -141,6 +182,7 @@ class ApiClient(private val baseUrl: String) {
                 identityLast4 = identity.getString("last4"),
                 abhaLinkStatus = patient.getString("abhaLinkStatus"),
                 abhaLast4 = patient.optString("abhaLast4"),
+                abhaNumber = patient.optString("abhaNumber"),
             ),
             consultationCount = summary.getInt("consultationCount"),
             documentCount = summary.getInt("documentCount"),
@@ -210,10 +252,52 @@ class ApiClient(private val baseUrl: String) {
     }
 
     suspend fun uploadDocument(session: AuthSession, file: File, mimeType: String, displayName: String): HealthDocument {
-        val encoded = withContext(Dispatchers.IO) { Base64.encodeToString(file.readBytes(), Base64.NO_WRAP) }
+        val encoded = withContext(Dispatchers.IO) {
+            if (file.length() == 0L || file.length() > 8L * 1024 * 1024) {
+                throw ApiException("Choose a file smaller than 8 MB", 400)
+            }
+            Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)
+        }
         val json = request("POST", "/api/patients/${session.patient.id}/documents", session.token,
             JSONObject().put("name", displayName).put("type", mimeType).put("data", encoded))
         return parseDocument(json.getJSONObject("document"))
+    }
+
+    suspend fun fetchDocument(session: AuthSession, documentId: String): ByteArray = withContext(Dispatchers.IO) {
+        val path = "/api/patients/${session.patient.id}/documents/$documentId"
+        val connection = URL(baseUrl.trimEnd('/') + path).openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 15_000
+            connection.readTimeout = 30_000
+            connection.setRequestProperty("Authorization", "Bearer ${session.token}")
+            connection.setRequestProperty("Accept", "application/pdf,image/jpeg,image/png,image/webp")
+            val status = connection.responseCode
+            if (status !in 200..299) {
+                val error = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                val message = runCatching { JSONObject(error).optString("error") }.getOrNull()
+                throw ApiException(message?.ifBlank { null } ?: "Could not open this document", status)
+            }
+            val limit = 8 * 1024 * 1024
+            if (connection.contentLengthLong > limit) throw ApiException("Document is too large to open", 413)
+            val output = ByteArrayOutputStream()
+            connection.inputStream.use { input ->
+                val buffer = ByteArray(8192)
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    if (output.size() + count > limit) throw ApiException("Document is too large to open", 413)
+                    output.write(buffer, 0, count)
+                }
+            }
+            output.toByteArray()
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    suspend fun deleteDocument(session: AuthSession, documentId: String) {
+        request("DELETE", "/api/patients/${session.patient.id}/documents/$documentId", session.token)
     }
 
     fun absoluteUrl(path: String) = baseUrl.trimEnd('/') + path
@@ -235,6 +319,7 @@ class ApiClient(private val baseUrl: String) {
         intakeId = item.nullableString("intakeId"),
         analysisStatus = item.optString("analysisStatus", "not-started"),
         aiSummary = item.nullableString("aiSummary"),
+        deletable = item.optBoolean("deletable"),
     )
 }
 

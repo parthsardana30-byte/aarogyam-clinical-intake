@@ -14,15 +14,24 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,12 +56,27 @@ import java.time.LocalDate
 internal fun CareScreen(
     viewModel: MainViewModel,
     onAddAppointment: () -> Unit,
+    onUploadRecord: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val language = viewModel.state.companion.language
+    var pendingDelete by remember { mutableStateOf<AppointmentItem?>(null) }
     val appointments = viewModel.state.companion.appointments.filter { appointment ->
         val date = appointment.dateIso?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
         date == null || !date.isBefore(LocalDate.now())
+    }
+
+    pendingDelete?.let { appointment ->
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text(l10n(language, "Delete this reminder?", "यह रिमाइंडर हटाएं?")) },
+            text = { Text(appointment.location) },
+            confirmButton = { TextButton(onClick = {
+                viewModel.deleteAppointment(appointment.id)
+                pendingDelete = null
+            }) { Text(l10n(language, "Delete", "हटाएं"), color = Color(0xFFB42318)) } },
+            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text(l10n(language, "Cancel", "रद्द करें")) } },
+        )
     }
 
     AarogyamBackdrop(modifier.fillMaxSize()) {
@@ -74,6 +98,12 @@ internal fun CareScreen(
                     Text(l10n(language, "Add appointment", "अपॉइंटमेंट जोड़ें"), modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)
                 }
             }
+            item {
+                OutlinedButton(onClick = onUploadRecord, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                    Icon(Icons.Default.UploadFile, null)
+                    Text(l10n(language, "Upload medical record", "मेडिकल रिकॉर्ड अपलोड करें"), modifier = Modifier.padding(start = 8.dp))
+                }
+            }
             if (appointments.isEmpty()) {
                 item {
                     EmptyCard(
@@ -83,7 +113,9 @@ internal fun CareScreen(
                 }
             } else {
                 items(appointments, key = { it.id }) { appointment ->
-                    AppointmentReminderCard(appointment, language) { viewModel.toggleAppointmentReminder(appointment.id) }
+                    AppointmentReminderCard(appointment, language,
+                        onReminder = { viewModel.toggleAppointmentReminder(appointment.id) },
+                        onDelete = { pendingDelete = appointment })
                 }
             }
         }
@@ -91,7 +123,7 @@ internal fun CareScreen(
 }
 
 @Composable
-private fun AppointmentReminderCard(item: AppointmentItem, language: AppLanguage, onReminder: () -> Unit) {
+private fun AppointmentReminderCard(item: AppointmentItem, language: AppLanguage, onReminder: () -> Unit, onDelete: () -> Unit) {
     val simpleHospitalReminder = item.doctor == "Hospital appointment"
     Card(
         shape = RoundedCornerShape(22.dp),
@@ -116,12 +148,16 @@ private fun AppointmentReminderCard(item: AppointmentItem, language: AppLanguage
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.NotificationsActive, null, tint = Forest, modifier = Modifier.size(19.dp))
                 Text(
-                    l10n(language, "Remind me one day before", "एक दिन पहले याद दिलाएं"),
+                    l10n(language, "Show on Home", "होम पर दिखाएं"),
                     color = DeepTeal,
                     modifier = Modifier.weight(1f).padding(start = 8.dp),
                     fontSize = 13.sp,
                 )
                 Switch(checked = item.reminderEnabled, onCheckedChange = { onReminder() })
+            }
+            TextButton(onClick = onDelete, modifier = Modifier.align(Alignment.End)) {
+                Icon(Icons.Default.DeleteOutline, null, tint = Color(0xFFB42318), modifier = Modifier.size(18.dp))
+                Text(l10n(language, "Delete reminder", "रिमाइंडर हटाएं"), color = Color(0xFFB42318), modifier = Modifier.padding(start = 5.dp))
             }
         }
     }

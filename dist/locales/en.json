@@ -11,7 +11,7 @@
   "common.back": "Back", "common.continue": "Continue", "common.send": "Send",
   "patient.voice.ready": "Arogyam is ready", "patient.voice.question": "What health concern would you like to discuss today?", "patient.voice.connecting": "Connecting microphone…", "patient.voice.end": "End check-up",
   "patient.chat.title": "Live chat", "patient.chat.subtitle": "Voice transcript appears here", "patient.chat.placeholder": "Type a message…",
-  "records.title": "My records", "records.subtitle": "Your consultations, care notes and shared documents in one place.", "records.consultations": "Consultations", "records.documents": "Documents", "records.followup": "Hospitals visited",
+  "records.title": "My record", "records.subtitle": "Your consultations, care notes and shared documents in one place.", "records.consultations": "Consultations", "records.documents": "Documents", "records.followup": "Hospitals visited",
   "records.filter.all": "All records", "records.filter.documents": "All documents", "records.filter.visits": "Consultations", "records.filter.labs": "Lab reports", "records.filter.prescriptions": "Prescriptions", "records.search": "Search visits, doctors or concerns", "records.empty": "No matching records found.",
   "records.clinician": "Clinician", "records.summary": "Visit summary", "records.plan": "Visit details",
   "doctor.nav.records": "Patient records", "doctor.nav.previous": "Previous patients", "doctor.nav.history": "Patient history", "doctor.chiefConcern": "Chief concern", "doctor.context": "Relevant context", "doctor.ayurvedic": "Ayurvedic intake", "doctor.flags": "Review flags",
