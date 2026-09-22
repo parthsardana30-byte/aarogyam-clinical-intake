@@ -1,4 +1,8 @@
 {
+  "English": {
+    "login/patient": "en/01_patient_login_en.mp3",
+    "patient/start": "en/02_patient_dashboard_en.mp3"
+  },
   "Hindi": {
     "roles": "hi/01_roles_hi.mp3",
     "login/patient": "hi/02_patient_login_hi.mp3",
