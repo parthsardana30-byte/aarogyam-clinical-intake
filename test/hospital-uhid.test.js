@@ -67,7 +67,9 @@ async function authorizeDevice(staffId, name, staffCookie) {
   const deviceSession = await json('/api/device-session', { headers: { Cookie: cookie } });
   assert.equal(deviceSession.response.status, 200);
   assert.equal(deviceSession.payload.authorized, true);
-  const retryStatus = await fetch(`${origin}/api/device-enrollments/${invitation.payload.id}/status?requestToken=${encodeURIComponent(request.payload.requestToken)}`);
+  const retryStatus = await fetch(`${origin}/api/device-enrollments/${invitation.payload.id}/status?requestToken=${encodeURIComponent(request.payload.requestToken)}`, {
+    headers: { Cookie: cookie },
+  });
   assert.equal(retryStatus.status, 200);
   assert.equal((await retryStatus.json()).status, 'authorized');
   return cookie;

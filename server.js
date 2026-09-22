@@ -3509,7 +3509,8 @@ const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
     const kioskRestricted = /^\/api\/(?:doctor(?:-|\/)|staff(?:-|\/)|patients\/[^/]+\/(?:dashboard|link-abha|link-aadhaar|access-history|documents(?:\/|$))|patient-intakes\/latest$|devices(?:\/|$)|device-enrollments(?:\/|$))/.test(url.pathname);
-    if (kioskRestricted && authorizedDeviceForRequest(request)) {
+    const kioskEnrollmentHandoff = /^\/api\/device-enrollments\/[0-9a-f-]+\/(?:request|status)$/i.test(url.pathname);
+    if (kioskRestricted && !kioskEnrollmentHandoff && authorizedDeviceForRequest(request)) {
       return sendJson(response, 403, { error: 'This device is for patient intake only' });
     }
     if (request.method === 'GET' && url.pathname === '/api/session') return currentSession(request, response);
