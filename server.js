@@ -11,6 +11,7 @@ const publicRoot = resolve('dist');
 const dataRoot = resolve(process.env.DATA_DIR || 'data');
 const voiceGuideCacheRoot = join(dataRoot, 'voice-guide-cache');
 const voiceGuideScripts = JSON.parse(await readFile(join(publicRoot, 'voice-guide-scripts.json'), 'utf8'));
+const prerecordedVoiceGuides = JSON.parse(await readFile(join(publicRoot, 'voice-guides', 'manifest.json'), 'utf8'));
 const devicesFile = join(dataRoot, 'authorized-devices.json');
 const patientsDbFile = join(dataRoot, 'patients.sqlite');
 const patientUploadsRoot = join(dataRoot, 'patient-uploads');
@@ -1046,6 +1047,22 @@ async function serveVoiceGuide(request, response, url) {
   const text = voiceGuideScripts[language]?.[key];
   if (!text) return sendJson(response, 404, { error: 'Voice guide was not found' });
 
+  const prerecordedFile = prerecordedVoiceGuides[language]?.[key];
+  if (prerecordedFile) {
+    try {
+      const audio = await readFile(join(publicRoot, 'voice-guides', prerecordedFile));
+      response.writeHead(200, {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': audio.length,
+        'Cache-Control': 'public, max-age=3600'
+      });
+      response.end(audio);
+      return;
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      console.error(`Prerecorded voice guide is missing: ${prerecordedFile}`);
+    }
+  }
   const apiKey = String(process.env.ELEVENLABS_API_KEY || '').trim();
   if (!apiKey) return sendJson(response, 503, { configured: false, error: 'High-quality narration is not configured' });
   const voiceId = await resolveVoiceGuideVoiceId(language, apiKey);

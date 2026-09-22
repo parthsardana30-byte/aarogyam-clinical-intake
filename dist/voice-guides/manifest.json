@@ -1,0 +1,11 @@
+{
+  "Hindi": {
+    "roles": "hi/01_roles_hi.mp3",
+    "login/patient": "hi/02_patient_login_hi.mp3",
+    "patient/start": "hi/03_patient_home_hi.mp3",
+    "patient/language": "hi/04_ai_screening_hi.mp3",
+    "patient/intake-summary": "hi/05_intake_complete_hi.mp3",
+    "doctor/previous": "hi/06_doctor_workspace_hi.mp3",
+    "staff/patients": "hi/07_staff_dashboard_hi.mp3"
+  }
+}
