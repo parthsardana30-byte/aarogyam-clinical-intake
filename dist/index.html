@@ -4661,18 +4661,10 @@
         summaryAction.type = 'button'; summaryAction.className = 'patient-summary-action';
         summaryAction.dataset.patientSummaries = patient.id;
         summaryAction.textContent = `View ${summaryCount} AI summar${summaryCount === 1 ? 'y' : 'ies'}`;
-        summaryAction.disabled = Boolean(patient.requiresClaim);
         const encounterMeta = document.createElement('small');
         encounterMeta.className = 'patient-context-line';
         encounterMeta.textContent = `${patient.encounterNumber || 'Encounter pending'} · ${String(patient.intakeSource || 'authorized-device').replace('-', ' ')}`;
         identity.append(name, encounterMeta, summaryAction);
-        if (patient.requiresClaim) {
-          const claimButton = document.createElement('button');
-          claimButton.type = 'button'; claimButton.className = 'patient-row-action';
-          claimButton.dataset.staffClaim = patient.latestIntakeId || '';
-          claimButton.textContent = 'Accept AI screening';
-          identity.append(claimButton);
-        }
         const uhid = document.createElement('td');
         const uhidValue = document.createElement('strong'); uhidValue.textContent = patient.uhid;
         uhid.append(uhidValue);
@@ -4682,7 +4674,6 @@
         documentButton.className = 'patient-row-action'; documentButton.type = 'button';
         documentButton.dataset.patientDocument = patient.id; documentButton.dataset.patientName = patient.fullName;
         documentButton.dataset.patientUhid = patient.uhid; documentButton.dataset.patientIntake = patient.latestIntakeId || '';
-        documentButton.disabled = Boolean(patient.requiresClaim);
         documentButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         documentButton.append(documentActionLabel);
         const documentCount = document.createElement('small');
@@ -4694,7 +4685,6 @@
         vitalsButton.className = 'patient-row-action vitals'; vitalsButton.type = 'button';
         vitalsButton.dataset.patientVitals = patient.id; vitalsButton.dataset.patientName = patient.fullName;
         vitalsButton.dataset.patientUhid = patient.uhid; vitalsButton.dataset.patientIntake = patient.latestIntakeId || '';
-        vitalsButton.disabled = Boolean(patient.requiresClaim);
         vitalsButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         vitalsButton.append(vitalsActionLabel);
         const vitalsMeta = document.createElement('small');
@@ -4707,12 +4697,12 @@
         const completeToggle = document.createElement('button'); completeToggle.type = 'button'; completeToggle.className = 'staff-complete-toggle';
         completeToggle.dataset.staffCompleteToggle = patient.latestIntakeId || ''; completeToggle.setAttribute('aria-expanded', 'false');
         completeToggle.setAttribute('aria-label', `Complete staff preparation for ${patient.fullName}`);
-        completeToggle.disabled = Boolean(patient.requiresClaim) || !patient.latestVitals;
+        completeToggle.disabled = !patient.latestVitals;
         completeToggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         const confirmation = document.createElement('span'); confirmation.className = 'staff-complete-confirm'; confirmation.hidden = true;
         confirmation.dataset.staffCompleteConfirmation = patient.latestIntakeId || '';
         const confirm = document.createElement('button'); confirm.type = 'button'; confirm.dataset.staffCompleteConfirm = patient.latestIntakeId || ''; confirm.textContent = 'Confirm';
-        const hint = document.createElement('small'); hint.textContent = patient.requiresClaim ? 'Accept first' : patient.latestVitals ? 'Ready for doctor' : 'Vitals required';
+        const hint = document.createElement('small'); hint.textContent = patient.latestVitals ? 'Ready for doctor' : 'Vitals required';
         confirmation.append(confirm, hint); completeStack.append(completeToggle, confirmation); complete.append(completeStack);
         row.append(identity, uhid, documents, vitals, complete); staffPatientsBody.append(row);
       });
@@ -4737,25 +4727,36 @@
       }
     }
 
-    staffPatientsBody.addEventListener('click', event => {
-      const claimButton = event.target.closest('[data-staff-claim]');
-      if (claimButton) {
-        const intakeId = claimButton.dataset.staffClaim;
-        let storedStaff = null;
-        try { storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null'); } catch (_) {}
-        claimButton.disabled = true; claimButton.textContent = 'Accepting…';
-        void fetch(`/api/staff-intakes/${encodeURIComponent(intakeId)}/claim`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ staffId: storedStaff?.id || '' })
-        }).then(async response => {
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok) throw new Error(data.error || 'Could not accept this AI screening');
-          await loadStaffPatients();
-          showToast('Patient accepted', 'This AI screening is now assigned to your staff queue.');
-        }).catch(error => {
-          claimButton.disabled = false; claimButton.textContent = 'Accept AI screening';
-          showToast('Not accepted', error.message || 'Could not accept this AI screening.');
-        });
-        return;
+    async function claimStaffPatientIfNeeded(patient) {
+      if (!patient?.requiresClaim) return;
+      let storedStaff = null;
+      try { storedStaff = JSON.parse(localStorage.getItem('arogStaff') || 'null'); } catch (_) {}
+      const response = await fetch(`/api/staff-intakes/${encodeURIComponent(patient.latestIntakeId || '')}/claim`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ staffId: storedStaff?.id || '' })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'This patient is being handled by another staff member');
+      patient.requiresClaim = false;
+    }
+
+    staffPatientsBody.addEventListener('click', async event => {
+      const patientAction = event.target.closest('[data-patient-summaries], [data-patient-document], [data-patient-vitals], [data-staff-complete-toggle]');
+      if (patientAction) {
+        const patientId = patientAction.dataset.patientSummaries || patientAction.dataset.patientDocument || patientAction.dataset.patientVitals || '';
+        const intakeId = patientAction.dataset.staffCompleteToggle || patientAction.dataset.patientIntake || '';
+        const patient = staffPatientRecords.find(item => item.id === patientId || item.latestIntakeId === intakeId);
+        if (patient?.requiresClaim) {
+          patientAction.disabled = true;
+          try {
+            await claimStaffPatientIfNeeded(patient);
+          } catch (error) {
+            await loadStaffPatients();
+            showToast('Patient unavailable', error.message || 'This patient is being handled by another staff member.');
+            return;
+          } finally {
+            patientAction.disabled = false;
+          }
+        }
       }
       const completeToggle = event.target.closest('[data-staff-complete-toggle]');
       if (completeToggle) {

@@ -87,6 +87,9 @@ after(async () => {
 });
 
 test('UHIDs are stable per hospital and clinical data reaches that hospital', async () => {
+  const staffPortalUi = await (await fetch(origin)).text();
+  assert.doesNotMatch(staffPortalUi, /Accept AI screening/);
+  assert.match(staffPortalUi, /claimStaffPatientIfNeeded/);
   const staffA = await json('/api/staff-registrations', {
     method: 'POST', body: JSON.stringify({
       hospitalId: 'civil-ahmedabad', employeeId: 'STAFF-A', password: 'Password@1',
