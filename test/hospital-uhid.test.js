@@ -188,6 +188,20 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   assert.equal(staticIntake.response.status, 201);
   assert.equal(staticIntake.payload.intake.intakeSource, 'app-qr');
   assert.equal(staticIntake.payload.intake.uhid, mobileIntake.payload.intake.uhid);
+  const unassignedQueue = await json('/api/staff-patients?staffId=STAFF-A', { headers: { Cookie: staffCookieA } });
+  assert.equal(unassignedQueue.response.status, 200);
+  assert.equal(unassignedQueue.payload.patients[0].latestIntakeId, staticIntake.payload.intake.id);
+  assert.equal(unassignedQueue.payload.patients[0].requiresClaim, true);
+  const crossHospitalClaim = await json(`/api/staff-intakes/${staticIntake.payload.intake.id}/claim`, {
+    method: 'POST', headers: { Cookie: staffCookieB }, body: JSON.stringify({ staffId: 'STAFF-B' }),
+  });
+  assert.equal(crossHospitalClaim.response.status, 404);
+  const claimedStaticIntake = await json(`/api/staff-intakes/${staticIntake.payload.intake.id}/claim`, {
+    method: 'POST', headers: { Cookie: staffCookieA }, body: JSON.stringify({ staffId: 'STAFF-A' }),
+  });
+  assert.equal(claimedStaticIntake.response.status, 200);
+  const claimedQueue = await json('/api/staff-patients?staffId=STAFF-A', { headers: { Cookie: staffCookieA } });
+  assert.equal(claimedQueue.payload.patients[0].requiresClaim, false);
 
   const firstA = await json('/api/patient-intakes', {
     method: 'POST', headers: { Cookie: cookieA, Authorization: `Bearer ${patient.sessionToken}` },

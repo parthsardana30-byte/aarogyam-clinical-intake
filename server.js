@@ -2360,7 +2360,8 @@ function listStaffPatients(request, response, url) {
   const patientMap = new Map();
   for (const row of rows) {
     const device = devices.find(item => item.id === row.device_id);
-    if (row.staff_id !== staffId && device?.staffId !== staffId) continue;
+    const requiresClaim = !staffCanAccessIntake(row, staffId);
+    if (requiresClaim && !staffCanClaimIntake(row, staff.hospital_id)) continue;
     if (!patientMap.has(row.id)) {
       patientMap.set(row.id, {
         id: row.id,
@@ -2368,6 +2369,7 @@ function listStaffPatients(request, response, url) {
         fullName: row.full_name,
         hospitalId: row.hospital_id,
         latestIntakeId: row.intake_id,
+        requiresClaim,
         encounterNumber: row.encounter_number,
         intakeSource: row.intake_source,
         documentCount: Number(row.document_count || 0),
@@ -2433,14 +2435,53 @@ async function completeStaffPreparation(request, response, intakeId) {
 }
 
 function staffCanAccessIntake(intake, staffId) {
-  return intake?.staff_id === staffId || devices.some(device =>
-    device.id === intake?.device_id && device.staffId === staffId);
+  return intakeOwnerStaffId(intake) === staffId;
+}
+
+function intakeOwnerStaffId(intake) {
+  if (!intake) return '';
+  const directStaffId = normalizeStaffId(intake.staff_id);
+  if (directStaffId && patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ? AND hospital_id = ?').get(directStaffId, intake.hospital_id)) {
+    return directStaffId;
+  }
+  const device = devices.find(item => item.id === intake.device_id && item.hospitalId === intake.hospital_id);
+  const deviceStaffId = normalizeStaffId(device?.staffId);
+  return deviceStaffId && patientsDb.prepare('SELECT employee_id FROM staff WHERE employee_id = ? AND hospital_id = ?').get(deviceStaffId, intake.hospital_id)
+    ? deviceStaffId
+    : '';
+}
+
+function staffCanClaimIntake(intake, hospitalId) {
+  return Boolean(intake && intake.hospital_id === hospitalId && !intakeOwnerStaffId(intake)
+    && (intake.staff_status || 'pending') !== 'completed');
+}
+
+async function claimStaffIntake(request, response, intakeId) {
+  const body = await readJson(request);
+  const staffId = normalizeStaffId(body.staffId);
+  if (!authorizeRole(request, response, 'staff', staffId)) return;
+  const staff = patientsDb.prepare('SELECT * FROM staff WHERE employee_id = ?').get(staffId);
+  if (!staff) return sendJson(response, 403, { error: 'A registered hospital staff account is required' });
+  const intake = patientsDb.prepare('SELECT * FROM patient_intakes WHERE id = ? AND hospital_id = ?').get(intakeId, staff.hospital_id);
+  if (!intake) return sendJson(response, 404, { error: 'This hospital intake was not found' });
+  const ownerStaffId = intakeOwnerStaffId(intake);
+  if (ownerStaffId && ownerStaffId !== staffId) {
+    return sendJson(response, 409, { error: 'Another staff member has already accepted this patient' });
+  }
+  if (!ownerStaffId && !staffCanClaimIntake(intake, staff.hospital_id)) {
+    return sendJson(response, 409, { error: 'This intake can no longer be accepted' });
+  }
+  if (ownerStaffId === staffId && intake.staff_id === staffId) {
+    return sendJson(response, 200, { claimed: true, intakeId, staffId });
+  }
+  patientsDb.prepare('UPDATE patient_intakes SET staff_id = ? WHERE id = ?').run(staffId, intakeId);
+  sendJson(response, 200, { claimed: true, intakeId, staffId });
 }
 
 function staffPatientIntake(patientId, hospitalId, staffId, requestedIntakeId = '') {
   const rows = requestedIntakeId
-    ? patientsDb.prepare('SELECT id, staff_id, device_id FROM patient_intakes WHERE id = ? AND patient_id = ? AND hospital_id = ?').all(requestedIntakeId, patientId, hospitalId)
-    : patientsDb.prepare('SELECT id, staff_id, device_id FROM patient_intakes WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(created_at) DESC').all(patientId, hospitalId);
+    ? patientsDb.prepare('SELECT id, staff_id, device_id, hospital_id, staff_status FROM patient_intakes WHERE id = ? AND patient_id = ? AND hospital_id = ?').all(requestedIntakeId, patientId, hospitalId)
+    : patientsDb.prepare('SELECT id, staff_id, device_id, hospital_id, staff_status FROM patient_intakes WHERE patient_id = ? AND hospital_id = ? ORDER BY datetime(created_at) DESC').all(patientId, hospitalId);
   return rows.find(row => staffCanAccessIntake(row, staffId)) || null;
 }
 
@@ -3534,6 +3575,8 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === '/api/staff-patients') return listStaffPatients(request, response, url);
     if (request.method === 'GET' && url.pathname === '/api/staff-doctor-availability') return listAvailableDoctorsForStaff(request, response, url);
     if (request.method === 'POST' && url.pathname === '/api/staff-patient-vitals') return await createStaffPatientVitals(request, response);
+    const staffClaimMatch = url.pathname.match(/^\/api\/staff-intakes\/([0-9a-f-]+)\/claim$/i);
+    if (request.method === 'POST' && staffClaimMatch) return await claimStaffIntake(request, response, staffClaimMatch[1]);
     const staffCompleteMatch = url.pathname.match(/^\/api\/staff-intakes\/([0-9a-f-]+)\/complete$/i);
     if (request.method === 'POST' && staffCompleteMatch) return await completeStaffPreparation(request, response, staffCompleteMatch[1]);
     if (request.method === 'GET' && url.pathname === '/api/staff-profile') return getStaffProfile(request, response, url);
