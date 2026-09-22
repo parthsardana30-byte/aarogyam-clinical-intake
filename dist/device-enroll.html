@@ -137,12 +137,20 @@
 
     async function pollStatus() {
       try {
-        const response = await fetch(`/api/device-enrollments/${enrollmentId}/status?requestToken=${encodeURIComponent(requestToken)}`, { cache:'no-store' });
+        const response = await fetch(`/api/device-enrollments/${enrollmentId}/status?requestToken=${encodeURIComponent(requestToken)}`, { cache:'no-store', credentials:'same-origin' });
         const result = await response.json();
         if (result.status === 'authorized') {
-          clearInterval(clockTimer);
-          setStatus('Device authorized. Opening Arogyam…', 'ready');
-          setTimeout(() => location.replace('/#/login/device-patient'), 900);
+          setStatus('Approval received. Finishing secure device setup…', 'ready');
+          const sessionResponse = await fetch('/api/device-session', { cache:'no-store', credentials:'same-origin' });
+          const session = sessionResponse.ok ? await sessionResponse.json() : { authorized:false };
+          if (session.authorized === true) {
+            clearInterval(clockTimer);
+            setStatus('Device authorized. Opening Arogyam…', 'ready');
+            setTimeout(() => location.replace('/#/login/device-patient'), 500);
+            return;
+          }
+          setStatus('Approval received. Retrying secure device setup…');
+          pollTimer = setTimeout(pollStatus, 1000);
           return;
         }
         if (result.status === 'rejected') {
@@ -176,7 +184,7 @@
         }
         const endpoint = usingQrInvitation ? `/api/device-enrollments/${enrollmentId}/request` : '/api/device-enrollment-requests';
         const response = await fetch(endpoint, {
-          method:'POST', headers:{'Content-Type':'application/json'},
+          method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'},
           body:JSON.stringify({ name, claimToken, code, platform:navigator.userAgent })
         });
         const result = await response.json();

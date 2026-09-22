@@ -3250,7 +3250,9 @@ async function createEnrollment(request, response) {
   const creatorToken = randomBytes(24).toString('base64url');
   const claimToken = randomBytes(24).toString('base64url');
   const expiresAt = Date.now() + enrollmentTtlMs;
-  const origin = `http://${request.headers.host || `localhost:${port}`}`;
+  const forwardedProtocol = String(request.headers['x-forwarded-proto'] || '').split(',')[0].trim().toLowerCase();
+  const protocol = request.socket.encrypted || forwardedProtocol === 'https' ? 'https' : 'http';
+  const origin = `${protocol}://${request.headers.host || `localhost:${port}`}`;
   const setupUrl = `${origin}/device-enroll.html?enrollment=${encodeURIComponent(id)}&token=${encodeURIComponent(claimToken)}`;
   enrollments.set(id, {
     id, staffId, codeHash: hash(code), creatorHash: hash(creatorToken), claimHash: hash(claimToken),
@@ -3269,7 +3271,6 @@ function enrollmentStatus(request, response, id, url) {
   if (enrollment.status !== 'authorized') return sendJson(response, 200, { status: 'pending', expiresAt: enrollment.expiresAt });
   const headers = { 'Set-Cookie': `arog_device=${encodeURIComponent(enrollment.deviceToken)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000${secureCookie(request)}` };
   sendJson(response, 200, { status: 'authorized', device: publicDevice(enrollment.device) }, headers);
-  enrollments.delete(id);
 }
 
 async function requestDeviceAuthorization(request, response, id) {

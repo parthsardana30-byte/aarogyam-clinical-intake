@@ -64,6 +64,12 @@ async function authorizeDevice(staffId, name, staffCookie) {
   assert.equal(status.status, 200);
   const cookie = status.headers.get('set-cookie')?.split(';')[0];
   assert.match(cookie || '', /^arog_device=/);
+  const deviceSession = await json('/api/device-session', { headers: { Cookie: cookie } });
+  assert.equal(deviceSession.response.status, 200);
+  assert.equal(deviceSession.payload.authorized, true);
+  const retryStatus = await fetch(`${origin}/api/device-enrollments/${invitation.payload.id}/status?requestToken=${encodeURIComponent(request.payload.requestToken)}`);
+  assert.equal(retryStatus.status, 200);
+  assert.equal((await retryStatus.json()).status, 'authorized');
   return cookie;
 }
 
@@ -90,6 +96,9 @@ test('UHIDs are stable per hospital and clinical data reaches that hospital', as
   const staffPortalUi = await (await fetch(origin)).text();
   assert.doesNotMatch(staffPortalUi, /Accept AI screening/);
   assert.match(staffPortalUi, /claimStaffPatientIfNeeded/);
+  const deviceEnrollmentUi = await (await fetch(`${origin}/device-enroll.html`)).text();
+  assert.match(deviceEnrollmentUi, /Approval received\. Finishing secure device setup/);
+  assert.match(deviceEnrollmentUi, /fetch\('\/api\/device-session', \{ cache:'no-store', credentials:'same-origin' \}\)/);
   const staffA = await json('/api/staff-registrations', {
     method: 'POST', body: JSON.stringify({
       hospitalId: 'civil-ahmedabad', employeeId: 'STAFF-A', password: 'Password@1',
